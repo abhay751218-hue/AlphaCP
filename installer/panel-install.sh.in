@@ -1,0 +1,647 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  AlphaCP — Step 2B-1 installer: PANEL UI (login + dashboard) on port 8090
+#  Version 0.3.0
+# -----------------------------------------------------------------------------
+#  WHAT IT DOES
+#   1. installs the PHP extensions + nginx the panel needs
+#   2. deploys the panel app to /usr/local/alphacp/panel (Laravel 11)
+#   3. composer install --no-dev  (creds stay in etc/database.env — no copies)
+#   4. applies db/migrations/*.sql (0001 core, 0002 panel core)
+#   5. creates the first admin user (random password, printed once)
+#   6. serves it at  https://<server>:8090  via nginx + php-fpm (self-signed TLS
+#      for now — free Let's Encrypt certificate arrives with the SSL module)
+#   7. verifies end to end (login page must answer 200)
+#
+#  WHAT IT DOES **NOT** DO
+#   - it does not touch customer websites (Apache keeps 80/443)
+#   - it does not start mail/FTP services
+#   - it never runs the panel as root (ADR-0002: privileged work = paneld only)
+#
+#  FLAGS
+#   --dry-run            plan only, change nothing
+#   --yes                no prompts
+#   --force              redo steps that look done
+#   --only=PHASES        comma list: preflight,packages,deploy,migrate,admin,serve,verify
+#   --port=8090          panel port (default 8090)
+#   --admin-user=NAME    first admin username (default: admin)
+#   --admin-password=PW  set the password yourself (default: generated)
+#   --allow-unsupported  non-Ubuntu Debian family (dev tests)
+#
+#  Generated file — do not edit by hand. Edit step2b-panel-install.sh.in instead.
+#  Rebuild:  python3 tools/build-panel-installer.py
+# =============================================================================
+set -euo pipefail
+
+ACP_PANEL_INSTALLER_VERSION="0.3.0"
+TAR_SHA256="${ACP_TAR_SHA256}"
+
+ACP_HOME="/usr/local/alphacp"
+PANEL_DIR="${ACP_HOME}/panel"
+STAGE="/tmp/alphacp-panel-payload.$$"
+LOG_FILE="/var/log/alphacp-panel-install.log"
+DB_NAME="alphacp"
+if [[ -f "${ACP_HOME}/etc/database.env" ]]; then
+  # Step 2A writes ACP_DB_* keys; accept both spellings and never let a missing
+  # key kill the script (this file is read before main() runs)
+  _db="$( { grep -E '^(ACP_DB_NAME|DB_NAME)=' "${ACP_HOME}/etc/database.env" 2>/dev/null || true; } | head -1 | cut -d= -f2)"
+  if [[ -n "$_db" ]]; then DB_NAME="$_db"; fi
+fi
+
+DRY_RUN=0; ASSUME_YES=0; FORCE=0; ALLOW_UNSUPPORTED=0
+ONLY_PHASES=""; PANEL_PORT=8090; ADMIN_USER="admin"; ADMIN_PASSWORD=""
+ORIG_ARGS=()
+
+C_RESET=$'\033[0m'; C_BOLD=$'\033[1m'; C_DIM=$'\033[2m'
+C_GREEN=$'\033[32m'; C_RED=$'\033[31m'; C_YELLOW=$'\033[33m'; C_BLUE=$'\033[34m'
+
+log() {
+  local lvl="$1"; shift
+  { printf '%s [%s] %s\n' "$(date '+%F %T')" "$lvl" "$*" >>"${LOG_FILE}"; } 2>/dev/null || true
+  # keep a copy inside the ACP home too — that tree survives log rotation in /var/log
+  mkdir -p "${ACP_HOME}/logs" 2>/dev/null || true
+  { printf '%s [%s] %s\n' "$(date '+%F %T')" "$lvl" "$*" >>"${ACP_HOME}/logs/panel-install.log"; } 2>/dev/null || true
+}
+say()  { printf '%s\n' "$*"; }
+info() { log INFO "$*";  say "${C_BLUE}[i]${C_RESET} $*"; }
+ok()   { log OK "$*";    say "${C_GREEN}[OK]${C_RESET} $*"; }
+warn() { log WARN "$*";  say "${C_YELLOW}[!]${C_RESET} $*"; }
+err()  { log ERROR "$*"; say "${C_RED}[x]${C_RESET} $*" >&2; }
+step() { say ""; say "${C_BOLD}${C_BLUE}==> $*${C_RESET}"; log STEP "$*"; }
+die()  { err "$*"; say ""; say "Full log: ${LOG_FILE}"; exit 1; }
+
+cleanup() { rm -rf "$STAGE" 2>/dev/null || true; }
+trap cleanup EXIT
+
+run()       { log CMD "$*"; if (( DRY_RUN )); then say "    ${C_DIM}(dry-run)${C_RESET} $*"; return 0; fi; "$@" >>"${LOG_FILE}" 2>&1; }
+run_try()   { log CMD "(try) $*"; if (( DRY_RUN )); then say "    ${C_DIM}(dry-run)${C_RESET} $*"; return 0; fi; "$@" >>"${LOG_FILE}" 2>&1 || { log WARN "command failed (ignored): $*"; return 1; }; }
+
+confirm() {
+  if (( ASSUME_YES )) || (( DRY_RUN )); then return 0; fi
+  local reply
+  read -r -p "${C_BOLD}$1 [y/N]: ${C_RESET}" reply || true
+  [[ "${reply,,}" == "y" || "${reply,,}" == "yes" ]]
+}
+
+usage() {
+  cat <<'EOF'
+AlphaCP panel installer (Step 2B-1) — login + dashboard on port 8090
+
+Usage: sudo bash panel-install.sh [options]
+
+  --dry-run              plan only, change nothing
+  --yes|-y               no prompts (background-friendly)
+  --force                redo steps that look done
+  --only=PHASES          preflight,packages,deploy,migrate,admin,serve,verify
+  --port=8090            panel port
+  --admin-user=NAME      first admin username
+  --admin-password=PW    set the password yourself
+  --allow-unsupported    non-Ubuntu Debian family (dev tests)
+  --help                 this help
+EOF
+}
+
+parse_args() {
+  for arg in "$@"; do
+    case "$arg" in
+      --dry-run)           DRY_RUN=1 ;;
+      --yes|-y)            ASSUME_YES=1 ;;
+      --force)             FORCE=1 ;;
+      --allow-unsupported) ALLOW_UNSUPPORTED=1 ;;
+      --only=*)            ONLY_PHASES="${arg#*=}" ;;
+      --port=*)            PANEL_PORT="${arg#*=}" ;;
+      --admin-user=*)      ADMIN_USER="${arg#*=}" ;;
+      --admin-password=*)  ADMIN_PASSWORD="${arg#*=}" ;;
+      --help|-h)           usage; exit 0 ;;
+      *) usage; die "Unknown option: $arg" ;;
+    esac
+  done
+  [[ "$PANEL_PORT" =~ ^[0-9]+$ ]] || die "--port must be a number"
+  if [[ -n "$ONLY_PHASES" ]]; then
+    local p
+    IFS=',' read -r -a _phases <<< "$ONLY_PHASES"
+    for p in "${_phases[@]}"; do
+      case "$p" in
+        preflight|packages|deploy|migrate|admin|serve|verify) ;;
+        *) die "--only: unknown phase '${p}'" ;;
+      esac
+    done
+  fi
+}
+
+should_run() {
+  if [[ -z "$ONLY_PHASES" ]]; then return 0; fi
+  if [[ ",${ONLY_PHASES}," == *",$1,"* ]]; then return 0; fi
+  info "Skipping phase '$1' (not in --only list)"
+  return 1
+}
+
+# -----------------------------------------------------------------------------
+#  helpers
+# -----------------------------------------------------------------------------
+mysql_root()      { mariadb --protocol=socket -u root "$@"; }
+sysd()            { if [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; then return 0; else return 1; fi; }
+os_id()           { . /etc/os-release 2>/dev/null || true; printf '%s' "${ID:-unknown}"; }
+os_ver()          { . /etc/os-release 2>/dev/null || true; printf '%s' "${VERSION_ID:-0}"; }
+php_primary() {
+  local v c
+  v="$(grep -E '^ACP_PHP_PRIMARY=' "${ACP_HOME}/etc/install.env" 2>/dev/null | cut -d= -f2)"
+  if [[ -n "$v" && -x "/usr/bin/php${v}" ]]; then printf '%s' "$v"; return 0; fi
+  # trust what is actually installed (Step 1 may have installed a different version)
+  for c in 8.5 8.4 8.3 8.2 8.1 8.0 7.4; do
+    if [[ -x "/usr/bin/php${c}" ]]; then printf '%s' "$c"; return 0; fi
+  done
+  printf '%s' "${v:-8.3}"
+}
+php_bin()         { local v; v="$(php_primary)"; if [[ -x "/usr/bin/php${v}" ]]; then printf '/usr/bin/php%s' "$v"; else command -v php; fi; }
+php_sock()        { local v; v="$(php_primary)"; printf '/run/php/php%s-fpm.sock' "$v"; }
+fpm_service()     { local v; v="$(php_primary)"; printf 'php%s-fpm' "$v"; }
+
+extract_payload() {
+  local b64
+  b64="$(sed -n '/^# @@PAYLOAD_BEGIN@@$/,/^# @@PAYLOAD_END@@$/p' "$0" | sed '1d;$d')"
+  [[ -n "$b64" ]] || die "payload missing from this script (re-download it)"
+
+  rm -rf "$STAGE"; mkdir -p "$STAGE"
+  printf '%s' "$b64" | base64 -d > "${STAGE}/payload.tar.gz" || die "payload decode failed"
+
+  local got; got="$(sha256sum "${STAGE}/payload.tar.gz" | awk '{print $1}')"
+  [[ "$got" == "${TAR_SHA256}" ]] || die "payload checksum mismatch — file corrupt, re-download"
+  ok "payload verified (sha256 ${TAR_SHA256:0:16}…)"
+
+  tar -xzf "${STAGE}/payload.tar.gz" -C "$STAGE" || die "payload extract failed"
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 0 — preflight
+# -----------------------------------------------------------------------------
+phase_preflight() {
+  step "Phase 0/6 — Preflight"
+
+  if (( ! DRY_RUN )) && [[ "${EUID}" -ne 0 ]]; then
+    if command -v sudo >/dev/null 2>&1 && [[ -f "${BASH_SOURCE[0]}" ]]; then
+      info "Not root — re-running with sudo..."
+      exec sudo -E bash "${BASH_SOURCE[0]}" "${ORIG_ARGS[@]}"
+    fi
+    die "Please run as root:  sudo bash $0"
+  fi
+  ok "root privileges confirmed"
+
+  local id ver; id="$(os_id)"; ver="$(os_ver)"
+  case "${id}:${ver}" in
+    ubuntu:22.04|ubuntu:24.04) ok "OS supported: Ubuntu ${ver} LTS" ;;
+    *)
+      if (( ALLOW_UNSUPPORTED )); then warn "OS ${id} ${ver} not officially supported (continuing: --allow-unsupported)"
+      else die "Unsupported OS: ${id} ${ver} (use --allow-unsupported for dev tests)"; fi ;;
+  esac
+
+  [[ -f "${ACP_HOME}/etc/database.env" ]] || die "panel needs the agent installed first — run installer/step2-install.sh (Step 2A)"
+  mysql_root -e 'SELECT 1' >/dev/null 2>&1 || die "MariaDB not reachable as root"
+  ok "database + agent prerequisites present"
+
+  command -v composer >/dev/null 2>&1 || die "composer missing (Step 1 installs it)"
+  ok "composer: $(composer --version 2>/dev/null | head -1 | awk '{print $3}')"
+
+  local missing=()
+  local ext
+  for ext in mbstring xml curl zip intl bcmath gd pdo_mysql openssl tokenizer fileinfo; do
+    "$(php_bin)" -m 2>/dev/null | grep -qi "^${ext}$" || missing+=("$ext")
+  done
+  if (( ${#missing[@]} > 0 )); then
+    info "PHP extensions missing: ${missing[*]} (packages phase installs them)"
+  else
+    ok "all required PHP extensions present"
+  fi
+
+  if [[ -f "${ACP_HOME}/etc/install.env" ]]; then ok "installer record found (Step 1)"; fi
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 1 — packages
+# -----------------------------------------------------------------------------
+phase_packages() {
+  step "Phase 1/6 — Packages (nginx + PHP extensions)"
+
+  local v; v="$(php_primary)"
+  local pkgs=(nginx "php${v}-fpm" "php${v}-cli" "php${v}-mbstring" "php${v}-xml" "php${v}-curl"
+              "php${v}-zip" "php${v}-intl" "php${v}-bcmath" "php${v}-gd" "php${v}-mysql")
+
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} apt-get install -y ${pkgs[*]}"
+    return 0
+  fi
+
+  if "$(php_bin)" -m 2>/dev/null | grep -qi '^mbstring$' && command -v nginx >/dev/null 2>&1; then
+    ok "nginx + PHP extensions already installed"
+  else
+    info "installing: ${pkgs[*]}"
+    DEBIAN_FRONTEND=noninteractive apt-get update -qq >>"${LOG_FILE}" 2>&1 || true
+    if ! DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+           -o Dpkg::Options::=--force-confnew -o Dpkg::Options::=--force-confold \
+           "${pkgs[@]}" >>"${LOG_FILE}" 2>&1; then
+      # this distro does not ship versioned packages (e.g. Debian) — use its default PHP
+      warn "php${v}-* packages not available here — trying the distro default php-* packages"
+      local dflt=(nginx php-fpm php-cli php-mbstring php-xml php-curl php-zip php-intl php-bcmath php-gd php-mysql)
+      DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
+        -o Dpkg::Options::=--force-confnew -o Dpkg::Options::=--force-confold \
+        "${dflt[@]}" >>"${LOG_FILE}" 2>&1 || die "package install failed — see ${LOG_FILE}"
+      v="$(php_primary)"
+      warn "using PHP ${v} (distro default)"
+      ok "packages installed"
+      return 0
+    fi
+    ok "packages installed"
+  fi
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 2 — deploy code
+# -----------------------------------------------------------------------------
+phase_deploy() {
+  step "Phase 2/6 — Deploy panel code"
+
+  [[ -d "${STAGE}/panel" ]] || die "payload has no panel/ directory"
+
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} copy panel -> ${PANEL_DIR} (keeping existing .env + storage)"
+    say "    ${C_DIM}(dry-run)${C_RESET} composer install --no-dev --optimize-autoloader"
+    return 0
+  fi
+
+  mkdir -p "${PANEL_DIR}"
+  local keep_env=""
+  if [[ -f "${PANEL_DIR}/.env" ]]; then keep_env="$(mktemp)"; cp "${PANEL_DIR}/.env" "$keep_env"; fi
+
+  # rsync-free sync: copy source, never delete storage/ or .env
+  rm -rf "${PANEL_DIR}/app.new"
+  mkdir -p "${PANEL_DIR}/app.new"
+  cp -a "${STAGE}/panel/." "${PANEL_DIR}/app.new/"
+  # sync every entry except runtime state (vendor deps, storage, live .env)
+  local part
+  for part in $(ls -A "${PANEL_DIR}/app.new"); do
+    case "$part" in
+      vendor|storage|.env) continue ;;
+    esac
+    rm -rf "${PANEL_DIR:?}/${part}"
+    mv "${PANEL_DIR}/app.new/${part}" "${PANEL_DIR}/${part}"
+  done
+  rm -rf "${PANEL_DIR}/app.new"
+  if [[ -n "$keep_env" ]]; then cp "$keep_env" "${PANEL_DIR}/.env"; rm -f "$keep_env"; fi
+
+  # writable runtime dirs (excluded from the payload on purpose — they are runtime state)
+  mkdir -p "${PANEL_DIR}/storage/framework/cache/data" \
+           "${PANEL_DIR}/storage/framework/sessions" \
+           "${PANEL_DIR}/storage/framework/views" \
+           "${PANEL_DIR}/storage/logs" \
+           "${PANEL_DIR}/bootstrap/cache"
+  ok "code deployed to ${PANEL_DIR}"
+
+  # --- composer -------------------------------------------------------------
+  if [[ -d "${PANEL_DIR}/vendor" ]] && (( ! FORCE )); then
+    ok "vendor/ already present (use --force to reinstall dependencies)"
+  else
+    info "composer install (this downloads Laravel — ~1 minute)"
+    ( cd "${PANEL_DIR}" && COMPOSER_ALLOW_SUPERUSER=1 composer install \
+        --no-dev --no-interaction --optimize-autoloader --no-progress ) >>"${LOG_FILE}" 2>&1 \
+      || die "composer install failed — see ${LOG_FILE}"
+    ok "composer install complete"
+  fi
+
+  # --- .env -----------------------------------------------------------------
+  if [[ ! -f "${PANEL_DIR}/.env" ]]; then
+    cp -f "${PANEL_DIR}/.env.example" "${PANEL_DIR}/.env" \
+      || die ".env.example missing in ${PANEL_DIR} — payload incomplete"
+    local key
+    key="base64:$("$(php_bin)" -r 'echo base64_encode(random_bytes(32));')"
+    sed -i "s|^APP_KEY=.*|APP_KEY=${key}|" "${PANEL_DIR}/.env"
+    sed -i "s|^APP_URL=.*|APP_URL=https://$(hostname -I | awk '{print $1}'):${PANEL_PORT}|" "${PANEL_DIR}/.env"
+    chown root:www-data "${PANEL_DIR}/.env"
+    chmod 0640 "${PANEL_DIR}/.env"
+    ok ".env created (APP_KEY generated, 0640 root:www-data)"
+  else
+    info ".env already present — keeping it"
+  fi
+
+  # --- ownership / permissions ---------------------------------------------
+  # panel code: root-owned, readable by the web user; storage stays writable
+  chown -R root:www-data "${PANEL_DIR}"
+  chmod -R 0750 "${PANEL_DIR}"
+  chmod -R 0770 "${PANEL_DIR}/storage" "${PANEL_DIR}/bootstrap/cache"
+  find "${PANEL_DIR}/storage" "${PANEL_DIR}/bootstrap/cache" -type f -exec chmod 0660 {} \; 2>/dev/null || true
+  chmod 0755 "${PANEL_DIR}/artisan"
+
+  # credentials file: root-owned, group-readable by the web user (0640)
+  chown root:www-data "${ACP_HOME}/etc/database.env"
+  chmod 0640 "${ACP_HOME}/etc/database.env"
+  ok "permissions set (panel runs as www-data, never root)"
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 3 — migrations
+# -----------------------------------------------------------------------------
+phase_migrate() {
+  step "Phase 3/6 — Migrations"
+
+  [[ -d "${STAGE}/db/migrations" ]] || die "payload has no db/migrations"
+
+  if (( DRY_RUN )); then
+    ls "${STAGE}/db/migrations"/*.sql 2>/dev/null | while read -r f; do say "    ${C_DIM}(dry-run)${C_RESET} apply $(basename "$f")"; done
+    return 0
+  fi
+
+  mysql_root "${DB_NAME}" -e "CREATE TABLE IF NOT EXISTS schema_migrations (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      version VARCHAR(40) NOT NULL,
+      applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id), UNIQUE KEY uq_schema_version (version)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+
+  local f version applied
+  for f in $(ls "${STAGE}/db/migrations"/*.sql | sort); do
+    version="$(basename "$f" .sql)"
+    applied="$(mysql_root -N -B "${DB_NAME}" -e "SELECT COUNT(*) FROM schema_migrations WHERE version='${version}'" 2>/dev/null || echo 0)"
+    if [[ "$applied" != "0" && $FORCE -eq 0 ]]; then
+      info "migration ${version} already applied — skipping"
+      continue
+    fi
+    if mysql_root "${DB_NAME}" < "$f"; then
+      mysql_root "${DB_NAME}" -e "INSERT IGNORE INTO schema_migrations (version) VALUES ('${version}')"
+      ok "applied ${version}"
+    else
+      die "migration ${version} FAILED — fix and re-run"
+    fi
+  done
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 4 — admin user
+# -----------------------------------------------------------------------------
+phase_admin() {
+  step "Phase 4/6 — Panel admin user"
+
+  local exists="0"
+  exists="$(mysql_root -N -B "${DB_NAME}" -e "SELECT COUNT(*) FROM users WHERE username='${ADMIN_USER}'" 2>/dev/null || echo 0)"
+
+  if (( DRY_RUN )); then
+    if [[ "$exists" != "0" && -z "$ADMIN_PASSWORD" ]]; then
+      say "    ${C_DIM}(dry-run)${C_RESET} admin '${ADMIN_USER}' already exists — password left unchanged"
+    else
+      say "    ${C_DIM}(dry-run)${C_RESET} php artisan alphacp:create-admin --username=${ADMIN_USER} …"
+    fi
+    return 0
+  fi
+
+  # an existing admin keeps its password unless one is given explicitly —
+  # silently rotating it on every re-run locked people out of their own panel.
+  if [[ "$exists" != "0" && -z "$ADMIN_PASSWORD" ]]; then
+    ok "admin user '${ADMIN_USER}' already exists — password unchanged"
+    info "password badalna ho to: --admin-password='NayaPassword' ke saath dobara chalao"
+    return 0
+  fi
+
+  if [[ -z "$ADMIN_PASSWORD" ]]; then
+    ADMIN_PASSWORD="$("$(php_bin)" -r 'echo rtrim(strtr(base64_encode(random_bytes(18)), "+/", "AZ"), "=");')"
+  fi
+
+  ( cd "${PANEL_DIR}" && ACP_HOME="${ACP_HOME}" "$(php_bin)" artisan alphacp:create-admin \
+      --username="${ADMIN_USER}" --password="${ADMIN_PASSWORD}" ) >>"${LOG_FILE}" 2>&1 \
+      || die "admin user creation failed — see ${LOG_FILE}"
+
+  mkdir -p "${ACP_HOME}/var"
+  umask 077
+  printf 'panel_user=%s\npanel_pass=%s\npanel_port=%s\ncreated_at=%s\n' \
+    "${ADMIN_USER}" "${ADMIN_PASSWORD}" "${PANEL_PORT}" "$(date -Is)" \
+    > "${ACP_HOME}/var/panel-admin.txt"
+  ok "admin user '${ADMIN_USER}' ready (password saved to ${ACP_HOME}/var/panel-admin.txt, root-only)"
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 5 — serve (nginx + TLS on 8090)
+# -----------------------------------------------------------------------------
+phase_serve() {
+  step "Phase 5/6 — nginx service on port ${PANEL_PORT}"
+
+  # is the port already taken by something else?
+  local holder
+  holder="$(ss -ltnp 2>/dev/null | awk -v p=":${PANEL_PORT}$" '$4 ~ p {print $6}' | head -1)"
+  if [[ -n "$holder" && "$holder" != *nginx* ]]; then
+    warn "port ${PANEL_PORT} is already held by: ${holder}"
+    warn "nginx will not be able to bind — stop that process first (e.g. a leftover 'php artisan serve')"
+  fi
+
+  if ! command -v nginx >/dev/null 2>&1; then
+    warn "nginx not installed (skip the web server phase — packages phase needed)"
+    return 0
+  fi
+
+  local cert_dir="/etc/ssl/alphacp"
+
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} self-signed cert (${cert_dir}/panel.crt)"
+    say "    ${C_DIM}(dry-run)${C_RESET} write /etc/nginx/sites-available/alphacp-panel.conf (listen ${PANEL_PORT} ssl)"
+    say "    ${C_DIM}(dry-run)${C_RESET} disable default site + enable alpha panel site + nginx -t + start nginx"
+    return 0
+  fi
+
+  # --- TLS ------------------------------------------------------------------
+  if [[ ! -f "${cert_dir}/panel.crt" ]]; then
+    mkdir -p "$cert_dir"
+    a=$(hostname -I | awk '{print $1}')
+    openssl req -x509 -nodes -newkey rsa:2048 -days 825 \
+      -keyout "${cert_dir}/panel.key" -out "${cert_dir}/panel.crt" \
+      -subj "/CN=alphacp-panel" \
+      -addext "subjectAltName=IP:${a},DNS:$(hostname -f 2>/dev/null || hostname)" >>"${LOG_FILE}" 2>&1 \
+      || die "self-signed certificate generation failed"
+    chmod 0600 "${cert_dir}/panel.key"
+    ok "self-signed certificate created (browser will warn until Let's Encrypt arrives)"
+  else
+    info "certificate already present"
+  fi
+
+  # --- vhost ----------------------------------------------------------------
+  cat > /etc/nginx/sites-available/alphacp-panel.conf <<NGINX
+# AlphaCP panel — generated by installer/panel-install.sh (safe to re-generate)
+server {
+    listen ${PANEL_PORT} ssl;
+    listen [::]:${PANEL_PORT} ssl;
+    http2 on;
+    server_name _;
+
+    root ${PANEL_DIR}/public;
+    index index.php;
+
+    ssl_certificate     ${cert_dir}/panel.crt;
+    ssl_certificate_key ${cert_dir}/panel.key;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    add_header X-Frame-Options SAMEORIGIN always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy strict-origin-when-cross-origin always;
+
+    client_max_body_size 128m;
+    server_tokens off;
+
+    # never serve dotfiles, the framework's internals or logs
+    location ~ /\\.(?!well-known).* { deny all; }
+    location ~ ^/(storage|vendor|bootstrap|config|database|app|routes)/ { deny all; }
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location ~ \\.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:$(php_sock);
+        fastcgi_read_timeout 120;
+    }
+
+    location ~* \\.(css|js|png|jpg|jpeg|gif|svg|ico|woff2?)\$ {
+        expires 7d;
+        access_log off;
+    }
+}
+NGINX
+  ok "vhost written: /etc/nginx/sites-available/alphacp-panel.conf"
+
+  # the distro default site listens on :80 and would fight Apache for customer sites
+  if [[ -e /etc/nginx/sites-enabled/default ]]; then
+    rm -f /etc/nginx/sites-enabled/default
+    ok "disabled nginx default site (port 80 belongs to Apache)"
+  fi
+  ln -sfn /etc/nginx/sites-available/alphacp-panel.conf /etc/nginx/sites-enabled/alphacp-panel.conf
+
+  if ! nginx -t >>"${LOG_FILE}" 2>&1; then
+    err "nginx config test failed — diagnostics:"
+    nginx -t 2>&1 | tail -5
+    die "fix the config above and re-run with --only=serve"
+  fi
+  ok "nginx config test: OK"
+
+  # --- php-fpm pool socket ------------------------------------------------
+  if sysd; then
+    systemctl enable "$(fpm_service)" >>"${LOG_FILE}" 2>&1 || true
+    systemctl restart "$(fpm_service)" >>"${LOG_FILE}" 2>&1 || true
+    sleep 1
+    if systemctl is-active --quiet "$(fpm_service)"; then ok "$(fpm_service): running"
+    else warn "$(fpm_service) did not start — check: journalctl -u $(fpm_service)"; fi
+
+    systemctl enable nginx >>"${LOG_FILE}" 2>&1 || true
+    systemctl restart nginx >>"${LOG_FILE}" 2>&1 || true
+    sleep 1
+    if systemctl is-active --quiet nginx; then ok "nginx: running (panel on :${PANEL_PORT})"
+    else
+      err "nginx failed to start — diagnostics:"
+      systemctl status nginx --no-pager -l 2>&1 | head -12
+      journalctl -u nginx --no-pager -n 10 2>&1 | tail -10
+      die "nginx start failed"
+    fi
+  else
+    warn "systemd not available — start nginx manually (dev container)"
+  fi
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 6 — verify
+# -----------------------------------------------------------------------------
+phase_verify() {
+  step "Phase 6/6 — Verify (end to end)"
+
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} curl -k https://127.0.0.1:${PANEL_PORT}/login  (expect 200)"
+    return 0
+  fi
+
+  mkdir -p "${ACP_HOME}/logs" 2>/dev/null || true
+  local report; report="${ACP_HOME}/logs/verify-panel-$(date +%Y%m%d-%H%M%S).txt"
+  local code="" tries=0
+
+  while (( tries < 10 )); do
+    tries=$((tries + 1))
+    code="$(curl -k -s -o /dev/null -w '%{http_code}' -m 10 "https://127.0.0.1:${PANEL_PORT}/login" 2>/dev/null || true)"
+    if [[ "$code" == "200" ]]; then break; fi
+    sleep 2
+  done
+
+  {
+    echo "===== AlphaCP panel verification — $(date -Is) ====="
+    echo "  panel dir      : ${PANEL_DIR}"
+    echo "  port           : ${PANEL_PORT}"
+    echo "  login page     : HTTP ${code:-none} (after ${tries} tries)"
+    echo "  nginx          : $(command -v systemctl >/dev/null 2>&1 && systemctl is-active nginx 2>/dev/null || echo 'n/a')"
+    echo "  $(fpm_service) : $(command -v systemctl >/dev/null 2>&1 && systemctl is-active "$(fpm_service)" 2>/dev/null || echo 'n/a')"
+    echo "  apache2 (sites): $(command -v systemctl >/dev/null 2>&1 && systemctl is-active apache2 2>/dev/null || echo 'n/a')"
+    echo "  paneld         : $(command -v systemctl >/dev/null 2>&1 && systemctl is-active paneld 2>/dev/null || echo 'n/a')"
+    echo
+    echo "--- last panel log lines ---"
+    tail -5 "${ACP_HOME}/logs/panel-install.log" 2>/dev/null || true
+    echo
+    echo "--- laravel log (if any) ---"
+    tail -5 "${PANEL_DIR}/storage/logs/laravel.log" 2>/dev/null || echo "  (clean)"
+  } > "$report" 2>&1
+
+  say ""
+  if [[ "$code" == "200" ]]; then
+    ok "login page answered HTTP 200 — panel is live"
+  else
+    err "login page returned '${code:-no response}' — diagnostics:"
+    tail -20 "$report" | sed 's/^/  /'
+    die "panel not reachable on port ${PANEL_PORT}"
+  fi
+
+  # Apache must still own the customer websites
+  local site_code; site_code="$(curl -s -o /dev/null -w '%{http_code}' -m 8 http://127.0.0.1/ 2>/dev/null || true)"
+  if [[ "$site_code" == "200" ]]; then ok "customer websites still served by Apache (HTTP 200)"
+  else warn "Apache check returned '${site_code:-none}' — is apache2 running?"; fi
+
+  local ip; ip="$(hostname -I | awk '{print $1}')"
+  say ""
+  say "${C_GREEN}${C_BOLD}Panel live:${C_RESET}  https://${ip}:${PANEL_PORT}/"
+  if [[ -f "${ACP_HOME}/var/panel-admin.txt" ]]; then
+    say "  username: $(grep '^panel_user=' "${ACP_HOME}/var/panel-admin.txt" | cut -d= -f2)"
+    say "  password: (${ACP_HOME}/var/panel-admin.txt me hai — root-only file)"
+    say "  ${C_DIM}password dekhne ke liye:  sudo cat ${ACP_HOME}/var/panel-admin.txt${C_RESET}"
+  fi
+  say ""
+  say "  browser me kholte waqt 'Not secure' warning aayega — self-signed certificate hai."
+  say "  (Let's Encrypt wala asli certificate SSL module ke saath aayega.)"
+  say ""
+  say "  report: ${report}"
+  say "  log   : ${LOG_FILE}"
+}
+
+# -----------------------------------------------------------------------------
+main() {
+  ORIG_ARGS=("$@")
+  parse_args "$@"
+  if (( ! DRY_RUN )); then mkdir -p "$(dirname "$LOG_FILE")" "${ACP_HOME}/logs" 2>/dev/null || true; fi
+
+  say ""
+  say "${C_BOLD}AlphaCP panel installer v${ACP_PANEL_INSTALLER_VERSION}${C_RESET} — panel UI (login + dashboard)"
+  say "${C_DIM}port ${PANEL_PORT} · log: ${LOG_FILE}${C_RESET}"
+
+  if should_run preflight; then phase_preflight; fi
+  extract_payload
+  if should_run packages;  then phase_packages;  fi
+  if should_run deploy;    then phase_deploy;    fi
+  if should_run migrate;   then phase_migrate;   fi
+  if should_run admin;     then phase_admin;     fi
+  if should_run serve;     then phase_serve;     fi
+  if should_run verify;    then phase_verify;    fi
+
+  say ""
+  say "${C_GREEN}${C_BOLD}Panel install complete.${C_RESET} Browser me kholo aur login karke batao kaisa laga."
+  say ""
+}
+
+# `set -e` stays in force INSIDE main() on purpose: a failed step must stop the
+# install (wrapping this call in `||` or `set +e` would silently disable that).
+main "$@"
+# The base64 payload below is DATA, not code — stop before bash reaches it.
+exit 0
+
+# @@PAYLOAD_BEGIN@@
+${ACP_PAYLOAD_B64}
+# @@PAYLOAD_END@@
