@@ -2,7 +2,7 @@
 """Build the reproducible code-only Laravel 13 panel payload.
 
 Source of truth: refs/panel-2b-bundle/
-Output: artifacts/panel-code-0.3.1.tar.gz
+Output: artifacts/panel-code-<version>.tar.gz  (version = refs/panel-2b-bundle/MANIFEST.json)
 
 The installer runs Composer on the target server, so vendor/ is intentionally
 not included. A zero-mtime tar + gzip makes the SHA-256 reproducible.
@@ -13,12 +13,14 @@ from __future__ import annotations
 import gzip
 import hashlib
 import io
+import json
 import pathlib
 import tarfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SOURCE = ROOT / "refs" / "panel-2b-bundle"
-OUTPUT = ROOT / "artifacts" / "panel-code-0.3.1.tar.gz"
+VERSION = json.loads((SOURCE / "MANIFEST.json").read_text())["version"]
+OUTPUT = ROOT / "artifacts" / f"panel-code-{VERSION}.tar.gz"
 EXCLUDED = {"database/database.sqlite", ".phpunit.result.cache"}
 
 

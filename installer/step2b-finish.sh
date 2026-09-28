@@ -128,7 +128,8 @@ artisan() {
 
 rand_pw() {
   local b; b="$(php_candidates | head -1)"
-  "${b:-php}" -r 'echo rtrim(strtr(base64_encode(random_bytes(15)), "+/", "AZ"), "=");'
+  # policy: min 10 + upper + lower + digit — purana tareeka ~3% baar policy fail karta tha
+  "${b:-php}" -r 'do { $p = rtrim(strtr(base64_encode(random_bytes(15)), "+/", "AZ"), "="); } while (!preg_match("/[a-z]/", $p) || !preg_match("/[A-Z]/", $p) || !preg_match("/[0-9]/", $p)); echo $p;'
 }
 
 # -----------------------------------------------------------------------------
