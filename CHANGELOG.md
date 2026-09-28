@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Fixed / Changed
+- **S2C deployed on dev-srv1 (29 Sep)** — existing-server updater v0.1.0 completed successfully; panel
+  `License & Trial` page now shows the local 15-day trial, fingerprint, expiry and activation form.
+  Server header is now `dev-srv1`; websites/email remain unaffected.
 - **Existing-server updater rollback fix (29 Sep)** — v0.1.0 updater ne release staging directory se
   `config:cache`/`route:cache` banaya tha, jiski absolute paths `/usr/local/alphacp/releases/...` par
   point ho rahi thi. PHP-FPM ka `open_basedir` sirf final `/usr/local/alphacp/panel` allow karta hai,

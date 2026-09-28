@@ -7,7 +7,7 @@
 |---|---|---|
 | **S0** | Blueprint: requirements, architecture, DB schema, security matrix, coding standards, license design, installer design, ADRs | ✅ **DONE** |
 | **S1** | Server base stack + **one-click installer** (Phase 1-2) + `alphacp` CLI basics (`status`, `doctor`) | ⏳ next |
-| **S2** | Panel core: auth/RBAC/2FA/audit, **paneld agent**, task queue, license client + trial, base UI shell, systemd units | 🔄 **2A ✅** · **2B-1 ✅** · **2B-2 ✅** (password + 2FA + RBAC pages verified) · **2C 🟡** (license client/trial started; installer v0.3.8 bundle ready) |
+| **S2** | Panel core: auth/RBAC/2FA/audit, **paneld agent**, task queue, license client + trial, base UI shell, systemd units | 🔄 **2A ✅** · **2B-1 ✅** · **2B-2 ✅** (password + 2FA + RBAC pages verified) · **2C 🟡** (license client/trial deployed; license-server API pending) |
 | **S3** | Provisioning engine: account create/suspend/unsuspend/terminate/limits (+ rollback), account UI | ⏳ |
 | **S4** | Packages & limits manager (+ feature lists, cPanel-compatible limit keys) | ⏳ |
 | **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | ⏳ |

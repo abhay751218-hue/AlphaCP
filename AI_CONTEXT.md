@@ -23,8 +23,8 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **Step 2C — license client/trial in progress** 🟡 |
-| Next task | Finish S2C tests, bundle rebuild/deploy, then optional license-server API |
+| Phase | **Step 2C — license client/trial deployed** 🟡 |
+| Next task | S3 account provisioning foundation; then license-server API/paid activation |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
 | Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor + license client/trial |
 | Blocking issues | PHP/Laravel test execution still needs a PHP 8.3+ build environment; server acceptance of new S2C bundle pending |
