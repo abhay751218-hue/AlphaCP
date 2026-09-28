@@ -1,0 +1,26 @@
+# AlphaCP privileged task agent.
+# Installed to /etc/systemd/system/paneld.service by installer/step2-install.sh
+# (the installer rewrites ExecStart with the real PHP binary path it detected).
+[Unit]
+Description=AlphaCP privileged task agent (paneld)
+Documentation=file:/usr/local/alphacp/docs/runbooks/
+After=network-online.target mariadb.service
+Wants=network-online.target mariadb.service
+
+[Service]
+Type=simple
+User=root
+Group=root
+Environment=ACP_HOME=/usr/local/alphacp
+ExecStart=/usr/bin/php /usr/local/alphacp/agent/bin/paneld --daemon
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+KillMode=mixed
+LimitNOFILE=65535
+Nice=5
+StandardOutput=append:/usr/local/alphacp/logs/paneld.log
+StandardError=append:/usr/local/alphacp/logs/paneld.log
+
+[Install]
+WantedBy=multi-user.target

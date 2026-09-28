@@ -1,0 +1,7 @@
+# AlphaCP — generated / local-only
+vendor/
+node_modules/
+.env
+*.sqlite
+*.log
+/tmp/

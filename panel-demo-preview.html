@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlphaCP — Panel Demo Preview (cPanel-jaisa)</title>
+<style>
+:root{
+  --bg:#eef2f7; --card:#ffffff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+  --brand:#4f46e5; --brand2:#06b6d4; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+  --nav:#111827; --nav2:#1e293b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45}
+.ico{display:inline-flex;align-items:center;justify-content:center}
+.ico svg{width:100%;height:100%}
+.ico svg path,.ico svg rect,.ico svg circle,.ico svg ellipse,.ico svg line,.ico svg polyline{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ico svg text{fill:currentColor;stroke:none;font-weight:700}
+
+/* ---------- TOPBAR ---------- */
+.topbar{position:sticky;top:0;z-index:50;background:linear-gradient(90deg,#0b1220,#1e293b);color:#e2e8f0;display:flex;align-items:center;gap:14px;padding:9px 16px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:9px;font-weight:800;font-size:16px;color:#fff}
+.brand .logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;font-size:14px;font-weight:900;color:#fff}
+.brand small{font-weight:500;font-size:11px;color:#94a3b8;display:block;letter-spacing:.3px}
+.tabs{display:flex;gap:6px;margin-left:auto;flex-wrap:wrap}
+.tab{background:#1e293b;color:#cbd5e1;border:1px solid #334155;padding:7px 13px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;transition:.15s}
+.tab:hover{background:#27364b;color:#fff}
+.tab.active{background:linear-gradient(135deg,var(--brand),var(--brand2));border-color:transparent;color:#fff}
+.demo-note{background:#fef3c7;color:#92400e;font-size:11.5px;text-align:center;padding:5px 10px;border-bottom:1px solid #fde68a}
+
+/* ---------- VIEWS ---------- */
+.view{display:none}
+.view.active{display:block}
+
+/* ---------- WHM ---------- */
+.whm-wrap{display:flex;min-height:calc(100vh - 92px)}
+.whm-side{width:228px;flex-shrink:0;background:var(--nav2);color:#cbd5e1;padding:14px 10px}
+.whm-side .serverbox{background:#0f172a;border:1px solid #334155;border-radius:10px;padding:10px;margin-bottom:12px;font-size:11.5px;color:#94a3b8}
+.whm-side .serverbox b{color:#e2e8f0;display:block;font-size:12.5px;margin-bottom:2px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:8px;cursor:pointer;font-size:13px;color:#cbd5e1;transition:.12s;margin-bottom:2px}
+.nav-item:hover{background:#27364b;color:#fff}
+.nav-item.on{background:linear-gradient(90deg,rgba(79,70,229,.35),rgba(6,182,212,.18));color:#fff;font-weight:600;border-left:3px solid var(--brand2)}
+.nav-item .ico{width:17px;height:17px;color:var(--brand2)}
+.nav-sep{font-size:10px;letter-spacing:1.2px;color:#64748b;margin:13px 10px 6px;text-transform:uppercase;font-weight:700}
+.whm-main{flex:1;padding:18px;min-width:0}
+.page-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.page-head h2{font-size:19px;font-weight:800}
+.page-head .sub{color:var(--muted);font-size:12.5px}
+.btn{border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+.btn-primary{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{border-color:#c7d2fe;background:#f8faff}
+.btn-danger{background:#fee2e2;color:#b91c1c}
+.btn-ok{background:#d1fae5;color:#047857}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:11px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+.card .k{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:6px}
+.card .v{font-size:21px;font-weight:800;margin-top:4px}
+.card .d{font-size:11.5px;color:var(--muted);margin-top:2px}
+.bar{height:7px;border-radius:99px;background:#e2e8f0;overflow:hidden;margin-top:8px}
+.bar > i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.bar.warn > i{background:linear-gradient(90deg,#f59e0b,#f97316)}
+.bar.ok > i{background:linear-gradient(90deg,#10b981,#06b6d4)}
+.svc-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.svc{background:#fff;border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 3px rgba(16,185,129,.16)}
+.dot.off{background:var(--bad);box-shadow:0 0 0 3px rgba(239,68,68,.15)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:16px}
+.panel .p-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.panel .p-head h3{font-size:14.5px;font-weight:800}
+.panel .p-head .right{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:12.8px}
+th{text-align:left;padding:9px 12px;background:#f8fafc;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafbff}
+.badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:700}
+.b-ok{background:#d1fae5;color:#047857}
+.b-warn{background:#fef3c7;color:#92400e}
+.b-bad{background:#fee2e2;color:#b91c1c}
+.b-info{background:#e0e7ff;color:#4338ca}
+.mini-bar{width:90px;height:6px;border-radius:99px;background:#e2e8f0;display:inline-block;overflow:hidden;vertical-align:middle;margin-right:7px}
+.mini-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.mini-bar.over > i{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+.search{border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13px;width:100%;max-width:340px;background:#fff}
+.search:focus{outline:2px solid rgba(79,70,229,.25);border-color:#a5b4fc}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:14px}
+
+/* ---------- CPANEL ---------- */
+.cp-head{background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.cp-head .who{display:flex;align-items:center;gap:10px;margin-left:auto;font-size:12.5px;color:var(--muted)}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px}
+.cp-wrap{display:flex;gap:16px;padding:16px;align-items:flex-start}
+.cp-side{width:268px;flex-shrink:0;position:sticky;top:100px}
+.stats{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px}
+.stats h3{font-size:13px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.stat{margin-bottom:11px}
+.stat .row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.stat .row b{font-weight:700}
+.stat .row span{color:var(--muted)}
+.cp-main{flex:1;min-width:0}
+.group{background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:14px}
+.group h3{font-size:13.5px;font-weight:800;margin-bottom:11px;padding-bottom:9px;border-bottom:2px solid #f1f5f9;display:flex;align-items:center;gap:8px}
+.group h3 .cnt{font-size:11px;color:var(--muted);font-weight:600;background:#f1f5f9;border-radius:99px;padding:2px 9px}
+.toolgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(102px,1fr));gap:9px}
+.tool{display:flex;flex-direction:column;align-items:center;gap:8px;padding:13px 6px 11px;border-radius:10px;background:#fbfcfe;border:1px solid var(--line);cursor:pointer;transition:.14s;text-align:center}
+.tool:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(15,23,42,.10);border-color:#c7d2fe;background:#fff}
+.tool .ico{width:30px;height:30px;color:var(--brand)}
+.tool span{font-size:11.5px;font-weight:600;color:#334155;line-height:1.25}
+.tool .st{font-size:9.5px;color:#94a3b8;font-weight:700;letter-spacing:.3px}
+.nomatch{padding:30px;text-align:center;color:var(--muted)}
+
+/* ---------- WEBMAIL ---------- */
+.wm-wrap{display:flex;height:calc(100vh - 92px);background:#fff}
+.wm-folders{width:190px;flex-shrink:0;border-right:1px solid var(--line);background:#f8fafc;padding:12px 8px}
+.wm-folders .fl{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:8px;font-size:13px;cursor:pointer;color:#334155}
+.wm-folders .fl:hover{background:#eef2ff}
+.wm-folders .fl.on{background:#e0e7ff;color:#4338ca;font-weight:700}
+.wm-folders .fl b{margin-left:auto;font-size:11px;color:var(--muted)}
+.wm-list{width:340px;flex-shrink:0;border-right:1px solid var(--line);overflow:auto}
+.wm-item{padding:11px 13px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:12.5px}
+.wm-item:hover{background:#fafbff}
+.wm-item.on{background:#eef2ff;border-left:3px solid var(--brand)}
+.wm-item .t{display:flex;justify-content:space-between;gap:8px}
+.wm-item .t b{font-weight:700;color:#0f172a}
+.wm-item .t span{font-size:11px;color:var(--muted);white-space:nowrap}
+.wm-item .s{color:var(--muted);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wm-read{flex:1;padding:20px;overflow:auto;min-width:0}
+.wm-read h2{font-size:17px;margin-bottom:6px}
+.wm-read .meta{font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:14px}
+.wm-read p{margin-bottom:10px;font-size:13.5px;color:#1e293b}
+.wm-toolbar{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;gap:8px}
+
+/* ---------- API ---------- */
+.api-wrap{display:flex;gap:16px;padding:16px;align-items:flex-start}
+.api-side{width:300px;flex-shrink:0}
+.api-side .fn{padding:9px 12px;border-bottom:1px solid #f1f5f9;cursor:pointer;font-size:12.5px}
+.api-side .fn:hover{background:#fafbff}
+.api-side .fn.on{background:#eef2ff;border-left:3px solid var(--brand);font-weight:700}
+.api-side .fn code{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--brand);font-size:12px;font-weight:700}
+.api-side .fn span{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.api-main{flex:1;min-width:0}
+pre{background:#0b1220;color:#a5f3fc;border-radius:10px;padding:13px 14px;font-size:11.8px;line-height:1.55;overflow:auto;font-family:ui-monospace,Menlo,Consolas,monospace;white-space:pre}
+pre .g{color:#86efac}
+pre .y{color:#fde68a}
+pre .r{color:#fca5a5}
+pre .m{color:#64748b}
+h4.sec{font-size:13px;font-weight:800;margin:14px 0 8px;display:flex;align-items:center;gap:8px}
+h4.sec:first-child{margin-top:0}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.fbox{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 13px;font-size:12px;font-weight:600;text-align:center}
+.fbox small{display:block;color:var(--muted);font-weight:500;font-size:11px}
+.farrow{color:var(--brand);font-weight:800;font-size:16px}
+.fbox.hot{border-color:#fca5a5;background:#fef2f2}
+.fbox.cool{border-color:#86efac;background:#f0fdf4}
+.timeline{padding:6px 2px}
+.tl{display:flex;gap:11px;align-items:flex-start;padding:7px 4px;opacity:.35;transition:.3s}
+.tl.done{opacity:1}
+.tl .tk{width:20px;height:20px;border-radius:50%;border:2px solid #cbd5e1;display:grid;place-items:center;font-size:11px;flex-shrink:0;color:#fff;background:#fff}
+.tl.done .tk{background:var(--ok);border-color:var(--ok)}
+.tl b{font-size:12.8px}
+.tl small{display:block;color:var(--muted);font-size:11.5px}
+
+/* ---------- MODAL ---------- */
+.modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:100}
+.modal.open{display:flex}
+.modal-card{background:#fff;border-radius:14px;max-width:620px;width:100%;max-height:86vh;overflow:auto;box-shadow:0 30px 70px rgba(15,23,42,.35)}
+.m-head{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#fff}
+.m-head .ico{width:30px;height:30px;color:var(--brand)}
+.m-head h3{font-size:16px;font-weight:800}
+.m-head .x{margin-left:auto;background:#f1f5f9;border:none;width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;font-weight:700;color:#475569}
+.m-head .x:hover{background:#e2e8f0}
+.m-body{padding:16px 18px}
+.m-body p.desc{color:#334155;font-size:13.5px;margin-bottom:12px}
+.m-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:#eef2ff;color:#4338ca;border-radius:99px;padding:4px 11px;font-size:11.5px;font-weight:700}
+.chip.g{background:#d1fae5;color:#047857}
+.chip.o{background:#fef3c7;color:#92400e}
+ul.feats{list-style:none}
+ul.feats li{padding:6px 0 6px 26px;position:relative;font-size:13px;color:#334155;border-bottom:1px dashed #f1f5f9}
+ul.feats li:before{content:"✓";position:absolute;left:4px;color:var(--ok);font-weight:800}
+.note{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;padding:10px 13px;font-size:12.3px;margin-top:14px}
+@media (max-width:900px){
+  .whm-side{display:none}
+  .cp-side{position:static;width:100%}
+  .cp-wrap{flex-direction:column}
+  .wm-list{display:none}
+  .api-side{width:100%}
+  .api-wrap{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SVG ICON SPRITE ===== -->
+<svg style="display:none" aria-hidden="true">
+<symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M10 13h5M10 17h5"/></symbol>
+<symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V5"/><path d="M8 9l4-4 4 4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></symbol>
+<symbol id="i-ftp" viewBox="0 0 24 24"><path d="M4 8h13"/><path d="M14 5l3 3-3 3"/><path d="M20 16H7"/><path d="M10 13l-3 3 3 3"/></symbol>
+<symbol id="i-git" viewBox="0 0 24 24"><circle cx="7" cy="6" r="2.2"/><circle cx="7" cy="18" r="2.2"/><circle cx="17" cy="10" r="2.2"/><path d="M7 8.2v7.6"/><path d="M9.2 6.5c4 .5 5.8 1.5 5.8 3.4"/></symbol>
+<symbol id="i-terminal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3"/><path d="M13 15h4"/></symbol>
+<symbol id="i-backup" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/><path d="M12 8v5"/><path d="M9.5 11l2.5 2.5 2.5-2.5"/></symbol>
+<symbol id="i-disk" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="6" rx="2"/><rect x="3" y="13" width="18" height="6" rx="2"/><circle cx="7" cy="8" r="1"/><circle cx="7" cy="16" r="1"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"/></symbol>
+<symbol id="i-tree" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-2h12v2"/></symbol>
+<symbol id="i-redirect" viewBox="0 0 24 24"><path d="M5 4v7h11"/><path d="M13 8l3 3-3 3"/><path d="M5 11v9"/></symbol>
+<symbol id="i-server" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><circle cx="7" cy="7.5" r="1.1"/><circle cx="7" cy="16.5" r="1.1"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
+<symbol id="i-forward" viewBox="0 0 24 24"><path d="M4 12h11"/><path d="M12 8l4 4-4 4"/><path d="M20 5v14"/></symbol>
+<symbol id="i-autorespond" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 14l4-4 4 4"/><path d="M12 10v7"/></symbol>
+<symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 5h16l-6 7v5l-4 2v-7z"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M8 6h12M8 12h12M8 18h12"/><circle cx="4.5" cy="6" r="1.3"/><circle cx="4.5" cy="12" r="1.3"/><circle cx="4.5" cy="18" r="1.3"/></symbol>
+<symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></symbol>
+<symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></symbol>
+<symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V13M9.3 20V7M14.6 20V15M20 20V4"/><path d="M3 21h18"/></symbol>
+<symbol id="i-person" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></symbol>
+<symbol id="i-gauge" viewBox="0 0 24 24"><path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4.5-5"/><circle cx="12" cy="17" r="1.2"/></symbol>
+<symbol id="i-warning" viewBox="0 0 24 24"><path d="M12 4l9 15H3z"/><path d="M12 10v4"/><path d="M12 17h.01"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></symbol>
+<symbol id="i-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/></symbol>
+<symbol id="i-bug" viewBox="0 0 24 24"><ellipse cx="12" cy="13" rx="5" ry="6.5"/><path d="M12 6.5V4M8.5 6.5L7 4M15.5 6.5L17 4M7 11H4M20 11h-3M7 16H4M20 16h-3"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M9.5 14.5l5-5"/><path d="M8 11l-2.5 2.5a3.5 3.5 0 0 0 5 5L13 16"/><path d="M16 13l2.5-2.5a3.5 3.5 0 0 0-5-5L11 8"/></symbol>
+<symbol id="i-code" viewBox="0 0 24 24"><path d="M9 6l-5 6 5 6M15 6l5 6-5 6"/></symbol>
+<symbol id="i-wand" viewBox="0 0 24 24"><path d="M6 18L16 8l2 2L8 20z"/><path d="M18 3v3M21 4.5h-3M4 7v2M5 8H3"/></symbol>
+<symbol id="i-wp" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="10" font-family="system-ui">W</text></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 11V5a2 2 0 0 1 2-2h6l10 10-8 8z"/><circle cx="7.5" cy="7.5" r="1.4"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 16h6"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></symbol>
+<symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="M11 12L20 3M17 4l3 3"/></symbol>
+<symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="10" y="10" width="4" height="4" rx="1"/><path d="M9 3v3M15 3v3M9 18v3M15 18v3M3 9h3M3 15h3M18 9h3M18 15h3"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+<symbol id="i-power" viewBox="0 0 24 24"><path d="M12 3v8"/><path d="M6.5 6.5a8 8 0 1 0 11 0"/></symbol>
+<symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 13h10l1-13"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v4h-4"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.4-9A6 6 0 0 1 18 9.5 4 4 0 0 1 17.5 18z"/></symbol>
+<symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0 0 18c1.7 0 2-1.3 1.3-2.2-.7-1 .1-2.3 1.4-2.3H17a4 4 0 0 0 4-4c0-5.2-4-9.5-9-9.5z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="11" cy="7.5" r="1.2"/><circle cx="15.5" cy="9" r="1.2"/></symbol>
+<symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L3 10l7 3 3 7z"/><path d="M21 3l-11 10"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/></symbol>
+<symbol id="i-shield2" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+</svg>
+
+<!-- ===== TOPBAR ===== -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">A</div>
+    <div>AlphaCP<small>Custom Hosting Panel — Demo Preview</small></div>
+  </div>
+  <div class="tabs">
+    <button class="tab active" onclick="showView('whm',this)">🛡️ WHM Admin</button>
+    <button class="tab" onclick="showView('cpanel',this)">👤 cPanel User</button>
+    <button class="tab" onclick="showView('webmail',this)">✉️ Webmail</button>
+    <button class="tab" onclick="showView('api',this)">💳 Billing / API</button>
+  </div>
+</div>
+<div class="demo-note">⚠️ Ye ek <b>visual mockup demo</b> hai (sample data ke saath) — actual working system hum Step-by-step banayenge. Har tool pe click karke uska plan dekh sakte ho.</div>
+
+<!-- ======================= VIEW 1 : WHM ADMIN ======================= -->
+<div id="view-whm" class="view active">
+  <div class="whm-wrap">
+    <aside class="whm-side">
+      <div class="serverbox">
+        <b>srv1.alphacp.in</b>
+        AlmaLinux 9 · x86_64 · 4 vCPU / 24 GB<br>Uptime: 47 din
+      </div>
+      <div class="nav-sep">Main</div>
+      <div class="nav-item on"><span class="ico"><svg><use href="#i-home"/></svg></span> Home</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-gauge"/></svg></span> Server Status</div>
+      <div class="nav-sep">Account Functions</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-person"/></svg></span> Create Account</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-list"/></svg></span> List Accounts</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-power"/></svg></span> Suspend / Unsuspend</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-trash"/></svg></span> Terminate</div>
+      <div class="nav-sep">Configuration</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-folder"/></svg></span> Packages</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-server"/></svg></span> DNS Functions</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-mail"/></svg></span> Mail Queue / Reports</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-backup"/></svg></span> Backup Center</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-globe"/></svg></span> IP Manager</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-cloud"/></svg></span> Multi-Server / Nodes</div>
+      <div class="nav-sep">Security &amp; Access</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-shield"/></svg></span> Security Center</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-key"/></svg></span> API Tokens</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-doc"/></svg></span> Audit Logs</div>
+      <div class="nav-item"><span class="ico"><svg><use href="#i-palette"/></svg></span> Branding / Themes</div>
+    </aside>
+
+    <main class="whm-main">
+      <div class="page-head">
+        <div>
+          <h2>Server Overview — srv1.alphacp.in</h2>
+          <div class="sub">WHM-jaisa admin panel · saare accounts, packages aur server aapke control me</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-ghost"><span class="ico" style="width:15px;height:15px"><svg><use href="#i-refresh"/></svg></span> Refresh</button>
+          <button class="btn btn-primary" onclick="openModal('createacct')"><span class="ico" style="width:15px;height:15px"><svg><use href="#i-plus"/></svg></span> Create Account</button>
+        </div>
+      </div>
+
+      <div class="cards">
+        <div class="card">
+          <div class="k">Server Load</div>
+          <div class="v">0.42</div>
+          <div class="d">4 cores · 10% busy</div>
+          <div class="bar ok"><i style="width:10%"></i></div>
+        </div>
+        <div class="card">
+          <div class="k">Memory (RAM)</div>
+          <div class="v">11.2 / 24 GB</div>
+          <div class="d">47% used</div>
+          <div class="bar"><i style="width:47%"></i></div>
+        </div>
+        <div class="card">
+          <div class="k">Disk (/home)</div>
+          <div class="v">412 / 900 GB</div>
+          <div class="d">46% used · quotas ON</div>
+          <div class="bar"><i style="width:46%"></i></div>
+        </div>
+        <div class="card">
+          <div class="k">Hosting Accounts</div>
+          <div class="v">128</div>
+          <div class="d">3 suspended · 2 over-quota</div>
+          <div class="bar warn"><i style="width:28%"></i></div>
+        </div>
+      </div>
+
+      <div class="svc-row">
+        <div class="svc"><span class="dot"></span> Apache / Nginx</div>
+        <div class="svc"><span class="dot"></span> PHP-FPM (7.4–8.4)</div>
+        <div class="svc"><span class="dot"></span> MariaDB 10.11</div>
+        <div class="svc"><span class="dot"></span> Exim (SMTP)</div>
+        <div class="svc"><span class="dot"></span> Dovecot (IMAP)</div>
+        <div class="svc"><span class="dot"></span> BIND (DNS)</div>
+        <div class="svc"><span class="dot"></span> Pure-FTPd</div>
+        <div class="svc"><span class="dot off"></span> Mail Queue: 3 stuck</div>
+      </div>
+
+      <div class="panel">
+        <div class="p-head">
+          <h3>Quick Actions</h3>
+          <div class="right">
+            <button class="btn btn-ghost" onclick="openModal('packages')">Packages</button>
+            <button class="btn btn-ghost" onclick="openModal('apikeys')">API Tokens</button>
+            <button class="btn btn-ghost" onclick="openModal('dns')">DNS Cluster</button>
+            <button class="btn btn-ghost" onclick="openModal('backup')">Backups</button>
+          </div>
+        </div>
+        <div class="qgrid">
+          <button class="btn btn-primary" onclick="openModal('createacct')">➕ Create Account</button>
+          <button class="btn btn-ghost" onclick="openModal('suspend')">⏸️ Suspend</button>
+          <button class="btn btn-ghost" onclick="openModal('changepkg')">⬆️ Change Package</button>
+          <button class="btn btn-ghost" onclick="openModal('quota')">📊 Edit Quota</button>
+          <button class="btn btn-ghost" onclick="openModal('mailq')">✉️ Mail Queue</button>
+          <button class="btn btn-ghost" onclick="openModal('restore')">♻️ Restore Backup</button>
+          <button class="btn btn-ghost" onclick="openModal('migrate')">📦 cPanel Migration</button>
+          <button class="btn btn-danger" onclick="openModal('terminate')">🗑️ Terminate</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="p-head">
+          <h3>Hosting Accounts (sample data)</h3>
+          <div class="right">
+            <input class="search" id="acctSearch" oninput="filterAccounts(this.value)" placeholder="🔍 Search domain / user / package...">
+          </div>
+        </div>
+        <div style="overflow:auto">
+        <table id="acctTable">
+          <thead><tr><th>Domain</th><th>User</th><th>Package</th><th>Disk Usage</th><th>Bandwidth</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td><b>example.com</b></td><td>exmpuser</td><td>Business (10 GB)</td>
+              <td><span class="mini-bar"><i style="width:64%"></i></span>6.4 / 10 GB</td><td>34 / 100 GB</td><td>8 / 50</td>
+              <td><span class="badge b-ok">Active</span></td>
+              <td><a href="#" onclick="openModal('suspend');return false" style="color:var(--brand);font-weight:700;text-decoration:none">Manage</a></td></tr>
+            <tr><td><b>shop.mystore.in</b></td><td>mystore</td><td>Starter (5 GB)</td>
+              <td><span class="mini-bar over"><i style="width:98%"></i></span>4.9 / 5 GB</td><td>41 / 50 GB</td><td>22 / 20</td>
+              <td><span class="badge b-warn">Near Limit</span></td>
+              <td><a href="#" onclick="openModal('changepkg');return false" style="color:var(--brand);font-weight:700;text-decoration:none">Upgrade</a></td></tr>
+            <tr><td><b>blog.rahul.dev</b></td><td>rahuldev</td><td>Pro (25 GB)</td>
+              <td><span class="mini-bar"><i style="width:45%"></i></span>11.2 / 25 GB</td><td>62 / 200 GB</td><td>3 / 100</td>
+              <td><span class="badge b-ok">Active</span></td>
+              <td><a href="#" onclick="openModal('quota');return false" style="color:var(--brand);font-weight:700;text-decoration:none">Manage</a></td></tr>
+            <tr><td><b>testapp.io</b></td><td>testapp</td><td>Starter (5 GB)</td>
+              <td><span class="mini-bar"><i style="width:16%"></i></span>0.8 / 5 GB</td><td>2 / 50 GB</td><td>4 / 20</td>
+              <td><span class="badge b-bad">Suspended — Unpaid</span></td>
+              <td><a href="#" onclick="openModal('unsuspend');return false" style="color:var(--brand);font-weight:700;text-decoration:none">Unsuspend</a></td></tr>
+            <tr><td><b>api.startup.co</b></td><td>startupapi</td><td>Business (10 GB)</td>
+              <td><span class="mini-bar"><i style="width:31%"></i></span>3.1 / 10 GB</td><td>18 / 100 GB</td><td>6 / 50</td>
+              <td><span class="badge b-ok">Active</span></td>
+              <td><a href="#" onclick="openModal('passwd');return false" style="color:var(--brand);font-weight:700;text-decoration:none">Manage</a></td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="note">📌 Ye table aapke <b>billing software</b> ke data se sync rahega — invoice paid? account active. Invoice unpaid 7 din? <code>suspendacct</code> API se ye row red ho jaayegi. Sab automatic, zero manual kaam.</div>
+    </main>
+  </div>
+</div>
+
+<!-- ======================= VIEW 2 : CPANEL USER ======================= -->
+<div id="view-cpanel" class="view">
+  <div class="cp-head">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="logo" style="width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;color:#fff;font-weight:900;font-size:13px">A</div>
+      <b style="font-size:14.5px">AlphaCP</b>
+      <span style="color:var(--muted);font-size:12.5px">· example.com (exmpuser)</span>
+    </div>
+    <input class="search" id="toolSearch" oninput="filterTools(this.value)" placeholder="🔍 Search tools... (jaise: email, file, ssl)">
+    <div class="who">
+      <span class="badge b-info">Package: Business (10 GB)</span>
+      <div class="avatar">EX</div>
+      <b style="color:var(--ink)">exmpuser</b>
+    </div>
+  </div>
+
+  <div class="cp-wrap">
+    <aside class="cp-side">
+      <div class="stats">
+        <h3><span class="ico" style="width:16px;height:16px;color:var(--brand)"><svg><use href="#i-disk"/></svg></span> Account Stats (Live)</h3>
+        <div class="stat"><div class="row"><b>Disk Storage</b><span>6.4 GB / 10 GB</span></div><div class="bar"><i style="width:64%"></i></div></div>
+        <div class="stat"><div class="row"><b>Bandwidth</b><span>34 GB / 100 GB</span></div><div class="bar"><i style="width:34%"></i></div></div>
+        <div class="stat"><div class="row"><b>Email Accounts</b><span>8 / 50</span></div><div class="bar warn"><i style="width:16%"></i></div></div>
+        <div class="stat"><div class="row"><b>MySQL Databases</b><span>3 / 25</span></div><div class="bar"><i style="width:12%"></i></div></div>
+        <div class="stat"><div class="row"><b>Subdomains</b><span>4 / 25</span></div><div class="bar"><i style="width:16%"></i></div></div>
+        <div class="stat"><div class="row"><b>Addon Domains</b><span>1 / 10</span></div><div class="bar"><i style="width:10%"></i></div></div>
+        <div class="stat"><div class="row"><b>Cron Jobs</b><span>2 / 20</span></div><div class="bar"><i style="width:10%"></i></div></div>
+        <div class="stat"><div class="row"><b>Inodes (Files)</b><span>42,318 / 200,000</span></div><div class="bar ok"><i style="width:21%"></i></div></div>
+      </div>
+      <div class="note" style="margin-top:12px">💡 Ye limits aapke package se aati hain (billing software ke plan se). Limit full hote hi customer ko alert / upgrade prompt milega — bilkul cPanel jaisa.</div>
+    </aside>
+
+    <main class="cp-main" id="toolArea"></main>
+  </div>
+</div>
+
+<!-- ======================= VIEW 3 : WEBMAIL ======================= -->
+<div id="view-webmail" class="view">
+  <div class="wm-wrap">
+    <aside class="wm-folders">
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:10px" onclick="openModal('compose')">✏️ Compose</button>
+      <div class="fl on">📥 Inbox <b>12</b></div>
+      <div class="fl">⭐ Starred</div>
+      <div class="fl">📤 Sent</div>
+      <div class="fl">📝 Drafts <b>1</b></div>
+      <div class="fl">🚫 Junk <b>3</b></div>
+      <div class="fl">🗑️ Trash</div>
+      <div class="fl">📦 Archive</div>
+      <div style="border-top:1px solid var(--line);margin:10px 4px"></div>
+      <div class="fl">⚙️ Settings</div>
+    </aside>
+    <section class="wm-list">
+      <div class="wm-toolbar">
+        <input class="search" placeholder="🔍 Search mail" style="max-width:none">
+      </div>
+      <div class="wm-item on">
+        <div class="t"><b>AlphaCP Welcome</b><span>10:24</span></div>
+        <div class="s">Aapka hosting account ready hai — credentials aur next steps...</div>
+      </div>
+      <div class="wm-item">
+        <div class="t"><b>Invoice #INV-2041 — Paid ✅</b><span>09:15</span></div>
+        <div class="s">Payment received. Aapka plan next month tak active hai...</div>
+      </div>
+      <div class="wm-item">
+        <div class="t"><b>AutoSSL: Certificate Issued</b><span>Yesterday</span></div>
+        <div class="s">example.com ke liye Let's Encrypt certificate install ho gaya...</div>
+      </div>
+      <div class="wm-item">
+        <div class="t"><b>Backup Complete</b><span>Yesterday</span></div>
+        <div class="s">Daily backup S3 pe upload ho gaya (1.2 GB)...</div>
+      </div>
+      <div class="wm-item">
+        <div class="t"><b>⚠️ Disk Usage 64%</b><span>2 din pehle</span></div>
+        <div class="s">Aapne 6.4 GB use kiya hai 10 GB me se. Cleanup suggestions...</div>
+      </div>
+    </section>
+    <section class="wm-read">
+      <h2>🎉 AlphaCP Welcome — Aapka hosting account ready hai!</h2>
+      <div class="meta">From: <b>support@alphacp.in</b> · To: exmpuser@example.com · 10:24 AM</div>
+      <p>Namaste!</p>
+      <p>Aapka hosting account <b>example.com</b> successfully create ho gaya hai. 🎉</p>
+      <p><b>Login details:</b><br>
+      Panel: <b>https://example.com:2083</b><br>
+      Username: <b>exmpuser</b><br>
+      Password: (security ke liye email me bheja gaya)</p>
+      <p><b>Aapke package me:</b> 10 GB SSD storage, 100 GB bandwidth, 50 email accounts, 25 MySQL databases, unlimited Forwarders.</p>
+      <p>Koi bhi help ke liye reply kar dein — hum 24×7 available hain.</p>
+      <p>Dhanyavaad,<br>Team AlphaCP</p>
+      <div class="note" style="margin-top:18px">📌 Ye webmail (Roundcube) aapke customers ke liye hoga — custom domain pe, SSL ke saath, panel se one-click SSO. Ye bhi hum Step 7 me banayenge.</div>
+    </section>
+  </div>
+</div>
+
+<!-- ======================= VIEW 4 : BILLING / API ======================= -->
+<div id="view-api" class="view">
+  <div class="api-wrap">
+    <aside class="api-side">
+      <div class="panel" style="margin-bottom:14px">
+        <div class="p-head" style="padding:11px 13px"><h3>🔌 API Layer Status</h3></div>
+        <div style="padding:12px 13px;font-size:12.5px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>WHM API 1 (port 2087)</span><span class="badge b-ok">Ready</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>UAPI (port 2083)</span><span class="badge b-ok">Ready</span></div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:7px"><span>API Token Auth</span><span class="badge b-ok">Ready</span></div>
+          <div style="display:flex;justify-content:space-between"><span>Webhooks (Events)</span><span class="badge b-ok">Ready</span></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="p-head" style="padding:11px 13px"><h3>API Functions</h3></div>
+        <div id="apiFnList"></div>
+      </div>
+    </aside>
+
+    <main class="api-main">
+      <div class="panel">
+        <div class="p-head">
+          <h3 id="apiTitle">createacct — Naya hosting account banao</h3>
+          <div class="right"><span class="badge b-info">WHM API 1 Compatible</span></div>
+        </div>
+        <div style="padding:14px">
+          <p id="apiDesc" style="font-size:13.5px;color:#334155;margin-bottom:10px"></p>
+          <div class="flow" id="apiFlow"></div>
+        </div>
+      </div>
+
+      <h4 class="sec">📤 Request (aapka billing software yahi bhejega)</h4>
+      <pre id="apiReq"></pre>
+      <h4 class="sec">📥 Response (panel yahi lautaega)</h4>
+      <pre id="apiRes"></pre>
+
+      <div class="panel" style="margin-top:16px">
+        <div class="p-head">
+          <h3>⚡ Live Demo: Ek hosting account kaise banta hai (60 seconds)</h3>
+          <div class="right"><button class="btn btn-primary" onclick="runProvision()">▶️ Demo chalao</button></div>
+        </div>
+        <div class="timeline" id="provisionTl"></div>
+      </div>
+
+      <div class="note">💡 <b>Aapka custom billing software</b> in API endpoints se baat karega. Kyunki hum <b>WHM API 1 ka exact format</b> follow kar rahe hain, agar kal aap WHMCS pe shift karna chahein to bhi <b>zero code change</b> — seedha kaam karega.</div>
+    </main>
+  </div>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-card">
+    <div class="m-head">
+      <span class="ico" id="mIcon"><svg><use href="#i-folder" id="mUse"/></svg></span>
+      <div><h3 id="mTitle">Tool</h3><div style="font-size:12px;color:var(--muted)" id="mGroup"></div></div>
+      <button class="x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="m-meta" id="mMeta"></div>
+      <p class="desc" id="mDesc"></p>
+      <h4 class="sec">Isme kya kya hoga:</h4>
+      <ul class="feats" id="mFeats"></ul>
+      <div class="note" id="mNote"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- VIEW SWITCH ---------------- */
+function showView(id, btn){
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+  document.getElementById('view-'+id).classList.add('active');
+  document.querySelectorAll('.tab').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---------------- TOOLS (cPanel grid) ---------------- */
+var GROUPS = [
+  {id:'files', name:'📁 Files'},
+  {id:'domains', name:'🌐 Domains'},
+  {id:'email', name:'✉️ Email'},
+  {id:'databases', name:'🗄️ Databases'},
+  {id:'metrics', name:'📊 Metrics'},
+  {id:'security', name:'🔒 Security'},
+  {id:'software', name:'🧩 Software'},
+  {id:'advanced', name:'⚙️ Advanced'},
+  {id:'prefs', name:'👤 Preferences'}
+];
+
+var TOOLS = [
+  {id:'filemanager', g:'files', n:'File Manager', ic:'i-folder', step:'Step 6', name:'File Manager', desc:'cPanel ka sabse famous tool — apni website ki saari files browser se manage karo, FTP client ki zaroorat nahi.', f:['500 MB tak file upload + drag & drop','Zip / Tar / Gz extract & compress (1 click)','Built-in code editor (syntax highlighting)','Permissions (chmod), rename, move, copy, delete','Advanced search + file count/size','Trash bin — galti se delete hone pe recover','Hidden files (.htaccess) support']},
+  {id:'ftp', g:'files', n:'FTP Accounts', ic:'i-ftp', step:'Step 6', name:'FTP Accounts', desc:'FTP/SFTP accounts banao — kaun kahan tak access kar sakta hai, quota ke saath.', f:['FTP account create / delete / password change','Per-FTP-account directory restriction','FTP quota (storage limit)','FTP Session control (kaun live connected hai)','Anonymous FTP (optional)','SFTP over SSH support']},
+  {id:'git', g:'files', n:'Git Version Control', ic:'i-git', step:'Step 6', name:'Git Version Control', desc:'Apni website ka code GitHub/GitLab se deploy karo — direct panel se.', f:['Repo clone karo (private + public)','Manual pull / auto-deploy (webhook)','Branch select karke deploy','Deploy log / history']},
+  {id:'ssh', g:'files', n:'SSH Access', ic:'i-terminal', step:'Step 6', name:'SSH Access & Keys', desc:'Advanced users ke liye secure shell access — jailed (limited) shell ke saath.', f:['SSH access on/off per account','SSH public keys add/remove (passwordless login)','Jailed shell (customer server se bahar nahi ja sakta — 100% safe)','SSH login history + alerts']},
+  {id:'backups', g:'files', n:'Backups', ic:'i-backup', step:'Step 10', name:'Backup & Restore', desc:'Poora account ya sirf files/database/email — jab chaaho backup lo, jab chaaho restore karo.', f:['Full account backup (1 file me sab kuch)','Alag-alag: Home directory / MySQL / Email config / Forwarders','Daily auto-backup (aapki schedule pe)','Remote destinations: S3 / FTP / Google Drive','Restore wizard — 3 click me purani date pe wapas','Backup size + retention control (kitne din rakhne hain)','Download backup button (customer khud le jaaye)']},
+  {id:'diskusage', g:'files', n:'Disk Usage', ic:'i-disk', step:'Step 11', name:'Disk Usage Viewer', desc:'Storage kahan kharch ho raha hai — folder-wise breakdown with cleanup suggestions.', f:['Folder-wise size chart (kaunsa folder kitna bada)','Inode (file count) usage','Email vs Website vs Database ka hisaab','Cleanup suggestions + one-click delete','Quota alert: 80% / 90% / 100% pe notify']},
+
+  {id:'domains', g:'domains', n:'Domains', ic:'i-globe', step:'Step 5', name:'Domains Manager', desc:'Primary domain + saare attached domains ek jagah — ek nazar me.', f:['Primary domain + document root control','Addon domains (naya domain add karo)','Parked/Alias domains','Per-domain SSL status (lock icon)','Domain create date, IP, status','Force HTTPS toggle per domain']},
+  {id:'subdomains', g:'domains', n:'Subdomains', ic:'i-tree', step:'Step 5', name:'Subdomains', desc:'blog.example.com, shop.example.com — jitne chaaho subdomains banao.', f:['Subdomain create / delete','Alag document root (alag website chal sakti hai)','Auto DNS record create','Subdomain pe alag PHP version (advanced)','Propagation status check']},
+  {id:'addon', g:'domains', n:'Addon Domains', ic:'i-plus', step:'Step 5', name:'Addon Domains', desc:'Ek hi hosting me multiple websites — har domain ka alag folder, alag email, alag database.', f:['Naya domain add karo (apna website folder)','Alag email accounts per domain','Alag databases per domain','Package limit ke hisaab se count','Old/cPanel wale addon domains auto-import']},
+  {id:'redirects', g:'domains', n:'Redirects', ic:'i-redirect', step:'Step 5', name:'Redirects', desc:'Ek URL se doosre URL pe bhejo — 301 (permanent) ya 302 (temporary).', f:['Whole domain ya single page redirect','301 permanent / 302 temporary','Wildcard redirects','HTTPS force redirect','Live redirect tester']},
+  {id:'zoneeditor', g:'domains', n:'Zone Editor (DNS)', ic:'i-server', step:'Step 9', name:'DNS Zone Editor', desc:'A, AAAA, CNAME, MX, TXT, SRV, CAA — saare DNS records ka poora control.', f:['Har record type add/edit/delete','SPF / DKIM / DMARC records (deliverability ke liye)','Bulk record add','Zone file download/upload','Record validation + propagation check','Default zone template (naya account auto-setup)']},
+
+  {id:'emailaccounts', g:'email', n:'Email Accounts', ic:'i-mail', step:'Step 7', name:'Email Accounts', desc:'Apne domain pe professional email — you@yourdomain.com. Full IMAP/POP/SMTP support.', f:['Email account create / delete / password change','Per-mailbox STORAGE QUOTA (jaise 2 GB per mailbox)','Mailbox usage bar (kitna bhara)','Auto-config: Outlook, Thunderbird, mobile (IMAP/SMTP)','Sending limit per hour (spam control)','Suspend mailbox / suspend only outgoing mail','Mailbox aliases (sales@ = info@)']},
+  {id:'forwarders', g:'email', n:'Forwarders', ic:'i-forward', step:'Step 7', name:'Email Forwarders', desc:'Aane wale mail ko kisi bhi address pe forward karo — jaise support@yourcompany.com pe.', f:['Single address forwarder','Domain-wide catch-all forwarder','Forward + keep a copy (local copy option)','Forwarder list with usage/count','Test forwarder tool']},
+  {id:'autorespond', g:'email', n:'Autoresponders', ic:'i-autorespond', step:'Step 7', name:'Autoresponders', desc:'Chhutti pe ho? Auto-reply set karo — "Main 5 din tak available nahi hoon".', f:['Auto-reply message + subject','Start / End date-time (vacation mode)','Per-email-account setup','HTML email support (logo, signature)','Reply loop protection']},
+  {id:'filters', g:'email', n:'Email Filters', ic:'i-filter', step:'Step 7', name:'Email Filters', desc:'Rules banao — "agar sender X hai to folder Y me daalo / delete karo / forward karo".', f:['Sieve-based powerful filtering','Rule builder (From / To / Subject / Size / Header)','Actions: move, copy, delete, forward, redirect','Global filters (admin, poore domain pe)','Test rule against sample mail']},
+  {id:'spam', g:'email', n:'Spam Filters', ic:'i-shield', step:'Step 7', name:'Spam & Virus Filters', desc:'SpamAssassin + ClamAV se 99% spam aur virus block — customer ka inbox saaf.', f:['Per-account spam score setting (required score)','Whitelist / Blacklist','Auto-delete high-score spam','Virus scan (ClamAV) on attachments','Spam folder auto-create','Spam report/statistics']},
+  {id:'deliverability', g:'email', n:'Email Deliverability', ic:'i-send', step:'Step 7', name:'Email Deliverability', desc:'Aapke emails Gmail me spam me na jaayein — SPF, DKIM, DMARC, PTR sab auto-set aur monitor.', f:['SPF / DKIM / DMARC auto-setup + health check','PTR (reverse DNS) status','Blacklist monitor (RBL check)','Per-domain deliverability score','One-click fix suggestions','Sending reputation report']},
+  {id:'lists', g:'email', n:'Mailing Lists', ic:'i-list', step:'Step 7', name:'Mailing Lists', desc:'Newsletter / announcement list — ek email pe bhejo, sabko mile.', f:['List create with members','Subscribe / unsubscribe management','Archive + moderation option','List admin password','Bulk import members (CSV)']},
+  {id:'webmail', g:'email', n:'Webmail', ic:'i-globe', step:'Step 7', name:'Webmail (Roundcube)', desc:'Browser se email check karo — Gmail jaisa, apne domain pe (webmail.yourdomain.com).', f:['Roundcube webmail (modern UI)','Calendar + Contacts (optional)','Panel se one-click SSO login','Custom webmail domain + branding','Mobile responsive']},
+
+  {id:'mysqldb', g:'databases', n:'MySQL Databases', ic:'i-db', step:'Step 8', name:'MySQL Databases', desc:'WordPress ya koi bhi app ke liye database banao — size limits ke saath.', f:['Database create / rename / delete','Per-database SIZE LIMIT (jaise 1 GB)','Live DB usage display','Database backup (.sql.gz download) + restore','Database size warning + auto-alert','One-click phpMyAdmin open']},
+  {id:'mysqlusers', g:'databases', n:'MySQL Users', ic:'i-person', step:'Step 8', name:'MySQL Users', desc:'Database users aur unke permissions — kaun kaunse DB pe kya kar sakta hai.', f:['User create with strong password generator','Privilege assignment (SELECT/INSERT/UPDATE/... )','User ko multiple DBs ka access','Password change / user delete','Access host restriction']},
+  {id:'phpmyadmin', g:'databases', n:'phpMyAdmin', ic:'i-gear', step:'Step 8', name:'phpMyAdmin + Adminer', desc:'Database ko GUI se manage karo — SQL queries, import/export, tables.', f:['phpMyAdmin SSO (login without password typing)','Adminer as lightweight alternative','Import / Export (CSV, SQL, Excel)','Query runner + table designer','Per-database access control']},
+  {id:'remotemysql', g:'databases', n:'Remote MySQL', ic:'i-globe', step:'Step 8', name:'Remote MySQL Access', desc:'Bahar se (jaise apne PC se) database connect karo — safe IP allowlist ke saath.', f:['Remote access hosts add/remove','IP-wise allowlist (security)','Per-database remote toggle','Connection testing tool']},
+
+  {id:'bandwidth', g:'metrics', n:'Bandwidth', ic:'i-chart', step:'Step 11', name:'Bandwidth Usage', desc:'Kitna data transfer hua — per domain, per month. Billing ke overage ke liye exact data.', f:['Per-domain monthly bandwidth','Daily / weekly / monthly graphs','Billing API (showbw) se sync','Limit cross hone pe alert + action','Historical data (12 months)']},
+  {id:'visitors', g:'metrics', n:'Visitors', ic:'i-person', step:'Step 11', name:'Visitors & Web Stats', desc:'Kitne log aaye, kahan se aaye, kaunsa page dekha — AWStats/GoAccess se.', f:['AWStats full reports','Real-time visitors (GoAccess)','Referrers, countries, browsers','Top pages + 404s','Download as PDF/CSV']},
+  {id:'resource', g:'metrics', n:'Resource Usage', ic:'i-gauge', step:'Step 11', name:'Resource Usage (CPU / RAM / IO)', desc:'cgroups-based limits — ek customer poori server ka resource na kha jaaye (cPanel+CloudLinux jaisa).', f:['CPU % limit + live usage graph','RAM (memory) limit','Disk I/O speed limit','Process count (NPROC) + entry processes','Fault alerts: "aapki website limit cross kar rahi hai"','Limit cross pe auto-throttle (server safe rahe)']},
+  {id:'errors', g:'metrics', n:'Errors & Logs', ic:'i-warning', step:'Step 11', name:'Errors & Log Viewer', desc:'Website ke errors, access logs, PHP errors — sab debug ke liye live.', f:['Apache/Nginx error log (live tail)','PHP error log','Raw access log + download','Per-domain log isolation','Log rotation + retention control']},
+
+  {id:'ssl', g:'security', n:'SSL / AutoSSL', ic:'i-lock', step:'Step 5', name:'SSL / TLS Manager', desc:'Free SSL (Let\'s Encrypt) auto-install + auto-renew — customer ko kuch nahi karna padta.', f:['AutoSSL: sab domains pe free SSL automatic','Let\'s Encrypt + custom certificate install','CSR + Private Key generator','Force HTTPS redirect (one-click)','SSL expiry alerts + auto-renew','Wildcard SSL support (paid certs)']},
+  {id:'ipblocker', g:'security', n:'IP Blocker', ic:'i-ban', step:'Step 13', name:'IP Blocker', desc:'Koi attacker ya spammer — usko IP se block karo, poori website ya specific folder se.', f:['IP / range / domain block','Block poore account se ya sirf admin se','Temporary vs permanent block','Auto-block after failed logins (cPHulk-style)','Blocked IP list + unblock']},
+  {id:'waf', g:'security', n:'ModSecurity WAF', ic:'i-shield2', step:'Step 13', name:'ModSecurity WAF', desc:'OWASP rules ke saath website firewall — SQL injection, XSS jaise attacks block.', f:['OWASP Core Rule Set','Per-domain WAF on/off','Blocked attacks ka log + report','False-positive whitelist','Rule update automation','Cloudflare-style extra protection (optional)']},
+  {id:'twofa', g:'security', n:'Two-Factor Auth', ic:'i-phone', step:'Step 13', name:'Two-Factor Authentication (2FA)', desc:'Password chori ho bhi jaaye to account safe — OTP ke bina login nahi.', f:['TOTP app support (Google Authenticator)','Backup recovery codes','Email OTP option','Admin force 2FA for sab users (policy)','Login notifications (new device alert)']},
+  {id:'malware', g:'security', n:'Malware Scanner', ic:'i-bug', step:'Step 13', name:'Malware & Security Scanner', desc:'Website me malware, backdoor, blacklist — automatic scan aur cleanup.', f:['Daily automatic malware scan','Known malware signature detection','Suspicious file / backdoor detection','Blacklist monitoring (Google, McAfee)','One-click cleanup + quarantine','Scan report email']},
+  {id:'hotlink', g:'security', n:'Hotlink Protection', ic:'i-link', step:'Step 13', name:'Hotlink & Leech Protection', desc:'Koi aapki images chori karke apni site pe na daal sake — bandwidth bachao.', f:['Hotlink protection (image/video stealing rok)','Allowed domains list','Leech protection (password-protected folders)','Bandwidth theft report']},
+
+  {id:'multiphp', g:'software', n:'MultiPHP Manager', ic:'i-code', step:'Step 5', name:'MultiPHP Manager', desc:'Har domain ke liye alag PHP version — jaise purani site PHP 7.4 pe, nayi 8.3 pe.', f:['PHP 7.4 / 8.1 / 8.2 / 8.3 / 8.4 (sab available)','Per-domain version switch (1 click)','Per-directory version (.htaccess override)','PHP extension manager (gd, igbinary, redis...)','FastCGI / PHP-FPM pool per account','PHP version EOL alerts (purana version warning)']},
+  {id:'phpini', g:'software', n:'PHP INI Editor', ic:'i-gear', step:'Step 5', name:'PHP INI Editor', desc:'memory_limit, upload_max_filesize jaise settings bina coding change karo.', f:['Editor mode + Basic mode','memory_limit, max_execution_time, upload size','Per-domain settings','Safe ranges (server crash protection)','Reset to default']},
+  {id:'installer', g:'software', n:'App Installer', ic:'i-wand', step:'Step 14', name:'One-Click App Installer (50+ Apps)', desc:'WordPress, WooCommerce, Joomla, Magento, Laravel — 60 second me install, Softaculous jaisa.', f:['50+ popular apps one-click install','Auto database + admin account create','Auto SSL + domain setup','Demo mode (test install)','Auto-update with backup-before-update','Clone / staging copies','Update notifications']},
+  {id:'wptoolkit', g:'software', n:'WordPress Toolkit', ic:'i-wp', step:'Step 14', name:'WordPress Toolkit', desc:'WordPress ke liye special tools — staging, clone, security scan, bulk update.', f:['Staging site (safe testing) + 1-click push to live','Clone site (instant copy)','Security scan (core + plugin vulnerabilities)','Bulk plugin/theme/core update','Manage all WordPress sites from one screen','Auto-backup before every update']},
+  {id:'cron', g:'software', n:'Cron Jobs', ic:'i-clock', step:'Step 5', name:'Cron Jobs', desc:'Scheduled tasks — jaise subah 3 baje database backup, daily email bhejna.', f:['Visual cron editor (Common Settings + Advanced)','Output mail to email address','Per-minute to per-year schedules','Cron run log + last run status','Limit per package (jaise max 20 crons)']},
+  {id:'nodejs', g:'software', n:'Node.js / Python', ic:'i-cpu', step:'Step 5', name:'Node.js / Python App Manager', desc:'Modern apps chalao — Node.js, Python, Ruby — cPanel ki tarah.', f:['Node.js app create (auto npm install)','Python / Ruby / PHP-CLI support','Environment variables + restart','Custom start command + port','App logs + error view']},
+
+  {id:'errorpages', g:'advanced', n:'Error Pages', ic:'i-doc', step:'Step 5', name:'Error Pages', desc:'404, 403, 500 pages apne brand ke hisaab se banao.', f:['Per-domain error page editor','400/401/403/404/500 types','HTML editor with preview','Auto template (brand colors)']},
+  {id:'mimetypes', g:'advanced', n:'MIME Types', ic:'i-tag', step:'Step 5', name:'MIME Types', desc:'Kaunsi file kis app se khulegi — server ko batao.', f:['Custom MIME type mapping','Per-user + system-wide','Common presets','Safe validation']},
+  {id:'handlers', g:'advanced', n:'Apache Handlers', ic:'i-server', step:'Step 5', name:'Apache Handlers', desc:'Certain file types ko specific handler se process karwao (CGI, SSI).', f:['Handler add/remove (cgi-script, server-parsed)','Extension mapping','Nginx equivalent auto-config','Security validation']},
+  {id:'indexes', g:'advanced', n:'Indexes', ic:'i-list', step:'Step 5', name:'Directory Indexes', desc:'Folder me index file na ho to file listing dikhe ya "403 Forbidden" — aap decide karo.', f:['Directory indexing on/off','Per-folder control','Show/hide hidden files','Custom index order (index.php, index.html)']},
+  {id:'trackdns', g:'advanced', n:'Track DNS', ic:'i-search', step:'Step 9', name:'Track DNS & Propagation', desc:'Domain abhi kis IP pe point kar raha hai — DNS propagation ka live check.', f:['Domain → IP lookup','Nameserver check','Propagation check (world-wide servers)','Traceroute tool','Reverse DNS (PTR) lookup']},
+
+  {id:'password', g:'prefs', n:'Password & Security', ic:'i-key', step:'Step 2', name:'Password & Security', desc:'Apna password change karo + login history dekho.', f:['Strong password generator','Password change (instant)','Login history (IP, time, device)','Active sessions — "logout all devices"','Password strength meter + policy']},
+  {id:'language', g:'prefs', n:'Language (हिंदी)', ic:'i-globe', step:'Step 2', name:'Panel Language', desc:'Panel 20+ languages me — Hindi bhi! Aapke customers ko aasan lagega.', f:['Hindi, English + 20 languages','Per-user preference','RTL support (Arabic/Urdu)','Translation manager (aap custom bhi kar sakte ho)']},
+  {id:'contact', g:'prefs', n:'Contact Info', ic:'i-person', step:'Step 2', name:'Contact Information', desc:'Notification email, phone — kahan alerts aayenge.', f:['Notification email update','Secondary/backup email','Phone (SMS alerts optional)','Notification preferences (kaunse alerts chahiye)']},
+  {id:'branding', g:'prefs', n:'Theme / Branding', ic:'i-palette', step:'Step 2', name:'Theme & Branding', desc:'Panel ka look — aapke brand ka logo aur colors.', f:['Logo upload + favicon','Color theme (brand colors)','Custom login page designer','Email template branding','White-label for resellers']}
+];
+
+var TOOLMAP = {};
+TOOLS.forEach(function(t){ TOOLMAP[t.id] = t; });
+
+/* Extra modal-only entries (WHM actions etc.) */
+var EXTRA = {
+  createacct:{name:'Create a New Hosting Account', group:'WHM · Account Functions', ic:'i-plus', step:'Step 3', desc:'Ek hi form se pura hosting account ready — website, email, DNS, FTP, SSL, database sab automatic. Billing se aane wala createacct API bhi yahi engine use karta hai.', f:['Domain + username + password (auto-generate option)','Package select (limit auto-apply)','DKIM + SPF auto-setup checkbox','SSL auto-issue (Let\'s Encrypt)','Welcome email auto-send (credentials ke saath)','Rollback: koi step fail ho to pura undo (adha-adhura account nahi)','Time: ~60 seconds me account live']},
+  suspend:{name:'Suspend Account', group:'WHM · Account Functions', ic:'i-power', step:'Step 3', desc:'Account band karo — website "Account Suspended" page dikhayegi, email band, FTP band. Billing unpaid pe yahi automatic chalta hai.', f:['Reason note (audit ke liye)','Website → suspension page','Email + FTP + cron sab band','Admin panel se kabhi bhi unsuspend','Auto-suspend rule: invoice X din unpaid']},
+  unsuspend:{name:'Unsuspend Account', group:'WHM · Account Functions', ic:'i-refresh', step:'Step 3', desc:'Payment aa gayi? Ek click me account wapas live — sab services restart.', f:['Website + email + FTP wapas live','Customer ko "account restored" email','Billing webhook se auto-trigger']},
+  terminate:{name:'Terminate Account', group:'WHM · Account Functions', ic:'i-trash', step:'Step 3', desc:'Account permanently delete — pehle final backup lene ka option.', f:['Final backup option (safety)','Confirm domain typing (double safety)','Sab data remove (files, email, DB, DNS)','Linux user + quota delete','Audit log entry']},
+  changepkg:{name:'Change Package / Upgrade', group:'WHM · Account Functions', ic:'i-chart', step:'Step 4', desc:'Customer ka plan upgrade/downgrade — limits instantly change, kuch restart nahi chahiye.', f:['Package dropdown (aapke saare plans)','Instant limit update (disk, email, DBs)','Downgrade pe over-limit warning','Customer ko confirmation email','Billing se changepackage API bhi yahi karta hai']},
+  quota:{name:'Edit Disk Quota', group:'WHM · Account Functions', ic:'i-disk', step:'Step 4', desc:'Kisi ek account ka storage custom set karo — package se alag.', f:['Custom quota (MB/GB)','Instant apply (no downtime)','Usage bar update','Alert thresholds set']},
+  packages:{name:'Hosting Packages', group:'WHM · Configuration', ic:'i-folder', step:'Step 4', desc:'Plans banao — Starter/Business/Pro. Har package me 20+ limits set hoti hain (bilkul cPanel jaise).', f:['QUOTA, BWLIMIT (disk + bandwidth)','MAXPOP, MAXFWD, MAXLST, MAXRESP (email)','MAXSQL, MAXSUB, MAXPARK, MAXADDON, MAXFTP, MAXCRON','CPU/RAM/IO limits (cgroups)','Inodes limit + per-mailbox size','Unlimited option kisi bhi limit pe','Duplicate package / import from cPanel']},
+  apikeys:{name:'API Tokens', group:'WHM · Security', ic:'i-key', step:'Step 12', desc:'Billing software ke liye API token banao — per-function permissions ke saath (bilkul cPanel jaisa).', f:['Token create (name + expiry)','Function-wise permissions (createacct, suspendacct...)','IP allowlist (sirf billing server se access)','Token revoke (turant)','Usage log — kis token ne kya kiya']},
+  dns:{name:'DNS Cluster', group:'WHM · Configuration', ic:'i-server', step:'Step 9', desc:'2+ servers ka DNS cluster — ek server down ho to bhi customer ke domains chalte rahein.', f:['Cluster add/remove servers','Zone auto-sync','Standalone ya cluster mode','Zone template management','Sync status monitor']},
+  backup:{name:'Backup Center (Admin)', group:'WHM · Operations', ic:'i-backup', step:'Step 10', desc:'Poore server ka backup — saare accounts, ek schedule pe, remote storage pe.', f:['Server-wide backup schedule','Per-account backup policy','Remote: S3 / FTP / Google Drive','Restore single account / single file','Backup integrity check','Storage usage report']},
+  mailq:{name:'Mail Queue Manager', group:'WHM · Email', ic:'i-mail', step:'Step 7', desc:'Atke hue emails dekho — spammer pakdo, queue clear karo.', f:['Queue list (sender, recipient, size, age)','Delivery attempt log','Single mail delete / retry','Anti-spam rules auto-alert','Per-account send rate monitor']},
+  restore:{name:'Restore Backup', group:'WHM · Operations', ic:'i-refresh', step:'Step 10', desc:'Purani backup wapas lao — poora account ya sirf ek file.', f:['Account-wise backup list (date-wise)','Partial restore (sirf files / sirf DB / sirf email)','Point-in-time restore','Restore progress + log','Automatic restore email notification']},
+  migrate:{name:'cPanel Migration Tool', group:'WHM · Operations', ic:'i-cloud', step:'Step 10', desc:'cPanel ka full backup file (.tar.gz) import karke account humare panel pe restore karo — customers shift karane ke liye superpower!', f:['cPanel full backup import','Files + DB + email + DNS sab migrate','Package mapping (unka plan → aapka plan)','Bulk migration (ek saath 100 accounts)','Live migration (downtime kam)','Migration report']},
+  compose:{name:'Compose Mail', group:'Webmail', ic:'i-send', step:'Step 7', desc:'Roundcube webmail — Gmail jaisa compose, attachments aur signatures ke saath.', f:['Rich text compose','File attachments (up to server limit)','Contacts + autocomplete','Drafts auto-save','Signature management','Reply / Forward / Reply-All']},
+  passwd:{name:'Change Password (Account)', group:'WHM · Account Functions', ic:'i-key', step:'Step 3', desc:'Customer ka hosting password reset karo — turant apply, customer ko notification email.', f:['Strong password auto-generate','Instant apply (email/FTP/panel sab jagah)','Customer ko security notification email','Optional: force change on next login','Billing ke passwd API se bhi yahi chalta hai']}
+};
+
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+
+/* ---------- Render cPanel tool grid ---------- */
+function renderTools(filter){
+  var area = document.getElementById('toolArea');
+  var q = (filter||'').trim().toLowerCase();
+  var html = '';
+  var shown = 0;
+  GROUPS.forEach(function(g){
+    var list = TOOLS.filter(function(t){ return t.g===g.id && (!q || t.n.toLowerCase().indexOf(q)>-1); });
+    if(!list.length) return;
+    shown += list.length;
+    html += '<div class="group"><h3>'+g.name+' <span class="cnt">'+list.length+' tools</span></h3><div class="toolgrid">';
+    list.forEach(function(t){
+      html += '<div class="tool" onclick="openTool(\''+t.id+'\')" title="'+esc(t.name)+'">'+
+        '<span class="ico"><svg><use href="#'+t.ic+'"/></svg></span>'+
+        '<span>'+esc(t.n)+'</span><span class="st">'+t.step+'</span></div>';
+    });
+    html += '</div></div>';
+  });
+  if(!shown) html = '<div class="group nomatch">😕 Kuch nahi mila — doosra keyword try karo (jaise "mail", "ssl", "file")</div>';
+  area.innerHTML = html;
+}
+function filterTools(v){ renderTools(v); }
+
+/* ---------- MODAL ---------- */
+function fillModal(t){
+  document.getElementById('mTitle').textContent = t.name;
+  document.getElementById('mGroup').textContent = t.group || 'cPanel Module';
+  document.getElementById('mUse').setAttribute('href','#'+(t.ic||'i-folder'));
+  var meta = '<span class="chip">'+t.step+'</span><span class="chip g">Roadmap me included ✅</span>';
+  if(t.group && t.group.indexOf('WHM')>-1) meta = '<span class="chip o">Admin (WHM-side)</span>'+meta;
+  document.getElementById('mMeta').innerHTML = meta;
+  document.getElementById('mDesc').textContent = t.desc || '';
+  document.getElementById('mFeats').innerHTML = (t.f||[]).map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+  document.getElementById('mNote').innerHTML = '🧭 <b>Roadmap:</b> Ye module <b>'+t.step+'</b> me banega. Poora step-wise plan master plan document me hai.';
+}
+function openTool(id){
+  var t = TOOLMAP[id]; if(t){ t = {name:t.name, group:(GROUPS.filter(function(g){return g.id===t.g;})[0]||{}).name, ic:t.ic, step:t.step, desc:t.desc, f:t.f}; }
+  else t = EXTRA[id];
+  if(!t) return;
+  fillModal(t);
+  document.getElementById('modal').classList.add('open');
+}
+function openModal(id){
+  var t = EXTRA[id] || TOOLMAP[id];
+  if(!t) return;
+  if(TOOLMAP[id] && !EXTRA[id]) t = TOOLMAP[id];
+  fillModal(t);
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+
+/* ---------- WHM account filter ---------- */
+function filterAccounts(v){
+  var q = v.trim().toLowerCase();
+  var rows = document.querySelectorAll('#acctTable tbody tr');
+  rows.forEach(function(r){
+    r.style.display = (!q || r.textContent.toLowerCase().indexOf(q)>-1) ? '' : 'none';
+  });
+}
+
+/* ---------- API VIEW ---------- */
+var API_FUNCS = [
+  {fn:'createacct', d:'Naya hosting account banao', trig:'Order paid hone pe (billing → panel)'},
+  {fn:'suspendacct', d:'Account suspend karo', trig:'Invoice X din unpaid'},
+  {fn:'unsuspendacct', d:'Account wapas chalu karo', trig:'Payment receive hone pe'},
+  {fn:'removeacct', d:'Account delete (terminate)', trig:'X din baad ya cancellation pe'},
+  {fn:'changepackage', d:'Plan upgrade / downgrade', trig:'Customer plan change kare'},
+  {fn:'editquota', d:'Custom disk quota set karo', trig:'Add-on storage purchase'},
+  {fn:'passwd', d:'Account password change', trig:'Client area se password change'},
+  {fn:'listaccts', d:'Saare accounts ki list', trig:'Billing daily sync / admin dashboard'},
+  {fn:'accountsummary', d:'Ek account ki full detail', trig:'Client area info display'},
+  {fn:'showbw', d:'Bandwidth usage report', trig:'Monthly usage billing / overage'},
+  {fn:'listpkgs', d:'Hosting packages list', trig:'Billing product dropdown sync'},
+  {fn:'create_user_session', d:'cPanel me SSO login link banao', trig:'"Login to cPanel" button'}
+];
+
+var API_DATA = {
+  createacct:{
+    title:'createacct — Naya hosting account banao',
+    desc:'Jab customer order karta hai aur payment confirm hoti hai, aapka billing software ye call karta hai. Panel 60 second me pura account ready karke response deta hai.',
+    flow:[['Billing: Order Paid','invoice #2041',''],['createacct (API)','port 2087 · token auth','hot'],[
+      'Panel: Provisioning Engine','user + disk + web + mail + DNS + SSL',''],['Response: account created','username, IP, status','cool']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/createacct" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "username=exmpuser" \\\n  --data-urlencode "domain=example.com" \\\n  --data-urlencode "plan=Business" \\\n  --data-urlencode "password=S3cur3-Pa55" \\\n  --data-urlencode "contactemail=rahul@example.com" \\\n  --data-urlencode "dkim=1" --data-urlencode "spf=1"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "createacct" },\n  "data": {\n    "status": 1,\n    "statusmsg": "Account Creation Complete!!!",\n    "user": "exmpuser",\n    "domain": "example.com",\n    "ip": "203.0.113.10",\n    "package": "Business",\n    "quota": "10240",\n    "maxpop": "50",\n    "maxsql": "25",\n    "nameserver": "ns1.alphacp.in",\n    "nameserver2": "ns2.alphacp.in"\n  }\n}'
+  },
+  suspendacct:{
+    title:'suspendacct — Account suspend karo (unpaid invoice)',
+    desc:'Billing software ka cron daily check karta hai: invoice unpaid hai? To ye call jaati hai. Website ek "Account Suspended" page dikhati hai, email/FTP band ho jaate hain — data safe rehta hai.',
+    flow:[['Billing: Invoice #2041','7 din unpaid','hot'],['suspendacct (API)','reason: Unpaid Invoice','hot'],['Panel: Account Suspended','web + mail + FTP band',''],['Customer: Suspension Page','"Kripya payment karein"','']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/suspendacct" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "user=testapp" \\\n  --data-urlencode "reason=Unpaid Invoice #2041"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "suspendacct" },\n  "data": {\n    "status": 1,\n    "statusmsg": "Suspended account testapp",\n    "user": "testapp",\n    "reason": "Unpaid Invoice #2041",\n    "suspended_at": "2026-09-28 08:12:44",\n    "web": "suspended",\n    "mail": "suspended",\n    "ftp": "suspended"\n  }\n}'
+  },
+  unsuspendacct:{
+    title:'unsuspendacct — Payment aayi, account chalu karo',
+    desc:'Payment gateway ka webhook aate hi (ya manually) ye call hoti hai. Account turant live, customer ko welcome-back email.',
+    flow:[['Payment Received','Razorpay / Stripe webhook','cool'],['unsuspendacct (API)','','cool'],['Panel: Services ON','web + mail + FTP chalu',''],['Email: "Account Restored"','customer ko notify','']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/unsuspendacct" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "user=testapp"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "unsuspendacct" },\n  "data": {\n    "status": 1,\n    "statusmsg": "Unsuspended account testapp",\n    "user": "testapp"\n  }\n}'
+  },
+  removeacct:{
+    title:'removeacct — Account terminate karo',
+    desc:'Cancellation + 30 din grace period ke baad. Pehle final backup ka option, phir poora data remove.',
+    flow:[['Cancellation Request','30 din pehle',''],['Grace Period','reminder emails',''],['removeacct (API)','final backup optional','hot'],['Data Removed','audit log entry','']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/removeacct" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "username=testapp" \\\n  --data-urlencode "keepdns=0"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "removeacct" },\n  "data": {\n    "status": 1,\n    "statusmsg": "Account removed",\n    "user": "testapp",\n    "final_backup": "/backup/final/testapp-2026-09-28.tar.gz"\n  }\n}'
+  },
+  changepackage:{
+    title:'changepackage — Plan upgrade / downgrade',
+    desc:'Customer plan badle (Starter → Business), billing ye call karta hai. Limits instantly update — website/email restart ki zaroorat nahi.',
+    flow:[['Customer: Plan Upgrade','Starter → Business',''],['changepackage (API)','',''],['Panel: Limits Updated','10GB, 50 emails, 25 DBs',''],['Customer: Confirmation','"Aapka plan upgrade ho gaya"','cool']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/changepackage" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "user=exmpuser" \\\n  --data-urlencode "pkg=Business"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "changepackage" },\n  "data": {\n    "status": 1,\n    "statusmsg": "Changed package for exmpuser to Business",\n    "newquota": "10240",\n    "newmaxpop": "50"\n  }\n}'
+  },
+  editquota:{
+    title:'editquota — Custom disk quota set karo',
+    desc:'Customer ne extra 20 GB storage kharida? Billing ye call karke quota instant badha deta hai.',
+    flow:[['Add-on: +20 GB Storage','purchase complete',''],['editquota (API)','quota=30720 (MB)',''],['Panel: Quota Applied','usage bar update',''],['Invoice Line Item','next bill me add','']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/editquota" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "user=exmpuser" \\\n  --data-urlencode "quota=30720"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "editquota" },\n  "data": {\n    "status": 1,\n    "statusmsg": "Quota updated to 30720 MB"\n  }\n}'
+  },
+  passwd:{
+    title:'passwd — Password change',
+    desc:'Client area se password change → billing → panel. Ya admin ke liye force-reset.',
+    flow:[['Client Area: New Password','',''],['passwd (API)','',''],['Panel: Password Updated','',''],['Email: Security Notification','"Aapka password badla gaya"','cool']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/passwd" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "user=exmpuser" \\\n  --data-urlencode "password=N3w-S3cur3-Pa55"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "passwd" },\n  "data": { "status": 1, "statusmsg": "Password changed" }\n}'
+  },
+  listaccts:{
+    title:'listaccts — Saare accounts ki list',
+    desc:'Billing daily sync karta hai — kaun kaun active hai, kisne kitna use kiya. Admin dashboard bhi isi data se banta hai.',
+    flow:[['Billing Cron (daily)',''],['listaccts (API)','search / pagination',''],['Panel: Accounts JSON','128 accounts',''],['Billing: DB Sync','usage + status update','cool']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/listaccts" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "searchtype=package" \\\n  --data-urlencode "search=Business"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "listaccts" },\n  "data": {\n    "acct": [\n      { "user":"exmpuser","domain":"example.com","plan":"Business",\n        "diskused":"6553","disklimit":"10240","suspended":"0","emailcount":"8" },\n      { "user":"startupapi","domain":"api.startup.co","plan":"Business",\n        "diskused":"3174","disklimit":"10240","suspended":"0","emailcount":"6" }\n    ]\n  }\n}'
+  },
+  accountsummary:{
+    title:'accountsummary — Ek account ki detail',
+    desc:'Client area me "My Hosting" page isi API se bharta hai — disk, bandwidth, email, DB count sab live.',
+    flow:[['Client area load',''],['accountsummary (API)','user=exmpuser',''],['Panel: Live data','disk, bw, mail, db, ssl',''],['Client UI: Stats Cards','live update','cool']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/accountsummary" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "user=exmpuser"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "accountsummary" },\n  "data": {\n    "acct": [{\n      "user":"exmpuser","domain":"example.com","plan":"Business",\n      "diskused":"6553","disklimit":"10240",\n      "bandwidthused":"34816","bandwidthlimit":"102400",\n      "emailcount":"8","maxpop":"50",\n      "dbcount":"3","maxsql":"25",\n      "ssl_status":"valid","uptime_days":"112"\n    }]\n  }\n}'
+  },
+  showbw:{
+    title:'showbw — Bandwidth usage report',
+    desc:'Monthly bandwidth ka exact data — billing overage charge ya customer report ke liye.',
+    flow:[['Month End / Daily',''],['showbw (API)','month + year',''],['Panel: BW Data','per domain usage',''],['Billing: Overage Invoice','usdata ke hisaab se','cool']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/showbw" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "month=9" --data-urlencode "year=2026"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "showbw" },\n  "data": {\n    "bandwidth": [{\n      "user":"exmpuser","domain":"example.com",\n      "totalbytes":36495671296,\n      "limit":104857600000,\n      "percent":"34.8"\n    }]\n  }\n}'
+  },
+  listpkgs:{
+    title:'listpkgs — Hosting packages list',
+    desc:'Billing ke product dropdown isi se sync karte hain — aap naya package banao, billing me automatically dikh jaaye.',
+    flow:[['Admin: Naya Package','Business Pro banao',''],['listpkgs (API)','',''],['Billing: Sync Products','naya plan auto-add','cool'],['Order Form: Plan Available','customer choose kare','']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/listpkgs" \\\n  --data-urlencode "api.version=1"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "listpkgs" },\n  "data": { "pkg": [\n    { "name":"Starter","quota":"5120","bwlimit":"51200","maxpop":"20","maxsql":"5" },\n    { "name":"Business","quota":"10240","bwlimit":"102400","maxpop":"50","maxsql":"25" },\n    { "name":"Pro","quota":"25600","bwlimit":"204800","maxpop":"100","maxsql":"100" }\n  ]}\n}'
+  },
+  create_user_session:{
+    title:'create_user_session — "Login to Panel" button',
+    desc:'Billing ke client area me "Login to cPanel" button — customer ko password type kiye bina seedha panel me (SSO).',
+    flow:[['Client Area: Click "Login to cPanel"',''],['create_user_session (API)','',''],['Panel: One-time SSO URL','secure token link',''],['Browser: Panel Dashboard','customer logged in 🎉','cool']],
+    req:'curl -s -G -H "Authorization: whm root:TOKEN_ABC123" \\\n  "https://srv1.alphacp.in:2087/json-api/create_user_session" \\\n  --data-urlencode "api.version=1" \\\n  --data-urlencode "user=exmpuser" \\\n  --data-urlencode "service=cpaneld"',
+    res:'{\n  "metadata": { "version": 1, "result": 1, "reason": "OK", "command": "create_user_session" },\n  "data": {\n    "url": "https://example.com:2083/cpsess8473920156/login?session=one-time-token",\n    "expires": 300\n  }\n}'
+  }
+};
+
+var curFn = 'createacct';
+function renderApiList(){
+  var el = document.getElementById('apiFnList');
+  el.innerHTML = API_FUNCS.map(function(a){
+    return '<div class="fn'+(a.fn===curFn?' on':'')+'" onclick="selectApi(\''+a.fn+'\')"><code>'+a.fn+'</code><span>'+esc(a.d)+'</span></div>';
+  }).join('');
+}
+function selectApi(fn){
+  curFn = fn;
+  renderApiList();
+  var d = API_DATA[fn]; if(!d) return;
+  document.getElementById('apiTitle').textContent = d.title;
+  document.getElementById('apiDesc').textContent = d.desc;
+  document.getElementById('apiFlow').innerHTML = d.flow.map(function(f,i){
+    var cls = f[2]==='hot' ? ' hot' : (f[2]==='cool' ? ' cool' : '');
+    var html = '<div class="fbox'+cls+'">'+esc(f[0])+'<small>'+esc(f[1])+'</small></div>';
+    if(i < d.flow.length-1) html += '<span class="farrow">→</span>';
+    return html;
+  }).join('');
+  document.getElementById('apiReq').textContent = d.req;
+  document.getElementById('apiRes').textContent = d.res;
+}
+
+/* ---------- Provisioning demo ---------- */
+var PROV_STEPS = [
+  ['Token verify + order validate','Billing se aayi request authenticate (API token, IP check)'],
+  ['Linux user + home directory','/home/exmpuser banaya, skeleton files copy'],
+  ['Disk quota + resource limits','10 GB disk, CPU 100%, RAM 1 GB, IO limit apply'],
+  ['Website setup','vhost template (Apache + Nginx) + placeholder page'],
+  ['DNS zone create','A, MX, SPF, DKIM, DMARC records + nameservers'],
+  ['Mail system setup','Dovecot mailbox + Exim domain + welcome email ready'],
+  ['MySQL + user + privileges','Database exmpuser_wp + dedicated DB user'],
+  ['SSL certificate issue','Let\'s Encrypt se HTTPS live (auto-renew ON)'],
+  ['Welcome email + credentials','Customer ko login details bhej diya'],
+  ['Webhook → Billing: account.created','Aapke billing software ko success notify 🎉']
+];
+function renderProvision(){
+  document.getElementById('provisionTl').innerHTML = PROV_STEPS.map(function(s,i){
+    return '<div class="tl" id="tl'+i+'"><div class="tk">✓</div><div><b>'+esc(s[0])+'</b><small>'+esc(s[1])+'</small></div></div>';
+  }).join('');
+}
+function runProvision(){
+  renderProvision();
+  var i = 0;
+  function next(){
+    if(i >= PROV_STEPS.length) return;
+    document.getElementById('tl'+i).classList.add('done');
+    i++;
+    setTimeout(next, 520);
+  }
+  next();
+}
+
+/* ---------- INIT ---------- */
+renderTools('');
+renderApiList();
+selectApi('createacct');
+renderProvision();
+</script>
+</body>
+</html>

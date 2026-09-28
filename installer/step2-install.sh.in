@@ -1,0 +1,510 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  AlphaCP — Step 2 installer: paneld agent + task queue + alphacp CLI v0.2
+#  Version 0.2.0
+# -----------------------------------------------------------------------------
+#  WHAT IT DOES
+#    1. creates the `alphacp` MariaDB database + app user (random password)
+#    2. applies db/migrations/*.sql (tracked in schema_migrations)
+#    3. installs the root task agent to /usr/local/alphacp/agent (paneld)
+#    4. installs the new `alphacp` CLI v0.2 (task run/list/show/doctor)
+#    5. registers this server in the `servers` table
+#    6. starts paneld via systemd and runs an end-to-end self test
+#
+#  WHAT IT DOES **NOT** DO
+#    - no customer accounts, no mail, no DNS changes (those are later steps)
+#    - it never touches /home, /etc/<service> confs or running websites
+#
+#  PAYLOAD
+#    The agent source + CLI + migrations are embedded (base64 tar) so this is
+#    a true one-file install. Rebuild after code changes with:
+#        python3 tools/build-step2-installer.py
+#
+#  FLAGS
+#    --dry-run        plan only, change nothing
+#    --yes            no prompts
+#    --force          redo steps that look already done
+#    --allow-unsupported   run on non-Ubuntu Debian-family (dev/test only)
+#
+#  Generated file — do not edit by hand. Edit step2-install.sh.in instead.
+# =============================================================================
+set -euo pipefail
+
+ACP_STEP2_VERSION="0.2.0"
+TAR_SHA256="${ACP_TAR_SHA256}"
+
+ACP_HOME="/usr/local/alphacp"
+STAGE="/tmp/alphacp-step2-payload.$$"
+LOG_FILE="/var/log/alphacp-step2-install.log"
+DB_NAME="alphacp"
+DB_USER="alphacp"
+DB_HOST="localhost"
+
+DRY_RUN=0; ASSUME_YES=0; FORCE=0; ALLOW_UNSUPPORTED=0
+SERVER_NAME=""   # --server-name=NAME (default: short hostname)
+ORIG_ARGS=()
+
+C_RESET=$'\033[0m'; C_BOLD=$'\033[1m'; C_DIM=$'\033[2m'
+C_GREEN=$'\033[32m'; C_RED=$'\033[31m'; C_YELLOW=$'\033[33m'; C_BLUE=$'\033[34m'
+
+log() { local lvl="$1"; shift; { printf '%s [%s] %s\n' "$(date '+%F %T')" "$lvl" "$*" >>"${LOG_FILE}"; } 2>/dev/null || true; }
+say()  { printf '%s\n' "$*"; }
+info() { log INFO "$*";  say "${C_BLUE}[i]${C_RESET} $*"; }
+ok()   { log OK "$*";    say "${C_GREEN}[OK]${C_RESET} $*"; }
+warn() { log WARN "$*";  say "${C_YELLOW}[!]${C_RESET} $*"; }
+err()  { log ERROR "$*"; say "${C_RED}[x]${C_RESET} $*" >&2; }
+step() { say ""; say "${C_BOLD}${C_BLUE}==> $*${C_RESET}"; log STEP "$*"; }
+die()  { err "$*"; say ""; say "Full log: ${LOG_FILE}"; exit 1; }
+
+cleanup() { rm -rf "$STAGE" 2>/dev/null || true; }
+trap cleanup EXIT
+
+run() { # run a command (respects --dry-run, output goes to the log)
+  log CMD "$*"
+  if (( DRY_RUN )); then say "    ${C_DIM}(dry-run)${C_RESET} $*"; return 0; fi
+  "$@" >>"${LOG_FILE}" 2>&1
+}
+run_try() {
+  log CMD "(try) $*"
+  if (( DRY_RUN )); then say "    ${C_DIM}(dry-run)${C_RESET} $*"; return 0; fi
+  "$@" >>"${LOG_FILE}" 2>&1 || { log WARN "command failed (ignored): $*"; return 1; }
+}
+run_out() {
+  log CMD "$*"
+  if (( DRY_RUN )); then say "    ${C_DIM}(dry-run)${C_RESET} $*"; return 0; fi
+  "$@" 2>&1 | tee -a "${LOG_FILE}"
+}
+
+confirm() {
+  if (( ASSUME_YES )) || (( DRY_RUN )); then return 0; fi
+  local reply
+  read -r -p "${C_BOLD}$1 [y/N]: ${C_RESET}" reply || true
+  [[ "${reply,,}" == "y" || "${reply,,}" == "yes" ]]
+}
+
+usage() {
+  cat <<'EOF'
+AlphaCP Step 2 installer — paneld agent + task queue + CLI v0.2
+
+Usage: sudo bash step2-install.sh [options]
+
+  --dry-run              plan only, change nothing
+  --yes|-y               no prompts (background-friendly)
+  --force                redo steps that look already done
+  --allow-unsupported    allow non-Ubuntu Debian-family (dev/test only)
+  --server-name=NAME     name this server in the panel (default: short hostname)
+  --help                 this help
+EOF
+}
+
+parse_args() {
+  for arg in "$@"; do
+    case "$arg" in
+      --dry-run)            DRY_RUN=1 ;;
+      --yes|-y)             ASSUME_YES=1 ;;
+      --force)              FORCE=1 ;;
+      --allow-unsupported)  ALLOW_UNSUPPORTED=1 ;;
+      --server-name=*)      SERVER_NAME="${arg#*=}" ;;
+      --help|-h)            usage; exit 0 ;;
+      *) usage; die "Unknown option: $arg" ;;
+    esac
+  done
+}
+
+# -----------------------------------------------------------------------------
+#  helpers
+# -----------------------------------------------------------------------------
+mysql_root() { mariadb --protocol=socket -u root "$@"; }
+
+sysd() { if [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; then return 0; else return 1; fi; }
+
+os_id() { . /etc/os-release 2>/dev/null || true; printf '%s' "${ID:-unknown}"; }
+os_ver() { . /etc/os-release 2>/dev/null || true; printf '%s' "${VERSION_ID:-0}"; }
+
+detect_php() {
+  if command -v php >/dev/null 2>&1; then command -v php; return 0; fi
+  local v
+  for v in 8.4 8.3 8.2 8.1; do
+    if [[ -x "/usr/bin/php${v}" ]]; then echo "/usr/bin/php${v}"; return 0; fi
+  done
+  return 1
+}
+
+extract_payload() {
+  local b64
+  b64="$(sed -n '/^# @@PAYLOAD_BEGIN@@$/,/^# @@PAYLOAD_END@@$/p' "$0" | sed '1d;$d')"
+  [[ -n "$b64" ]] || die "payload missing from this script (re-download it)"
+
+  rm -rf "$STAGE"; mkdir -p "$STAGE"
+  printf '%s' "$b64" | base64 -d > "${STAGE}/payload.tar.gz" || die "payload decode failed"
+
+  local got; got="$(sha256sum "${STAGE}/payload.tar.gz" | awk '{print $1}')"
+  if [[ "$got" != "${TAR_SHA256}" ]]; then
+    die "payload checksum mismatch (got ${got:0:12}…, expected ${TAR_SHA256:0:12}…) — file is corrupt, re-download"
+  fi
+  ok "payload verified (sha256 ${TAR_SHA256:0:16}…)"
+
+  tar -xzf "${STAGE}/payload.tar.gz" -C "$STAGE" || die "payload extract failed"
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 0 — preflight
+# -----------------------------------------------------------------------------
+phase_preflight() {
+  step "Phase 0/4 — Preflight"
+
+  if (( ! DRY_RUN )) && [[ "${EUID}" -ne 0 ]]; then
+    if command -v sudo >/dev/null 2>&1 && [[ -f "${BASH_SOURCE[0]}" ]]; then
+      info "Not root — re-running with sudo..."
+      exec sudo -E bash "${BASH_SOURCE[0]}" "${ORIG_ARGS[@]}"
+    fi
+    die "Please run as root:  sudo bash $0"
+  fi
+  ok "root privileges confirmed"
+
+  local id ver; id="$(os_id)"; ver="$(os_ver)"
+  case "${id}:${ver}" in
+    ubuntu:22.04|ubuntu:24.04) ok "OS supported: Ubuntu ${ver} LTS" ;;
+    *)
+      if (( ALLOW_UNSUPPORTED )); then
+        warn "OS ${id} ${ver} not officially supported (continuing: --allow-unsupported)"
+      else
+        die "Unsupported OS: ${id} ${ver}. Supported: Ubuntu 22.04 / 24.04 (use --allow-unsupported for dev tests)"
+      fi ;;
+  esac
+
+  command -v mariadb >/dev/null 2>&1 || die "mariadb client missing — run installer/install.sh (Step 1) first"
+  mysql_root -e 'SELECT 1' >/dev/null 2>&1 || die "MariaDB root access failed — is mariadb running? (Step 1)"
+  ok "MariaDB reachable"
+
+  local php_bin; php_bin="$(detect_php)" || die "PHP CLI missing (Step 1 installs php-fpm/cli)"
+  [[ "$(php -m 2>/dev/null | grep -ci pdo_mysql)" -ge 1 ]] || die "php pdo_mysql missing — apt install php-mysql"
+  ok "PHP CLI: ${php_bin} ($(php -r 'echo PHP_VERSION;')) with pdo_mysql"
+
+  if ! (( FORCE )) && [[ -f "${ACP_HOME}/agent/bin/paneld" ]]; then
+    info "paneld already installed — use --force to reinstall/upgrade"
+  fi
+
+  mkdir -p "${ACP_HOME}"/{agent,etc,logs,var,releases,bin}
+  ok "layout ready: ${ACP_HOME}"
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 1 — database
+# -----------------------------------------------------------------------------
+phase_database() {
+  step "Phase 1/4 — Database"
+
+  local env_file="${ACP_HOME}/etc/database.env"
+  local pass=""
+
+  if [[ -f "$env_file" ]] && ! (( FORCE )); then
+    pass="$(grep -E '^ACP_DB_PASS=' "$env_file" | cut -d= -f2-)"
+    info "existing credentials found — keeping them"
+  fi
+  if [[ -z "$pass" ]]; then
+    pass="$(openssl rand -base64 32 2>/dev/null | tr -dc 'A-Za-z0-9' | head -c 28)"
+    [[ -n "$pass" ]] || die "could not generate a password (openssl missing?)"
+  fi
+
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} create database ${DB_NAME} + user ${DB_USER}@localhost"
+  else
+    mysql_root <<SQL
+CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${pass}';
+CREATE USER IF NOT EXISTS '${DB_USER}'@'127.0.0.1' IDENTIFIED BY '${pass}';
+ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${pass}';
+ALTER USER '${DB_USER}'@'127.0.0.1' IDENTIFIED BY '${pass}';
+GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';
+GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'127.0.0.1';
+FLUSH PRIVILEGES;
+SQL
+    ok "database + user ready"
+  fi
+
+  # credentials for PHP (parsed by paneld)
+  if (( ! DRY_RUN )); then
+    install -m 0600 /dev/null "$env_file"
+    cat > "$env_file" <<EOF
+# AlphaCP database credentials — generated by step2-install.sh
+# mode 0600, root-only. Parsed by paneld (agent) and the panel app.
+ACP_DB_HOST=${DB_HOST}
+ACP_DB_PORT=3306
+ACP_DB_NAME=${DB_NAME}
+ACP_DB_USER=${DB_USER}
+ACP_DB_PASS=${pass}
+AAP_SERVER_ID_PLACEHOLDER
+EOF
+  else
+    say "    ${C_DIM}(dry-run)${C_RESET} write ${env_file} (0600)"
+  fi
+
+  # credentials for the CLI (mariadb client config, also 0600)
+  if (( ! DRY_RUN )); then
+    install -m 0600 /dev/null "${ACP_HOME}/etc/my.cnf"
+    cat > "${ACP_HOME}/etc/my.cnf" <<EOF
+[client]
+user=${DB_USER}
+password="${pass}"
+host=${DB_HOST}
+port=3306
+database=${DB_NAME}
+EOF
+  fi
+  ok "credentials stored (0600): etc/database.env + etc/my.cnf"
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 2 — migrations
+# -----------------------------------------------------------------------------
+phase_migrations() {
+  step "Phase 2/4 — Migrations"
+
+  [[ -d "${STAGE}/db/migrations" ]] || die "payload has no db/migrations"
+
+  if (( DRY_RUN )); then
+    ls "${STAGE}/db/migrations"/*.sql | while read -r f; do say "    ${C_DIM}(dry-run)${C_RESET} apply $(basename "$f")"; done
+    return 0
+  fi
+
+  mysql_root "${DB_NAME}" -e "CREATE TABLE IF NOT EXISTS schema_migrations (
+      id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+      version VARCHAR(40) NOT NULL,
+      applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id), UNIQUE KEY uq_schema_version (version)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+
+  local f version applied
+  for f in $(ls "${STAGE}/db/migrations"/*.sql | sort); do
+    version="$(basename "$f" .sql)"
+    applied="$(mysql_root -N -B "${DB_NAME}" -e "SELECT COUNT(*) FROM schema_migrations WHERE version='${version}'" 2>/dev/null || echo 0)"
+    if [[ "$applied" != "0" ]]; then
+      info "migration ${version} already applied — skipping"
+      continue
+    fi
+    if mysql_root "${DB_NAME}" < "$f"; then
+      mysql_root "${DB_NAME}" -e "INSERT INTO schema_migrations (version) VALUES ('${version}')"
+      ok "applied ${version}"
+    else
+      die "migration ${version} FAILED — DB left as-is, fix and re-run"
+    fi
+  done
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 3 — code install (agent + CLI) + systemd
+# -----------------------------------------------------------------------------
+phase_code() {
+  step "Phase 3/4 — Agent, CLI and service"
+
+  # ---- agent files ---------------------------------------------------------
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} install agent -> ${ACP_HOME}/agent (bin/config/src/systemd/tests)"
+  else
+    rm -rf "${ACP_HOME}/agent.new"
+    mkdir -p "${ACP_HOME}/agent.new"
+    cp -a "${STAGE}/agent/." "${ACP_HOME}/agent.new/"
+    chmod 0755 "${ACP_HOME}/agent.new/bin/paneld"
+    # atomic-ish swap so a running agent never sees half-written code
+    if [[ -d "${ACP_HOME}/agent" ]]; then mv "${ACP_HOME}/agent" "${ACP_HOME}/agent.old.$(date +%s)"; fi
+    mv "${ACP_HOME}/agent.new" "${ACP_HOME}/agent"
+    ok "agent installed: ${ACP_HOME}/agent"
+  fi
+
+  # ---- CLI -----------------------------------------------------------------
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} install CLI -> /usr/local/bin/alphacp (v0.2)"
+  else
+    install -m 0755 "${STAGE}/cli/alphacp" /usr/local/bin/alphacp
+    install -m 0755 "${STAGE}/cli/alphacp" "${ACP_HOME}/bin/alphacp"
+    ok "CLI installed: /usr/local/bin/alphacp"
+  fi
+
+  # ---- register this server ------------------------------------------------
+  local hostname_short public_ip private_ip os_pretty arch cpu ram_mb disk_gb specs
+  hostname_short="${SERVER_NAME:-$(hostname -s)}"
+  private_ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
+  public_ip="$(curl -4 -s --max-time 5 https://ifconfig.me 2>/dev/null || true)"
+  [[ -n "$public_ip" ]] || public_ip="$private_ip"
+  os_pretty="$(. /etc/os-release 2>/dev/null && echo "${PRETTY_NAME:-unknown}")"
+  arch="$(uname -m)"
+  cpu="$(nproc)"
+  ram_mb="$(awk '/MemTotal/{printf "%d", $2/1024}' /proc/meminfo)"
+  disk_gb="$(df -BG / | awk 'NR==2{print $2}' | tr -dc '0-9')"
+
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} register server '${hostname_short}' (${public_ip}, ${arch}, ${cpu}c/${ram_mb}MB/${disk_gb}GB)"
+  else
+    mysql_root "${DB_NAME}" <<SQL
+INSERT INTO servers (name, hostname, role, public_ip, private_ip, os, arch, panel_version, specs, created_at, updated_at)
+VALUES ('${hostname_short}', '${hostname_short}', 'central', '${public_ip}', '${private_ip}', '${os_pretty}',
+        '${arch}', '0.2.0', JSON_OBJECT('cpu', ${cpu}, 'ram_mb', ${ram_mb}, 'disk_gb', ${disk_gb}), NOW(), NOW())
+ON DUPLICATE KEY UPDATE
+  public_ip = VALUES(public_ip), private_ip = VALUES(private_ip), os = VALUES(os),
+  arch = VALUES(arch), specs = VALUES(specs), updated_at = NOW();
+SQL
+  fi
+
+  local server_id=1
+  if (( ! DRY_RUN )); then
+    server_id="$(mysql_root -N -B "${DB_NAME}" -e "SELECT id FROM servers WHERE hostname='${hostname_short}' LIMIT 1")"
+    [[ -n "$server_id" ]] || die "could not read server id"
+    if grep -q '^ACP_SERVER_ID=' "${ACP_HOME}/etc/database.env"; then
+      sed -i "s/^ACP_SERVER_ID=.*/ACP_SERVER_ID=${server_id}/" "${ACP_HOME}/etc/database.env"
+    else
+      sed -i "s/^AAP_SERVER_ID_PLACEHOLDER$/ACP_SERVER_ID=${server_id}/" "${ACP_HOME}/etc/database.env"
+    fi
+    ok "server registered: ${hostname_short} (id=${server_id}, public ${public_ip})"
+  fi
+
+  # ---- systemd unit --------------------------------------------------------
+  local php_bin; php_bin="$(detect_php)"
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} install /etc/systemd/system/paneld.service (ExecStart=${php_bin} ... --daemon)"
+    return 0
+  fi
+
+  sed "s#^ExecStart=.*#ExecStart=${php_bin} ${ACP_HOME}/agent/bin/paneld --daemon#" \
+    "${STAGE}/agent/systemd/paneld.service" > /etc/systemd/system/paneld.service
+
+  if sysd; then
+    systemctl daemon-reload >>"${LOG_FILE}" 2>&1 || true
+    systemctl enable paneld >>"${LOG_FILE}" 2>&1 || true
+    systemctl restart paneld >>"${LOG_FILE}" 2>&1 || true
+    sleep 2
+    if systemctl is-active --quiet paneld; then
+      ok "paneld service active (restarts automatically, also after reboot)"
+    else
+      warn "paneld did not start — diagnostics:"
+      systemctl status paneld --no-pager -l 2>&1 | head -14 | tee -a "${LOG_FILE}"
+    fi
+  else
+    warn "systemd not available in this environment — service install skipped"
+    warn "(real VPS par chalega; yahan test ke liye paneld manually chalega)"
+    nohup "${php_bin}" "${ACP_HOME}/agent/bin/paneld" --daemon >>"${ACP_HOME}/logs/paneld.log" 2>&1 &
+    sleep 2
+    if pgrep -f "paneld --daemon" >/dev/null 2>&1; then ok "paneld started manually (no systemd)"; fi
+  fi
+}
+
+# -----------------------------------------------------------------------------
+#  PHASE 4 — verify (end to end)
+# -----------------------------------------------------------------------------
+phase_verify() {
+  step "Phase 4/4 — Self test (end to end)"
+
+  local php_bin; php_bin="$(detect_php)"
+
+  if (( DRY_RUN )); then
+    say "    ${C_DIM}(dry-run)${C_RESET} paneld --selftest ; queue agent.ping ; wait for result"
+    return 0
+  fi
+
+  local report; report="${ACP_HOME}/logs/verify-step2-$(date +%Y%m%d-%H%M%S).txt"
+  {
+    echo "===== AlphaCP Step 2 verification — $(date -Is) ====="
+    echo
+    echo "--- file layout ---"
+    ls -la "${ACP_HOME}/agent/bin/" "${ACP_HOME}/etc/" | sed 's/^/  /'
+    echo
+    echo "--- paneld selftest ---"
+    "$php_bin" "${ACP_HOME}/agent/bin/paneld" --selftest 2>&1 | sed 's/^/  /'
+    echo
+    echo "--- agent status (before task) ---"
+    "$php_bin" "${ACP_HOME}/agent/bin/paneld" --status 2>&1 | sed 's/^/  /'
+  } > "$report" 2>&1
+
+  # queue a real task and wait for the agent to finish it
+  step "Queue test: agent.ping"
+  local server_id; server_id="$(grep -E '^ACP_SERVER_ID=' "${ACP_HOME}/etc/database.env" | cut -d= -f2)"
+  server_id="${server_id:-1}"
+
+  local task_id
+  task_id="$(mysql_root -N -B "${DB_NAME}" -e "
+    INSERT INTO tasks (server_id, type, safety, payload, status, requested_src, created_at, updated_at)
+      VALUES (${server_id}, 'agent.ping', 'readonly', '{}', 'queued', 'installer', NOW(), NOW());
+    SELECT LAST_INSERT_ID();")"
+  [[ -n "$task_id" && "$task_id" != "0" ]] || die "could not queue the test task"
+
+  info "task #${task_id} queued — paneld ka jawab wait kar rahe hain (max 30s)"
+
+  local waited=0 status="" result="" error=""
+  while (( waited < 30 )); do
+    IFS=$'\t' read -r status result error < <(mysql_root -N -B "${DB_NAME}" -e \
+      "SELECT status, IFNULL(result,''), IFNULL(error,'') FROM tasks WHERE id=${task_id};") || true
+    case "$status" in success|failed|cancelled) break ;; esac
+    sleep 1; waited=$((waited + 1))
+  done
+
+  {
+    echo
+    echo "--- queue test (task #${task_id}) ---"
+    echo "  status      : ${status}"
+    echo "  waited      : ${waited}s"
+    echo "  result      : ${result}"
+    echo "  error       : ${error}"
+  } >> "$report"
+
+  say ""
+  if [[ "$status" == "success" ]]; then
+    ok "agent replied to the queue in ${waited}s"
+    say "  result: ${result}"
+  else
+    err "queue test FAILED (status='${status}', error='${error}')"
+    say ""
+    say "Diagnostics:"
+    tail -15 "${ACP_HOME}/logs/paneld.log" 2>/dev/null | sed 's/^/  /' || true
+    (( DRY_RUN )) || {
+      echo "  --- journal ---"
+      journalctl -u paneld --no-pager -n 15 2>/dev/null | sed 's/^/  /' || true
+    }
+  fi
+
+  # CLI smoke test
+  step "CLI smoke test"
+  run_out alphacp task list --limit=5 || true
+  run_out alphacp task show "$task_id" || true
+
+  say ""
+  ok "report saved: ${report}"
+  say ""
+  say "${C_BOLD}Ab ye try karo:${C_RESET}"
+  say "  alphacp status"
+  say "  alphacp doctor"
+  say "  alphacp task types"
+  say "  sudo alphacp task run system.info"
+  say "  sudo alphacp task run service.status"
+  say ""
+  say "Log: ${LOG_FILE}"
+}
+
+# -----------------------------------------------------------------------------
+main() {
+  ORIG_ARGS=("$@")
+  parse_args "$@"
+  if (( ! DRY_RUN )); then mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true; fi
+
+  say ""
+  say "${C_BOLD}AlphaCP Step 2 installer v${ACP_STEP2_VERSION}${C_RESET} — paneld agent + task queue"
+  say "${C_DIM}log: ${LOG_FILE}${C_RESET}"
+
+  phase_preflight
+  extract_payload
+  phase_database
+  phase_migrations
+  phase_code
+  phase_verify
+
+  say ""
+  say "${C_GREEN}${C_BOLD}Step 2 install complete.${C_RESET} Iska output paste karo — phir Step 2B (panel UI) aage badhega."
+  say ""
+}
+
+main "$@"
+# The base64 payload below is DATA, not code — stop before bash reaches it.
+exit 0
+
+# @@PAYLOAD_BEGIN@@
+${ACP_PAYLOAD_B64}
+# @@PAYLOAD_END@@
