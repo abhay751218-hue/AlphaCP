@@ -13,7 +13,7 @@ Laravel 13 + Blade, no build step, no CDN, no Node.
 Login with lockout + rate limit · TOTP 2FA (replay-protected) · password policy + force-change ·
 RBAC (root / reseller / user / mail, per-permission gates) · users CRUD + admin password reset ·
 audit log viewer · live server info, services and task queue (from `paneld`) · dashboard with the
-full cPanel tool grid and parity progress.
+full cPanel tool grid and parity progress · offline-first license/trial status and admin activation page.
 
 Everything else on the cPanel tool list is planned and tracked — one row per tool — in
 `../docs/09-cpanel-parity-checklist.md` (the written contract: rows are never removed, only marked done).
@@ -58,7 +58,7 @@ Reset a locked-out admin: `sudo -u alphacp php artisan alphacp:admin-password ad
 
 | Path | What lives there |
 |---|---|
-| `app/Support/` | `Paneld` (task client), `Panel`, `Audit`, `Totp`, `PanelEnv`, `ModuleCatalog`, `PermissionCatalog` |
+| `app/Support/` | `Paneld` (task client), `Panel`, `Audit`, `Totp`, `PanelEnv`, `ModuleCatalog`, `PermissionCatalog`, `LicenseClient` |
 | `app/Http/Controllers/` | thin controllers (validate → Support/model → audit → redirect) |
 | `app/Http/Middleware/` | `2fa`, `password.fresh`, `perm`, `PanelSecurityHeaders` |
 | `resources/views/` | Blade templates (layouts, partials, one folder per area) |

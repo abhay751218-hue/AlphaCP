@@ -33,6 +33,32 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   - **Test:** `tools/sim/doctor-sim.sh` — asli panel bundle 0.3.0 + mount-namespace me asli
     read-only `/usr` (ProtectSystem=full jaisa). 3 scenario, **21/21 PASS**: 500 → drop-in → 200,
     password rotate + naya login OK + purana fail, re-run par password same, user ka password untouched.
+- **S2C deployed on dev-srv1 (29 Sep)** — existing-server updater v0.1.0 completed successfully; panel
+  `License & Trial` page now shows the local 15-day trial, fingerprint, expiry and activation form.
+  Server header is now `dev-srv1`; websites/email remain unaffected.
+- **Existing-server updater rollback fix (29 Sep)** — v0.1.0 updater ne release staging directory se
+  `config:cache`/`route:cache` banaya tha, jiski absolute paths `/usr/local/alphacp/releases/...` par
+  point ho rahi thi. PHP-FPM ka `open_basedir` sirf final `/usr/local/alphacp/panel` allow karta hai,
+  isliye health check 500 hua. Updater ab staging me sirf preflight karta hai aur atomic swap ke baad
+  final panel path se caches rebuild karta hai; fail hone par wahi automatic rollback rahega.
+- **S2C license client started (29 Sep)** — active panel bundle now has an offline-first 15-day local trial,
+  machine fingerprint, atomic `0600` local license store, Ed25519 canonical-payload verification,
+  optional `/api/v1/activate` client, admin `/license` page, `license.view`/`license.manage` enforcement,
+  and audit events. License failure only degrades the panel; customer websites/email/DNS/backups are untouched.
+- **Shared panel header fix** — server name is now supplied through the layout composer, so User Manager,
+  Audit and Security pages no longer show `server: unknown` just because their controllers do not pass the
+  dashboard-only `server` variable.
+- **Step 2B installer v0.3.8 (29 Sep)** — fresh installs now fetch the signed/checksummed
+  Laravel 13 panel code-only artifact `artifacts/panel-code-0.3.1.tar.gz` from the repository,
+  instead of stale paste chunks. The GitHub URL and SHA-256 can be overridden with
+  `ACP_PANEL_BUNDLE_URL` / `ACP_PANEL_BUNDLE_SHA256` for a release mirror. The v0.3.7
+  permanent php-fpm sandbox fix remains included.
+- **Step 2B installer v0.3.7 (29 Sep)** — fresh installs now create the permanent
+  `phpX.Y-fpm.service.d/alphacp-panel.conf` systemd drop-in before restarting PHP-FPM.
+  It grants only `/usr/local/alphacp` and `/run/php` write access, preventing Ubuntu/Ondrej
+  `ProtectSystem=full` from causing the panel's first web request to return HTTP 500.
+  Source of truth: `installer/step2b-finish.sh`; generated single-shot installer:
+  `installer/step2b-setup.sh`. Both pass `bash -n`.
 - **Step 2B-1 INSTALLED ON dev-srv1 (29 Sep 00:02)** 🎉 — panel live: `https://13.207.123.177:8090`
   (Laravel 13.33.0, nginx+php-fpm, user `alphacp`), Apache sites untouched (HTTP 200 verified).
   Credentials: `admin` + password in `/root/.alphacp-admin-credentials` (first login par change forced).

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 #  AlphaCP — Step 2B FULL setup (code + composer + database + admin + nginx :8090)
-#  Version 0.3.2  ·  port 8090  ·  Ubuntu 22.04/24.04 (x86_64)
+#  Version 0.3.8  ·  port 8090  ·  Ubuntu 22.04/24.04 (x86_64)
 # -----------------------------------------------------------------------------
 #  Yeh script SAB kuch karti hai (kuch pehle se karne ki zarurat nahi):
 #     0. panel code khud download karti hai (checksum-verified) aur composer install
@@ -21,6 +21,7 @@ ACP_HOME="/usr/local/alphacp"
 PANEL_ROOT="${ACP_HOME}/panel"
 PANEL_USER="alphacp"
 PANEL_PORT="8090"
+ACP_INSTALLER_VERSION="0.3.8"
 DB_NAME="alphacp"
 DB_TEST_NAME="alphacp_test"
 ADMIN_USER="${ADMIN_USER:-admin}"
@@ -89,6 +90,30 @@ ensure_php_extensions() {
 sysd()    { [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; }
 svc()     { if sysd; then systemctl "$@" ; else service "$1" "${@:2}"; fi; }
 env_val() { grep -E "^$1=" "$2" 2>/dev/null | head -1 | cut -d= -f2- ; }
+
+# Ubuntu/Ondrej ke php-fpm units me ProtectSystem=full hota hai. Panel
+# /usr/local/alphacp ke andar hai, isliye web worker ko is path par explicit
+# write access dena zaroori hai. CLI checks is sandbox ko nahi dekhte.
+ensure_fpm_write_access() {
+  local php_version="$1" unit="php${1}-fpm"
+  local dropin="/etc/systemd/system/${unit}.service.d/alphacp-panel.conf"
+  if ! sysd; then
+    info "systemd available nahi — ${unit} sandbox drop-in skip (container/test mode)"
+    return 0
+  fi
+  install -d "$(dirname "${dropin}")"
+  cat > "${dropin}" <<EOF
+# AlphaCP panel: php-fpm workers ko ${ACP_HOME} me likhne do.
+# Ubuntu/Ondrej ka ProtectSystem=full /usr ko read-only banata hai.
+[Service]
+ReadWritePaths=-${ACP_HOME}
+ReadWritePaths=-/run/php
+EOF
+  chmod 0644 "${dropin}"
+  systemctl daemon-reload >>"${LOG_FILE}" 2>&1 \
+    || { warn "systemd daemon-reload fail — ${dropin} apply nahi hua"; return 1; }
+  ok "php${php_version}-fpm sandbox allowlist: ${dropin}"
+}
 PHP_BIN=""
 
 # Saari artisan commands PANEL USER ke roop me chalti hain — root se chalane par
@@ -109,7 +134,7 @@ rand_pw() {
 
 
 # -----------------------------------------------------------------------------
-#  STAGE A — panel code laao (paste.rs chunks) + composer install
+#  STAGE A — panel code laao (GitHub artifact + checksum) + composer install
 # -----------------------------------------------------------------------------
 stage_code() {
   step "Stage A — panel code (Laravel 13) + composer install"
@@ -120,22 +145,17 @@ stage_code() {
     exit 1
   fi
 
-  local chunks=("kiprz" "tzbUI" "RZSl9")
-  local expected="61c46d6dd8e1ec1c74bc65cc6e49f575c5d21f999f6ca5c53b701b655c2f5a6c"
+  local bundle_url="${ACP_PANEL_BUNDLE_URL:-https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/arena/01a0ea0d-alphacp/artifacts/panel-code-0.3.1.tar.gz}"
+  local expected="${ACP_PANEL_BUNDLE_SHA256:-32fe68cce8868d05a23b962821acf20d19e4f56b4d8711140b40aaa063b6494c}"
   cd / 2>/dev/null || true          # panel dir delete karne se pehle cwd safe karo
   local work="/tmp/acp-setup.$$"
   mkdir -p "$work"
   trap 'rm -rf "${work:-}"' EXIT
 
-  info "panel code download (3 chunks)…"
-  local f
-  for f in "${chunks[@]}"; do
-    curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 120 \
-      "https://paste.rs/${f}" >> "${work}/panel.b64" \
-      || die "chunk ${f} download fail — net check karke dobara chalao"
-  done
-  base64 -d "${work}/panel.b64" > "${work}/panel-code.tar.gz" \
-    || die "base64 decode fail (chunk adhoora aaya — dobara chalao)"
+  info "panel code download (GitHub artifact)…"
+  curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 \
+    "${bundle_url}" > "${work}/panel-code.tar.gz" \
+    || die "panel artifact download fail — URL/network check karke dobara chalao"
 
   local got; got="$(sha256sum "${work}/panel-code.tar.gz" | awk '{print $1}')"
   if [[ "$got" != "$expected" ]]; then
@@ -427,6 +447,10 @@ EOF
       -e "s#@@ACP_HOME@@#${ACP_HOME}#g" \
       "${PANEL_ROOT}/deploy/php-fpm-alphacp.conf.in" > "/etc/php/${v}/fpm/pool.d/alphacp.conf"
   ok "php-fpm pool: /etc/php/${v}/fpm/pool.d/alphacp.conf"
+
+  # Must be installed before php-fpm restart; otherwise ProtectSystem=full
+  # can make the first browser request fail with HTTP 500.
+  ensure_fpm_write_access "${v}" || die "php-fpm sandbox allowlist apply nahi hua"
 
   # --- 9. TLS certificate ---------------------------------------------------
   mkdir -p /etc/ssl/alphacp

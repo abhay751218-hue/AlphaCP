@@ -26,9 +26,9 @@
 | Step 1 | Server base stack + one-click installer + `alphacp` CLI — Apache fix done, page live; v0.1.1 re-verify pending | 🔄 **95%** (28 Sep) |
 | Step 2A | **paneld agent + task queue + CLI v0.2** — dev-srv1 par install ✅, queue test `agent.ping` success in 2ms | ✅ **DONE (28 Sep)** |
 | Step 2B-1 | **Panel LIVE on dev-srv1** — https://13.207.123.177:8090 (Laravel 13 v0.3.0: login, dashboard w/ live paneld data, User Manager, RBAC, 2FA, audit) | ✅ **INSTALLED & VERIFIED on dev-srv1** (29 Sep 00:02) |
-| Step 2B-2 | 2FA setup by user + first-login password change, then module wiring | ⏳ Next |
+| Step 2B-2 | First-login password change + 2FA login verification + RBAC/User Manager pages | ✅ **VERIFIED** |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
-| Step 2C | License client + trial (license server se baat) | ⏳ |
+| Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |
 | Step 4 | Packages & limits manager | ⏳ |
 | Step 5 | Domains, vHost, MultiPHP, SSL, Cron | ⏳ |
@@ -96,4 +96,10 @@
 nahi sakta → **har web request 500**; CLI par ye bandish nahi lagti (isliye saare probes "OK").
 Local container me wahi condition bana kar verify: 500 → `ReadWritePaths=/usr/local/alphacp`
 drop-in → 200 → PANEL READY ✅. Doctor v1.6 = https://paste.rs/G72oK (detect + auto-fix).
-**Follow-up:** installer v0.3.7 me yahi drop-in daalna hai (naye server par bhi na aaye).
+
+## 29 Sep — installer v0.3.8 + S2C bundle
+Fresh installs me PHP-FPM restart se pehle permanent systemd drop-in create hota hai:
+`ReadWritePaths=-/usr/local/alphacp` + `ReadWritePaths=-/run/php`. Installer ab active Laravel 13
+panel-code artifact `artifacts/panel-code-0.3.1.tar.gz` ko SHA-256 verify karke fetch karta hai;
+isliye S2C license client fresh installs me bhi included rahega. Source aur generated installer
+`bash -n` se validate hain. Existing dev-srv1 par naya bundle deploy karna abhi pending hai.

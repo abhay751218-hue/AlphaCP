@@ -26,11 +26,11 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **Step 0 (Blueprint) — COMPLETE** ✅ |
-| Next task | **Step 1** — server base stack + one-click installer |
+| Phase | **Step 2C — license client/trial deployed** 🟡 |
+| Next task | S3 account provisioning foundation; then license-server API/paid activation |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
-| Code written so far | None yet (design docs only) |
-| Blocking issues | None |
+| Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor + license client/trial |
+| Blocking issues | PHP/Laravel test execution still needs a PHP 8.3+ build environment; server acceptance of new S2C bundle pending |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 
@@ -65,8 +65,8 @@ Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 | Layer | Choice |
 |---|---|
 | Language (panel) | PHP 8.3, `declare(strict_types=1)` everywhere |
-| Framework | Laravel 11 (API + queues + migrations) |
-| Frontend | React 18 + TypeScript + Inertia.js + Tailwind CSS + Vite |
+| Framework | Laravel 13.33.0 (active `refs/panel-2b-bundle`; old `panel/` Laravel 11 tree is obsolete) |
+| Frontend | Blade/Tailwind panel shell in the active bundle; React/Inertia remains a future UI direction |
 | Panel DB | MariaDB 10.11+ (InnoDB, utf8mb4) |
 | Queue/Cache | Redis |
 | Privileged agent | PHP CLI daemon (`paneld`) run by systemd as root, polls `tasks` table, allowlisted handlers |

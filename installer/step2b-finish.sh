@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 #  AlphaCP — Step 2B finishing script (panel already copied + composer installed)
-#  Version 0.3.1  ·  port 8090  ·  Ubuntu 22.04/24.04 (x86_64)
+#  Version 0.3.8  ·  port 8090  ·  Ubuntu 22.04/24.04 (x86_64)
 # -----------------------------------------------------------------------------
 #  Jab tak panel ka code `/usr/local/alphacp/panel` me aa gaya ho aur
 #  `composer install` chal chuka ho, yeh script baaki ka kaam karti hai:
@@ -20,6 +20,7 @@ ACP_HOME="/usr/local/alphacp"
 PANEL_ROOT="${ACP_HOME}/panel"
 PANEL_USER="alphacp"
 PANEL_PORT="8090"
+ACP_INSTALLER_VERSION="0.3.8"
 DB_NAME="alphacp"
 DB_TEST_NAME="alphacp_test"
 ADMIN_USER="${ADMIN_USER:-admin}"
@@ -88,6 +89,30 @@ ensure_php_extensions() {
 sysd()    { [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; }
 svc()     { if sysd; then systemctl "$@" ; else service "$1" "${@:2}"; fi; }
 env_val() { grep -E "^$1=" "$2" 2>/dev/null | head -1 | cut -d= -f2- ; }
+
+# Ubuntu/Ondrej ke php-fpm units me ProtectSystem=full hota hai. Panel
+# /usr/local/alphacp ke andar hai, isliye web worker ko is path par explicit
+# write access dena zaroori hai. CLI checks is sandbox ko nahi dekhte.
+ensure_fpm_write_access() {
+  local php_version="$1" unit="php${1}-fpm"
+  local dropin="/etc/systemd/system/${unit}.service.d/alphacp-panel.conf"
+  if ! sysd; then
+    info "systemd available nahi — ${unit} sandbox drop-in skip (container/test mode)"
+    return 0
+  fi
+  install -d "$(dirname "${dropin}")"
+  cat > "${dropin}" <<EOF
+# AlphaCP panel: php-fpm workers ko ${ACP_HOME} me likhne do.
+# Ubuntu/Ondrej ka ProtectSystem=full /usr ko read-only banata hai.
+[Service]
+ReadWritePaths=-${ACP_HOME}
+ReadWritePaths=-/run/php
+EOF
+  chmod 0644 "${dropin}"
+  systemctl daemon-reload >>"${LOG_FILE}" 2>&1 \
+    || { warn "systemd daemon-reload fail — ${dropin} apply nahi hua"; return 1; }
+  ok "php${php_version}-fpm sandbox allowlist: ${dropin}"
+}
 PHP_BIN=""
 
 # Saari artisan commands PANEL USER ke roop me chalti hain — root se chalane par
@@ -346,6 +371,10 @@ EOF
       -e "s#@@ACP_HOME@@#${ACP_HOME}#g" \
       "${PANEL_ROOT}/deploy/php-fpm-alphacp.conf.in" > "/etc/php/${v}/fpm/pool.d/alphacp.conf"
   ok "php-fpm pool: /etc/php/${v}/fpm/pool.d/alphacp.conf"
+
+  # Must be installed before php-fpm restart; otherwise ProtectSystem=full
+  # can make the first browser request fail with HTTP 500.
+  ensure_fpm_write_access "${v}" || die "php-fpm sandbox allowlist apply nahi hua"
 
   # --- 9. TLS certificate ---------------------------------------------------
   mkdir -p /etc/ssl/alphacp

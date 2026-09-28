@@ -66,7 +66,7 @@ Legend: ✅ full · 🟡 own scope only · ⛔ none
 | resellers.manage | ✅ | ✅ | ⛔ | 🟡 own subs | ⛔ |
 | api.tokens.manage | ✅ | ✅ (own) | ⛔ | 🟡 (own) | 🟡 (own) |
 | license.view | ✅ | ✅ (read) | ⛔ | ⛔ | ⛔ |
-| license.activate / transfer | ✅ | ⛔ | ⛔ | ⛔ | ⛔ |
+| license.manage (activate / transfer) | ✅ | ⛔ | ⛔ | ⛔ | ⛔ |
 | panel.update / rollback | ✅ | ⛔ | ⛔ | ⛔ | ⛔ |
 | audit.view | ✅ | ✅ | 🟡 limited | 🟡 own scope | ⛔ |
 | users.manage (panel logins) | ✅ | ✅ | ⛔ | 🟡 own reseller users | 🟡 own profile |

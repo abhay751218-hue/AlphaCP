@@ -1,7 +1,7 @@
 # Runbook — Step 2B: panel deploy on dev-srv1 (working path)
 
 **Status:** ✅ **INSTALLED ON dev-srv1 (29 Sep 2026 00:02)** — `https://13.207.123.177:8090` live, admin `admin`, password `/root/.alphacp-admin-credentials` me; installer v0.3.3 = https://paste.rs/0r1Mi (yahi chalaya gaya) · **Panel:** v0.3.0 (Laravel 13.33.0)
-**Script:** `installer/step2b-setup.sh` (v0.3.6 — 500-fix) · **Download:** https://paste.rs/EPW3b
+**Script:** `installer/step2b-setup.sh` (v0.3.8 — active panel artifact + permanent php-fpm sandbox fix) · **Source:** `installer/step2b-finish.sh` + generated `installer/step2b-setup.sh`
 **Install kiya gaya version (dev-srv1):** v0.3.3 = https://paste.rs/0r1Mi
 **Panel URL:** `https://13.207.123.177:8090` · panel user: `alphacp` (never root)
 
@@ -97,6 +97,34 @@ har request 500. Fix: saari artisan commands ab `runuser -u alphacp --` se chalt
 aakhir me `storage/` + `bootstrap/cache` ka chown **+ chmod (0770/0660)** hota hai.
 Locally reproduce karke verify kiya: 500 → script → 200 ✅.
 
+## 4j. v0.3.8 — fresh installs ka active bundle + permanent sandbox fix
+
+Doctor v1.6 ne existing server ka 500 fix kar diya tha. Ab installer me bhi wahi protection
+permanently add hai, taaki naye Ubuntu/Ondrej server par pehli request se pehle hi problem na aaye.
+Installer ab repository ke active Laravel 13 code artifact ko SHA-256 verify karke download karta hai,
+isliye S2C license/trial code bhi fresh install me aata hai.
+`step2b-finish.sh` PHP version choose karne ke baad, pool file likhne ke turant baad:
+
+```ini
+[Service]
+ReadWritePaths=-/usr/local/alphacp
+ReadWritePaths=-/run/php
+```
+
+Systemd available ho to installer drop-in ko
+`/etc/systemd/system/phpX.Y-fpm.service.d/alphacp-panel.conf` me rakhta hai, `daemon-reload`
+karta hai, aur uske baad hi PHP-FPM restart karta hai. Non-systemd container/test mode me
+installer safe tarike se drop-in skip karta hai. Script version **0.3.7** hai; generated script
+`python3 tools/build-panel-2b-bundle.py` ke baad `python3 tools/merge-finish-stage.py` se dobara ban sakti hai.
+
+Validation performed:
+
+- `python3 tools/build-panel-2b-bundle.py` successful — artifact SHA-256 `32fe68cce8868d05a23b962821acf20d19e4f56b4d8711140b40aaa063b6494c`
+- `python3 tools/merge-finish-stage.py` successful
+- generated script me active artifact URL, SHA-256 aur `ReadWritePaths` present
+- `bash -n installer/step2b-finish.sh` ✅
+- `bash -n installer/step2b-setup.sh` ✅
+
 ## 4i. ASLI JAD — systemd sandbox + doctor v1.6 (`G72oK`)  [29 Sep, PROVEN]
 Ubuntu/Ondrej ka php8.4-fpm unit `ProtectSystem=full` lagata hai → **/usr read-only** →
 hamara panel `/usr/local/alphacp/panel` me hai → php-fpm worker kuch bhi likh nahi paata
@@ -185,6 +213,34 @@ Locally verify kiya (do scenarios):
 
 **Sabak (dono installers me fix):** Laravel `LOG_CHANNEL=daily` par **dated file** `laravel-YYYY-MM-DD.log` likhta hai,
 `laravel.log` nahi — isliye purane diagnostics khaali dikh rahe the.
+
+## 4k. Existing AWS server par safe panel upgrade
+
+Current `dev-srv1` jaise already-installed server ke liye **fresh installer v0.3.8 dobara mat
+chalana**. Usse panel code ko fresh extract karna hota hai. Existing server ke liye source-of-truth
+updater `installer/panel-update.sh` hai. Ye:
+
+1. `panel-code-0.3.1.tar.gz` ko GitHub se download karke SHA-256 verify karta hai;
+2. current `.env`, APP_KEY, storage aur database ko preserve karta hai;
+3. new code + Composer ko alag release directory me stage karta hai;
+4. `php artisan migrate/config/route cache` preflight karta hai;
+5. atomic swap ke baad HTTPS health check karta hai;
+6. final `/usr/local/alphacp/panel` path se config/route caches rebuild karta hai;
+7. HTTP 200 na mile to old panel automatic rollback karta hai.
+
+**Why this ordering matters:** Laravel cache files absolute view/config paths store kar sakti hain.
+Release staging directory se cache banane par PHP-FPM ke `open_basedir` allowlist se path bahar ho jata
+hai aur HTTP 500 aata hai. Updater v0.1.0 ab swap ke baad final path se hi caches banata hai.
+
+AWS server par chalane wali current branch command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/arena/01a0ea0d-alphacp/installer/panel-update.sh -o /tmp/alphacp-panel-update-0.1.0.sh && sudo bash /tmp/alphacp-panel-update-0.1.0.sh
+```
+
+Ye command **existing AlphaCP panel** ke liye hai; blank VPS par nahi. Update ke baad browser me
+existing admin se login karke `License & Trial` tile verify karo. Backup path script output me print
+hoga; rollback ke liye turant delete nahi kiya jata.
 
 ## 5. Agar kuch fail ho
 

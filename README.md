@@ -3,7 +3,7 @@
 > 👉 **Naya AI/developer? Sabse pehle [`START-HERE.md`](START-HERE.md) padho** — server ki live state `server-snapshot/STATE.md` me hai.
 
 > **Working title:** "AlphaCP" (final brand name aap decide karoge)
-> **Status:** 🟢 Step 0 (Blueprint) — design phase
+> **Status:** 🟢 Step 2B-1 — panel live; installer v0.3.7 hardened; browser acceptance next
 > **Type:** Commercial hosting control panel (cPanel/WHM parity target)
 
 A from-scratch, cPanel-compatible hosting control panel written for real hosting businesses.
@@ -17,8 +17,8 @@ install/upgrade tooling.
 
 | Item | Value |
 |---|---|
-| Backend | PHP 8.3 + Laravel 11 (strict types) |
-| Frontend | React 18 + TypeScript + Inertia.js + Tailwind |
+| Backend | PHP 8.3+ + Laravel 13.33.0 active panel bundle (strict types) |
+| Frontend | Active bundle: Blade/Tailwind; React/Inertia remains future UI direction |
 | Panel DB | MariaDB (separate from customer DBs) |
 | Privileged layer | `paneld` — root task worker (allowlist-based, never a root web app) |
 | Target OS | Ubuntu 24.04 LTS (primary), AlmaLinux 9 (secondary) |
@@ -58,8 +58,10 @@ Planning docs from the pre-design phase (kept for reference):
 
 ## 🚦 Current Phase
 
-**Step 0 — Blueprint** ✅ (this repo state)
-**Next → Step 1 — Server base stack + one-click installer**
+**Step 0 — Blueprint** ✅
+**Step 1 + Step 2A** ✅
+**Step 2B-1** ✅ panel live on :8090; installer v0.3.7 includes the php-fpm sandbox fix
+**Next → Step 2B-2 — browser acceptance: password change, 2FA, RBAC/user checks**
 
 See `ROADMAP.md` for the full 16-step plan.
 

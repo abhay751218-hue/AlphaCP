@@ -28,6 +28,18 @@ failure injection (rollback) · interrupted-install resume.
 
 ---
 
+## Existing-server panel updater
+
+`panel-update.sh` is for a panel that is already installed at `/usr/local/alphacp/panel`.
+It downloads the pinned active panel artifact, verifies SHA-256, stages Composer and Laravel
+preflight as `alphacp`, creates the PHP-FPM sandbox drop-in, atomically swaps the panel, checks
+HTTP 200, and automatically restores the previous release if the health check fails.
+It preserves `.env`/APP_KEY, database data, admin credentials, sessions and panel storage.
+It does not install the base server stack and must not be used on a blank VPS.
+
+Default artifact can be overridden for a release mirror:
+`ACP_PANEL_BUNDLE_URL=... ACP_PANEL_BUNDLE_SHA256=... sudo -E bash installer/panel-update.sh`
+
 ## Step 2 installer (agent + queue)
 
 | File | Kya hai |
