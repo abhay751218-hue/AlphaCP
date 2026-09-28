@@ -1,4 +1,7 @@
 # AI_CONTEXT.md — Read This First
+
+> 👉 **Naya AI/developer? Sabse pehle [`START-HERE.md`](START-HERE.md) padho** — server ki live state `server-snapshot/STATE.md` me hai.
+
 > **Purpose:** This file gives ANY AI assistant (or new developer) complete context to work on
 > this project safely. Keep it updated whenever architecture, conventions, or status change.
 > **Last updated:** 2026-09-28 (Step 0 complete)

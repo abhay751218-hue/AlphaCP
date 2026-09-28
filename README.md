@@ -1,4 +1,7 @@
 # AlphaCP — Custom Hosting Control Panel
+
+> 👉 **Naya AI/developer? Sabse pehle [`START-HERE.md`](START-HERE.md) padho** — server ki live state `server-snapshot/STATE.md` me hai.
+
 > **Working title:** "AlphaCP" (final brand name aap decide karoge)
 > **Status:** 🟢 Step 0 (Blueprint) — design phase
 > **Type:** Commercial hosting control panel (cPanel/WHM parity target)

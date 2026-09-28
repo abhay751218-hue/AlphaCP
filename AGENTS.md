@@ -1,5 +1,8 @@
 # AGENTS.md — Rules for AI Assistants
 
+> 👉 **Naya AI/developer? Sabse pehle [`START-HERE.md`](START-HERE.md) padho** — server ki live state `server-snapshot/STATE.md` me hai.
+
+
 > **RULE 0 — PARITY CONTRACT:** `docs/09-cpanel-parity-checklist.md` defines "done" for this project.
 > Har feature us file ki ek row se juda hai. Kaam karke us row ka status ✅/🟡 update karna **compulsory** hai.
 > Koi row hatana allowed **nahi**. Saare non-optional rows ✅ = project complete.

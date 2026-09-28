@@ -4,6 +4,21 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Added
+- **alphacp-sync v1.0 (29 Sep)** — `installer/alphacp-sync.sh`: server → GitHub auto-sync, taaki GitHub
+  hamesha server jaisa rahe aur naya AI bina poochhe shuru kar sake.
+  - GitHub deploy key (ed25519, host key pinned) + port 22 band ho to `ssh.github.com:443` fallback.
+  - Snapshot `main` branch ke `server-snapshot/` me jata hai: panel/agent/license code, nginx/php-fpm/systemd
+    configs, `STATE.md` (versions, services, ports, migrations, routes, artisan commands, license files),
+    `db-schema.sql` (sirf structure), `MANIFEST.txt`.
+  - **Secrets kabhi push nahi hote:** `.env`/`etc/`/`var/`/keys/certs copy hi nahi hote, server ke asli
+    secret values har file me dhoondhe jaate hain (mile to file skip), private-key/token patterns skip,
+    aur push se pehle ek final check hota hai. Secret mile to push ruk jata hai.
+  - Timer har ghante chalta hai. Badlav na ho to commit nahi hota. Agar kisi aur ne push kiya ho to rebase karke push karta hai.
+  - Test: `tools/sim/sync-sim.sh`, **45/45 PASS** (leak attempts, no-change, update, concurrent push,
+    key-add wait flow, 443 fallback, timer-mode fast-fail).
+- `START-HERE.md`: naye AI ke liye entry point. README/AGENTS/AI_CONTEXT me iska pointer hai.
+
 ### Fixed / Changed
 - **panel-doctor.sh v1.7 (29 Sep)** — ab GitHub se (commit-pinned link, `COMMANDS.md` dekho), paste.rs nahi.
   - v1.6 ka poora fix-chain (systemd `ProtectSystem=full` → `ReadWritePaths` drop-in) same.
