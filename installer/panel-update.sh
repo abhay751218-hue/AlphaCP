@@ -122,9 +122,11 @@ artisan_new() {
 info "Laravel preflight (database untouched except pending additive migrations)"
 artisan_new --version >>"${LOG_FILE}" 2>&1 || die "new Laravel boot fail"
 artisan_new config:clear >>"${LOG_FILE}" 2>&1 || die "config clear fail"
+artisan_new view:clear >>"${LOG_FILE}" 2>&1 || die "view clear fail"
 artisan_new migrate --force >>"${LOG_FILE}" 2>&1 || die "migration preflight fail"
-artisan_new route:cache >>"${LOG_FILE}" 2>&1 || die "route cache fail"
-artisan_new config:cache >>"${LOG_FILE}" 2>&1 || die "config cache fail"
+# Do not cache config/routes while the app lives in /releases. Laravel stores
+# absolute view/config paths; those paths would violate the FPM open_basedir
+# allowlist after the atomic swap. Caches are rebuilt from the final panel path.
 chown -R "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/storage" "${NEW_PANEL}/bootstrap/cache"
 ok "Laravel preflight complete"
 
@@ -144,29 +146,63 @@ EOF
 fi
 
 BACKUP_PANEL="${RELEASES}/panel-backup-${STAMP}"
+
+rollback_current() {
+  local reason="$1"
+  warn "${reason}; automatic rollback start"
+  local failed_panel="${RELEASES}/panel-failed-${STAMP}"
+  if [[ -d "${PANEL_ROOT}" ]]; then
+    mv "${PANEL_ROOT}" "${failed_panel}"
+  fi
+  if [[ -d "${BACKUP_PANEL}" ]]; then
+    mv "${BACKUP_PANEL}" "${PANEL_ROOT}"
+  else
+    say "${C_RED}Backup panel directory missing: ${BACKUP_PANEL}${C_RESET}"
+    exit 1
+  fi
+  systemctl restart "${FPM_UNIT}" >>"${LOG_FILE}" 2>&1 || true
+  local rollback_code
+  rollback_code="$(curl -k -sS -o /dev/null -w '%{http_code}' -m 20 "https://127.0.0.1:${PANEL_PORT}/" 2>/dev/null || true)"
+  if [[ "${rollback_code}" == "200" ]]; then
+    say "${C_YELLOW}Rollback successful — old panel HTTP 200 restored.${C_RESET}"
+  else
+    say "${C_RED}Rollback health check bhi HTTP ${rollback_code:-none}; ${LOG_FILE} turant check karein.${C_RESET}"
+  fi
+  exit 1
+}
+
 info "atomic panel swap ho raha hai"
 mv "${PANEL_ROOT}" "${BACKUP_PANEL}"
 mv "${NEW_PANEL}" "${PANEL_ROOT}"
 SWAPPED=1
 NEW_PANEL=""
 
+# Rebuild all absolute-path caches only after the app is at its final path.
+# This is essential because the FPM pool open_basedir allowlist contains
+# /usr/local/alphacp/panel, not /usr/local/alphacp/releases/....
+artisan_current() {
+  (cd "${PANEL_ROOT}" && runuser -u "${PANEL_USER}" -- env ACP_HOME="${ACP_HOME}" "${PHP_BIN}" artisan "$@")
+}
+if ! artisan_current config:clear >>"${LOG_FILE}" 2>&1; then
+  rollback_current "final config clear fail"
+fi
+if ! artisan_current view:clear >>"${LOG_FILE}" 2>&1; then
+  rollback_current "final view clear fail"
+fi
+if ! artisan_current route:cache >>"${LOG_FILE}" 2>&1; then
+  rollback_current "final route cache fail"
+fi
+if ! artisan_current config:cache >>"${LOG_FILE}" 2>&1; then
+  rollback_current "final config cache fail"
+fi
+chown -R "${PANEL_USER}:${PANEL_USER}" "${PANEL_ROOT}/storage" "${PANEL_ROOT}/bootstrap/cache"
+
 systemctl restart "${FPM_UNIT}" >>"${LOG_FILE}" 2>&1 || true
 sleep 2
 
 CODE="$(curl -k -sS -o "${TMP_DIR}/health.html" -w '%{http_code}' -m 20 "https://127.0.0.1:${PANEL_PORT}/" 2>/dev/null || true)"
 if [[ "${CODE}" != "200" ]]; then
-  warn "health check HTTP ${CODE:-none}; automatic rollback start"
-  FAILED_PANEL="${RELEASES}/panel-failed-${STAMP}"
-  mv "${PANEL_ROOT}" "${FAILED_PANEL}"
-  mv "${BACKUP_PANEL}" "${PANEL_ROOT}"
-  systemctl restart "${FPM_UNIT}" >>"${LOG_FILE}" 2>&1 || true
-  ROLLBACK_CODE="$(curl -k -sS -o /dev/null -w '%{http_code}' -m 20 "https://127.0.0.1:${PANEL_PORT}/" 2>/dev/null || true)"
-  if [[ "${ROLLBACK_CODE}" == "200" ]]; then
-    say "${C_YELLOW}Rollback successful — old panel HTTP 200 restored.${C_RESET}"
-  else
-    say "${C_RED}Rollback health check bhi HTTP ${ROLLBACK_CODE:-none}; ${LOG_FILE} turant check karein.${C_RESET}"
-  fi
-  exit 1
+  rollback_current "health check HTTP ${CODE:-none}"
 fi
 
 ok "new panel health HTTP 200"

@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Fixed / Changed
+- **Existing-server updater rollback fix (29 Sep)** — v0.1.0 updater ne release staging directory se
+  `config:cache`/`route:cache` banaya tha, jiski absolute paths `/usr/local/alphacp/releases/...` par
+  point ho rahi thi. PHP-FPM ka `open_basedir` sirf final `/usr/local/alphacp/panel` allow karta hai,
+  isliye health check 500 hua. Updater ab staging me sirf preflight karta hai aur atomic swap ke baad
+  final panel path se caches rebuild karta hai; fail hone par wahi automatic rollback rahega.
 - **S2C license client started (29 Sep)** — active panel bundle now has an offline-first 15-day local trial,
   machine fingerprint, atomic `0600` local license store, Ed25519 canonical-payload verification,
   optional `/api/v1/activate` client, admin `/license` page, `license.view`/`license.manage` enforcement,

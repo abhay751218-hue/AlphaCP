@@ -225,7 +225,12 @@ updater `installer/panel-update.sh` hai. Ye:
 3. new code + Composer ko alag release directory me stage karta hai;
 4. `php artisan migrate/config/route cache` preflight karta hai;
 5. atomic swap ke baad HTTPS health check karta hai;
-6. HTTP 200 na mile to old panel automatic rollback karta hai.
+6. final `/usr/local/alphacp/panel` path se config/route caches rebuild karta hai;
+7. HTTP 200 na mile to old panel automatic rollback karta hai.
+
+**Why this ordering matters:** Laravel cache files absolute view/config paths store kar sakti hain.
+Release staging directory se cache banane par PHP-FPM ke `open_basedir` allowlist se path bahar ho jata
+hai aur HTTP 500 aata hai. Updater v0.1.0 ab swap ke baad final path se hi caches banata hai.
 
 AWS server par chalane wali current branch command:
 
