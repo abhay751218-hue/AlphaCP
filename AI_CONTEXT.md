@@ -23,11 +23,11 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **Step 2B-1 — panel live; installer hardening complete** ✅ |
-| Next task | **Step 2B-2 acceptance** — browser password change, 2FA setup, then RBAC/user checks |
+| Phase | **Step 2C — license client/trial in progress** 🟡 |
+| Next task | Finish S2C tests, bundle rebuild/deploy, then optional license-server API |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
-| Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor |
-| Blocking issues | None known after server HTTP 500 fix; server-side browser acceptance pending |
+| Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor + license client/trial |
+| Blocking issues | PHP/Laravel test execution still needs a PHP 8.3+ build environment; server acceptance of new S2C bundle pending |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 

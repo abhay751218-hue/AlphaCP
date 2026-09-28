@@ -120,8 +120,8 @@
 | 55 | IP Blocker | IP/range block | S13 | ⏳ S13 |
 | 56 | SSL/TLS | CSR, cert install, keys | S5 | ⏳ S5 |
 | 57 | SSL/TLS Status | Sab domains ka SSL ek table | S5 | ⏳ S5 |
-| 58 | Two-Factor Authentication | TOTP 2FA |S2B-2|🟡 2B-2|
-| 59 | Password & Security | Password change + strength |S2B|🟡 2B-1|
+| 58 | Two-Factor Authentication | TOTP 2FA |S2B-2|✅|
+| 59 | Password & Security | Password change + strength |S2B|✅|
 | 60 | Leech Protection | Password vs hotlink abusers | S13 | ⏳ S13 |
 | 61 | ModSecurity (WAF) | Per-account WAF on/off | S13 | ⏳ S13 |
 | 62 | Security Policy | Account-level policy | S13 | ⏳ S13 |
@@ -167,7 +167,7 @@
 | 87 | Video Tutorials | Help videos | S2B | 🟡 2B |
 | 88 | Change Language | Multi-language | S2B | 🟡 2B |
 | 89 | Change Style | Theme/colors, dark mode | S2B | 🟡 2B |
-| 90 | Change Password | Password update | S2B | 🟡 2B |
+| 90 | Change Password | Password update | S2B | ✅ |
 | 91 | Contact Information | Email + alerts |S2B|🟡 2B-2|
 | 92 | User Manager | Sub-users + roles |S2B|🟡 2B-2|
 | 93 | Shortcuts / Favorites | Quick links | S2B | 🟡 2B |
@@ -319,7 +319,7 @@
 | 193 | One-click installer (cPanel ka install script) | `installer/install.sh` + `step2-install.sh` | S1·S2A | ✅ |
 | 194 | WHM API 1 (billing integration) | Wahi function naam + JSON shape | S12 | ⏳ S12 |
 | 195 | API tokens with permissions | Per-function token scopes | S12 | ⏳ S12 |
-| 196 | cPanel license (paid) | **AlphaCP license system** (Ed25519 signed, our own) |S2C|⏳ S2C|
+| 196 | cPanel license (paid) | **AlphaCP license system** (Ed25519 signed, our own) |S2C|🟡 S2C|
 | 197 | cPanel updates (one-click + auto) | One-click update + rollback + `alphacp update` | S15 | ⏳ S15 |
 | 198 | Multi-server / link nodes | Central + nodes, per-node tasks | S15 | ⏳ S15 |
 | 199 | cPanel backup import (hosting migrations) | `.tar.gz` cPanel backup import | S10 | ⏳ S10 |

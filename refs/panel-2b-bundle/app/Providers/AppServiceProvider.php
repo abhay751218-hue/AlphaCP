@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Support\PermissionCatalog;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -63,6 +64,14 @@ class AppServiceProvider extends ServiceProvider
             return \Illuminate\Cache\RateLimiting\Limit::perMinute(
                 (int) config('acp.security.throttle_per_minute', 10)
             )->by($request->ip());
+        });
+
+        // ---- Shared panel layout data ---------------------------------------
+        // Every authenticated page uses the same header. Supplying the server
+        // row here prevents pages such as User Manager/Audit from showing
+        // `server: unknown` merely because their controller is not a dashboard.
+        View::composer('layouts.panel', static function ($view): void {
+            $view->with('server', \App\Support\Panel::server());
         });
 
         // ---- Blade helpers ---------------------------------------------------

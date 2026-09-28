@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Fixed / Changed
+- **S2C license client started (29 Sep)** — active panel bundle now has an offline-first 15-day local trial,
+  machine fingerprint, atomic `0600` local license store, Ed25519 canonical-payload verification,
+  optional `/api/v1/activate` client, admin `/license` page, `license.view`/`license.manage` enforcement,
+  and audit events. License failure only degrades the panel; customer websites/email/DNS/backups are untouched.
+- **Shared panel header fix** — server name is now supplied through the layout composer, so User Manager,
+  Audit and Security pages no longer show `server: unknown` just because their controllers do not pass the
+  dashboard-only `server` variable.
 - **Step 2B installer v0.3.7 (29 Sep)** — fresh installs now create the permanent
   `phpX.Y-fpm.service.d/alphacp-panel.conf` systemd drop-in before restarting PHP-FPM.
   It grants only `/usr/local/alphacp` and `/run/php` write access, preventing Ubuntu/Ondrej

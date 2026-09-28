@@ -145,7 +145,7 @@ final class ModuleCatalog
                     ['name' => 'Backup Config',       'step' => 'S10', 'status' => 'step'],
                     ['name' => 'Security Center',     'step' => 'S13', 'status' => 'step'],
                     ['name' => 'API Tokens',          'step' => 'S12', 'status' => 'step'],
-                    ['name' => 'License',             'step' => 'S2C', 'status' => 'step'],
+                    ['name' => 'License & Trial',      'step' => 'S2C', 'status' => 'live', 'route' => 'license.index'],
                     ['name' => 'Updates',             'step' => 'S15', 'status' => 'step'],
                 ],
             ],

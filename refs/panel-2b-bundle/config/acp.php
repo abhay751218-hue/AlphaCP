@@ -10,7 +10,7 @@ declare(strict_types=1);
  */
 return [
     // Panel + agent versions (shown in the UI footer and system page)
-    'version'       => env('ACP_VERSION', '0.3.0'),
+    'version'       => env('ACP_VERSION', '0.3.1'),
     'agent_version' => env('ACP_AGENT_VERSION', '0.1.0'),
 
     // AlphaCP install root (agent, etc/, logs/, panel/)
@@ -37,6 +37,17 @@ return [
         'password'     => env('ACP_ADMIN_PASSWORD'),
         'email'        => env('ACP_ADMIN_EMAIL'),
         'force_change' => (bool) env('ACP_ADMIN_FORCE_CHANGE', true),
+    ],
+
+    // License client (S2C): offline-first signed payload + local trial.
+    // An empty API URL is safe: the panel starts a local trial and never blocks
+    // customer websites/email because a license server is unavailable.
+    'license' => [
+        'api_url' => (string) env('ACP_LICENSE_API_URL', ''),
+        'timeout' => (int) env('ACP_LICENSE_TIMEOUT', 8),
+        'store_path' => (string) env('ACP_LICENSE_STORE_PATH', storage_path('app/private/license.json')),
+        'public_key' => (string) env('ACP_LICENSE_PUBLIC_KEY', ''),
+        'public_key_path' => (string) env('ACP_LICENSE_PUBLIC_KEY_PATH', config_path('license_public.pem')),
     ],
 
     // Password quality

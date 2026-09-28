@@ -6,6 +6,7 @@ use App\Http\Controllers\AuditController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SystemController;
 use App\Http\Controllers\UsersController;
@@ -79,6 +80,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
     // -- Audit -----------------------------------------------------------------
     Route::get('/audit', [AuditController::class, 'index'])
         ->middleware('perm:audit.view')->name('audit.index');
+
+    // -- License / trial (admin) -----------------------------------------------
+    Route::prefix('license')->name('license.')->middleware('perm:license.view')->group(function (): void {
+        Route::get('/', [LicenseController::class, 'index'])->name('index');
+        Route::post('/activate', [LicenseController::class, 'activate'])
+            ->middleware('perm:license.manage')->name('activate');
+    });
 
     // -- Server (admin) ----------------------------------------------------------
     Route::prefix('system')->name('system.')->middleware('perm:system.view')->group(function (): void {
