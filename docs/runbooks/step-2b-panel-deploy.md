@@ -1,7 +1,7 @@
 # Runbook — Step 2B: panel deploy on dev-srv1 (working path)
 
 **Status:** ✅ **INSTALLED ON dev-srv1 (29 Sep 2026 00:02)** — `https://13.207.123.177:8090` live, admin `admin`, password `/root/.alphacp-admin-credentials` me; installer v0.3.3 = https://paste.rs/0r1Mi (yahi chalaya gaya) · **Panel:** v0.3.0 (Laravel 13.33.0)
-**Script:** `installer/step2b-setup.sh` (v0.3.7 — permanent php-fpm sandbox fix) · **Source:** `installer/step2b-finish.sh` + generated `installer/step2b-setup.sh`
+**Script:** `installer/step2b-setup.sh` (v0.3.8 — active panel artifact + permanent php-fpm sandbox fix) · **Source:** `installer/step2b-finish.sh` + generated `installer/step2b-setup.sh`
 **Install kiya gaya version (dev-srv1):** v0.3.3 = https://paste.rs/0r1Mi
 **Panel URL:** `https://13.207.123.177:8090` · panel user: `alphacp` (never root)
 
@@ -97,10 +97,12 @@ har request 500. Fix: saari artisan commands ab `runuser -u alphacp --` se chalt
 aakhir me `storage/` + `bootstrap/cache` ka chown **+ chmod (0770/0660)** hota hai.
 Locally reproduce karke verify kiya: 500 → script → 200 ✅.
 
-## 4j. v0.3.7 — fresh installs ka permanent sandbox fix
+## 4j. v0.3.8 — fresh installs ka active bundle + permanent sandbox fix
 
 Doctor v1.6 ne existing server ka 500 fix kar diya tha. Ab installer me bhi wahi protection
 permanently add hai, taaki naye Ubuntu/Ondrej server par pehli request se pehle hi problem na aaye.
+Installer ab repository ke active Laravel 13 code artifact ko SHA-256 verify karke download karta hai,
+isliye S2C license/trial code bhi fresh install me aata hai.
 `step2b-finish.sh` PHP version choose karne ke baad, pool file likhne ke turant baad:
 
 ```ini
@@ -113,12 +115,13 @@ Systemd available ho to installer drop-in ko
 `/etc/systemd/system/phpX.Y-fpm.service.d/alphacp-panel.conf` me rakhta hai, `daemon-reload`
 karta hai, aur uske baad hi PHP-FPM restart karta hai. Non-systemd container/test mode me
 installer safe tarike se drop-in skip karta hai. Script version **0.3.7** hai; generated script
-`python3 tools/merge-finish-stage.py` se dobara ban sakti hai.
+`python3 tools/build-panel-2b-bundle.py` ke baad `python3 tools/merge-finish-stage.py` se dobara ban sakti hai.
 
 Validation performed:
 
+- `python3 tools/build-panel-2b-bundle.py` successful — artifact SHA-256 `32fe68cce8868d05a23b962821acf20d19e4f56b4d8711140b40aaa063b6494c`
 - `python3 tools/merge-finish-stage.py` successful
-- generated script me `ReadWritePaths` present
+- generated script me active artifact URL, SHA-256 aur `ReadWritePaths` present
 - `bash -n installer/step2b-finish.sh` ✅
 - `bash -n installer/step2b-setup.sh` ✅
 

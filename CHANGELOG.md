@@ -12,6 +12,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 - **Shared panel header fix** — server name is now supplied through the layout composer, so User Manager,
   Audit and Security pages no longer show `server: unknown` just because their controllers do not pass the
   dashboard-only `server` variable.
+- **Step 2B installer v0.3.8 (29 Sep)** — fresh installs now fetch the signed/checksummed
+  Laravel 13 panel code-only artifact `artifacts/panel-code-0.3.1.tar.gz` from the repository,
+  instead of stale paste chunks. The GitHub URL and SHA-256 can be overridden with
+  `ACP_PANEL_BUNDLE_URL` / `ACP_PANEL_BUNDLE_SHA256` for a release mirror. The v0.3.7
+  permanent php-fpm sandbox fix remains included.
 - **Step 2B installer v0.3.7 (29 Sep)** — fresh installs now create the permanent
   `phpX.Y-fpm.service.d/alphacp-panel.conf` systemd drop-in before restarting PHP-FPM.
   It grants only `/usr/local/alphacp` and `/run/php` write access, preventing Ubuntu/Ondrej

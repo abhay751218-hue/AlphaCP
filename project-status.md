@@ -97,7 +97,9 @@ nahi sakta → **har web request 500**; CLI par ye bandish nahi lagti (isliye sa
 Local container me wahi condition bana kar verify: 500 → `ReadWritePaths=/usr/local/alphacp`
 drop-in → 200 → PANEL READY ✅. Doctor v1.6 = https://paste.rs/G72oK (detect + auto-fix).
 
-## 29 Sep — installer v0.3.7 hardened
-Fresh installs me bhi PHP-FPM restart se pehle permanent systemd drop-in create hota hai:
-`ReadWritePaths=-/usr/local/alphacp` + `ReadWritePaths=-/run/php`. Source aur generated installer
-`bash -n` se validate hain. Existing dev-srv1 par browser acceptance (password change + 2FA) ab next.
+## 29 Sep — installer v0.3.8 + S2C bundle
+Fresh installs me PHP-FPM restart se pehle permanent systemd drop-in create hota hai:
+`ReadWritePaths=-/usr/local/alphacp` + `ReadWritePaths=-/run/php`. Installer ab active Laravel 13
+panel-code artifact `artifacts/panel-code-0.3.1.tar.gz` ko SHA-256 verify karke fetch karta hai;
+isliye S2C license client fresh installs me bhi included rahega. Source aur generated installer
+`bash -n` se validate hain. Existing dev-srv1 par naya bundle deploy karna abhi pending hai.

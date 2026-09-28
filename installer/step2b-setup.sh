@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 #  AlphaCP — Step 2B FULL setup (code + composer + database + admin + nginx :8090)
-#  Version 0.3.7  ·  port 8090  ·  Ubuntu 22.04/24.04 (x86_64)
+#  Version 0.3.8  ·  port 8090  ·  Ubuntu 22.04/24.04 (x86_64)
 # -----------------------------------------------------------------------------
 #  Yeh script SAB kuch karti hai (kuch pehle se karne ki zarurat nahi):
 #     0. panel code khud download karti hai (checksum-verified) aur composer install
@@ -21,7 +21,7 @@ ACP_HOME="/usr/local/alphacp"
 PANEL_ROOT="${ACP_HOME}/panel"
 PANEL_USER="alphacp"
 PANEL_PORT="8090"
-ACP_INSTALLER_VERSION="0.3.7"
+ACP_INSTALLER_VERSION="0.3.8"
 DB_NAME="alphacp"
 DB_TEST_NAME="alphacp_test"
 ADMIN_USER="${ADMIN_USER:-admin}"
@@ -134,7 +134,7 @@ rand_pw() {
 
 
 # -----------------------------------------------------------------------------
-#  STAGE A — panel code laao (paste.rs chunks) + composer install
+#  STAGE A — panel code laao (GitHub artifact + checksum) + composer install
 # -----------------------------------------------------------------------------
 stage_code() {
   step "Stage A — panel code (Laravel 13) + composer install"
@@ -145,22 +145,17 @@ stage_code() {
     exit 1
   fi
 
-  local chunks=("kiprz" "tzbUI" "RZSl9")
-  local expected="61c46d6dd8e1ec1c74bc65cc6e49f575c5d21f999f6ca5c53b701b655c2f5a6c"
+  local bundle_url="${ACP_PANEL_BUNDLE_URL:-https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/arena/01a0ea0d-alphacp/artifacts/panel-code-0.3.1.tar.gz}"
+  local expected="${ACP_PANEL_BUNDLE_SHA256:-32fe68cce8868d05a23b962821acf20d19e4f56b4d8711140b40aaa063b6494c}"
   cd / 2>/dev/null || true          # panel dir delete karne se pehle cwd safe karo
   local work="/tmp/acp-setup.$$"
   mkdir -p "$work"
   trap 'rm -rf "${work:-}"' EXIT
 
-  info "panel code download (3 chunks)…"
-  local f
-  for f in "${chunks[@]}"; do
-    curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 120 \
-      "https://paste.rs/${f}" >> "${work}/panel.b64" \
-      || die "chunk ${f} download fail — net check karke dobara chalao"
-  done
-  base64 -d "${work}/panel.b64" > "${work}/panel-code.tar.gz" \
-    || die "base64 decode fail (chunk adhoora aaya — dobara chalao)"
+  info "panel code download (GitHub artifact)…"
+  curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 \
+    "${bundle_url}" > "${work}/panel-code.tar.gz" \
+    || die "panel artifact download fail — URL/network check karke dobara chalao"
 
   local got; got="$(sha256sum "${work}/panel-code.tar.gz" | awk '{print $1}')"
   if [[ "$got" != "$expected" ]]; then

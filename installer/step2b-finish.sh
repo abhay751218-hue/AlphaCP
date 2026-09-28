@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 #  AlphaCP — Step 2B finishing script (panel already copied + composer installed)
-#  Version 0.3.7  ·  port 8090  ·  Ubuntu 22.04/24.04 (x86_64)
+#  Version 0.3.8  ·  port 8090  ·  Ubuntu 22.04/24.04 (x86_64)
 # -----------------------------------------------------------------------------
 #  Jab tak panel ka code `/usr/local/alphacp/panel` me aa gaya ho aur
 #  `composer install` chal chuka ho, yeh script baaki ka kaam karti hai:
@@ -20,7 +20,7 @@ ACP_HOME="/usr/local/alphacp"
 PANEL_ROOT="${ACP_HOME}/panel"
 PANEL_USER="alphacp"
 PANEL_PORT="8090"
-ACP_INSTALLER_VERSION="0.3.7"
+ACP_INSTALLER_VERSION="0.3.8"
 DB_NAME="alphacp"
 DB_TEST_NAME="alphacp_test"
 ADMIN_USER="${ADMIN_USER:-admin}"

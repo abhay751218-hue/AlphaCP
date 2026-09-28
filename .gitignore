@@ -9,6 +9,8 @@
 # Dependencies and generated runtime files
 vendor/
 node_modules/
+__pycache__/
+*.py[cod]
 .phpunit.result.cache
 storage/logs/
 storage/framework/cache/
