@@ -214,6 +214,29 @@ Locally verify kiya (do scenarios):
 **Sabak (dono installers me fix):** Laravel `LOG_CHANNEL=daily` par **dated file** `laravel-YYYY-MM-DD.log` likhta hai,
 `laravel.log` nahi — isliye purane diagnostics khaali dikh rahe the.
 
+## 4k. Existing AWS server par safe panel upgrade
+
+Current `dev-srv1` jaise already-installed server ke liye **fresh installer v0.3.8 dobara mat
+chalana**. Usse panel code ko fresh extract karna hota hai. Existing server ke liye source-of-truth
+updater `installer/panel-update.sh` hai. Ye:
+
+1. `panel-code-0.3.1.tar.gz` ko GitHub se download karke SHA-256 verify karta hai;
+2. current `.env`, APP_KEY, storage aur database ko preserve karta hai;
+3. new code + Composer ko alag release directory me stage karta hai;
+4. `php artisan migrate/config/route cache` preflight karta hai;
+5. atomic swap ke baad HTTPS health check karta hai;
+6. HTTP 200 na mile to old panel automatic rollback karta hai.
+
+AWS server par chalane wali current branch command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/arena/01a0ea0d-alphacp/installer/panel-update.sh -o /tmp/alphacp-panel-update-0.1.0.sh && sudo bash /tmp/alphacp-panel-update-0.1.0.sh
+```
+
+Ye command **existing AlphaCP panel** ke liye hai; blank VPS par nahi. Update ke baad browser me
+existing admin se login karke `License & Trial` tile verify karo. Backup path script output me print
+hoga; rollback ke liye turant delete nahi kiya jata.
+
 ## 5. Agar kuch fail ho
 
 ```bash
