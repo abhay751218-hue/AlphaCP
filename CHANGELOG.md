@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Panel 0.3.2 + panel-update 0.2.0 (29 Sep)**
+  - **Bug fix:** `alphacp:admin-password <user>` (bina `--password`, lockout rescue ka tareeka) ~2.9% baar
+    validation error se fail hota tha — random password me kabhi digit/capital/small letter nahi hota tha.
+    Naya `App\Support\PasswordGenerator` hamesha teeno class deta hai (ambiguous 0/O/1/l/I nahi).
+    `PasswordGeneratorTest` 2000 samples check karta hai. Installer `rand_pw` (step2b-finish/setup) me bhi yahi fix.
+  - `panel-update.sh` 0.2.0: version/URL/SHA ek jagah, **commit-pinned** artifact URL (pehle mutable branch),
+    `.env ACP_VERSION` update, SQLite-in-panel safety net (DB swap me saath jaye), sirf aakhri 3 backups,
+    end me `alphacp-sync`.
+  - `tools/build-panel-2b-bundle.py` ab `MANIFEST.json` version se file naam banata hai.
+  - Tests: `tools/sim/panel-tests.sh` (PHPUnit via php-wasm; 0.3.1 = 39 pass, 0.3.2 = 42 pass, 0 fail,
+    6 wasm-skip), `tools/sim/update-sim.sh` **37/37**.
+- **Merge (29 Sep):** dusre AI ka S2C kaam (branch `arena/01a0ea0d-alphacp`: license client + 15-day trial,
+  panel-update 0.1.0, panel 0.3.1) PR #1 me merge; uske unit/feature tests yahan chalaye — sab pass.
 - **alphacp-sync v1.0 (29 Sep)** — `installer/alphacp-sync.sh`: server → GitHub auto-sync, taaki GitHub
   hamesha server jaisa rahe aur naya AI bina poochhe shuru kar sake.
   - GitHub deploy key (ed25519, host key pinned) + port 22 band ho to `ssh.github.com:443` fallback.

@@ -17,6 +17,20 @@ curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/aa2091dc3ee
 - Baad me turant sync karna ho to: `sudo alphacp-sync`. Status ke liye: `sudo alphacp-sync --status`
 - Test: `sudo bash tools/sim/sync-sim.sh` → 45/45 PASS.
 
+## ⏭️ Uske baad (queued — sync OK hone ke baad hi)
+
+### panel-update 0.2.0 → panel 0.3.2 (admin-password rescue fix) — auto-rollback ke saath
+```bash
+curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/1d61cb850b851d6ad09891fc9557e562847889c2/installer/panel-update.sh -o /tmp/acp-panel-update-0.2.0.sh && sudo bash /tmp/acp-panel-update-0.2.0.sh
+```
+- script sha256: `d52503e72a61e1cf9f358fc6b7f579d92f7a7be3ebd016d5ed1eb039efe310b0`
+- artifact: `panel-code-0.3.2.tar.gz` sha256 `7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab` (commit 6001033)
+- Expected: banner `updater 0.2.0` → checksum verified → Composer → preflight → swap → `health HTTP 200`
+  → `==> UPDATE COMPLETE ✅` → `GitHub updated`. Health fail ho to khud purana panel wapas (`Rollback successful`).
+- DB, `.env`, APP_KEY, sessions, license/trial file (`storage/`) same rehte hain. Backups: aakhri 3.
+- Test: `sudo bash tools/sim/update-sim.sh` → 37/37; `bash tools/sim/panel-tests.sh` → 42 pass / 0 fail.
+
+## 🩺 Sirf zaroorat par
 
 ### panel-doctor v1.7 — panel ka HTTP 500 fix + public password rotate (sirf tab, jab panel 500 de raha ho)
 ```bash
@@ -35,6 +49,7 @@ Har naye feature/fix ke saath yahan ek nayi row aayegi:
 ## ❌ Superseded — mat chalao
 | Purani command | Kyun |
 |---|---|
+| `arena/01a0ea0d-alphacp/installer/panel-update.sh` (updater 0.1.0, panel 0.3.1) | chal chuka (S2C deployed); ab 0.2.0 → 0.3.2 |
 | paste.rs/G72oK (doctor v1.6) | v1.7 me cwd bug fix + security step |
 | paste.rs/pnV7U, LxbJT, vbVD9, wsPmr (doctor v1.5–v1.1) | superseded |
 | paste.rs/0r1Mi, VD0Px, vVdFC, EPW3b (installer v0.3.3–v0.3.6) | panel install ho chuka hai; v0.3.7 aayega |

@@ -19,13 +19,14 @@
 ## 2. Code kahan hai
 | Path | Kya |
 |---|---|
-| `server-snapshot/files/usr/local/alphacp/panel/` | **Server par jo panel code deployed hai** (Laravel 13.33.0). Isme license + 15-day trial bhi hai. Kisi aur AI ne ye kaam seedha server par kiya tha. |
-| `server-snapshot/files/usr/local/alphacp/{agent,bin,...}` | paneld agent, CLI, baaki tools (jo server par hain) |
-| `server-snapshot/files/etc/...` | nginx vhost, php-fpm pool, systemd drop-ins |
-| `server-snapshot/db-schema.sql` | DB structure (data nahi) |
-| `installer/` | Scripts jo server par chalti hain: `panel-doctor.sh`, `alphacp-sync.sh`, installers |
-| `tools/sim/` | Local simulation tests. Har script user ko dene se pehle yahan test hoti hai. |
-| `refs/panel-2b-bundle/`, `panel/` | Purane source copies. `server-snapshot` inse naya hai. |
+| **`refs/panel-2b-bundle/`** | ⭐ **Panel ka SOURCE (Laravel 13.33.0)** — login, RBAC, 2FA, **license + 15-day trial** (`app/Support/License/`, design: `docs/modules/license.md`), `PasswordGenerator`. Panel badalna ho to yahin badlo. |
+| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Server par yahi deploy hota hai. Latest: **0.3.2**. |
+| `artifacts/panel-bundle-0.3.0.tar.gz` | Purana bundle **vendor/ ke saath** — sandbox tests isi ka vendor use karte hain (composer.lock same). |
+| `server-snapshot/files/usr/local/alphacp/…` | **Server par jo ABHI deployed hai** (alphacp-sync se). Source se mismatch ho to server = sach; farq samjho phir source theek karo. |
+| `server-snapshot/files/etc/...`, `server-snapshot/db-schema.sql` | nginx vhost, php-fpm pool, systemd drop-ins; DB structure (data nahi) |
+| `installer/` | Server scripts: `panel-update.sh` (panel update + auto-rollback), `alphacp-sync.sh`, `panel-doctor.sh`, installers (`step2b-finish.sh` = source, `step2b-setup.sh` = generated) |
+| `tools/sim/` | Tests jo har command dene se pehle chalte hain (neeche §4b) |
+| `panel/`, `agent/`, `cli/`, `license-server/` | Purana scaffold / agla kaam (license-server API abhi pending) |
 
 `server-snapshot/` me **secrets nahi hain**, jaise `.env`, DB password, APP_KEY, license keys, admin password.
 Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hain.
@@ -48,8 +49,37 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 - Manual sync: `sudo alphacp-sync`. Status dekhna ho to: `sudo alphacp-sync --status`
 - Server sirf `server-snapshot/` ko chhoota hai. Baaki repo AI/dev ka hai, isliye conflict nahi hota.
 
+## 4b. Tests (sab sandbox me chalte hain — system PHP/MySQL ki zaroorat nahi)
+| Command | Kya test karta hai | Last result |
+|---|---|---|
+| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **42 pass, 0 fail, 6 wasm-skip** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh`: 0.3.0→0.3.2, sha mismatch, health-fail rollback, backup prune, sync hook | **37/37** |
+| `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
+| `sudo bash tools/sim/sync-sim.sh` | alphacp-sync (secret leak attempts, rebase, deploy-key flow, 443 fallback) | **45/45** |
+
+php-wasm ki limits (code ki galti NAHI): PHP 8.4 wasm PHPUnit me crash karta hai → 8.5 use hota hai; Mockery
+console-output mock crash karta hai → runner temp copy me `$mockConsoleOutput=false` lagata hai, isliye
+`AdminPasswordCommandTest` ke 5 PendingCommand tests aur `ConfigBootTest` (child `php` process) "wasm-skip"
+hote hain. Ek hi phpunit run me poora suite crash karta hai → runner har file alag chalata hai.
+Real server (PHP 8.4 FPM) par poora suite: `cd /usr/local/alphacp/panel && sudo -u alphacp php artisan test` (dev deps chahiye).
+
+## 4c. Panel update kaise bhejein (recipe)
+1. `refs/panel-2b-bundle/` me change + test likho; `MANIFEST.json` aur `config/acp.php` me version bump.
+2. `python3 tools/build-panel-2b-bundle.py` → `artifacts/panel-code-<ver>.tar.gz` (sha256 print hota hai).
+3. `bash tools/sim/panel-tests.sh` → 0 fail. Commit + push (commit **A**).
+4. `installer/panel-update.sh` me `UPDATER_VERSION`, `PANEL_VERSION`, `BUNDLE_URL` (commit **A** ka raw link), `BUNDLE_SHA256` badlo.
+5. `sudo bash tools/sim/update-sim.sh` → sab PASS. Commit + push (commit **B**). `gh api` se GitHub copy verify karo.
+6. `COMMANDS.md` me commit **B** ka link. Updater end me `alphacp-sync` khud chalata hai → GitHub bhi update.
+
+⚠️ Dusre AI kabhi-kabhi alag `arena/*` branch par push karte hain. Shuru me `git ls-remote origin` dekho, aur
+unka kaam PR se `main` me merge karo (29 Sep: `arena/01a0ea0d-alphacp` ka S2C kaam PR #1 me merge hua).
+
 ## 5. Abhi kahan hain (roadmap position)
-Step 0 → 2B (panel + login + RBAC + 2FA) ✅, Step 2C (license + 15-day trial) ✅ (server par; code `server-snapshot` me).
-**Next: Step 3 — Provisioning engine** (hosting account create/suspend/unsuspend/terminate: Linux user, home dir,
-Apache vhost, PHP-FPM pool, quota). Uske baad S4 Packages & limits → … → S12 WHM API 1 billing layer.
+- Step 0 → 2B (panel + login + RBAC + 2FA + password change) ✅
+- Step 2C (license + 15-day trial) 🟡 — **panel client + offline trial server par deployed (0.3.1)**;
+  apna license-server API (`license-server/`, activation/renewal) abhi baaki.
+- Panel **0.3.2** (admin-password rescue fix) ready — `COMMANDS.md` me queued.
+- **Next: Step 3 — Provisioning engine** (hosting account create/suspend/unsuspend/terminate: Linux user, home dir,
+  Apache vhost, PHP-FPM pool, quota). Uske baad S4 Packages & limits → … → S12 WHM API 1 billing layer.
+
 Latest status ke liye hamesha `server-snapshot/STATE.md` + `CHANGELOG.md` dekho.
