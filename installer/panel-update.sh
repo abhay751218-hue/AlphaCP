@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# Version 0.3.1 panel bundle / updater 0.1.0
+# updater 0.2.0  ·  default panel bundle 0.3.2
+#
+# 0.2.0: version/URL/SHA ek jagah (commit-pinned URL, branch nahi), .env ACP_VERSION update,
+#        sirf aakhri 3 backups rakhta hai, end me alphacp-sync (GitHub auto-update).
 #
 # Use on an EXISTING AlphaCP server only. It preserves the current .env,
 # APP_KEY, database, panel-admin credentials and storage, stages the new code,
@@ -14,8 +17,11 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/arena/01a0ea0d-alphacp/artifacts/panel-code-0.3.1.tar.gz}"
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-32fe68cce8868d05a23b962821acf20d19e4f56b4d8711140b40aaa063b6494c}"
+UPDATER_VERSION="0.2.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.3.2}"
+BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/6001033f0ee6e76614a390bc394e8d7e76ea4bdf/artifacts/panel-code-0.3.2.tar.gz}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab}"
+KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 LOG_FILE="/var/log/alphacp-panel-update.log"
 STAMP="$(date -u +%Y%m%d%H%M%S)"
 RELEASES="${ACP_HOME}/releases"
@@ -66,8 +72,8 @@ PHP_BIN="/usr/bin/php${FPM_VERSION}"
 FPM_UNIT="php${FPM_VERSION}-fpm"
 
 say ""
-say "${C_BOLD}AlphaCP existing-server updater 0.1.0${C_RESET}"
-say "Panel bundle: 0.3.1 (S2C license/trial + panel fixes)"
+say "${C_BOLD}AlphaCP existing-server updater ${UPDATER_VERSION}${C_RESET}   (yahan '${UPDATER_VERSION}' dikhe = sahi command)"
+say "Panel bundle: ${PANEL_VERSION}"
 say "PHP-FPM: ${FPM_UNIT} · PHP: $(${PHP_BIN} -r 'echo PHP_VERSION;' 2>/dev/null || echo unknown)"
 say ""
 
@@ -97,6 +103,16 @@ cp -a "${PANEL_ROOT}/.env" "${NEW_PANEL}/.env"
 if [[ -d "${PANEL_ROOT}/storage" ]]; then
   cp -a "${PANEL_ROOT}/storage" "${NEW_PANEL}/storage"
 fi
+# SQLite DB panel ke andar ho (dev/test setups) to wo bhi saath le jao — warna swap ke baad DB "gayab".
+# (dev-srv1 MariaDB use karta hai; ye sirf safety net hai.) Swap se theek pehle dobara copy hota hai.
+preserve_sqlite() {
+  local f
+  for f in "${PANEL_ROOT}"/database/*.sqlite "${PANEL_ROOT}"/database/*.sqlite-wal "${PANEL_ROOT}"/database/*.sqlite-shm; do
+    [[ -f "${f}" ]] && cp -a "${f}" "${NEW_PANEL}/database/"
+  done
+  return 0
+}
+preserve_sqlite
 mkdir -p "${NEW_PANEL}/storage/app/private" \
          "${NEW_PANEL}/storage/framework/cache/data" \
          "${NEW_PANEL}/storage/framework/sessions" \
@@ -104,6 +120,12 @@ mkdir -p "${NEW_PANEL}/storage/app/private" \
          "${NEW_PANEL}/storage/logs" \
          "${NEW_PANEL}/bootstrap/cache"
 chown -R "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/storage" "${NEW_PANEL}/bootstrap/cache"
+# naye panel ki .env me version (rollback par purani .env wapas aati hai)
+if grep -q '^ACP_VERSION=' "${NEW_PANEL}/.env"; then
+  sed -i "s/^ACP_VERSION=.*/ACP_VERSION=${PANEL_VERSION}/" "${NEW_PANEL}/.env"
+else
+  printf '\nACP_VERSION=%s\n' "${PANEL_VERSION}" >> "${NEW_PANEL}/.env"
+fi
 chown "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/.env"
 chmod 0640 "${NEW_PANEL}/.env"
 
@@ -172,6 +194,7 @@ rollback_current() {
 }
 
 info "atomic panel swap ho raha hai"
+preserve_sqlite
 mv "${PANEL_ROOT}" "${BACKUP_PANEL}"
 mv "${NEW_PANEL}" "${PANEL_ROOT}"
 SWAPPED=1
@@ -208,7 +231,17 @@ fi
 ok "new panel health HTTP 200"
 say ""
 say "${C_GREEN}${C_BOLD}==> UPDATE COMPLETE ✅${C_RESET}"
-say "New panel: 0.3.1 (license/trial client included)"
+say "New panel: ${PANEL_VERSION}"
 say "Backup: ${BACKUP_PANEL}"
 say "URL: https://127.0.0.1:${PANEL_PORT}/"
-say "Ab browser me existing admin login karke License & Trial tile check karein."
+
+# purane backups: sirf aakhri KEEP_BACKUPS rakho (disk na bhare)
+mapfile -t OLD_BACKUPS < <(ls -1d "${RELEASES}"/panel-backup-* 2>/dev/null | sort | head -n "-${KEEP_BACKUPS}")
+for d in "${OLD_BACKUPS[@]}"; do [[ -n "${d}" && -d "${d}" ]] && rm -rf "${d}" && info "purana backup hataya: $(basename "${d}")"; done
+
+# GitHub ko bhi update karo (alphacp-sync setup ho to) — fail ho to bhi update safal hai
+if command -v alphacp-sync >/dev/null 2>&1; then
+  info "GitHub sync (alphacp-sync) chala raha hoon"
+  alphacp-sync </dev/null >>"${LOG_FILE}" 2>&1 && ok "GitHub updated (server-snapshot)" || warn "GitHub sync fail — baad me: sudo alphacp-sync"
+fi
+say "— panel-update ${UPDATER_VERSION}"
