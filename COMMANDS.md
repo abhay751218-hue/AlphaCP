@@ -7,7 +7,18 @@
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-doctor v1.7 — panel ka HTTP 500 fix + public password rotate
+### alphacp-sync v1.0 — server → GitHub auto-sync (ek baar setup, phir har ghante khud)
+```bash
+curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/aa2091dc3ee28850266b8348aea1ea89408c64c2/installer/alphacp-sync.sh -o /tmp/acp-sync-v1.0.sh && sudo bash /tmp/acp-sync-v1.0.sh
+```
+- sha256: `bef5334bf07a57a3817c160d926b264272217e4442799599e7cfb502d352fdcd`
+- Screen par ek `ssh-ed25519 ...` line aayegi. Use https://github.com/abhay751218-hue/AlphaCP/settings/keys/new me
+  paste karo aur **"Allow write access" par tick** lagao. Script khud wait karke aage badhegi aur `==> SYNC OK ✅` dikhayegi.
+- Baad me turant sync karna ho to: `sudo alphacp-sync`. Status ke liye: `sudo alphacp-sync --status`
+- Test: `sudo bash tools/sim/sync-sim.sh` → 45/45 PASS.
+
+
+### panel-doctor v1.7 — panel ka HTTP 500 fix + public password rotate (sirf tab, jab panel 500 de raha ho)
 ```bash
 curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/da3539029d1010f33fd550e7b4d016785c932103/installer/panel-doctor.sh -o /tmp/acp-doctor-v1.7.sh && sudo bash /tmp/acp-doctor-v1.7.sh
 ```
