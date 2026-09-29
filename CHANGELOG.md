@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 5 AutoSSL (29 Sep)** — Let's Encrypt via certbot HTTP-01 (`ssl.issue`
+  mode=letsencrypt) + Run AutoSSL / include-exclude. Self-signed fallback
+  remains. Panel **0.9.0**, agent **0.6.0**.
+  Tests: panel **83/0**, provision-sim **36/36**.
 - **Step 5 SSL/TLS Status (29 Sep)** — self-signed certs + Apache :443 vhost
   (`ssl.issue` / `ssl.remove`). Panel **0.8.0**, agent **0.5.0**.
   Tests: panel **80/0**, provision-sim **34/34**.

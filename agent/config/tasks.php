@@ -244,8 +244,8 @@ return [
     'ssl.issue' => [
         'handler'     => Tasks\SslIssue::class,
         'safety'      => 'mutating',
-        'timeout'     => 60,
-        'description' => 'Issue a self-signed cert and write Apache :443 vhost.',
+        'timeout'     => 120,
+        'description' => 'Issue Let\'s Encrypt (certbot webroot) or self-signed cert + Apache :443 vhost.',
         'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
         'schema'      => [
             'type'                 => 'object',
@@ -256,6 +256,7 @@ return [
                 'domain'        => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
                 'document_root' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 255],
                 'mode'          => ['type' => 'string', 'enum' => ['selfsigned', 'letsencrypt']],
+                'email'         => ['type' => 'string', 'maxLength' => 190],
             ],
         ],
     ],

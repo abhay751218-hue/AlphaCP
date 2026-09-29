@@ -14,7 +14,7 @@ class Domain extends Model
     protected $fillable = [
         'account_id', 'type', 'domain', 'document_root', 'redirect_url',
         'redirect_code', 'php_version', 'status',
-        'ssl_status', 'ssl_issuer', 'ssl_not_after',
+        'ssl_status', 'ssl_issuer', 'ssl_not_after', 'ssl_autossl', 'ssl_last_error',
     ];
 
     protected function casts(): array
@@ -22,6 +22,7 @@ class Domain extends Model
         return [
             'redirect_code' => 'integer',
             'ssl_not_after' => 'datetime',
+            'ssl_autossl' => 'boolean',
         ];
     }
 

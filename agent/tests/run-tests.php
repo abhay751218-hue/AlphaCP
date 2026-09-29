@@ -445,6 +445,54 @@ test('ssl.issue writes certs and :443 vhost', function (): void {
     assert_true(!is_file($vhost));
     acp_account_cleanup($harness);
 });
+test('ssl.issue letsencrypt runs certbot and writes :443 vhost', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $doc = $harness['root'] . '/home/alicehost/public_html';
+    $out = (new SslIssue())->handle([
+        'username' => 'alicehost',
+        'domain' => 'shop.example.com',
+        'document_root' => $doc,
+        'mode' => 'letsencrypt',
+        'email' => 'alice@example.com',
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'active');
+    assert_true($out['issuer'] === 'letsencrypt');
+    $slug = 'shop-example-com';
+    $vhost = $harness['root'] . '/apache/sites-available/acp-alicehost-' . $slug . '-ssl.conf';
+    assert_true(is_file($vhost));
+    $cert = (string) file_get_contents($harness['root'] . '/home/alicehost/ssl/' . $slug . '/cert.pem');
+    assert_true(str_contains($cert, 'LE-fake'));
+    $bins = array_map('basename', array_column($harness['cmd']->calls, 0));
+    assert_true(in_array('certbot', $bins, true), 'certbot must run');
+    $leLine = '';
+    foreach ($harness['cmd']->calls as $argv) {
+        if (basename((string) ($argv[0] ?? '')) === 'certbot') {
+            $leLine = implode(' ', $argv);
+        }
+    }
+    assert_true(str_contains($leLine, '--webroot'), 'webroot challenge');
+    assert_true(str_contains($leLine, 'alice@example.com'), 'acme email');
+    acp_account_cleanup($harness);
+});
+test('ssl.issue letsencrypt rejects certbot failure', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $harness['cmd']->failWhenContains = 'certbot';
+    $threw = false;
+    try {
+        (new SslIssue())->handle([
+            'username' => 'alicehost',
+            'domain' => 'shop.example.com',
+            'document_root' => $harness['root'] . '/home/alicehost/public_html',
+            'mode' => 'letsencrypt',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'certbot failed');
+    }
+    assert_true($threw, 'certbot failure must fail closed');
+    acp_account_cleanup($harness);
+});
 test('SafeFs refuses writes outside the allowlisted roots', function (): void {
     $harness = acp_account_harness();
     $fs = new SafeFs($harness['ctx']->paths);

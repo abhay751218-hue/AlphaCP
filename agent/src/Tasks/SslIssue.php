@@ -8,9 +8,10 @@ use Alphacp\Agent\AccountOs;
 use Alphacp\Agent\AccountPaths;
 use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskRejectedException;
+use RuntimeException;
 
 /**
- * ssl.issue — self-signed (or Let's Encrypt if certbot exists) + Apache :443 vhost.
+ * ssl.issue — Let's Encrypt (certbot webroot) or self-signed + Apache :443 vhost.
  *
  * @acp-task ssl.issue
  */
@@ -21,13 +22,17 @@ final class SslIssue implements TaskInterface
         $username = (string) $payload['username'];
         $domain = strtolower((string) $payload['domain']);
         $docroot = (string) $payload['document_root'];
-        $mode = (string) ($payload['mode'] ?? 'selfsigned');
+        $mode = (string) ($payload['mode'] ?? 'letsencrypt');
+        $email = strtolower(trim((string) ($payload['email'] ?? '')));
         $err = AccountIdentity::username($username) ?? AccountIdentity::domain($domain);
         if ($err !== null) {
             throw new TaskRejectedException($err);
         }
         if (!in_array($mode, ['selfsigned', 'letsencrypt'], true)) {
             throw new TaskRejectedException('invalid ssl mode');
+        }
+        if ($email !== '' && !str_contains($email, '@')) {
+            throw new TaskRejectedException('invalid email');
         }
         if ($ctx->paths === null) {
             throw new TaskRejectedException('ssl.issue requires PathGuard roots');
@@ -38,11 +43,13 @@ final class SslIssue implements TaskInterface
             throw new TaskRejectedException("linux user '{$username}' is not an AlphaCP account");
         }
 
-        if ($mode === 'letsencrypt') {
-            throw new TaskRejectedException('letsencrypt (certbot) S5 AutoSSL follow-up — use selfsigned for now');
+        try {
+            $issued = $mode === 'letsencrypt'
+                ? $os->issueLetsEncrypt($username, $domain, $docroot, $email)
+                : $os->issueSelfSigned($username, $domain);
+        } catch (RuntimeException $e) {
+            throw new TaskRejectedException($e->getMessage());
         }
-
-        $issued = $os->issueSelfSigned($username, $domain);
         $os->writeSslVhost($username, $domain, $docroot, $issued['cert'], $issued['key']);
         $os->reloadServices();
         $ctx->log->info("ssl {$domain} issued ({$issued['issuer']})");

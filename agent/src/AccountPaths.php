@@ -84,6 +84,11 @@ final class AccountPaths
         return $this->home($username) . '/ssl/' . $this->vhostSlug($domain);
     }
 
+    public function leConfigDir(string $username): string
+    {
+        return $this->home($username) . '/ssl/letsencrypt';
+    }
+
     public function vhostSsl(string $username, string $domain): string
     {
         return $this->apacheSites . '/acp-' . $username . '-' . $this->vhostSlug($domain) . '-ssl.conf';

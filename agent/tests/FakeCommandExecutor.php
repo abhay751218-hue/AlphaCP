@@ -40,6 +40,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'usermod' => $this->usermod($argv),
             'setquota', 'systemctl' => new CommandResult($argv, 0, "fake {$bin} ok\n", '', 1),
             'crontab' => $this->handleCrontab($argv, $stdin),
+            'certbot' => $this->handleCertbot($argv),
             default => new CommandResult($argv, 0, '', '', 1),
         };
     }
@@ -98,6 +99,31 @@ final class FakeCommandExecutor implements CommandExecutor
             unset($this->locked[$user]);
         }
         return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleCertbot(array $argv): CommandResult
+    {
+        $config = '';
+        $domain = '';
+        foreach ($argv as $i => $arg) {
+            if ($arg === '--config-dir' && isset($argv[$i + 1])) {
+                $config = (string) $argv[$i + 1];
+            }
+            if ($arg === '-d' && isset($argv[$i + 1])) {
+                $domain = (string) $argv[$i + 1];
+            }
+        }
+        if ($config === '' || $domain === '') {
+            return new CommandResult($argv, 1, '', 'certbot: missing --config-dir or -d', 1);
+        }
+        $live = $config . '/live/' . $domain;
+        if (!is_dir($live) && !@mkdir($live, 0700, true) && !is_dir($live)) {
+            return new CommandResult($argv, 1, '', 'certbot: mkdir live failed', 1);
+        }
+        file_put_contents($live . '/fullchain.pem', "-----BEGIN CERTIFICATE-----\nLE-fake\n-----END CERTIFICATE-----\n");
+        file_put_contents($live . '/privkey.pem', "-----BEGIN PRIVATE KEY-----\nLE-fake\n-----END PRIVATE KEY-----\n");
+        return new CommandResult($argv, 0, "Successfully received certificate.\n", '', 1);
     }
 
     /** @param list<string> $argv */

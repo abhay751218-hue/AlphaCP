@@ -280,6 +280,66 @@ final class AccountOs
         return ['cert' => $cert, 'key' => $key, 'not_after' => $notAfter, 'issuer' => 'selfsigned'];
     }
 
+    public function issueLetsEncrypt(string $username, string $domain, string $docroot, string $email): array
+    {
+        $realDoc = $this->assertDocrootInHome($username, $docroot);
+        $this->fs->mkdir($realDoc, 0755);
+        $le = $this->paths->leConfigDir($username);
+        $this->fs->mkdir($le . '/work', 0700);
+        $this->fs->mkdir($le . '/logs', 0700);
+        $this->fs->chownName($le, $username);
+
+        $argv = [
+            '/usr/bin/certbot',
+            'certonly',
+            '--webroot',
+            '-w', $realDoc,
+            '-d', $domain,
+            '--non-interactive',
+            '--agree-tos',
+            '--config-dir', $le,
+            '--work-dir', $le . '/work',
+            '--logs-dir', $le . '/logs',
+            '--keep-until-expiring',
+            '--preferred-challenges', 'http',
+        ];
+        $email = strtolower(trim($email));
+        if ($email !== '') {
+            $argv[] = '--email';
+            $argv[] = $email;
+        } else {
+            $argv[] = '--register-unsafely-without-email';
+        }
+
+        $result = $this->cmd->run($argv, 90);
+        if (!$result->ok()) {
+            throw new RuntimeException('certbot failed: ' . trim($result->stderr . ' ' . $result->stdout));
+        }
+
+        $liveCert = $le . '/live/' . $domain . '/fullchain.pem';
+        $liveKey = $le . '/live/' . $domain . '/privkey.pem';
+        if (!$this->fs->isFile($liveCert) || !$this->fs->isFile($liveKey)) {
+            throw new RuntimeException('certbot succeeded but live cert missing');
+        }
+
+        $dir = $this->paths->sslDir($username, $domain);
+        $this->fs->mkdir($dir, 0700);
+        $cert = $dir . '/cert.pem';
+        $key = $dir . '/privkey.pem';
+        $this->fs->write($cert, (string) file_get_contents($this->fs->assert($liveCert)), 0644);
+        $this->fs->write($key, (string) file_get_contents($this->fs->assert($liveKey)), 0600);
+        $this->fs->chownName($dir, $username);
+        $this->fs->chownName($cert, $username);
+        $this->fs->chownName($key, $username);
+
+        return [
+            'cert' => $cert,
+            'key' => $key,
+            'not_after' => gmdate('c', time() + (90 * 86400)),
+            'issuer' => 'letsencrypt',
+        ];
+    }
+
     public function writeSslVhost(string $username, string $domain, string $docroot, string $cert, string $key): void
     {
         $realDoc = $this->assertDocrootInHome($username, $docroot);

@@ -118,7 +118,7 @@
 |---|---|---|---|---|
 | 54 | SSH Access | Keys + shell access control | S6 | ⏳ S6 |
 | 55 | IP Blocker | IP/range block | S13 | ⏳ S13 |
-| 56 | SSL/TLS | CSR, cert install, keys | S5 | ✅ (self-signed; Let's Encrypt next) |
+| 56 | SSL/TLS | CSR, cert install, keys | S5 | ✅ (Let's Encrypt AutoSSL + self-signed) |
 | 57 | SSL/TLS Status | Sab domains ka SSL ek table | S5 | ✅ |
 | 58 | Two-Factor Authentication | TOTP 2FA |S2B-2|✅|
 | 59 | Password & Security | Password change + strength |S2B|✅|

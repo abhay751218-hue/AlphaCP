@@ -10,7 +10,7 @@
 | **S2** | Panel core: auth/RBAC/2FA/audit, **paneld agent**, task queue, license client + trial, base UI shell, systemd units | ✅ **2A/2B** · **2C 🟡** (license client/trial deployed; license-server API pending) |
 | **S3** | Provisioning engine: account create/suspend/unsuspend/terminate/limits (+ rollback), account UI | ✅ **deployed 0.4.0** (dedicated IP later) |
 | **S4** | Packages & limits manager (+ feature lists, cPanel-compatible limit keys) | ✅ **deployed 0.5.0** |
-| **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | 🟡 **Domains + MultiPHP + Cron + SSL self-signed (0.8.0)** — AutoSSL/INI/error pages later |
+| **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | 🟡 **Domains + MultiPHP + Cron + SSL/AutoSSL (0.9.0)** — INI/error pages later |
 | **S6** | File Manager, disk usage, FTP (+ jailed shell), SSH keys, Git deploys, trash | ⏳ |
 | **S7** | Email suite: mailboxes/quotas, forwarders, autoresponders, filters, spam/virus, deliverability (SPF/DKIM/DMARC), lists, webmail | ⏳ |
 | **S8** | Databases: create/manage, users, privileges, size limits, phpMyAdmin SSO, remote access | ⏳ |
