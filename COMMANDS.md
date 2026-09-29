@@ -14,7 +14,15 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-_(panel-update 0.6.0 — WHM/cPanel split + Domains — updater pin ke baad)_
+### panel-update 0.6.0 — Step 5: WHM vs cPanel + Domains
+```bash
+sudo alphacp-sync get 48f94a618631c68329e990833afb188e5686970c installer/panel-update.sh /tmp/acp-panel-update-0.6.0.sh 4116c0c2bce3bf0b25b26a6b8496fc9eb24c926344147f2d9dddc786b9a8aef2 && sudo bash /tmp/acp-panel-update-0.6.0.sh
+```
+- sha256: `4116c0c2bce3bf0b25b26a6b8496fc9eb24c926344147f2d9dddc786b9a8aef2`
+- Expected: banner `updater 0.6.0` → agent 0.3.0 → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer login = **cPanel** (Domains, quota — Create Account nahi). Admin = **WHM**.
+- Trial/password/APP_KEY nahi badalte.
+- Test: panel-tests **70/0**, provision-sim **31/31**, update-sim **62/62**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
