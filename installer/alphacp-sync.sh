@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — SERVER → GITHUB SYNC  v1.1
+#  AlphaCP — SERVER → GITHUB SYNC  v1.2
+#  v1.2: `alphacp-sync get <commit> <path> <out> [sha256]` — deploy key se repo ki file laata hai
+#        (PRIVATE repo me bhi chalta hai; raw.githubusercontent private repo par 404 deta hai)
 #  v1.1: releases/ (purane backup/failed panel copies) snapshot me nahi — sirf naam STATE.md me;
 #        STATE.md me panel MANIFEST version + license/trial haalat (state/expiry, koi secret nahi)
 # -----------------------------------------------------------------------------
@@ -23,7 +25,7 @@
 # =============================================================================
 set -uo pipefail
 
-SYNC_VERSION="1.1"
+SYNC_VERSION="1.2"
 REPO_SLUG="${SYNC_REPO_SLUG:-abhay751218-hue/AlphaCP}"
 BRANCH="${SYNC_BRANCH:-main}"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
@@ -50,15 +52,18 @@ die()  { err "$*"; say "    — alphacp-sync v${SYNC_VERSION}"; exit 1; }
 MODE="sync"
 case "${1:-}" in
   --status) MODE="status" ;;
+  get) MODE="get"; shift ;;
   --help|-h) sed -n '2,24p' "$0"; exit 0 ;;
   "") ;;
-  *) die "unknown option: $1  (use: --status)" ;;
+  *) die "unknown option: $1  (use: --status | get <commit> <path> <out> [sha256])" ;;
 esac
 
+if [[ "${MODE}" != "get" ]]; then
 say ""
 say "${C_B}===============================================================${C_0}"
 say "${C_B}   AlphaCP SERVER → GITHUB SYNC  -  v${SYNC_VERSION}${C_0}"
 say "${C_B}===============================================================${C_0}"
+fi
 
 # GitHub ke official SSH host keys (api.github.com/meta se verify kiye) — MITM se bachav
 write_known_hosts() {
@@ -80,6 +85,38 @@ export_git_ssh() {
   export GIT_SSH_COMMAND="ssh -i ${KEY} -o IdentitiesOnly=yes -o UserKnownHostsFile=${KNOWN} -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=15"
   export GIT_TERMINAL_PROMPT=0
 }
+
+# ============================================================== get (v1.2)
+# alphacp-sync get <40-hex-commit> <repo/path> <out-file> [sha256]
+if [[ "${MODE}" == "get" ]]; then
+  G_COMMIT="${1:-}"; G_PATH="${2:-}"; G_OUT="${3:-}"; G_SHA="${4:-}"
+  [[ "${G_COMMIT}" =~ ^[0-9a-f]{40}$ ]] || die "get: commit poora 40-char SHA hona chahiye (mila: '${G_COMMIT}')"
+  [[ -n "${G_PATH}" && "${G_PATH}" != /* && "/${G_PATH}/" != */../* ]] || die "get: galat repo path '${G_PATH}'"
+  [[ -n "${G_OUT}" ]] || die "get: output file do  (alphacp-sync get <commit> <path> <out> [sha256])"
+  [[ -z "${G_SHA}" || "${G_SHA}" =~ ^[0-9a-f]{64}$ ]] || die "get: sha256 64-char hex hona chahiye"
+  [[ -f "${KEY}" ]] || die "get: deploy key nahi hai — pehle setup: sudo alphacp-sync"
+  command -v git >/dev/null 2>&1 || die "get: git missing"
+  write_known_hosts; load_conf; export_git_ssh
+  CACHE="${WORK}/get-cache.git"; mkdir -p "${WORK}"
+  exec 8>"${WORK}/get.lock"; flock -w 120 8 || die "get: doosra get chal raha hai"
+  [[ -d "${CACHE}/objects" ]] || git init -q --bare "${CACHE}"
+  if ! git -C "${CACHE}" cat-file -e "${G_COMMIT}^{commit}" 2>/dev/null; then
+    if ! git -C "${CACHE}" fetch -q --no-tags --depth 1 "${REMOTE_URL}" "${G_COMMIT}" 2>"${WORK}/get.err"; then
+      # SHA seedha na mile (purana/squash-merged commit) to saare branches + PR refs lao
+      git -C "${CACHE}" fetch -q --no-tags "${REMOTE_URL}" '+refs/heads/*:refs/remotes/o/*' '+refs/pull/*/head:refs/remotes/pr/*' 2>>"${WORK}/get.err" || true
+    fi
+  fi
+  git -C "${CACHE}" cat-file -e "${G_COMMIT}^{commit}" 2>/dev/null \
+    || die "get: commit ${G_COMMIT:0:12} GitHub se nahi mila ($(tail -1 "${WORK}/get.err" 2>/dev/null))"
+  git -C "${CACHE}" cat-file -e "${G_COMMIT}:${G_PATH}" 2>/dev/null || die "get: '${G_PATH}' commit ${G_COMMIT:0:7} me nahi hai"
+  TMPG="$(mktemp "${G_OUT}.XXXXXX" 2>/dev/null)" || die "get: '${G_OUT}' likh nahi sakta"
+  git -C "${CACHE}" cat-file blob "${G_COMMIT}:${G_PATH}" > "${TMPG}" || { rm -f "${TMPG}"; die "get: file nikal nahi paaya"; }
+  GOT="$(sha256sum "${TMPG}" | awk '{print $1}')"
+  if [[ -n "${G_SHA}" && "${GOT}" != "${G_SHA}" ]]; then rm -f "${TMPG}"; die "get: sha256 mismatch (mila ${GOT:0:16}…, chahiye ${G_SHA:0:16}…) — file NAHI likhi"; fi
+  chmod 0644 "${TMPG}"; mv -f "${TMPG}" "${G_OUT}"
+  ok "get: ${G_PATH} @ ${G_COMMIT:0:7} -> ${G_OUT}  (sha256 ${GOT:0:16}…$([[ -n "${G_SHA}" ]] && echo ' verified'))   — alphacp-sync v${SYNC_VERSION}"
+  exit 0
+fi
 
 # ============================================================== --status
 if [[ "${MODE}" == "status" ]]; then

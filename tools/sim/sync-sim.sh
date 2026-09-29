@@ -66,7 +66,7 @@ count()     { git -C "${REMOTE}" rev-list --count main; }
 echo; echo "=== Run 1: pehla sync ==="
 rc="$(run_sync 1)"; tail -4 /tmp/syncsim/run-1.out | sed 's/^/    | /'
 [[ "$rc" == 0 ]] && grep -q "SYNC OK" /tmp/syncsim/run-1.out && t_ok "sync OK (exit 0)" || { t_fail "sync fail rc=$rc"; cat /tmp/syncsim/run-1.out; }
-grep -q "v1.1" /tmp/syncsim/run-1.out && t_ok "banner v1.1" || t_fail "banner"
+grep -q "v1.2" /tmp/syncsim/run-1.out && t_ok "banner v1.2" || t_fail "banner"
 for f in server-snapshot/STATE.md server-snapshot/README.md server-snapshot/LAST-SYNC.md server-snapshot/MANIFEST.txt \
          server-snapshot/files/usr/local/alphacp/panel/app/Services/License/LicenseManager.php \
          server-snapshot/files/usr/local/alphacp/panel/routes/web.php \
@@ -158,6 +158,35 @@ rm -f /tmp/syncsim/key-added
 ( cd /root && PATH="/tmp/syncsim/sshbin:${PATH}" SYNC_CONF_DIR=/tmp/syncsim/conf SYNC_WORK_DIR=/tmp/syncsim/work SYNC_NO_TIMER=1 \
     timeout 60 bash "${SYNC}" </dev/null ) > /tmp/syncsim/run-7.out 2>&1
 grep -q "timer mode" /tmp/syncsim/run-7.out && t_ok "timer mode: fast fail" || { t_fail "timer mode"; tail -5 /tmp/syncsim/run-7.out; }
+
+echo; echo "=== Run 8 (v1.2): alphacp-sync get — deploy key se file (private repo me bhi) ==="
+GC="$(git -C "${REMOTE}" rev-parse refs/heads/arena/01a0ea3e-alphacp 2>/dev/null || git -C "${REMOTE}" rev-parse main)"
+GSHA="$(git -C "${REMOTE}" show "${GC}:START-HERE.md" | sha256sum | cut -d' ' -f1)"
+rm -rf /tmp/syncsim/getwork /tmp/syncsim/got*
+run_get() { ( cd /root && SYNC_CONF_DIR=/tmp/syncsim/conf SYNC_WORK_DIR=/tmp/syncsim/getwork SYNC_REPO_URL="file://${REMOTE}" bash "${SYNC}" get "$@" ) 2>&1; }
+o="$(run_get "${GC}" START-HERE.md /tmp/syncsim/got1 "${GSHA}")"; rc=$?
+[[ $rc == 0 ]] && cmp -s /tmp/syncsim/got1 <(git -C "${REMOTE}" show "${GC}:START-HERE.md") && grep -q "verified" <<<"$o" \
+  && t_ok "get: sahi file + sha256 verified" || { t_fail "get basic rc=$rc"; echo "$o"; }
+grep -q "SERVER → GITHUB SYNC" <<<"$o" && t_fail "get me bada banner (output saaf nahi)" || t_ok "get: output chhota/saaf"
+o="$(run_get "${GC}" START-HERE.md /tmp/syncsim/got2 "$(printf '0%.0s' {1..64})")"; rc=$?
+[[ $rc != 0 && ! -e /tmp/syncsim/got2 ]] && grep -q "sha256 mismatch" <<<"$o" && t_ok "get: galat sha256 -> fail, file NAHI likhi" || { t_fail "get sha mismatch"; echo "$o"; }
+o="$(run_get "${GC}" no/such/file.sh /tmp/syncsim/got3)"; rc=$?
+[[ $rc != 0 ]] && grep -q "me nahi hai" <<<"$o" && t_ok "get: missing path -> saaf error" || { t_fail "get missing path"; echo "$o"; }
+o="$(run_get "${GC:0:7}" START-HERE.md /tmp/syncsim/got4)"; rc=$?
+[[ $rc != 0 ]] && grep -q "40-char" <<<"$o" && t_ok "get: short SHA reject" || { t_fail "get short sha"; echo "$o"; }
+o="$(run_get "${GC}" ../../etc/passwd /tmp/syncsim/got5)"; rc=$?
+[[ $rc != 0 && ! -e /tmp/syncsim/got5 ]] && t_ok "get: path traversal reject" || { t_fail "get traversal"; echo "$o"; }
+o="$(run_get "$(printf 'a%.0s' {1..40})" START-HERE.md /tmp/syncsim/got6)"; rc=$?
+[[ $rc != 0 ]] && grep -q "nahi mila" <<<"$o" && t_ok "get: non-existent commit -> saaf error" || { t_fail "get bad commit"; echo "$o"; }
+# squash-merge ke baad: commit sirf refs/pull/N/head se reachable
+PRT="$(git -C "${REMOTE}" mktree < /dev/null)"; PRBLOB="$(echo 'pr-only file' | git -C "${REMOTE}" hash-object -w --stdin)"
+PRT="$(printf '100644 blob %s\tpr.txt\n' "${PRBLOB}" | git -C "${REMOTE}" mktree)"
+PRC="$(GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t git -C "${REMOTE}" commit-tree "${PRT}" -m pr-only)"
+git -C "${REMOTE}" update-ref refs/pull/1/head "${PRC}"
+o="$(run_get "${PRC}" pr.txt /tmp/syncsim/got7)"; rc=$?
+[[ $rc == 0 ]] && grep -q "pr-only file" /tmp/syncsim/got7 && t_ok "get: sirf PR-ref wala commit bhi mila (squash-merge safe)" || { t_fail "get pr ref"; echo "$o"; }
+o="$( cd /root && SYNC_CONF_DIR=/tmp/syncsim/noconf SYNC_WORK_DIR=/tmp/syncsim/getwork SYNC_REPO_URL="file://${REMOTE}" bash "${SYNC}" get "${GC}" START-HERE.md /tmp/syncsim/got8 2>&1 )"; rc=$?
+[[ $rc != 0 ]] && grep -q "pehle setup" <<<"$o" && t_ok "get: deploy key na ho -> setup ka message" || { t_fail "get no key"; echo "$o"; }
 
 # cleanup nakli files (fake server)
 rm -f ${PANEL}/app/Leak.php ${PANEL}/config/leak2.php
