@@ -125,6 +125,7 @@ class AccountsController extends Controller
             ]);
 
             $account->recordEvent('account.create.queued', 'Provisioning queued');
+            \App\Support\DomainProvisioner::seedMain($account);
             return $account;
         });
 

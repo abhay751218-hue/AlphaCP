@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 5 start + WHM/cPanel split (29 Sep)** — Customer (role `user`) sees **cPanel**
+  (Domains, quota, no Create Account). Root/reseller see **WHM**. Domains
+  addon/sub/parked/redirect via `domain.add`/`domain.remove`. Panel **0.6.0**,
+  agent **0.3.0**. Tests: panel **70 pass / 0 fail**, provision-sim **31/31**.
 - **Step 4 packages & limits (29 Sep)** — WHM-style Packages UI with cPanel-compatible
   keys (`QUOTA`, `MAXPOP`, `MAXSQL`, …), feature lists, account upgrade/downgrade +
   quota override (`account.setQuota`). Panel **0.5.0**. Tests: panel-tests **58 pass / 0 fail**.

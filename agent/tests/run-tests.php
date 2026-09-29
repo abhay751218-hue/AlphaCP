@@ -28,6 +28,8 @@ use Alphacp\Agent\Tasks\AccountSetQuota;
 use Alphacp\Agent\Tasks\AccountSuspend;
 use Alphacp\Agent\Tasks\AccountTerminate;
 use Alphacp\Agent\Tasks\AccountUnsuspend;
+use Alphacp\Agent\Tasks\DomainAdd;
+use Alphacp\Agent\Tasks\DomainRemove;
 use Alphacp\Agent\Tasks\TaskContext;
 use Alphacp\Agent\Tests\FakeCommandExecutor;
 
@@ -171,7 +173,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -307,6 +309,66 @@ test('setQuota records setquota argv in 1K blocks', function (): void {
         }
     }
     assert_true($found, '100 MB should become 102400 1K-blocks');
+    acp_account_cleanup($harness);
+});
+test('domain.add writes extra vhost and docroot under home', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $doc = $harness['root'] . '/home/alicehost/addon.example.com/public_html';
+    $out = (new DomainAdd())->handle([
+        'username' => 'alicehost',
+        'domain' => 'addon.example.com',
+        'type' => 'addon',
+        'document_root' => $doc,
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'active');
+    $vhost = $harness['root'] . '/apache/sites-available/acp-alicehost-addon-example-com.conf';
+    assert_true(is_file($vhost), 'extra vhost missing');
+    assert_true(str_contains((string) file_get_contents($vhost), 'ServerName addon.example.com'));
+    assert_true(is_dir($doc));
+    acp_account_cleanup($harness);
+});
+test('domain.add rejects document_root outside home', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $threw = false;
+    try {
+        (new DomainAdd())->handle([
+            'username' => 'alicehost',
+            'domain' => 'evil.example.com',
+            'type' => 'addon',
+            'document_root' => '/etc/apache2',
+        ], $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'outside home must fail');
+    acp_account_cleanup($harness);
+});
+test('domain.remove drops extra vhost; terminate cleans leftovers', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $doc = $harness['root'] . '/home/alicehost/public_html/blog';
+    (new DomainAdd())->handle([
+        'username' => 'alicehost',
+        'domain' => 'blog.shop.example.com',
+        'type' => 'sub',
+        'document_root' => $doc,
+    ], $harness['ctx']);
+    (new DomainRemove())->handle([
+        'username' => 'alicehost',
+        'domain' => 'blog.shop.example.com',
+    ], $harness['ctx']);
+    $vhost = $harness['root'] . '/apache/sites-available/acp-alicehost-blog-shop-example-com.conf';
+    assert_true(!is_file($vhost), 'extra vhost should be gone');
+    (new DomainAdd())->handle([
+        'username' => 'alicehost',
+        'domain' => 'park.example.com',
+        'type' => 'parked',
+        'document_root' => $harness['root'] . '/home/alicehost/public_html',
+    ], $harness['ctx']);
+    (new AccountTerminate())->handle(['username' => 'alicehost', '_confirm' => 'account.terminate'], $harness['ctx']);
+    assert_true(!is_file($harness['root'] . '/apache/sites-available/acp-alicehost-park-example-com.conf'));
     acp_account_cleanup($harness);
 });
 test('SafeFs refuses writes outside the allowlisted roots', function (): void {

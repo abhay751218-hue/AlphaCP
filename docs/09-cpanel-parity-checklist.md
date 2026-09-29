@@ -77,11 +77,11 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 30 | Domains | Overview + actions | S5 | ⏳ S5 |
-| 31 | Subdomains | sub.domain.com | S5 | ⏳ S5 |
-| 32 | Addon Domains | Extra domain, alag site | S5 | ⏳ S5 |
-| 33 | Aliases (Parked) | Domain aliases | S5 | ⏳ S5 |
-| 34 | Redirects | 301/302 redirect | S5 | ⏳ S5 |
+| 30 | Domains | Overview + actions | S5 | ✅ (cPanel tool; WHM alag) |
+| 31 | Subdomains | sub.domain.com | S5 | ✅ |
+| 32 | Addon Domains | Extra domain, alag site | S5 | ✅ |
+| 33 | Aliases (Parked) | Domain aliases | S5 | ✅ |
+| 34 | Redirects | 301/302 redirect | S5 | ✅ |
 | 35 | Zone Editor | A/CNAME/MX/TXT/… records | S9 | ⏳ S9 |
 | 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 |
 

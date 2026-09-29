@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Models\User;
+
 /**
  * cPanel-jaise dashboard ka data source.
  *
@@ -26,6 +28,7 @@ final class ModuleCatalog
             'files' => [
                 'label' => 'Files',
                 'icon'  => 'folder',
+                'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'File Manager',        'step' => 'S6',  'status' => 'step'],
                     ['name' => 'Images',              'step' => 'S6',  'status' => 'step'],
@@ -42,6 +45,7 @@ final class ModuleCatalog
             'email' => [
                 'label' => 'Email',
                 'icon'  => 'mail',
+                'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'Email Accounts',      'step' => 'S7', 'status' => 'step'],
                     ['name' => 'Forwarders',          'step' => 'S7', 'status' => 'step'],
@@ -56,18 +60,20 @@ final class ModuleCatalog
             'domains' => [
                 'label' => 'Domains',
                 'icon'  => 'globe',
+                'audience' => 'cpanel',
                 'items' => [
-                    ['name' => 'Domains',        'step' => 'S5', 'status' => 'step'],
-                    ['name' => 'Subdomains',     'step' => 'S5', 'status' => 'step'],
-                    ['name' => 'Addon Domains',  'step' => 'S5', 'status' => 'step'],
-                    ['name' => 'Aliases',        'step' => 'S5', 'status' => 'step'],
-                    ['name' => 'Redirects',      'step' => 'S5', 'status' => 'step'],
+                    ['name' => 'Domains',        'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
+                    ['name' => 'Subdomains',     'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
+                    ['name' => 'Addon Domains',  'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
+                    ['name' => 'Aliases',        'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
+                    ['name' => 'Redirects',      'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
                     ['name' => 'Zone Editor',    'step' => 'S9', 'status' => 'step'],
                 ],
             ],
             'databases' => [
                 'label' => 'Databases',
                 'icon'  => 'database',
+                'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'MySQL Databases',  'step' => 'S8', 'status' => 'step'],
                     ['name' => 'Database Wizard',  'step' => 'S8', 'status' => 'step'],
@@ -79,6 +85,7 @@ final class ModuleCatalog
             'metrics' => [
                 'label' => 'Metrics',
                 'icon'  => 'chart',
+                'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'Visitors',        'step' => 'S11', 'status' => 'step'],
                     ['name' => 'Errors',          'step' => 'S11', 'status' => 'step'],
@@ -91,6 +98,7 @@ final class ModuleCatalog
             'security' => [
                 'label' => 'Security',
                 'icon'  => 'shield',
+                'audience' => 'both',
                 'items' => [
                     ['name' => 'Two-Factor Auth', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.index'],
                     ['name' => 'Password & Security', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.index'],
@@ -105,6 +113,7 @@ final class ModuleCatalog
             'software' => [
                 'label' => 'Software',
                 'icon'  => 'box',
+                'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'App Installer',      'step' => 'S14', 'status' => 'step'],
                     ['name' => 'WordPress Toolkit',  'step' => 'S14', 'status' => 'step'],
@@ -118,6 +127,7 @@ final class ModuleCatalog
             'advanced' => [
                 'label' => 'Advanced',
                 'icon'  => 'cog',
+                'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'Cron Jobs',      'step' => 'S5',  'status' => 'step'],
                     ['name' => 'Track DNS',      'step' => 'S9',  'status' => 'step'],
@@ -130,8 +140,9 @@ final class ModuleCatalog
                 ],
             ],
             'server' => [
-                'label' => 'Server (Admin)',
+                'label' => 'WHM — Account Functions',
                 'icon'  => 'server',
+                'audience' => 'whm',
                 'items' => [
                     ['name' => 'System Information',  'step' => 'S2B', 'status' => 'live', 'route' => 'system.index'],
                     ['name' => 'Service Status',      'step' => 'S2B', 'status' => 'live', 'route' => 'system.services'],
@@ -174,5 +185,38 @@ final class ModuleCatalog
             'total'   => $total,
             'percent' => $total > 0 ? (int) round($live / max(1, $total - $addon) * 100) : 0,
         ];
+    }
+
+    /**
+     * WHM = root/reseller (accounts.view). cPanel = hosting customer / mail.
+     * Customer ko Create Account / Packages kabhi nahi dikhte.
+     */
+    public static function modeFor(User $user): string
+    {
+        if ($user->isRoot() || $user->hasPermission('accounts.view')) {
+            return 'whm';
+        }
+        return 'cpanel';
+    }
+
+    /**
+     * @return array<string, array{label:string, icon:string, audience?:string, items:list<array<string,mixed>>}>
+     */
+    public static function sectionsFor(User $user): array
+    {
+        $mode = self::modeFor($user);
+        $mailOnly = $user->role?->name === 'mail';
+        $out = [];
+        foreach (self::sections() as $key => $section) {
+            $audience = $section['audience'] ?? 'cpanel';
+            if ($audience !== $mode && $audience !== 'both') {
+                continue;
+            }
+            if ($mailOnly && ! in_array($key, ['email', 'security'], true)) {
+                continue;
+            }
+            $out[$key] = $section;
+        }
+        return $out;
     }
 }

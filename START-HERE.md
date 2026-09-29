@@ -54,8 +54,8 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 ## 4b. Tests (sab sandbox me chalte hain — system PHP/MySQL ki zaroorat nahi)
 | Command | Kya test karta hai | Last result |
 |---|---|---|
-| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **58 pass, 0 fail, 6 wasm-skip** (0.5.0) |
-| `bash tools/sim/provision-sim.sh` | Agent account tasks (create/suspend/terminate/quota/rollback, FakeCommandExecutor) | **28/28** |
+| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **70 pass, 0 fail, 6 wasm-skip** (0.6.0) |
+| `bash tools/sim/provision-sim.sh` | Agent account + domain tasks (create/suspend/terminate/quota/domain.add, FakeCommandExecutor) | **31/31** |
 | `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.5.0: panel 0.5.0 + agent 0.2.0, sha mismatch, rollback, backup prune, sync-tool, **private repo (get)** | **60/60** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Models\Account;
+use App\Models\Domain;
 use App\Support\License\LicenseClient;
 use Illuminate\Support\Facades\DB;
 
@@ -69,11 +70,7 @@ final class AccountProvisioner
         }
 
         match ($type) {
-            'account.create' => $account->forceFill([
-                'status' => 'active',
-                'setup_completed_at' => now(),
-                'meta' => array_merge($account->meta ?? [], ['last_error' => null]),
-            ])->save(),
+            'account.create' => self::markCreated($account),
             'account.suspend' => $account->forceFill([
                 'status' => 'suspended',
                 'suspended_at' => $account->suspended_at ?? now(),
@@ -86,6 +83,17 @@ final class AccountProvisioner
             'account.terminate' => self::markTerminated($account),
             default => null,
         };
+    }
+
+    private static function markCreated(Account $account): void
+    {
+        $account->forceFill([
+            'status' => 'active',
+            'setup_completed_at' => now(),
+            'meta' => array_merge($account->meta ?? [], ['last_error' => null]),
+        ])->save();
+        Domain::query()->where('account_id', $account->id)->where('type', 'main')
+            ->update(['status' => 'active']);
     }
 
     public static function markTerminated(Account $account): void

@@ -50,6 +50,13 @@ a:hover { text-decoration: underline; }
 }
 .brand small { display: block; font-weight: 500; color: var(--muted); font-size: 11px; letter-spacing: .2px; }
 .topbar .spacer { flex: 1; }
+.topnav { display: flex; gap: 6px; flex-wrap: wrap; }
+.topnav a {
+  color: var(--text); font-size: 13px; font-weight: 600;
+  padding: 6px 10px; border-radius: 8px; text-decoration: none;
+  border: 1px solid transparent;
+}
+.topnav a:hover { background: var(--panel-2); border-color: var(--line); text-decoration: none; }
 .topbar .meta { color: var(--muted); font-size: 12.5px; text-align: right; }
 .topbar .user { display: flex; align-items: center; gap: 10px; }
 .avatar {

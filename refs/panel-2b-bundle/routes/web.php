@@ -8,6 +8,7 @@ use App\Http\Controllers\PackagesController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SystemController;
@@ -54,6 +55,13 @@ Route::middleware('auth')->group(function (): void {
 Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/domains', [DomainsController::class, 'index'])
+        ->middleware('perm:domains.view')->name('domains.index');
+    Route::post('/domains', [DomainsController::class, 'store'])
+        ->middleware('perm:domains.manage')->name('domains.store');
+    Route::delete('/domains/{domain}', [DomainsController::class, 'destroy'])
+        ->middleware('perm:domains.manage')->name('domains.destroy');
 
     // -- Security (always available to the logged-in user) -------------------
     Route::prefix('security')->name('security.')->group(function (): void {

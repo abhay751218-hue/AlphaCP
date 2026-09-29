@@ -13,10 +13,23 @@
     <div class="brand">
         <span class="logo">A</span>
         <span>
-            AlphaCP
-            <small>{{ $serverName ?? config('acp.version') }}</small>
+            AlphaCP {{ ($panelMode ?? 'cpanel') === 'whm' ? 'WHM' : '' }}
+            <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'Web Host Manager' : 'cPanel' }} · {{ config('acp.version') }}</small>
         </span>
     </div>
+
+    <nav class="topnav" aria-label="Main">
+        <a href="{{ route('dashboard') }}">Dashboard</a>
+        @if (($panelMode ?? 'cpanel') === 'whm')
+            @can('accounts.view')<a href="{{ route('accounts.index') }}">Accounts</a>@endcan
+            @can('packages.view')<a href="{{ route('packages.index') }}">Packages</a>@endcan
+            @can('users.view')<a href="{{ route('users.index') }}">Users</a>@endcan
+            @can('system.view')<a href="{{ route('system.index') }}">System</a>@endcan
+        @else
+            @can('domains.view')<a href="{{ route('domains.index') }}">Domains</a>@endcan
+            <a href="{{ route('security.index') }}">Security</a>
+        @endif
+    </nav>
 
     <span class="spacer"></span>
 

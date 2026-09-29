@@ -31,6 +31,7 @@ final class AccountUnsuspend implements TaskInterface
         $os = new AccountOs($ctx->cmd, new SafeFs($ctx->paths), AccountPaths::fromEnv(), $ctx->log);
         $os->unlockUser($username);
         $os->writeLiveVhost($username, $domain);
+        $os->enableExtraVhosts($username);
         $os->enablePool($username);
         $os->reloadServices();
         $ctx->log->info("account {$username} unsuspended");

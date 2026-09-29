@@ -112,6 +112,11 @@ class AccountsTest extends TestCase
         $this->assertArrayNotHasKey('password', $payload);
 
         $this->assertDatabaseHas('audit_logs', ['action' => 'account.create', 'target_id' => $account->id]);
+        $this->assertDatabaseHas('domains', [
+            'account_id' => $account->id,
+            'domain' => 'shop.example.com',
+            'type' => 'main',
+        ]);
     }
 
     public function test_duplicate_domain_is_rejected(): void

@@ -30,8 +30,8 @@
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/unsuspend/terminate + Accounts UI, rollback) | ✅ **DEPLOYED 0.4.0** (29 Sep 01:07Z) |
-| Step 4 | Packages & limits manager | 🟡 **code ready (panel 0.5.0)** — server deploy pending |
-| Step 5 | Domains, vHost, MultiPHP, SSL, Cron | ⏳ |
+| Step 4 | Packages & limits manager | ✅ **DEPLOYED 0.5.0** (29 Sep 01:21Z) |
+| Step 5 | Domains, vHost, MultiPHP, SSL, Cron | 🟡 **cPanel Domains + WHM/cPanel shell (0.6.0)** — deploy pending |
 | Step 6 | File Manager + FTP + Git + SSH | ⏳ |
 | Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | ⏳ |
 | Step 8 | Databases (MySQL management) | ⏳ |
