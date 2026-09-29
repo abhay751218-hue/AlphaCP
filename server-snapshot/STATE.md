@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.13.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.13.0   (.env)
-AGENT_VERSION : 0.10.0
+panel code    : 0.14.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.14.0   (.env)
+AGENT_VERSION : 0.11.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -45,9 +45,10 @@ agent-backup-20260929034157
 agent-backup-20260929060807
 agent-backup-20260929073343
 agent-backup-20260929151257
-panel-backup-20260929060807
+agent-backup-20260929153015
 panel-backup-20260929073343
 panel-backup-20260929151257
+panel-backup-20260929153015
 panel-failed-20260928223644
 ```
 
@@ -108,6 +109,7 @@ alphacp:admin-password
   2026_09_29_000009_add_errorpages_permissions   [8] Ran
   2026_09_29_000010_add_indexes_permissions   [9] Ran
   2026_09_29_000011_add_mime_permissions   [10] Ran
+  2026_09_29_000012_add_handlers_permissions   [11] Ran
 ```
 
 ## Routes (web)
@@ -133,6 +135,9 @@ POST               /domains                                      domains.store
 DELETE             /domains/{domain}                             domains.destroy
 GET|HEAD           /errorpages                                   errorpages.index
 POST               /errorpages                                   errorpages.update
+GET|HEAD           /handlers                                     handlers.index
+POST               /handlers                                     handlers.store
+DELETE             /handlers/{ext}                               handlers.destroy
 GET|HEAD           /indexes                                      indexes.index
 POST               /indexes                                      indexes.update
 GET|HEAD           /license                                      license.index

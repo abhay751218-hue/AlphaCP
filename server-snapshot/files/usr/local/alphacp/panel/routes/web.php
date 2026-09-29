@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\ErrorPagesController;
 use App\Http\Controllers\IndexesController;
+use App\Http\Controllers\HandlersController;
 use App\Http\Controllers\MimeTypesController;
 use App\Http\Controllers\PhpController;
 use App\Http\Controllers\PhpIniController;
@@ -95,6 +96,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:mime.manage')->name('mime.store');
     Route::delete('/mime/{ext}', [MimeTypesController::class, 'destroy'])
         ->middleware('perm:mime.manage')->where('ext', '[A-Za-z0-9]{1,16}')->name('mime.destroy');
+
+    Route::get('/handlers', [HandlersController::class, 'index'])
+        ->middleware('perm:handlers.view')->name('handlers.index');
+    Route::post('/handlers', [HandlersController::class, 'store'])
+        ->middleware('perm:handlers.manage')->name('handlers.store');
+    Route::delete('/handlers/{ext}', [HandlersController::class, 'destroy'])
+        ->middleware('perm:handlers.manage')->where('ext', '[A-Za-z0-9]{1,16}')->name('handlers.destroy');
 
     Route::get('/cron', [CronController::class, 'index'])
         ->middleware('perm:cron.view')->name('cron.index');
