@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.17.0 — Step 6: Disk Usage
+### panel-update 0.18.0 — Step 6: SSH Access
 ```bash
-sudo alphacp-sync get c9bdbf51528b3aa58ce1d5b21f941f15a43f799a installer/panel-update.sh /tmp/acp-panel-update-0.17.0.sh e02f30c10037cbb06d2fca80c37ffee97e7baedb86797f5d126a20e9fb0f4659 && sudo bash /tmp/acp-panel-update-0.17.0.sh
+sudo alphacp-sync get 379c9eae584d4b1e55fdeb0a7625c43908cb916d installer/panel-update.sh /tmp/acp-panel-update-0.18.0.sh 8d765d757f62b47562feaba0c3dcb92d3a51666bc9b698162689873c710167cf && sudo bash /tmp/acp-panel-update-0.18.0.sh
 ```
-- sha256: `e02f30c10037cbb06d2fca80c37ffee97e7baedb86797f5d126a20e9fb0f4659`
-- Expected: banner `updater 0.17.0` → agent **0.14.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Disk Usage (folder-wise space, home-jailed). Symlink skip, 2000-node cap.
-- WHM: Create Account / packages / user manager. Customer ko Disk Usage tile dikhega, WHM me nahi.
+- sha256: `8d765d757f62b47562feaba0c3dcb92d3a51666bc9b698162689873c710167cf`
+- Expected: banner `updater 0.18.0` → agent **0.15.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: SSH Access (authorized_keys). Private key/options fail closed. Bash sirf HASSHELL on.
+- WHM: Create Account / packages / user manager. Customer ko SSH Access tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **120/0**, provision-sim **45/45**, update-sim **86/86**.
+- Test: panel-tests **126/0**, provision-sim **46/46**, update-sim **88/88**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.17.0 (`c9bdbf5…`) → panel 0.17.0 + agent 0.14.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Disk Usage |
 | panel-update 0.16.0 (`55142ec…`) → panel 0.16.0 + agent 0.13.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Directory Privacy |
 | panel-update 0.15.0 (`a03bdc7…`) → panel 0.15.0 + agent 0.12.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, File Manager |
 | panel-update 0.14.0 (`beaca4c…`) → panel 0.14.0 + agent 0.11.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Apache Handlers |
