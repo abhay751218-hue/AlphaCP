@@ -5,6 +5,9 @@
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('system.index', ['refresh' => 1]) }}">Refresh stats</a>
+    @can('accounts.view')
+        <a class="btn small secondary" href="{{ route('accounts.index') }}">Accounts</a>
+    @endcan
     @can('system.tasks')
         <a class="btn small secondary" href="{{ route('system.tasks') }}">Task queue</a>
     @endcan

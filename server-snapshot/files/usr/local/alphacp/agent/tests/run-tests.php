@@ -12,12 +12,24 @@ declare(strict_types=1);
  */
 
 require __DIR__ . '/../src/Bootstrap.php';
+require __DIR__ . '/FakeCommandExecutor.php';
 
+use Alphacp\Agent\AccountIdentity;
+use Alphacp\Agent\AccountPaths;
 use Alphacp\Agent\CommandRunner;
 use Alphacp\Agent\JsonSchema;
 use Alphacp\Agent\PathGuard;
 use Alphacp\Agent\PathGuardException;
+use Alphacp\Agent\SafeFs;
+use Alphacp\Agent\TaskLogger;
 use Alphacp\Agent\TaskRejectedException;
+use Alphacp\Agent\Tasks\AccountCreate;
+use Alphacp\Agent\Tasks\AccountSetQuota;
+use Alphacp\Agent\Tasks\AccountSuspend;
+use Alphacp\Agent\Tasks\AccountTerminate;
+use Alphacp\Agent\Tasks\AccountUnsuspend;
+use Alphacp\Agent\Tasks\TaskContext;
+use Alphacp\Agent\Tests\FakeCommandExecutor;
 
 $passed = 0;
 $failed = 0;
@@ -116,11 +128,19 @@ test('refuses relative binary names', function (): void {
     assert_throws(RuntimeException::class, fn () => (new CommandRunner(5))->run(['systemctl', 'status']));
 });
 test('runs an allowlisted binary and captures output', function (): void {
+    if (!function_exists('posix_getuid') || !is_file('/bin/hostname')) {
+        fwrite(STDOUT, "  skip  runs an allowlisted binary (no posix / hostname in this PHP)\n");
+        return;
+    }
     $r = (new CommandRunner(5))->run(['/bin/hostname']);
     assert_true($r->ok() || $r->exitCode >= 0, 'hostname should execute');
     assert_true($r->stdoutTrimmed() !== '', 'hostname should print something');
 });
 test('passes arguments as argv (no shell interpretation)', function (): void {
+    if (!function_exists('posix_getuid') || !is_file('/usr/bin/id')) {
+        fwrite(STDOUT, "  skip  passes arguments as argv (no posix in this PHP)\n");
+        return;
+    }
     $r = (new CommandRunner(5))->run(['/usr/bin/id', '-u']);
     assert_true(trim($r->stdout) === (string) posix_getuid(), 'id -u should match our uid');
 });
@@ -149,7 +169,229 @@ test('service.status only allowlists known services', function (): void {
     assert_true(in_array('apache2', $services, true), 'apache2 should be allowlisted');
     assert_true(!in_array('sshd', $services, true), 'sshd must NOT be allowlisted');
 });
+test('account tasks are registered with tight schemas and paths', function (): void {
+    $reg = acp_task_registry();
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota'] as $type) {
+        assert_true(isset($reg[$type]), "missing {$type}");
+        assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
+        assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
+    }
+    assert_true($reg['account.create']['safety'] === 'mutating');
+    assert_true($reg['account.terminate']['safety'] === 'destructive');
+    assert_true($reg['account.terminate']['confirm'] === 'account.terminate');
+});
+test('account.create schema rejects extra keys and bad usernames', function (): void {
+    $schema = acp_task_registry()['account.create']['schema'];
+    $good = [
+        'username' => 'alicehost',
+        'domain' => 'alice.example',
+        'shadow_hash' => '$6$rounds=5000$01234567$abcdefghijklmnopqrstuv',
+        'quota_mb' => 1024,
+        'php_version' => '8.4',
+    ];
+    assert_true(JsonSchema::validate($schema, $good) === [], 'valid payload should pass');
+    assert_true(JsonSchema::validate($schema, ['username' => 'alicehost']) !== [], 'missing required');
+    assert_true(JsonSchema::validate($schema, $good + ['evil' => 1]) !== [], 'additionalProperties');
+    $bad = $good; $bad['username'] = 'ROOT';
+    assert_true(JsonSchema::validate($schema, $bad) !== [], 'uppercase username');
+});
+
+fwrite(STDOUT, "\nAccount identity\n");
+test('accepts cPanel-like usernames and FQDNs', function (): void {
+    assert_true(AccountIdentity::username('alice') === null);
+    assert_true(AccountIdentity::username('web12host') === null);
+    assert_true(AccountIdentity::domain('shop.example.com') === null);
+});
+test('rejects reserved, short, and hostile usernames', function (): void {
+    assert_true(AccountIdentity::username('root') !== null);
+    assert_true(AccountIdentity::username('alphacp') !== null);
+    assert_true(AccountIdentity::username('ab') !== null);
+    assert_true(AccountIdentity::username('../etc') !== null);
+    assert_true(AccountIdentity::username('Alice') !== null);
+    assert_true(AccountIdentity::domain('nope') !== null);
+    assert_true(AccountIdentity::domain('-bad.com') !== null);
+});
+
+fwrite(STDOUT, "\nAccount handlers (fake executor)\n");
+test('create writes home, vhost, pool and records useradd', function (): void {
+    $harness = acp_account_harness();
+    $result = (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    assert_true($result['username'] === 'alicehost');
+    assert_true(isset($harness['cmd']->users['alicehost']), 'useradd should record alicehost');
+    assert_true(is_file($harness['root'] . '/home/alicehost/public_html/index.html'));
+    assert_true(is_file($harness['root'] . '/apache/sites-available/acp-alicehost.conf'));
+    assert_true(is_link($harness['root'] . '/apache/sites-enabled/acp-alicehost.conf'));
+    assert_true(is_file($harness['root'] . '/php/pool.d/acp-alicehost.conf'));
+    $vhost = (string) file_get_contents($harness['root'] . '/apache/sites-available/acp-alicehost.conf');
+    assert_true(str_contains($vhost, 'ServerName shop.example.com'), 'vhost has domain');
+    assert_true(str_contains($vhost, 'proxy:unix:/run/php/acp-alicehost.sock'), 'php-fpm socket');
+    $bins = array_map('basename', array_column($harness['cmd']->calls, 0));
+    assert_true(in_array('useradd', $bins, true));
+    assert_true(in_array('setquota', $bins, true));
+    assert_true(in_array('systemctl', $bins, true));
+    acp_account_cleanup($harness);
+});
+test('create refuses a pre-existing non-AlphaCP linux user', function (): void {
+    $harness = acp_account_harness();
+    $harness['cmd']->users['alicehost'] = 'Regular User';
+    $threw = false;
+    try {
+        (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = str_contains($e->getMessage(), 'not an AlphaCP');
+    }
+    assert_true($threw, 'foreign user must fail closed');
+    acp_account_cleanup($harness);
+});
+test('create rolls back user/vhost/pool when a later step fails', function (): void {
+    $harness = acp_account_harness();
+    $harness['cmd']->failWhenContains = 'reload';
+    $threw = false;
+    try {
+        (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = str_contains($e->getMessage(), 'injected failure');
+    }
+    assert_true($threw, 'reload failure should surface');
+    assert_true(!isset($harness['cmd']->users['alicehost']), 'useradd rolled back');
+    assert_true(!is_file($harness['root'] . '/apache/sites-available/acp-alicehost.conf'), 'vhost rolled back');
+    assert_true(!is_file($harness['root'] . '/php/pool.d/acp-alicehost.conf'), 'pool rolled back');
+    acp_account_cleanup($harness);
+});
+test('suspend swaps vhost to the suspended page and locks the user', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new AccountSuspend())->handle([
+        'username' => 'alicehost',
+        'domain' => 'shop.example.com',
+        'reason' => 'abuse',
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'suspended');
+    assert_true(isset($harness['cmd']->locked['alicehost']));
+    $vhost = (string) file_get_contents($harness['root'] . '/apache/sites-available/acp-alicehost.conf');
+    assert_true(str_contains($vhost, 'SUSPENDED'));
+    assert_true(is_file($harness['root'] . '/php/pool.d/acp-alicehost.conf.suspended'));
+    assert_true(!is_file($harness['root'] . '/php/pool.d/acp-alicehost.conf'));
+    acp_account_cleanup($harness);
+});
+test('unsuspend restores live vhost and pool', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new AccountSuspend())->handle(['username' => 'alicehost', 'domain' => 'shop.example.com'], $harness['ctx']);
+    $out = (new AccountUnsuspend())->handle(['username' => 'alicehost', 'domain' => 'shop.example.com'], $harness['ctx']);
+    assert_true($out['status'] === 'active');
+    assert_true(!isset($harness['cmd']->locked['alicehost']));
+    $vhost = (string) file_get_contents($harness['root'] . '/apache/sites-available/acp-alicehost.conf');
+    assert_true(str_contains($vhost, 'DocumentRoot ' . $harness['root'] . '/home/alicehost/public_html'));
+    assert_true(is_file($harness['root'] . '/php/pool.d/acp-alicehost.conf'));
+    acp_account_cleanup($harness);
+});
+test('terminate removes os objects and is idempotent', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new AccountTerminate())->handle(['username' => 'alicehost', '_confirm' => 'account.terminate'], $harness['ctx']);
+    assert_true(!isset($harness['cmd']->users['alicehost']));
+    assert_true(!is_file($harness['root'] . '/apache/sites-available/acp-alicehost.conf'));
+    $again = (new AccountTerminate())->handle(['username' => 'alicehost', '_confirm' => 'account.terminate'], $harness['ctx']);
+    assert_true($again['status'] === 'terminated');
+    acp_account_cleanup($harness);
+});
+test('setQuota records setquota argv in 1K blocks', function (): void {
+    $harness = acp_account_harness();
+    $harness['cmd']->users['alicehost'] = 'AlphaCP:shop.example.com';
+    (new AccountSetQuota())->handle(['username' => 'alicehost', 'quota_mb' => 100], $harness['ctx']);
+    $found = false;
+    foreach ($harness['cmd']->calls as $argv) {
+        if (basename($argv[0]) === 'setquota') {
+            $found = in_array('102400', $argv, true);
+        }
+    }
+    assert_true($found, '100 MB should become 102400 1K-blocks');
+    acp_account_cleanup($harness);
+});
+test('SafeFs refuses writes outside the allowlisted roots', function (): void {
+    $harness = acp_account_harness();
+    $fs = new SafeFs($harness['ctx']->paths);
+    $threw = false;
+    try {
+        $fs->write('/etc/passwd', 'nope');
+    } catch (PathGuardException $e) {
+        $threw = true;
+    }
+    assert_true($threw);
+    acp_account_cleanup($harness);
+});
 
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");
 fwrite(STDOUT, sprintf("passed: %d   failed: %d\n", $passed, $failed));
 exit($failed === 0 ? 0 : 1);
+
+/** @return array{root:string,cmd:FakeCommandExecutor,ctx:TaskContext} */
+function acp_account_harness(): array
+{
+    $root = sys_get_temp_dir() . '/acp-acct-' . bin2hex(random_bytes(4));
+    $dirs = [
+        $root . '/home',
+        $root . '/apache/sites-available',
+        $root . '/apache/sites-enabled',
+        $root . '/php/pool.d',
+        $root . '/suspended',
+    ];
+    foreach ($dirs as $dir) {
+        mkdir($dir, 0755, true);
+    }
+    putenv('ACP_ACCOUNTS_ROOT=' . $root . '/home');
+    putenv('ACP_APACHE_SITES=' . $root . '/apache/sites-available');
+    putenv('ACP_APACHE_ENABLED=' . $root . '/apache/sites-enabled');
+    putenv('ACP_PHP_POOL_DIR=' . $root . '/php/pool.d');
+    putenv('ACP_SUSPENDED_ROOT=' . $root . '/suspended');
+    putenv('ACP_PHP_FPM_SERVICE=php8.4-fpm');
+    putenv('ACP_APACHE_SERVICE=apache2');
+    putenv('ACP_NOLOGIN=/usr/sbin/nologin');
+    putenv('ACP_PHP_VERSION=8.4');
+    putenv('ACP_FAKE_SETQUOTA=1');
+
+    $cmd = new FakeCommandExecutor();
+    $log = new TaskLogger(new PDO('sqlite::memory:'), null, false);
+    $ctx = new TaskContext(
+        log: $log,
+        cmd: $cmd,
+        paths: new PathGuard($dirs),
+        taskId: null,
+        taskRow: null,
+    );
+    return ['root' => $root, 'cmd' => $cmd, 'ctx' => $ctx];
+}
+
+/** @param array{root:string} $harness */
+function acp_account_cleanup(array $harness): void
+{
+    $root = $harness['root'];
+    if (is_dir($root)) {
+        $it = new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $file) {
+            $file->isDir() ? @rmdir($file->getPathname()) : @unlink($file->getPathname());
+        }
+        @rmdir($root);
+    }
+    foreach ([
+        'ACP_ACCOUNTS_ROOT', 'ACP_APACHE_SITES', 'ACP_APACHE_ENABLED', 'ACP_PHP_POOL_DIR',
+        'ACP_SUSPENDED_ROOT', 'ACP_PHP_FPM_SERVICE', 'ACP_APACHE_SERVICE', 'ACP_NOLOGIN',
+        'ACP_PHP_VERSION', 'ACP_FAKE_SETQUOTA',
+    ] as $name) {
+        putenv($name);
+    }
+}
+
+/** @return array<string, mixed> */
+function acp_create_payload(): array
+{
+    return [
+        'username'    => 'alicehost',
+        'domain'      => 'shop.example.com',
+        'shadow_hash' => '$6$rounds=5000$01234567$abcdefghijklmnopqrstuv',
+        'quota_mb'    => 1024,
+        'php_version' => '8.4',
+    ];
+}

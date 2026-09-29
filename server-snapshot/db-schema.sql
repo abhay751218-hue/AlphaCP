@@ -10,6 +10,67 @@
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+DROP TABLE IF EXISTS `account_events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `account_events` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `account_id` bigint(20) unsigned NOT NULL,
+  `event` varchar(60) NOT NULL,
+  `message` varchar(500) DEFAULT NULL,
+  `meta` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`meta`)),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `account_events_account_id_created_at_index` (`account_id`,`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `account_users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `account_users` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `account_id` bigint(20) unsigned NOT NULL,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `role` varchar(20) NOT NULL DEFAULT 'owner',
+  `created_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `account_users_account_id_user_id_unique` (`account_id`,`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `accounts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `accounts` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `server_id` bigint(20) unsigned NOT NULL,
+  `package_id` bigint(20) unsigned NOT NULL,
+  `reseller_id` bigint(20) unsigned DEFAULT NULL,
+  `owner_user_id` bigint(20) unsigned DEFAULT NULL,
+  `username` varchar(32) NOT NULL,
+  `main_domain` varchar(190) NOT NULL,
+  `contact_email` varchar(190) NOT NULL,
+  `home_path` varchar(255) NOT NULL,
+  `php_version` varchar(8) NOT NULL DEFAULT '8.4',
+  `quota_mb` int(11) NOT NULL DEFAULT -1,
+  `status` varchar(20) NOT NULL DEFAULT 'pending',
+  `suspend_reason` varchar(255) DEFAULT NULL,
+  `suspended_at` timestamp NULL DEFAULT NULL,
+  `terminated_at` timestamp NULL DEFAULT NULL,
+  `setup_completed_at` timestamp NULL DEFAULT NULL,
+  `disk_used_mb` bigint(20) unsigned NOT NULL DEFAULT 0,
+  `bw_used_mb` bigint(20) unsigned NOT NULL DEFAULT 0,
+  `meta` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`meta`)),
+  `created_by` bigint(20) unsigned DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_acct_user_server` (`server_id`,`username`),
+  UNIQUE KEY `uq_acct_domain` (`main_domain`),
+  KEY `accounts_status_index` (`status`),
+  KEY `accounts_reseller_id_index` (`reseller_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `audit_logs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -123,6 +184,34 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `packages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `packages` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `owner_id` bigint(20) unsigned DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  `description` varchar(255) DEFAULT NULL,
+  `QUOTA` int(11) NOT NULL DEFAULT 1024,
+  `BWLIMIT` int(11) NOT NULL DEFAULT -1,
+  `MAXPOP` int(11) NOT NULL DEFAULT -1,
+  `MAXFTP` int(11) NOT NULL DEFAULT -1,
+  `MAXSQL` int(11) NOT NULL DEFAULT -1,
+  `MAXSUB` int(11) NOT NULL DEFAULT -1,
+  `MAXPARK` int(11) NOT NULL DEFAULT -1,
+  `MAXADDON` int(11) NOT NULL DEFAULT -1,
+  `MAXCRON` int(11) NOT NULL DEFAULT -1,
+  `MAXINODE` int(11) NOT NULL DEFAULT -1,
+  `HASSHELL` tinyint(1) NOT NULL DEFAULT 0,
+  `is_default` tinyint(1) NOT NULL DEFAULT 0,
+  `status` varchar(20) NOT NULL DEFAULT 'active',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `deleted_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `packages_owner_id_index` (`owner_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `permissions`;

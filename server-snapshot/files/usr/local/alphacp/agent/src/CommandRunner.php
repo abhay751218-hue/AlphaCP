@@ -14,7 +14,7 @@ use RuntimeException;
  *  - hard timeout with SIGTERM → SIGKILL escalation,
  *  - stdout/stderr captured, never inherited by the panel.
  */
-final class CommandRunner
+final class CommandRunner implements CommandExecutor
 {
     /** Binaries the agent is allowed to execute today (grows per step, reviewed). */
     private const BIN_ALLOWLIST = [
@@ -30,6 +30,11 @@ final class CommandRunner
         '/usr/bin/getent',
         '/usr/bin/stat',
         '/bin/stat',
+        '/usr/sbin/useradd',
+        '/usr/sbin/userdel',
+        '/usr/sbin/usermod',
+        '/usr/sbin/setquota',
+        '/usr/bin/setquota',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

@@ -77,4 +77,97 @@ return [
         ],
     ],
 
+    // ---------------------------------------------------------------------
+    //  ACCOUNTS (Step 3)
+    // ---------------------------------------------------------------------
+    'account.create' => [
+        'handler'     => Tasks\AccountCreate::class,
+        'safety'      => 'mutating',
+        'timeout'     => 90,
+        'description' => 'Create Linux user, home, Apache vhost, PHP-FPM pool, quota.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'domain', 'shadow_hash'],
+            'properties'           => [
+                'username'    => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'domain'      => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
+                'shadow_hash' => ['type' => 'string', 'minLength' => 20, 'maxLength' => 200, 'pattern' => '^\\$6\\$.+'],
+                'quota_mb'    => ['type' => 'integer', 'minimum' => -1, 'maximum' => 10485760],
+                'php_version' => ['type' => 'string', 'pattern' => '^8\\.[0-9]$'],
+            ],
+        ],
+    ],
+
+    'account.suspend' => [
+        'handler'     => Tasks\AccountSuspend::class,
+        'safety'      => 'mutating',
+        'timeout'     => 60,
+        'description' => 'Lock user, swap vhost to suspended page, disable PHP-FPM pool.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'domain'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'domain'   => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
+                'reason'   => ['type' => 'string', 'maxLength' => 255],
+            ],
+        ],
+    ],
+
+    'account.unsuspend' => [
+        'handler'     => Tasks\AccountUnsuspend::class,
+        'safety'      => 'mutating',
+        'timeout'     => 60,
+        'description' => 'Unlock user and restore vhost + PHP-FPM pool.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'domain'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'domain'   => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
+    'account.terminate' => [
+        'handler'     => Tasks\AccountTerminate::class,
+        'safety'      => 'destructive',
+        'timeout'     => 90,
+        'confirm'     => 'account.terminate',
+        'description' => 'Remove vhost, pool, quota and Linux user+home.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', '_confirm'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                '_confirm' => ['type' => 'string', 'enum' => ['account.terminate']],
+            ],
+        ],
+    ],
+
+    'account.setQuota' => [
+        'handler'     => Tasks\AccountSetQuota::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Set or clear disk quota for an account (MB, -1 unlimited).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'quota_mb'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'quota_mb' => ['type' => 'integer', 'minimum' => -1, 'maximum' => 10485760],
+            ],
+        ],
+    ],
+
 ];

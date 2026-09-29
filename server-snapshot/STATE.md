@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.3.2   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.3.2   (.env)
-AGENT_VERSION : 0.1.0
+panel code    : 0.4.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.4.0   (.env)
+AGENT_VERSION : 0.2.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -35,8 +35,10 @@ signed     : no (local trial)
 
 ## Releases (/usr/local/alphacp/releases — sirf naam, code snapshot me nahi)
 ```
+agent-backup-20260929010705
 panel-backup-20260928224358
 panel-backup-20260929001729
+panel-backup-20260929010705
 panel-failed-20260928223644
 ```
 
@@ -87,12 +89,20 @@ alphacp:admin-password
   0001_01_01_000001_create_cache_table   [1] Ran
   0001_01_01_000002_create_jobs_table   [1] Ran
   2026_09_28_000001_create_panel_core_tables   [1] Ran
-  2026_09_28_000002_agent_side_tables_if_missing .. [1] Ran
+  2026_09_28_000002_agent_side_tables_if_missing   [1] Ran
+  2026_09_29_000003_create_accounts_tables   [2] Ran
 ```
 
 ## Routes (web)
 ```
 GET|HEAD           /                                             login
+GET|HEAD           /accounts                                     accounts.index
+POST               /accounts                                     accounts.store
+GET|HEAD           /accounts/create                              accounts.create
+GET|HEAD           /accounts/{account}                           accounts.show
+POST               /accounts/{account}/suspend                   accounts.suspend
+POST               /accounts/{account}/terminate                 accounts.terminate
+POST               /accounts/{account}/unsuspend                 accounts.unsuspend
 GET|HEAD           /audit                                        audit.index
 GET|HEAD           /dashboard                                    dashboard
 GET|HEAD           /license                                      license.index
