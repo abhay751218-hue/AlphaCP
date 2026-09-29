@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.14.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.14.0   (.env)
-AGENT_VERSION : 0.11.0
+panel code    : 0.15.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.15.0   (.env)
+AGENT_VERSION : 0.12.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -46,15 +46,16 @@ agent-backup-20260929060807
 agent-backup-20260929073343
 agent-backup-20260929151257
 agent-backup-20260929153015
-panel-backup-20260929073343
+agent-backup-20260929154229
 panel-backup-20260929151257
 panel-backup-20260929153015
+panel-backup-20260929154229
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -110,6 +111,7 @@ alphacp:admin-password
   2026_09_29_000010_add_indexes_permissions   [9] Ran
   2026_09_29_000011_add_mime_permissions   [10] Ran
   2026_09_29_000012_add_handlers_permissions   [11] Ran
+  2026_09_29_000013_add_files_permissions   [12] Ran
 ```
 
 ## Routes (web)
@@ -135,6 +137,11 @@ POST               /domains                                      domains.store
 DELETE             /domains/{domain}                             domains.destroy
 GET|HEAD           /errorpages                                   errorpages.index
 POST               /errorpages                                   errorpages.update
+GET|HEAD           /files                                        files.index
+POST               /files/delete                                 files.destroy
+POST               /files/mkdir                                  files.mkdir
+POST               /files/rename                                 files.rename
+POST               /files/write                                  files.write
 GET|HEAD           /handlers                                     handlers.index
 POST               /handlers                                     handlers.store
 DELETE             /handlers/{ext}                               handlers.destroy
