@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 5 MultiPHP + Cron (29 Sep)** — cPanel MultiPHP Manager (PHP 7.4/8.1–8.4) +
+  Cron Jobs (`php.setVersion`, `cron.set`). Panel **0.7.0**, agent **0.4.0**.
+  Tests: panel **76/0**, provision-sim **33/33**.
 - **Step 5 start + WHM/cPanel split (29 Sep)** — Customer (role `user`) sees **cPanel**
   (Domains, quota, no Create Account). Root/reseller see **WHM**. Domains
   addon/sub/parked/redirect via `domain.add`/`domain.remove`. Panel **0.6.0**,

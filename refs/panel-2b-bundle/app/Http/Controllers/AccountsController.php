@@ -14,6 +14,7 @@ use App\Support\Audit;
 use App\Support\License\LicenseClient;
 use App\Support\Panel;
 use App\Support\PasswordGenerator;
+use App\Support\PhpVersions;
 use App\Support\ShadowHash;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -65,7 +66,7 @@ class AccountsController extends Controller
             'main_domain'   => ['required', 'string', 'max:190', 'regex:' . AccountIdentity::DOMAIN_PATTERN],
             'contact_email' => ['required', 'email', 'max:190'],
             'package_id'    => ['required', 'integer', Rule::exists('packages', 'id')],
-            'php_version'   => ['required', 'string', 'regex:/^8\.[0-9]$/'],
+            'php_version'   => ['required', 'string', 'regex:' . \App\Support\PhpVersions::pattern()],
             'password'      => ['nullable', Password::defaults()],
         ]);
 
@@ -275,6 +276,29 @@ class AccountsController extends Controller
         Audit::log('account.quota', 'warning', 'account', $account->id, ['quota_mb' => $data['quota_mb']]);
 
         return redirect()->route('accounts.show', $account)->with('success', 'Quota change queue me hai.');
+    }
+
+    public function php(Request $request, Account $account): RedirectResponse
+    {
+        if ($account->isTerminated() || $account->isSuspended()) {
+            return back()->withErrors(['php_version' => 'Suspended/terminated account par PHP nahi badlega.']);
+        }
+        $data = $request->validate([
+            'php_version' => ['required', 'string', 'regex:' . PhpVersions::pattern()],
+        ]);
+        $php = $data['php_version'];
+        if (! in_array($php, PhpVersions::all(), true)) {
+            return back()->withErrors(['php_version' => 'Ye PHP version is server par nahi hai.']);
+        }
+        $account->forceFill(['php_version' => $php])->save();
+        AccountProvisioner::enqueue($account, 'php.setVersion', [
+            'username' => $this->liveUsername($account),
+            'php_version' => $php,
+        ]);
+        $account->recordEvent('php.setVersion.queued', $php);
+        Audit::log('php.setVersion', 'info', 'account', $account->id, ['php_version' => $php]);
+
+        return redirect()->route('accounts.show', $account)->with('success', "PHP {$php} queue me hai.");
     }
 
     private function liveUsername(Account $account): string

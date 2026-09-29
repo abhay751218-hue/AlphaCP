@@ -20,6 +20,8 @@ final class FakeCommandExecutor implements CommandExecutor
     /** @var array<string, true> */
     public array $locked = [];
 
+    public ?string $crontabBody = null;
+
     public ?string $failWhenContains = null;
 
     public function run(array $argv, ?int $timeout = null, ?string $stdin = null): CommandResult
@@ -37,6 +39,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'userdel' => $this->userdel($argv),
             'usermod' => $this->usermod($argv),
             'setquota', 'systemctl' => new CommandResult($argv, 0, "fake {$bin} ok\n", '', 1),
+            'crontab' => $this->handleCrontab($argv, $stdin),
             default => new CommandResult($argv, 0, '', '', 1),
         };
     }
@@ -94,6 +97,17 @@ final class FakeCommandExecutor implements CommandExecutor
         if (in_array('-U', $argv, true)) {
             unset($this->locked[$user]);
         }
+        return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleCrontab(array $argv, ?string $stdin): CommandResult
+    {
+        if (in_array('-r', $argv, true)) {
+            $this->crontabBody = '';
+            return new CommandResult($argv, 0, '', '', 1);
+        }
+        $this->crontabBody = (string) $stdin;
         return new CommandResult($argv, 0, '', '', 1);
     }
 }

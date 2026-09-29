@@ -326,6 +326,49 @@ final class AccountOs
         $this->reload($this->paths->phpFpmService);
     }
 
+    public function reloadPhp(): void
+    {
+        $this->reload($this->paths->phpFpmService);
+    }
+
+    public function setPhpVersion(string $username, string $phpVersion): string
+    {
+        $err = AccountIdentity::phpVersion($phpVersion);
+        if ($err !== null) {
+            throw new RuntimeException($err);
+        }
+        $this->removePool($username);
+        $next = AccountPaths::fromEnv($phpVersion);
+        $os = new self($this->cmd, $this->fs, $next, $this->log);
+        $os->writePool($username);
+        $os->reloadServices();
+        if ($next->phpFpmService !== $this->paths->phpFpmService) {
+            $this->reloadPhp();
+        }
+        $this->log->info("php {$phpVersion} for {$username}");
+
+        return $phpVersion;
+    }
+
+    public function applyCrontab(string $username, string $body): void
+    {
+        if (AccountIdentity::username($username) !== null) {
+            throw new RuntimeException('bad username');
+        }
+        $bin = is_file('/usr/bin/crontab') ? '/usr/bin/crontab' : '/usr/bin/crontab';
+        if (trim($body) === '') {
+            $result = $this->cmd->run([$bin, '-u', $username, '-r'], 15);
+            if (!$result->ok() && !str_contains($result->stderr, 'no crontab')) {
+                throw new RuntimeException('crontab -r failed: ' . $result->stderr);
+            }
+            return;
+        }
+        $result = $this->cmd->run([$bin, '-u', $username, '-'], 15, $body);
+        if (!$result->ok()) {
+            throw new RuntimeException('crontab failed: ' . $result->stderr);
+        }
+    }
+
     public function ensureSuspendedPage(): void
     {
         $dir = $this->paths->suspendedRoot;

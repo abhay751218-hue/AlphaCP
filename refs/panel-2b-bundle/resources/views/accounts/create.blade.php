@@ -50,7 +50,7 @@
 
             <label for="php_version">PHP</label>
             <select id="php_version" name="php_version" required @disabled(! $gate['ok'])>
-                @foreach (['8.4', '8.3', '8.2', '8.1'] as $php)
+                @foreach (\App\Support\PhpVersions::all() as $php)
                     <option value="{{ $php }}" @selected(old('php_version', '8.4') === $php)>{{ $php }}</option>
                 @endforeach
             </select>

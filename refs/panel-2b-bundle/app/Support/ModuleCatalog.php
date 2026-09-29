@@ -117,7 +117,7 @@ final class ModuleCatalog
                 'items' => [
                     ['name' => 'App Installer',      'step' => 'S14', 'status' => 'step'],
                     ['name' => 'WordPress Toolkit',  'step' => 'S14', 'status' => 'step'],
-                    ['name' => 'MultiPHP Manager',   'step' => 'S5',  'status' => 'step'],
+                    ['name' => 'MultiPHP Manager',   'step' => 'S5',  'status' => 'live', 'route' => 'php.index'],
                     ['name' => 'MultiPHP INI Editor', 'step' => 'S5', 'status' => 'step'],
                     ['name' => 'Node.js Selector',   'step' => 'S14', 'status' => 'step'],
                     ['name' => 'Optimize Website',   'step' => 'S14', 'status' => 'step'],
@@ -129,7 +129,7 @@ final class ModuleCatalog
                 'icon'  => 'cog',
                 'audience' => 'cpanel',
                 'items' => [
-                    ['name' => 'Cron Jobs',      'step' => 'S5',  'status' => 'step'],
+                    ['name' => 'Cron Jobs',      'step' => 'S5',  'status' => 'live', 'route' => 'cron.index'],
                     ['name' => 'Track DNS',      'step' => 'S9',  'status' => 'step'],
                     ['name' => 'Indexes',        'step' => 'S5',  'status' => 'step'],
                     ['name' => 'Error Pages',    'step' => 'S5',  'status' => 'step'],

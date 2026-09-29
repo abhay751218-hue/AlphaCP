@@ -7,8 +7,10 @@ use App\Http\Controllers\AuditController;
 use App\Http\Controllers\PackagesController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\TwoFactorController;
+use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainsController;
+use App\Http\Controllers\PhpController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SystemController;
@@ -63,6 +65,18 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
     Route::delete('/domains/{domain}', [DomainsController::class, 'destroy'])
         ->middleware('perm:domains.manage')->name('domains.destroy');
 
+    Route::get('/php', [PhpController::class, 'index'])
+        ->middleware('perm:software.view')->name('php.index');
+    Route::post('/php', [PhpController::class, 'update'])
+        ->middleware('perm:software.manage')->name('php.update');
+
+    Route::get('/cron', [CronController::class, 'index'])
+        ->middleware('perm:cron.view')->name('cron.index');
+    Route::post('/cron', [CronController::class, 'store'])
+        ->middleware('perm:cron.manage')->name('cron.store');
+    Route::delete('/cron/{cron}', [CronController::class, 'destroy'])
+        ->middleware('perm:cron.manage')->name('cron.destroy');
+
     // -- Security (always available to the logged-in user) -------------------
     Route::prefix('security')->name('security.')->group(function (): void {
         Route::get('/', [SecurityController::class, 'index'])->name('index');
@@ -94,6 +108,8 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.modify')->name('accounts.upgrade');
     Route::post('/accounts/{account}/quota', [AccountsController::class, 'quota'])
         ->middleware('perm:accounts.modify')->name('accounts.quota');
+    Route::post('/accounts/{account}/php', [AccountsController::class, 'php'])
+        ->middleware('perm:accounts.modify')->name('accounts.php');
 
     Route::get('/packages', [PackagesController::class, 'index'])
         ->middleware('perm:packages.view')->name('packages.index');

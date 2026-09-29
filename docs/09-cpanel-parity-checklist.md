@@ -135,7 +135,7 @@
 | 65 | WP Guardian-style security | Malware scan + vuln patch | S14 | ⏳ S14 |
 | 66 | Node.js® Selector | Node apps + npm | S14 | ⏳ S14 |
 | 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 |
-| 68 | MultiPHP Manager | Per-domain PHP version | S5 | ⏳ S5 |
+| 68 | MultiPHP Manager | Per-domain PHP version | S5 | ✅ (account-level; per-domain later) |
 | 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ⏳ S5 |
 | 70 | PHP Composer | Composer in panel | S14 | ⏳ S14 |
 | 71 | PHP PEAR Packages | 🔵 legacy | post-v1 | 🔵 |
@@ -148,7 +148,7 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 76 | Cron Jobs | Scheduled tasks | S5 | ⏳ S5 |
+| 76 | Cron Jobs | Scheduled tasks | S5 | ✅ |
 | 77 | Track DNS | DNS trace/debug | S9 | ⏳ S9 |
 | 78 | Indexes | Directory listing control | S5 | ⏳ S5 |
 | 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 |

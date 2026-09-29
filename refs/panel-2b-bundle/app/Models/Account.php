@@ -53,6 +53,11 @@ class Account extends Model
         return $this->hasMany(Domain::class);
     }
 
+    public function cronJobs(): HasMany
+    {
+        return $this->hasMany(CronJob::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
