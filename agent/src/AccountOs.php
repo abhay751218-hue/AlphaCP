@@ -114,6 +114,93 @@ final class AccountOs
         return $out;
     }
 
+    /**
+     * Folder-wise disk usage under the account home. Symlinks skipped (no escape).
+     *
+     * @return array{bytes:int, truncated:bool, entries:list<array{name:string,type:string,bytes:int}>}
+     */
+    public function diskUsage(string $username, string $rel): array
+    {
+        $root = Files::resolve($this->paths->home($username), $rel);
+        if (is_link($root) || !is_dir($root)) {
+            throw new RuntimeException('path is not a directory');
+        }
+        $this->fs->assert($root);
+
+        $nodes = 0;
+        $truncated = false;
+        $entries = [];
+        $bytes = $this->walkUsage($root, $nodes, $truncated, $entries, true);
+        usort(
+            $entries,
+            static fn (array $a, array $b): int => ($b['bytes'] <=> $a['bytes']) ?: strcmp($a['name'], $b['name'])
+        );
+
+        return [
+            'bytes' => $bytes,
+            'truncated' => $truncated,
+            'entries' => $entries,
+        ];
+    }
+
+    /**
+     * @param  list<array{name:string,type:string,bytes:int}>  $entries
+     */
+    private function walkUsage(string $dir, int &$nodes, bool &$truncated, array &$entries, bool $collect): int
+    {
+        $nodes++;
+        if ($nodes > Files::MAX_USAGE_NODES) {
+            $truncated = true;
+
+            return 0;
+        }
+        try {
+            $names = $this->fs->listNames($dir);
+        } catch (RuntimeException) {
+            return 0;
+        }
+        if (count($names) > Files::MAX_USAGE_CHILDREN) {
+            $truncated = true;
+            $names = array_slice($names, 0, Files::MAX_USAGE_CHILDREN);
+        }
+        $sum = 0;
+        foreach ($names as $name) {
+            if ($nodes >= Files::MAX_USAGE_NODES) {
+                $truncated = true;
+                break;
+            }
+            $full = $dir . '/' . $name;
+            if (is_link($full)) {
+                continue;
+            }
+            try {
+                $this->fs->assert($full);
+            } catch (PathGuardException) {
+                continue;
+            }
+            if (is_dir($full)) {
+                $nested = [];
+                $size = $this->walkUsage($full, $nodes, $truncated, $nested, false);
+                if ($collect) {
+                    $entries[] = ['name' => $name, 'type' => 'dir', 'bytes' => $size];
+                }
+                $sum += $size;
+                continue;
+            }
+            if (!is_file($full)) {
+                continue;
+            }
+            $nodes++;
+            $size = (int) (@filesize($full) ?: 0);
+            if ($collect) {
+                $entries[] = ['name' => $name, 'type' => 'file', 'bytes' => $size];
+            }
+            $sum += $size;
+        }
+
+        return $sum;
+    }
+
     public function mkdirFile(string $username, string $rel): string
     {
         $path = Files::resolve($this->paths->home($username), $rel);

@@ -41,7 +41,7 @@
 | 1 | File Manager | Upload/edit/delete/zip/permissions | S6 | ✅ (browse/mkdir/edit/delete/rename; zip/chmod later) |
 | 2 | Images | Resize/convert images | S6 | ⏳ S6 |
 | 3 | Directory Privacy | Password-protected folders | S6 | ✅ (Apache Basic Auth; bcrypt htpasswd; path-jailed) |
-| 4 | Disk Usage | Folder-wise space | S6 | ⏳ S6 |
+| 4 | Disk Usage | Folder-wise space | S6 | ✅ (home-jailed walk; symlink skip; 2000-node cap) |
 | 5 | Web Disk | WebDAV drive | S6 | ⏳ S6 |
 | 6 | FTP Accounts | FTP users | S6 | ⏳ S6 |
 | 7 | FTP Connections | FTP session logs | S6 | ⏳ S6 |

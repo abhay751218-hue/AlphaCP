@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 6 Disk Usage (29 Sep)** — folder-wise space via readonly `files.usage`
+  (home-jailed, symlink skip, 2000-node cap). Panel **0.17.0**, agent **0.14.0**.
+  Tests: panel **120/0**, provision-sim **45/45**, update-sim **86/86**.
+  Deploy via `panel-update.sh` 0.17.0.
 - **Step 6 Directory Privacy (29 Sep)** — Apache Basic Auth via `privacy.set`
   (bcrypt hashes only, path-jailed). Panel **0.16.0**, agent **0.13.0**.
   Tests: panel **115/0**, provision-sim **44/44**, update-sim **84/84**.

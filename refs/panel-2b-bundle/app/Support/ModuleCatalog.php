@@ -33,7 +33,7 @@ final class ModuleCatalog
                     ['name' => 'File Manager',        'step' => 'S6',  'status' => 'live', 'route' => 'files.index'],
                     ['name' => 'Images',              'step' => 'S6',  'status' => 'step'],
                     ['name' => 'Directory Privacy',   'step' => 'S6',  'status' => 'live', 'route' => 'privacy.index'],
-                    ['name' => 'Disk Usage',          'step' => 'S6',  'status' => 'step'],
+                    ['name' => 'Disk Usage',          'step' => 'S6',  'status' => 'live', 'route' => 'disk.index'],
                     ['name' => 'FTP Accounts',        'step' => 'S6',  'status' => 'step'],
                     ['name' => 'Backup',              'step' => 'S10', 'status' => 'step'],
                     ['name' => 'Backup Wizard',       'step' => 'S10', 'status' => 'step'],

@@ -54,9 +54,9 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 ## 4b. Tests (sab sandbox me chalte hain — system PHP/MySQL ki zaroorat nahi)
 | Command | Kya test karta hai | Last result |
 |---|---|---|
-| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **115 pass, 0 fail, 6 wasm-skip** (0.16.0) |
-| `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy tasks | **44/44** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.16.0: panel 0.16.0 + agent 0.13.0, sha mismatch, rollback, backup prune, sync-tool, **private repo (get)** | **84/84** |
+| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **120 pass, 0 fail, 6 wasm-skip** (0.17.0) |
+| `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy/usage tasks | **45/45** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.17.0: panel 0.17.0 + agent 0.14.0, sha mismatch, rollback, backup prune, sync-tool, **private repo (get)** | **86/86** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 
