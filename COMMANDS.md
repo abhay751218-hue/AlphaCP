@@ -14,23 +14,23 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### alphacp-sync v1.2 — private repo support (`get` mode). Repo PRIVATE karne se PEHLE chalao.
+### panel-update 0.4.0 — Step 3: Accounts UI (panel 0.4.0) + paneld agent 0.2.0
 ```bash
-curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f55927ee1fbf526037785dcdb82aea1/installer/alphacp-sync.sh -o /tmp/acp-sync-v1.2.sh && sudo bash /tmp/acp-sync-v1.2.sh
+sudo alphacp-sync get 430ccf0574e8b0400a7922b7651179168bb29094 installer/panel-update.sh /tmp/acp-panel-update-0.4.0.sh 865f4167ecd3ca7ce46ba383249ba18fa4574f80f7ee3c614a74f49b5e48844b && sudo bash /tmp/acp-panel-update-0.4.0.sh
 ```
-- sha256: `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852`
-- Expected: banner `v1.2` → (key pehle se hai, dobara add nahi karni) → `==> SYNC OK ✅` (ya "koi badlav nahi").
-- Test: `sudo bash tools/sim/sync-sim.sh` → 60/60 (Run 8 = get: sha verify, galat sha, traversal, PR-ref commit, no key).
-  GitHub par SHA-fetch + `refs/pull/*` fetch asli repo par verify kiya (29 Sep).
+- sha256: `865f4167ecd3ca7ce46ba383249ba18fa4574f80f7ee3c614a74f49b5e48844b`
+- Expected: banner `updater 0.4.0` → agent 0.2.0 installed → `==> UPDATE COMPLETE ✅` → panel HTTP 200.
+- Panel: Accounts create/list/suspend/unsuspend/terminate. Agent: `account.*` tasks + rollback.
+- Trial/license same rehti hai (max_accounts=20). Password/APP_KEY nahi badalte.
+- Test: `bash tools/sim/provision-sim.sh` → 28/28; `bash tools/sim/panel-tests.sh` → 52 pass / 0 fail;
+  `sudo bash tools/sim/update-sim.sh` → **59/59**.
 
-### Uske baad panel updates: panel-update 0.3.0 (private-ready) — agli panel release ke saath
-- commit `0c90863a10e6c70984e627af1b819e66ae60b600`, sha256 `204b78af0b59b75614a61455df1ca96b5eb3c05f744b744647da1a33c4da8480`
-- artifact + sync tool pehle `alphacp-sync get` se, fallback public URL. update-sim **54/54** (U5 private+get, U6 private+purana sync → saaf error).
-- Abhi chalane ki zaroorat nahi (server already 0.3.2).
+## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| alphacp-sync v1.2 (`4b4573f…/installer/alphacp-sync.sh`) + `get` test | 29 Sep | ✅ private repo; `sudo alphacp-sync get` pass |
 | alphacp-sync v1.0 setup (`aa2091d…/installer/alphacp-sync.sh`) | 29 Sep | ✅ `main` par pehla snapshot `d5ae8d2` (314 files). Timer har ghante chalta hai. Manual: `sudo alphacp-sync`, status: `sudo alphacp-sync --status` |
 | updater 0.1.0 (dusre AI ka, panel 0.3.1) | 29 Sep | ✅ server par 0.3.1 = source byte-for-byte (snapshot se verify) |
 | panel-update 0.2.1 (`d741f79…`) → panel 0.3.2 + sync v1.1 | 29 Sep 00:17Z | ✅ UPDATE COMPLETE, HTTP 200, trial same (expiry 13 Oct), snapshot `ebdbd75` |
