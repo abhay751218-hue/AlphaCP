@@ -10,7 +10,7 @@ declare(strict_types=1);
  */
 return [
     // Panel + agent versions (shown in the UI footer and system page)
-    'version'       => env('ACP_VERSION', '0.3.1'),
+    'version'       => env('ACP_VERSION', '0.3.2'),
     'agent_version' => env('ACP_AGENT_VERSION', '0.1.0'),
 
     // AlphaCP install root (agent, etc/, logs/, panel/)

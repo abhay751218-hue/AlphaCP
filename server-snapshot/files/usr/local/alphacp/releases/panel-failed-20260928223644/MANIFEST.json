@@ -1,9 +1,0 @@
-{
-  "name": "alphacp-panel",
-  "version": "0.3.1",
-  "step": "2B",
-  "php": ">=8.3",
-  "built_at": "2026-09-29 00:00:00Z",
-  "includes_vendor": false,
-  "files": 93
-}

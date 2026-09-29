@@ -1,0 +1,9 @@
+[Unit]
+Description=AlphaCP server -> GitHub snapshot sync
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/alphacp/bin/alphacp-sync
+Nice=10

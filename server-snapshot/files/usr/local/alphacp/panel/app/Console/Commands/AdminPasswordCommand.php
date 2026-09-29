@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Models\User;
 use App\Support\Audit;
+use App\Support\PasswordGenerator;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -96,9 +97,9 @@ class AdminPasswordCommand extends Command
         return self::SUCCESS;
     }
 
-    /** Same alphabet as the installer: no ambiguous chars for humans retyping it. */
+    /** Always satisfies the password policy (see PasswordGenerator for the old ~3% failure). */
     private function generatePassword(): string
     {
-        return substr(str_replace(['/', '+', '='], '', base64_encode(random_bytes(24))), 0, 20);
+        return PasswordGenerator::generate(20);
     }
 }
