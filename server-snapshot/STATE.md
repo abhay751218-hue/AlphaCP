@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.15.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.15.0   (.env)
-AGENT_VERSION : 0.12.0
+panel code    : 0.16.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.16.0   (.env)
+AGENT_VERSION : 0.13.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -47,9 +47,10 @@ agent-backup-20260929073343
 agent-backup-20260929151257
 agent-backup-20260929153015
 agent-backup-20260929154229
-panel-backup-20260929151257
+agent-backup-20260929160317
 panel-backup-20260929153015
 panel-backup-20260929154229
+panel-backup-20260929160317
 panel-failed-20260928223644
 ```
 
@@ -112,6 +113,7 @@ alphacp:admin-password
   2026_09_29_000011_add_mime_permissions   [10] Ran
   2026_09_29_000012_add_handlers_permissions   [11] Ran
   2026_09_29_000013_add_files_permissions   [12] Ran
+  2026_09_29_000014_add_privacy_permissions   [13] Ran
 ```
 
 ## Routes (web)
@@ -164,6 +166,9 @@ GET|HEAD           /php                                          php.index
 POST               /php                                          php.update
 GET|HEAD           /php/ini                                      php.ini
 POST               /php/ini                                      php.ini.update
+GET|HEAD           /privacy                                      privacy.index
+POST               /privacy                                      privacy.store
+POST               /privacy/delete                               privacy.destroy
 GET|HEAD           /security                                     security.index
 POST               /security/2fa/confirm                         security.2fa.confirm
 POST               /security/2fa/disable                         security.2fa.disable

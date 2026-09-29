@@ -109,6 +109,16 @@ final class AccountPaths
         return $this->home($username) . '/etc/handlers.conf';
     }
 
+    public function privacyConf(string $username): string
+    {
+        return $this->home($username) . '/etc/privacy.conf';
+    }
+
+    public function privacyDir(string $username): string
+    {
+        return $this->home($username) . '/etc/privacy';
+    }
+
     public function sslDir(string $username, string $domain): string
     {
         return $this->home($username) . '/ssl/' . $this->vhostSlug($domain);

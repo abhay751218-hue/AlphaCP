@@ -384,6 +384,48 @@ return [
         ],
     ],
 
+    'privacy.set' => [
+        'handler'     => Tasks\PrivacySet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Apache Basic Auth (Directory Privacy) for folders under the account home.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'entries'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'entries'  => [
+                    'type'     => 'array',
+                    'maxItems' => 20,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['path', 'realm', 'users'],
+                        'properties'           => [
+                            'path'  => ['type' => 'string', 'maxLength' => 240],
+                            'realm' => ['type' => 'string', 'maxLength' => 64],
+                            'users' => [
+                                'type'     => 'array',
+                                'maxItems' => 20,
+                                'items'    => [
+                                    'type'                 => 'object',
+                                    'additionalProperties' => false,
+                                    'required'             => ['name', 'hash'],
+                                    'properties'           => [
+                                        'name' => ['type' => 'string', 'maxLength' => 32],
+                                        'hash' => ['type' => 'string', 'maxLength' => 64],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

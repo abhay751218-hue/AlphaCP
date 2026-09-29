@@ -51,6 +51,10 @@ final class PermissionCatalog
                 ['files.view', 'Browse files'],
                 ['files.manage', 'Upload/edit/delete files'],
             ],
+            'privacy' => [
+                ['privacy.view', 'View directory privacy'],
+                ['privacy.manage', 'Protect folders with Basic Auth'],
+            ],
             'email' => [
                 ['email.view', 'View email accounts'],
                 ['email.manage', 'Create/manage email'],
@@ -147,7 +151,7 @@ final class PermissionCatalog
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
                 'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
                 'indexes.view', 'indexes.manage', 'mime.view', 'mime.manage',
-                'handlers.view', 'handlers.manage',
+                'handlers.view', 'handlers.manage', 'privacy.view', 'privacy.manage',
             ],
 
             'user' => [
@@ -157,7 +161,7 @@ final class PermissionCatalog
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
                 'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
                 'indexes.view', 'indexes.manage', 'mime.view', 'mime.manage',
-                'handlers.view', 'handlers.manage',
+                'handlers.view', 'handlers.manage', 'privacy.view', 'privacy.manage',
             ],
 
             'mail' => [

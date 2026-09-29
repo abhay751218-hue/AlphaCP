@@ -33,6 +33,7 @@ final class AccountTemplates
     IncludeOptional {$home}/etc/errorpages.conf
     IncludeOptional {$home}/etc/mime.conf
     IncludeOptional {$home}/etc/handlers.conf
+    IncludeOptional {$home}/etc/privacy.conf
 
     ErrorLog {$logs}/error.log
     CustomLog {$logs}/access.log combined
@@ -78,6 +79,7 @@ CONF;
     IncludeOptional {$home}/etc/errorpages.conf
     IncludeOptional {$home}/etc/mime.conf
     IncludeOptional {$home}/etc/handlers.conf
+    IncludeOptional {$home}/etc/privacy.conf
 
     ErrorLog {$logs}/ssl-error.log
     CustomLog {$logs}/ssl-access.log combined
@@ -151,6 +153,27 @@ php_admin_value[session.save_path] = {$home}/tmp
 php_admin_flag[allow_url_fopen] = on
 {$extra}
 CONF;
+    }
+
+    /**
+     * @param list<array{path: string, realm: string, slug: string, users: list<array{name: string, hash: string}>}> $entries
+     */
+    public static function privacyConf(string $home, array $entries): string
+    {
+        $lines = ['# AlphaCP directory privacy — managed file, do not edit by hand'];
+        foreach ($entries as $row) {
+            $dir = $home . '/' . $row['path'];
+            $htpasswd = $home . '/etc/privacy/' . $row['slug'] . '.htpasswd';
+            $realm = str_replace('"', '', $row['realm']);
+            $lines[] = '<Directory ' . $dir . '>';
+            $lines[] = '    AuthType Basic';
+            $lines[] = '    AuthName "' . $realm . '"';
+            $lines[] = '    AuthUserFile ' . $htpasswd;
+            $lines[] = '    Require valid-user';
+            $lines[] = '</Directory>';
+        }
+
+        return implode("\n", $lines) . "\n";
     }
 
     /** @param list<array{handler: string, ext: string}> $mappings */
