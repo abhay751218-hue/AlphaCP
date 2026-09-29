@@ -19,6 +19,84 @@ final class AccountOs
     ) {
     }
 
+    /**
+     * @return list<array{name: string, type: string, size: int, mode: string}>
+     */
+    public function listFiles(string $username, string $rel): array
+    {
+        $dir = Files::resolve($this->paths->home($username), $rel);
+        $names = $this->fs->listNames($dir);
+        $out = [];
+        foreach ($names as $name) {
+            if (count($out) >= Files::MAX_LIST) {
+                break;
+            }
+            $full = $dir . '/' . $name;
+            $isDir = is_dir($full);
+            $out[] = [
+                'name' => $name,
+                'type' => $isDir ? 'dir' : 'file',
+                'size' => $isDir ? 0 : (int) (@filesize($full) ?: 0),
+                'mode' => sprintf('%04o', (@fileperms($full) ?: 0) & 0777),
+            ];
+        }
+
+        return $out;
+    }
+
+    public function mkdirFile(string $username, string $rel): string
+    {
+        $path = Files::resolve($this->paths->home($username), $rel);
+        $this->fs->mkdir($path, 0755);
+        $this->fs->chownName($path, $username);
+
+        return $rel;
+    }
+
+    public function writeFile(string $username, string $rel, string $content): string
+    {
+        if (strlen($content) > Files::MAX_WRITE) {
+            throw new RuntimeException('file too large (256 KiB max)');
+        }
+        if (str_contains($content, "\0")) {
+            throw new RuntimeException('null byte not allowed in file content');
+        }
+        $path = Files::resolve($this->paths->home($username), $rel);
+        if (is_dir($path)) {
+            throw new RuntimeException('cannot write to a directory');
+        }
+        $this->fs->write($path, $content, 0644);
+        $this->fs->chownName($path, $username);
+
+        return $rel;
+    }
+
+    public function deleteFile(string $username, string $rel): string
+    {
+        $path = Files::resolve($this->paths->home($username), $rel);
+        if (is_dir($path) && !is_link($path)) {
+            $this->fs->rmdir($path);
+        } else {
+            $this->fs->unlink($path);
+        }
+
+        return $rel;
+    }
+
+    public function renameFile(string $username, string $fromRel, string $toRel): string
+    {
+        $toRel = Files::normalizeRel($toRel);
+        if ($toRel === '') {
+            throw new RuntimeException('rename target required');
+        }
+        $from = Files::resolve($this->paths->home($username), $fromRel);
+        $to = Files::resolve($this->paths->home($username), $toRel);
+        $this->fs->rename($from, $to);
+        $this->fs->chownName($to, $username);
+
+        return $toRel;
+    }
+
     public function userExists(string $username): bool
     {
         $result = $this->cmd->run(['/usr/bin/getent', 'passwd', $username], 10);

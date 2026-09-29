@@ -30,7 +30,7 @@ final class ModuleCatalog
                 'icon'  => 'folder',
                 'audience' => 'cpanel',
                 'items' => [
-                    ['name' => 'File Manager',        'step' => 'S6',  'status' => 'step'],
+                    ['name' => 'File Manager',        'step' => 'S6',  'status' => 'live', 'route' => 'files.index'],
                     ['name' => 'Images',              'step' => 'S6',  'status' => 'step'],
                     ['name' => 'Directory Privacy',   'step' => 'S6',  'status' => 'step'],
                     ['name' => 'Disk Usage',          'step' => 'S6',  'status' => 'step'],

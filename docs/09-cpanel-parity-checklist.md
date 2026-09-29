@@ -38,7 +38,7 @@
 
 | # | cPanel tool | Kya karta hai | Humara step | Status |
 |---|---|---|---|---|
-| 1 | File Manager | Upload/edit/delete/zip/permissions | S6 | ⏳ S6 |
+| 1 | File Manager | Upload/edit/delete/zip/permissions | S6 | ✅ (browse/mkdir/edit/delete/rename; zip/chmod later) |
 | 2 | Images | Resize/convert images | S6 | ⏳ S6 |
 | 3 | Directory Privacy | Password-protected folders | S6 | ⏳ S6 |
 | 4 | Disk Usage | Folder-wise space | S6 | ⏳ S6 |

@@ -347,6 +347,43 @@ return [
         ],
     ],
 
+    'files.list' => [
+        'handler'     => Tasks\FilesList::class,
+        'safety'      => 'readonly',
+        'timeout'     => 15,
+        'description' => 'List files under the account home (relative path).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'path'     => ['type' => 'string', 'maxLength' => 240],
+            ],
+        ],
+    ],
+
+    'files.set' => [
+        'handler'     => Tasks\FilesSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'mkdir/write/delete/rename a path under the account home.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'op', 'path'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'op'       => ['type' => 'string', 'enum' => ['mkdir', 'write', 'delete', 'rename']],
+                'path'     => ['type' => 'string', 'maxLength' => 240],
+                'to'       => ['type' => 'string', 'maxLength' => 240],
+                'content'  => ['type' => 'string', 'maxLength' => 262144],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

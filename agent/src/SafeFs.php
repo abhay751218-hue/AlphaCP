@@ -101,6 +101,53 @@ final class SafeFs
         @chmod($this->guard->assert($path), $mode);
     }
 
+    public function read(string $path): string
+    {
+        $path = $this->guard->assert($path);
+        if (!is_file($path)) {
+            throw new RuntimeException("not a file: {$path}");
+        }
+        $data = @file_get_contents($path);
+        if ($data === false) {
+            throw new RuntimeException("read failed: {$path}");
+        }
+
+        return $data;
+    }
+
+    /** @return list<string> */
+    public function listNames(string $path): array
+    {
+        $path = $this->guard->assert($path);
+        if (!is_dir($path)) {
+            throw new RuntimeException("not a directory: {$path}");
+        }
+        $names = @scandir($path);
+        if (!is_array($names)) {
+            throw new RuntimeException("scandir failed: {$path}");
+        }
+        $out = [];
+        foreach ($names as $name) {
+            if ($name === '.' || $name === '..') {
+                continue;
+            }
+            $out[] = $name;
+        }
+
+        return $out;
+    }
+
+    public function rmdir(string $path): void
+    {
+        $path = $this->guard->assert($path);
+        if (!is_dir($path)) {
+            return;
+        }
+        if (!@rmdir($path)) {
+            throw new RuntimeException("rmdir failed (not empty?): {$path}");
+        }
+    }
+
     /**
      * Best-effort ownership. Missing users (tests / wasm) must not fail the task.
      */

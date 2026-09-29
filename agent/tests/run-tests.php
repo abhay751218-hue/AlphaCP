@@ -33,6 +33,8 @@ use Alphacp\Agent\Tasks\DomainAdd;
 use Alphacp\Agent\Tasks\DomainRemove;
 use Alphacp\Agent\Tasks\ErrorPagesSet;
 use Alphacp\Agent\Tasks\IndexesSet;
+use Alphacp\Agent\Tasks\FilesList;
+use Alphacp\Agent\Tasks\FilesSet;
 use Alphacp\Agent\Tasks\HandlersSet;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
@@ -182,7 +184,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -564,6 +566,64 @@ test('handlers.set writes AddHandler and rejects php-script', function (): void 
         $threwExt = str_contains($e->getMessage(), 'blocked handler extension');
     }
     assert_true($threwExt, 'php extension must fail closed');
+    acp_account_cleanup($harness);
+});
+test('files.list and files.set stay inside home and reject ..', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $listed = (new FilesList())->handle(['username' => 'alicehost', 'path' => 'public_html'], $harness['ctx']);
+    $names = array_column($listed['entries'], 'name');
+    assert_true(in_array('index.html', $names, true), 'welcome page should list');
+    (new FilesSet())->handle([
+        'username' => 'alicehost',
+        'op' => 'mkdir',
+        'path' => 'public_html/docs',
+    ], $harness['ctx']);
+    (new FilesSet())->handle([
+        'username' => 'alicehost',
+        'op' => 'write',
+        'path' => 'public_html/docs/hello.txt',
+        'content' => 'namaste',
+    ], $harness['ctx']);
+    $file = $harness['root'] . '/home/alicehost/public_html/docs/hello.txt';
+    assert_true(is_file($file));
+    assert_true(str_contains((string) file_get_contents($file), 'namaste'));
+    (new FilesSet())->handle([
+        'username' => 'alicehost',
+        'op' => 'rename',
+        'path' => 'public_html/docs/hello.txt',
+        'to' => 'public_html/docs/bye.txt',
+    ], $harness['ctx']);
+    assert_true(is_file($harness['root'] . '/home/alicehost/public_html/docs/bye.txt'));
+    (new FilesSet())->handle([
+        'username' => 'alicehost',
+        'op' => 'delete',
+        'path' => 'public_html/docs/bye.txt',
+    ], $harness['ctx']);
+    assert_true(!is_file($harness['root'] . '/home/alicehost/public_html/docs/bye.txt'));
+    $threw = false;
+    try {
+        (new FilesSet())->handle([
+            'username' => 'alicehost',
+            'op' => 'write',
+            'path' => '../etc/passwd',
+            'content' => 'x',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), '..') || str_contains($e->getMessage(), 'escape');
+    }
+    assert_true($threw, 'path escape must fail closed');
+    $threwRoot = false;
+    try {
+        (new FilesSet())->handle([
+            'username' => 'alicehost',
+            'op' => 'delete',
+            'path' => '',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwRoot = str_contains($e->getMessage(), 'home root');
+    }
+    assert_true($threwRoot, 'home root delete must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

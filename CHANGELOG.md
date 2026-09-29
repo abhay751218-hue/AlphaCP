@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 6 File Manager slice 1 (29 Sep)** — home-jailed browse/mkdir/edit/delete/rename
+  via `files.list` + `files.set`. Zip/chmod/FTP later. Panel **0.15.0**, agent **0.12.0**.
+  Tests: panel **110/0**, provision-sim **43/43**.
 - **Step 5 Apache Handlers (29 Sep)** — allowlisted Apache `AddHandler` via
   `handlers.set` (PHP/proxy/fcgi fail closed). Panel **0.14.0**, agent **0.11.0**.
   Tests: panel **105/0**, provision-sim **42/42**, update-sim **80/80**.
