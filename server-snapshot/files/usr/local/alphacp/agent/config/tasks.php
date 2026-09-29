@@ -241,6 +241,42 @@ return [
         ],
     ],
 
+    'ssl.issue' => [
+        'handler'     => Tasks\SslIssue::class,
+        'safety'      => 'mutating',
+        'timeout'     => 60,
+        'description' => 'Issue a self-signed cert and write Apache :443 vhost.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'domain', 'document_root'],
+            'properties'           => [
+                'username'      => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'domain'        => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
+                'document_root' => ['type' => 'string', 'minLength' => 2, 'maxLength' => 255],
+                'mode'          => ['type' => 'string', 'enum' => ['selfsigned', 'letsencrypt']],
+            ],
+        ],
+    ],
+
+    'ssl.remove' => [
+        'handler'     => Tasks\SslRemove::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Remove SSL vhost; cert files stay under the account home.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'domain'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'domain'   => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
     'account.setQuota' => [
         'handler'     => Tasks\AccountSetQuota::class,
         'safety'      => 'mutating',

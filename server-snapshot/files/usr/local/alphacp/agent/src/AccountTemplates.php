@@ -36,6 +36,46 @@ final class AccountTemplates
 CONF;
     }
 
+    public static function sslVhost(
+        string $username,
+        string $domain,
+        string $home,
+        string $docroot,
+        string $socketName,
+        string $cert,
+        string $key,
+    ): string {
+        $logs = $home . '/logs';
+        $sock = '/run/php/' . $socketName;
+
+        return <<<CONF
+# AlphaCP SSL vhost — managed file, do not edit by hand
+<VirtualHost *:443>
+    ServerName {$domain}
+    ServerAlias www.{$domain}
+    ServerAdmin {$username}@{$domain}
+    DocumentRoot {$docroot}
+    SSLEngine on
+    SSLCertificateFile {$cert}
+    SSLCertificateKeyFile {$key}
+
+    <Directory {$docroot}>
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+
+    <FilesMatch "\\.php\$">
+        SetHandler "proxy:unix:{$sock}|fcgi://localhost"
+    </FilesMatch>
+
+    ErrorLog {$logs}/ssl-error.log
+    CustomLog {$logs}/ssl-access.log combined
+</VirtualHost>
+
+CONF;
+    }
+
     public static function redirectVhost(string $username, string $domain, string $target, int $code = 301): string
     {
         $code = $code === 302 ? 302 : 301;

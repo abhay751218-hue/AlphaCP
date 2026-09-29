@@ -82,6 +82,10 @@ final class PermissionCatalog
             'monitoring' => [
                 ['metrics.view', 'View stats & metrics'],
             ],
+            'ssl' => [
+                ['ssl.view', 'View SSL status'],
+                ['ssl.manage', 'Issue/remove SSL certificates'],
+            ],
             'security' => [
                 ['security.view', 'View security center'],
                 ['security.manage', 'Change security settings'],
@@ -125,6 +129,7 @@ final class PermissionCatalog
                 'databases.view', 'databases.manage', 'dns.view', 'backup.view',
                 'metrics.view', 'security.view', 'audit.view', 'system.view',
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
+                'ssl.view', 'ssl.manage',
             ],
 
             'user' => [
@@ -132,6 +137,7 @@ final class PermissionCatalog
                 'email.view', 'email.manage', 'domains.view', 'domains.manage',
                 'databases.view', 'dns.view', 'backup.view', 'metrics.view',
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
+                'ssl.view', 'ssl.manage',
             ],
 
             'mail' => [

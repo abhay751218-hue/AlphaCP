@@ -36,6 +36,8 @@ final class CommandRunner implements CommandExecutor
         '/usr/sbin/setquota',
         '/usr/bin/setquota',
         '/usr/bin/crontab',
+        '/usr/bin/openssl',
+        '/usr/bin/certbot',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

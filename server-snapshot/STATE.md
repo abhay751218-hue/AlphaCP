@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.7.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.7.0   (.env)
-AGENT_VERSION : 0.4.0
+panel code    : 0.8.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.8.0   (.env)
+AGENT_VERSION : 0.5.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -39,15 +39,16 @@ agent-backup-20260929010705
 agent-backup-20260929012116
 agent-backup-20260929024057
 agent-backup-20260929025640
-panel-backup-20260929012116
+agent-backup-20260929031724
 panel-backup-20260929024057
 panel-backup-20260929025640
+panel-backup-20260929031724
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -97,6 +98,7 @@ alphacp:admin-password
   2026_09_29_000004_packages_feature_lists_and_limits   [3] Ran
   2026_09_29_000005_create_domains_table   [4] Ran
   2026_09_29_000006_create_cron_jobs_and_software_perms   [5] Ran
+  2026_09_29_000007_add_ssl_to_domains   [6] Ran
 ```
 
 ## Routes (web)
@@ -140,6 +142,9 @@ GET|HEAD           /security/password                            security.passwo
 POST               /security/password                            security.password.update
 GET|HEAD           /security/sessions                            security.sessions
 DELETE             /security/sessions/{id}                       security.sessions.destroy
+GET|HEAD           /ssl                                          ssl.index
+POST               /ssl/{domain}                                 ssl.issue
+DELETE             /ssl/{domain}                                 ssl.destroy
 GET|HEAD           /storage/{path}                               storage.local
 PUT                /storage/{path}                               storage.local.upload
 GET|HEAD           /system                                       system.index
@@ -182,4 +187,5 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot se skip hui files (secret/binary)
 ```
+/usr/local/alphacp/agent/src/AccountOs.php  (secret jaisa pattern)
 ```
