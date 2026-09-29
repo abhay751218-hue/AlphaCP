@@ -151,6 +151,8 @@ CREATE TABLE `domains` (
   `ssl_status` varchar(20) NOT NULL DEFAULT 'none',
   `ssl_issuer` varchar(40) DEFAULT NULL,
   `ssl_not_after` timestamp NULL DEFAULT NULL,
+  `ssl_autossl` tinyint(1) NOT NULL DEFAULT 1,
+  `ssl_last_error` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uq_domains_fqdn` (`domain`),
   KEY `domains_account_id_index` (`account_id`),

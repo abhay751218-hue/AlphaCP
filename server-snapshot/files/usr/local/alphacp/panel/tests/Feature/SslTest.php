@@ -58,23 +58,58 @@ class SslTest extends TestCase
         return [$customer, $account];
     }
 
-    public function test_customer_sees_ssl_status_and_can_issue(): void
+    public function test_customer_sees_ssl_status_and_can_issue_letsencrypt(): void
     {
         [$customer, $account] = $this->customerWithAccount();
         $this->asPanelUser($customer)->get('/ssl')
             ->assertOk()
             ->assertSee('shop.example.com')
-            ->assertSee('Issue self-signed');
+            ->assertSee('Run AutoSSL')
+            ->assertSee("Let's Encrypt")
+            ->assertSee('self-signed');
 
         $domain = Domain::query()->where('account_id', $account->id)->firstOrFail();
-        $this->asPanelUser($customer)->post('/ssl/' . $domain->id)->assertRedirect(route('ssl.index'));
+        $this->asPanelUser($customer)->post('/ssl/' . $domain->id, ['mode' => 'letsencrypt'])
+            ->assertRedirect(route('ssl.index'));
         $this->assertSame('pending', $domain->fresh()->ssl_status);
-        $this->assertSame('selfsigned', $domain->fresh()->ssl_issuer);
+        $this->assertSame('letsencrypt', $domain->fresh()->ssl_issuer);
         $task = DB::table('tasks')->where('account_id', $account->id)->where('type', 'ssl.issue')->first();
         $this->assertNotNull($task);
         $payload = json_decode((string) $task->payload, true);
         $this->assertSame('shop.example.com', $payload['domain']);
+        $this->assertSame('letsencrypt', $payload['mode']);
+        $this->assertSame('c@example.com', $payload['email']);
+    }
+
+    public function test_customer_can_issue_self_signed_fallback(): void
+    {
+        [$customer, $account] = $this->customerWithAccount();
+        $domain = Domain::query()->where('account_id', $account->id)->firstOrFail();
+        $this->asPanelUser($customer)->post('/ssl/' . $domain->id, ['mode' => 'selfsigned'])
+            ->assertRedirect(route('ssl.index'));
+        $this->assertSame('selfsigned', $domain->fresh()->ssl_issuer);
+        $task = DB::table('tasks')->where('account_id', $account->id)->where('type', 'ssl.issue')->first();
+        $payload = json_decode((string) $task->payload, true);
         $this->assertSame('selfsigned', $payload['mode']);
+        $this->assertArrayNotHasKey('email', $payload);
+    }
+
+    public function test_run_autossl_queues_included_domains(): void
+    {
+        [$customer, $account] = $this->customerWithAccount();
+        $this->asPanelUser($customer)->post('/ssl/autossl')->assertRedirect(route('ssl.index'));
+        $this->assertSame(1, DB::table('tasks')->where('account_id', $account->id)->where('type', 'ssl.issue')->count());
+        $this->assertSame('letsencrypt', Domain::query()->where('account_id', $account->id)->value('ssl_issuer'));
+    }
+
+    public function test_autossl_exclude_skips_domain(): void
+    {
+        [$customer, $account] = $this->customerWithAccount();
+        $domain = Domain::query()->where('account_id', $account->id)->firstOrFail();
+        $this->asPanelUser($customer)->post('/ssl/' . $domain->id . '/autossl')->assertRedirect(route('ssl.index'));
+        $this->assertFalse((bool) $domain->fresh()->ssl_autossl);
+        $this->asPanelUser($customer)->post('/ssl/autossl')->assertRedirect(route('ssl.index'));
+        $this->assertSame(0, DB::table('tasks')->where('account_id', $account->id)->where('type', 'ssl.issue')->count());
     }
 
     public function test_customer_dashboard_has_ssl_not_create_account(): void

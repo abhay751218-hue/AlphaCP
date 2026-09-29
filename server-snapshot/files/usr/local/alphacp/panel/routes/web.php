@@ -80,8 +80,12 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
 
     Route::get('/ssl', [SslController::class, 'index'])
         ->middleware('perm:ssl.view')->name('ssl.index');
+    Route::post('/ssl/autossl', [SslController::class, 'autossl'])
+        ->middleware('perm:ssl.manage')->name('ssl.autossl');
     Route::post('/ssl/{domain}', [SslController::class, 'issue'])
         ->middleware('perm:ssl.manage')->name('ssl.issue');
+    Route::post('/ssl/{domain}/autossl', [SslController::class, 'toggle'])
+        ->middleware('perm:ssl.manage')->name('ssl.toggle');
     Route::delete('/ssl/{domain}', [SslController::class, 'destroy'])
         ->middleware('perm:ssl.manage')->name('ssl.destroy');
 
