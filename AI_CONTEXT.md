@@ -26,8 +26,8 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **Step 5 — MultiPHP INI** 🟡 (panel 0.10.0 / agent 0.7.0; AutoSSL deployed 0.9.0) |
-| Next task | Deploy 0.10.0 to dev-srv1; then error pages |
+| Phase | **Step 5 — Error Pages** 🟡 (panel 0.11.0 / agent 0.8.0; INI deployed 0.10.0) |
+| Next task | Deploy 0.11.0 to dev-srv1; then Indexes/MIME/handlers or S6 |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
 | Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor + license client/trial |
 | Blocking issues | PHP/Laravel test execution still needs a PHP 8.3+ build environment; server acceptance of new S2C bundle pending |

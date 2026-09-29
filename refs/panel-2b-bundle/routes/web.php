@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainsController;
+use App\Http\Controllers\ErrorPagesController;
 use App\Http\Controllers\PhpController;
 use App\Http\Controllers\PhpIniController;
 use App\Http\Controllers\SslController;
@@ -75,6 +76,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:software.view')->name('php.ini');
     Route::post('/php/ini', [PhpIniController::class, 'update'])
         ->middleware('perm:software.manage')->name('php.ini.update');
+
+    Route::get('/errorpages', [ErrorPagesController::class, 'index'])
+        ->middleware('perm:errorpages.view')->name('errorpages.index');
+    Route::post('/errorpages', [ErrorPagesController::class, 'update'])
+        ->middleware('perm:errorpages.manage')->name('errorpages.update');
 
     Route::get('/cron', [CronController::class, 'index'])
         ->middleware('perm:cron.view')->name('cron.index');

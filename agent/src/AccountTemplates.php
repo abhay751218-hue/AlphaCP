@@ -29,6 +29,8 @@ final class AccountTemplates
         SetHandler "proxy:unix:{$sock}|fcgi://localhost"
     </FilesMatch>
 
+    IncludeOptional {$home}/etc/errorpages.conf
+
     ErrorLog {$logs}/error.log
     CustomLog {$logs}/access.log combined
 </VirtualHost>
@@ -68,6 +70,8 @@ CONF;
     <FilesMatch "\\.php\$">
         SetHandler "proxy:unix:{$sock}|fcgi://localhost"
     </FilesMatch>
+
+    IncludeOptional {$home}/etc/errorpages.conf
 
     ErrorLog {$logs}/ssl-error.log
     CustomLog {$logs}/ssl-access.log combined
@@ -141,6 +145,25 @@ php_admin_value[session.save_path] = {$home}/tmp
 php_admin_flag[allow_url_fopen] = on
 {$extra}
 CONF;
+    }
+
+    /** @param list<string> $codes */
+    public static function errorpagesConf(string $home, array $codes): string
+    {
+        $dir = $home . '/errorpages';
+        $lines = [
+            '# AlphaCP error pages — managed file, do not edit by hand',
+            "Alias /acp-errorpages {$dir}",
+            "<Directory {$dir}>",
+            '    AllowOverride None',
+            '    Require all granted',
+            '    Options -Indexes',
+            '</Directory>',
+        ];
+        foreach ($codes as $code) {
+            $lines[] = "ErrorDocument {$code} /acp-errorpages/{$code}.html";
+        }
+        return implode("\n", $lines) . "\n";
     }
 
     public static function welcomePage(string $domain): string

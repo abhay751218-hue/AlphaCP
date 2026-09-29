@@ -133,7 +133,7 @@ final class ModuleCatalog
                     ['name' => 'Cron Jobs',      'step' => 'S5',  'status' => 'live', 'route' => 'cron.index'],
                     ['name' => 'Track DNS',      'step' => 'S9',  'status' => 'step'],
                     ['name' => 'Indexes',        'step' => 'S5',  'status' => 'step'],
-                    ['name' => 'Error Pages',    'step' => 'S5',  'status' => 'step'],
+                    ['name' => 'Error Pages',    'step' => 'S5',  'status' => 'live', 'route' => 'errorpages.index'],
                     ['name' => 'MIME Types',     'step' => 'S5',  'status' => 'step'],
                     ['name' => 'Apache Handlers','step' => 'S5',  'status' => 'step'],
                     ['name' => 'Terminal',       'step' => 'S6',  'status' => 'step'],

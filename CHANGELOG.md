@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 5 Error Pages (29 Sep)** — custom 400/401/403/404/500/503 HTML via
+  `errorpages.set` (Apache ErrorDocument). Panel **0.11.0**, agent **0.8.0**.
+  Tests: panel **91/0**, provision-sim **39/39**.
 - **Step 5 MultiPHP INI Editor (29 Sep)** — allowlisted php.ini via
   `php.setIni` (FPM `php_admin_value`). Panel **0.10.0**, agent **0.7.0**.
   Tests: panel **87/0**, provision-sim **38/38**.

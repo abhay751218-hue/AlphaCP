@@ -151,7 +151,7 @@
 | 76 | Cron Jobs | Scheduled tasks | S5 | ✅ |
 | 77 | Track DNS | DNS trace/debug | S9 | ⏳ S9 |
 | 78 | Indexes | Directory listing control | S5 | ⏳ S5 |
-| 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 |
+| 79 | Error Pages | Custom 404/500 etc. | S5 | ✅ (account-level 4xx/5xx HTML) |
 | 80 | MIME Types | Custom MIME | S5 | ⏳ S5 |
 | 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 |
 | 82 | Network Tools | Ping/traceroute/lookup | S11 | ⏳ S11 |

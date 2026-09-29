@@ -429,6 +429,60 @@ final class AccountOs
         $this->fs->chownName($path, $username);
     }
 
+    /** @param array<string, string> $pages @return array<string, string> */
+    public function setErrorPages(string $username, array $pages): array
+    {
+        $clean = ErrorPages::sanitize($pages);
+        $dir = $this->paths->errorpagesDir($username);
+        $this->fs->mkdir($dir, 0755);
+        $this->fs->chownName($dir, $username);
+        foreach (ErrorPages::CODES as $code) {
+            $file = $dir . '/' . $code . '.html';
+            if (!isset($clean[$code])) {
+                $this->fs->unlink($file);
+                continue;
+            }
+            $this->fs->write($file, $clean[$code], 0644);
+            $this->fs->chownName($file, $username);
+        }
+        $confPath = $this->paths->errorpagesConf($username);
+        $this->fs->mkdir(dirname($confPath), 0750);
+        $this->fs->write(
+            $confPath,
+            AccountTemplates::errorpagesConf($this->paths->home($username), array_keys($clean)),
+            0644,
+        );
+        $this->fs->chownName(dirname($confPath), $username);
+        $this->ensureErrorPagesInclude($username);
+        $this->reload($this->paths->apacheService);
+        $this->log->info('error pages ' . count($clean) . " codes for {$username}");
+        return $clean;
+    }
+
+    public function ensureErrorPagesInclude(string $username): void
+    {
+        $home = $this->paths->home($username);
+        $needle = 'IncludeOptional ' . $home . '/etc/errorpages.conf';
+        $files = [$this->paths->vhost($username)];
+        foreach ($this->listExtraVhosts($username) as $extra) {
+            $files[] = $extra;
+        }
+        foreach ($files as $file) {
+            if (!$this->fs->isFile($file)) {
+                continue;
+            }
+            $body = (string) file_get_contents($this->fs->assert($file));
+            if (str_contains($body, 'errorpages.conf')) {
+                continue;
+            }
+            if (!str_contains($body, '</VirtualHost>')) {
+                continue;
+            }
+            $body = str_replace('</VirtualHost>', "    {$needle}\n</VirtualHost>", $body);
+            $this->fs->write($file, $body, 0644);
+        }
+    }
+
     public function disablePool(string $username): void
     {
         $live = $this->paths->pool($username);

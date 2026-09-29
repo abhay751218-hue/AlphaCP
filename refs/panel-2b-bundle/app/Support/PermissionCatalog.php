@@ -67,6 +67,10 @@ final class PermissionCatalog
                 ['cron.view', 'View cron jobs'],
                 ['cron.manage', 'Create/delete cron jobs'],
             ],
+            'errorpages' => [
+                ['errorpages.view', 'View error pages'],
+                ['errorpages.manage', 'Edit custom error pages'],
+            ],
             'databases' => [
                 ['databases.view', 'View databases'],
                 ['databases.manage', 'Create/manage databases'],
@@ -129,7 +133,7 @@ final class PermissionCatalog
                 'databases.view', 'databases.manage', 'dns.view', 'backup.view',
                 'metrics.view', 'security.view', 'audit.view', 'system.view',
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
-                'ssl.view', 'ssl.manage',
+                'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
             ],
 
             'user' => [
@@ -137,7 +141,7 @@ final class PermissionCatalog
                 'email.view', 'email.manage', 'domains.view', 'domains.manage',
                 'databases.view', 'dns.view', 'backup.view', 'metrics.view',
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
-                'ssl.view', 'ssl.manage',
+                'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
             ],
 
             'mail' => [

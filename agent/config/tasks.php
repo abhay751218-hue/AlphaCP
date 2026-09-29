@@ -244,6 +244,34 @@ return [
         ],
     ],
 
+    'errorpages.set' => [
+        'handler'     => Tasks\ErrorPagesSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Write custom 4xx/5xx HTML and Apache ErrorDocument snippet.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'pages'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'pages'    => [
+                    'type'                 => 'object',
+                    'additionalProperties' => false,
+                    'properties'           => [
+                        '400' => ['type' => 'string', 'maxLength' => 16384],
+                        '401' => ['type' => 'string', 'maxLength' => 16384],
+                        '403' => ['type' => 'string', 'maxLength' => 16384],
+                        '404' => ['type' => 'string', 'maxLength' => 16384],
+                        '500' => ['type' => 'string', 'maxLength' => 16384],
+                        '503' => ['type' => 'string', 'maxLength' => 16384],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',
