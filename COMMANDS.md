@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.14.0 — Step 5: Apache Handlers
+### panel-update 0.15.0 — Step 6: File Manager
 ```bash
-sudo alphacp-sync get beaca4c000215647e8c39970d2ef9a2528436223 installer/panel-update.sh /tmp/acp-panel-update-0.14.0.sh a1f98eb8c45db9f4d313e4d4d6465cb5ffc4173227db164a3cb0b2666f6b735a && sudo bash /tmp/acp-panel-update-0.14.0.sh
+sudo alphacp-sync get a03bdc75f53a0623fba1db6fde47c4ca6e50db78 installer/panel-update.sh /tmp/acp-panel-update-0.15.0.sh f52c3b59744b5269bf5d61c31f574d543f09c0c3378a6871bd88b88affa46a4e && sudo bash /tmp/acp-panel-update-0.15.0.sh
 ```
-- sha256: `a1f98eb8c45db9f4d313e4d4d6465cb5ffc4173227db164a3cb0b2666f6b735a`
-- Expected: banner `updater 0.14.0` → agent **0.11.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Apache Handlers (allowlisted AddHandler). PHP/proxy/fcgi blocked. MIME, Indexes, Error Pages same.
-- WHM: Create Account / packages / user manager. Customer ko Handlers tile dikhega, WHM me nahi.
+- sha256: `f52c3b59744b5269bf5d61c31f574d543f09c0c3378a6871bd88b88affa46a4e`
+- Expected: banner `updater 0.15.0` → agent **0.12.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: File Manager (browse/mkdir/edit/delete/rename, home-jailed). Zip/chmod later.
+- WHM: Create Account / packages / user manager. Customer ko File Manager tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **105/0**, provision-sim **42/42**, update-sim **80/80**.
+- Test: panel-tests **110/0**, provision-sim **43/43**, update-sim **82/82**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.14.0 (`beaca4c…`) → panel 0.14.0 + agent 0.11.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Apache Handlers |
 | panel-update 0.13.0 (`b2c1fc7…`) → panel 0.13.0 + agent 0.10.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, MIME Types |
 | panel-update 0.12.0 (`be1ba8c…`) → panel 0.12.0 + agent 0.9.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Indexes |
 | panel-update 0.11.0 (`14e8fcf…`) → panel 0.11.0 + agent 0.8.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Error Pages |
