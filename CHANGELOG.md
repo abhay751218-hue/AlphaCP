@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **alphacp-sync LIVE (29 Sep)** — server par setup hua, `main` par pehla snapshot `d5ae8d2` (314 files).
+  Audit: koi secret nahi (sirf code; `.env`/keys/tokens/license.json nahi). Deployed panel = source 0.3.1 byte-for-byte.
+- **alphacp-sync v1.1** — `releases/` (backup/failed panel copies) snapshot me nahi (sirf naam STATE.md me);
+  STATE.md me panel MANIFEST version + license/trial state (source/tier/expiry; fingerprint nahi). sync-sim **51/51**.
+- **panel-update 0.2.1** — 0.2.0 + alphacp-sync ko v1.1 par upgrade (sha-verified; fail ho to update phir bhi safal).
+  update-sim **43/43**.
 - **Panel 0.3.2 + panel-update 0.2.0 (29 Sep)**
   - **Bug fix:** `alphacp:admin-password <user>` (bina `--password`, lockout rescue ka tareeka) ~2.9% baar
     validation error se fail hota tha — random password me kabhi digit/capital/small letter nahi hota tha.

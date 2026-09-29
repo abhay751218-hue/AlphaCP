@@ -53,9 +53,9 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 | Command | Kya test karta hai | Last result |
 |---|---|---|
 | `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **42 pass, 0 fail, 6 wasm-skip** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh`: 0.3.0→0.3.2, sha mismatch, health-fail rollback, backup prune, sync hook | **37/37** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh`: 0.3.0→0.3.2, sha mismatch, health-fail rollback, backup prune, sync-tool upgrade + hook | **43/43** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
-| `sudo bash tools/sim/sync-sim.sh` | alphacp-sync (secret leak attempts, rebase, deploy-key flow, 443 fallback) | **45/45** |
+| `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.1 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback) | **51/51** |
 
 php-wasm ki limits (code ki galti NAHI): PHP 8.4 wasm PHPUnit me crash karta hai → 8.5 use hota hai; Mockery
 console-output mock crash karta hai → runner temp copy me `$mockConsoleOutput=false` lagata hai, isliye
@@ -70,6 +70,7 @@ Real server (PHP 8.4 FPM) par poora suite: `cd /usr/local/alphacp/panel && sudo 
 4. `installer/panel-update.sh` me `UPDATER_VERSION`, `PANEL_VERSION`, `BUNDLE_URL` (commit **A** ka raw link), `BUNDLE_SHA256` badlo.
 5. `sudo bash tools/sim/update-sim.sh` → sab PASS. Commit + push (commit **B**). `gh api` se GitHub copy verify karo.
 6. `COMMANDS.md` me commit **B** ka link. Updater end me `alphacp-sync` khud chalata hai → GitHub bhi update.
+   (Sync tool badla ho to updater ke `SYNC_TOOL_VERSION/URL/SHA256` bhi badlo — updater use upgrade kar deta hai.)
 
 ⚠️ Dusre AI kabhi-kabhi alag `arena/*` branch par push karte hain. Shuru me `git ls-remote origin` dekho, aur
 unka kaam PR se `main` me merge karo (29 Sep: `arena/01a0ea0d-alphacp` ka S2C kaam PR #1 me merge hua).
@@ -78,7 +79,9 @@ unka kaam PR se `main` me merge karo (29 Sep: `arena/01a0ea0d-alphacp` ka S2C ka
 - Step 0 → 2B (panel + login + RBAC + 2FA + password change) ✅
 - Step 2C (license + 15-day trial) 🟡 — **panel client + offline trial server par deployed (0.3.1)**;
   apna license-server API (`license-server/`, activation/renewal) abhi baaki.
-- Panel **0.3.2** (admin-password rescue fix) ready — `COMMANDS.md` me queued.
+- Server par abhi (snapshot se verified, 29 Sep): panel **0.3.1** (= source byte-for-byte), Laravel 13.33.0, PHP 8.4.26,
+  MariaDB 10.11, nginx (8090) + Apache (80/443), bind, spamd, redis, fail2ban, paneld. alphacp-sync v1.0 chal raha hai.
+- Next command: panel-update **0.2.1** → panel 0.3.2 (admin-password rescue fix) + alphacp-sync v1.1 (`COMMANDS.md`).
 - **Next: Step 3 — Provisioning engine** (hosting account create/suspend/unsuspend/terminate: Linux user, home dir,
   Apache vhost, PHP-FPM pool, quota). Uske baad S4 Packages & limits → … → S12 WHM API 1 billing layer.
 
