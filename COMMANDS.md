@@ -14,6 +14,10 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+_(panel-update 0.8.0 — SSL/TLS — updater pin ke baad)_
+
+## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
+
 ### panel-update 0.7.0 — Step 5: MultiPHP + Cron
 ```bash
 sudo alphacp-sync get ca2f33728a159db403ced1ebe4dea0f64d63895b installer/panel-update.sh /tmp/acp-panel-update-0.7.0.sh a60a6bbc34deef8e86a86292731831a0d895c5d0f16df8e22e78b32d9c64d868 && sudo bash /tmp/acp-panel-update-0.7.0.sh

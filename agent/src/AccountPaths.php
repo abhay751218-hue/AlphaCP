@@ -79,6 +79,21 @@ final class AccountPaths
         return $this->apacheEnabled . '/acp-' . $username . '-' . $this->vhostSlug($domain) . '.conf';
     }
 
+    public function sslDir(string $username, string $domain): string
+    {
+        return $this->home($username) . '/ssl/' . $this->vhostSlug($domain);
+    }
+
+    public function vhostSsl(string $username, string $domain): string
+    {
+        return $this->apacheSites . '/acp-' . $username . '-' . $this->vhostSlug($domain) . '-ssl.conf';
+    }
+
+    public function vhostSslEnabled(string $username, string $domain): string
+    {
+        return $this->apacheEnabled . '/acp-' . $username . '-' . $this->vhostSlug($domain) . '-ssl.conf';
+    }
+
     public function pool(string $username): string
     {
         return $this->phpPoolDir . '/acp-' . $username . '.conf';

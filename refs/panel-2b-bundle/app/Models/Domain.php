@@ -14,12 +14,14 @@ class Domain extends Model
     protected $fillable = [
         'account_id', 'type', 'domain', 'document_root', 'redirect_url',
         'redirect_code', 'php_version', 'status',
+        'ssl_status', 'ssl_issuer', 'ssl_not_after',
     ];
 
     protected function casts(): array
     {
         return [
             'redirect_code' => 'integer',
+            'ssl_not_after' => 'datetime',
         ];
     }
 

@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 5 SSL/TLS Status (29 Sep)** — self-signed certs + Apache :443 vhost
+  (`ssl.issue` / `ssl.remove`). Panel **0.8.0**, agent **0.5.0**.
+  Tests: panel **80/0**, provision-sim **34/34**.
 - **Step 5 MultiPHP + Cron (29 Sep)** — cPanel MultiPHP Manager (PHP 7.4/8.1–8.4) +
   Cron Jobs (`php.setVersion`, `cron.set`). Panel **0.7.0**, agent **0.4.0**.
   Tests: panel **76/0**, provision-sim **33/33**.

@@ -103,7 +103,8 @@ final class ModuleCatalog
                     ['name' => 'Two-Factor Auth', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.index'],
                     ['name' => 'Password & Security', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.index'],
                     ['name' => 'Active Sessions', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.sessions'],
-                    ['name' => 'SSL/TLS',        'step' => 'S5',  'status' => 'step'],
+                    ['name' => 'SSL/TLS',        'step' => 'S5',  'status' => 'live', 'route' => 'ssl.index', 'audience' => 'cpanel'],
+                    ['name' => 'SSL/TLS Status', 'step' => 'S5',  'status' => 'live', 'route' => 'ssl.index', 'audience' => 'cpanel'],
                     ['name' => 'IP Blocker',     'step' => 'S13', 'status' => 'step'],
                     ['name' => 'ModSecurity',    'step' => 'S13', 'status' => 'step'],
                     ['name' => 'SSH Access',     'step' => 'S6',  'status' => 'step'],
@@ -215,6 +216,18 @@ final class ModuleCatalog
             if ($mailOnly && ! in_array($key, ['email', 'security'], true)) {
                 continue;
             }
+            $items = [];
+            foreach ($section['items'] as $item) {
+                $itemAudience = $item['audience'] ?? $audience;
+                if ($itemAudience !== $mode && $itemAudience !== 'both') {
+                    continue;
+                }
+                $items[] = $item;
+            }
+            if ($items === []) {
+                continue;
+            }
+            $section['items'] = $items;
             $out[$key] = $section;
         }
         return $out;

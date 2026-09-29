@@ -32,6 +32,8 @@ use Alphacp\Agent\Tasks\CronSet;
 use Alphacp\Agent\Tasks\DomainAdd;
 use Alphacp\Agent\Tasks\DomainRemove;
 use Alphacp\Agent\Tasks\PhpSetVersion;
+use Alphacp\Agent\Tasks\SslIssue;
+use Alphacp\Agent\Tasks\SslRemove;
 use Alphacp\Agent\Tasks\TaskContext;
 use Alphacp\Agent\Tests\FakeCommandExecutor;
 
@@ -175,7 +177,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'cron.set'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -417,6 +419,30 @@ test('cron.set writes crontab body and rejects newlines', function (): void {
         $threw = true;
     }
     assert_true($threw, 'newline in command must fail');
+    acp_account_cleanup($harness);
+});
+test('ssl.issue writes certs and :443 vhost', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $doc = $harness['root'] . '/home/alicehost/public_html';
+    $out = (new SslIssue())->handle([
+        'username' => 'alicehost',
+        'domain' => 'shop.example.com',
+        'document_root' => $doc,
+        'mode' => 'selfsigned',
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'active');
+    assert_true($out['issuer'] === 'selfsigned');
+    $slug = 'shop-example-com';
+    $vhost = $harness['root'] . '/apache/sites-available/acp-alicehost-' . $slug . '-ssl.conf';
+    assert_true(is_file($vhost), 'ssl vhost missing');
+    assert_true(str_contains((string) file_get_contents($vhost), 'SSLEngine on'));
+    assert_true(is_file($harness['root'] . '/home/alicehost/ssl/' . $slug . '/cert.pem'));
+    (new SslRemove())->handle([
+        'username' => 'alicehost',
+        'domain' => 'shop.example.com',
+    ], $harness['ctx']);
+    assert_true(!is_file($vhost));
     acp_account_cleanup($harness);
 });
 test('SafeFs refuses writes outside the allowlisted roots', function (): void {

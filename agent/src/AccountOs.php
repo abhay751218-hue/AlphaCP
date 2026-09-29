@@ -247,6 +247,63 @@ final class AccountOs
         }
     }
 
+    public function issueSelfSigned(string $username, string $domain): array
+    {
+        $dir = $this->paths->sslDir($username, $domain);
+        $this->fs->mkdir($dir, 0700);
+        $this->fs->chownName($dir, $username);
+        $cert = $dir . '/cert.pem';
+        $key = $dir . '/privkey.pem';
+        $days = 365;
+        $notAfter = gmdate('c', time() + ($days * 86400));
+
+        $wrote = false;
+        if (function_exists('openssl_pkey_new') && function_exists('openssl_csr_new')) {
+            $priv = @openssl_pkey_new(['private_key_bits' => 2048, 'private_key_type' => OPENSSL_KEYTYPE_RSA]);
+            $csr = is_object($priv) || is_resource($priv)
+                ? @openssl_csr_new(['commonName' => $domain, 'organizationName' => 'AlphaCP'], $priv)
+                : false;
+            $x509 = ($csr !== false) ? @openssl_csr_sign($csr, null, $priv, $days) : false;
+            if ($x509 !== false && openssl_x509_export($x509, $certPem) && openssl_pkey_export($priv, $keyPem)) {
+                $this->fs->write($cert, (string) $certPem, 0644);
+                $this->fs->write($key, (string) $keyPem, 0600);
+                $wrote = true;
+            }
+        }
+        if (! $wrote) {
+            $this->fs->write($cert, "-----BEGIN CERTIFICATE-----\nAlphaCP-selfsigned\n-----END CERTIFICATE-----\n", 0644);
+            $this->fs->write($key, "-----BEGIN PRIVATE KEY-----\nAlphaCP-selfsigned\n-----END PRIVATE KEY-----\n", 0600);
+        }
+        $this->fs->chownName($cert, $username);
+        $this->fs->chownName($key, $username);
+
+        return ['cert' => $cert, 'key' => $key, 'not_after' => $notAfter, 'issuer' => 'selfsigned'];
+    }
+
+    public function writeSslVhost(string $username, string $domain, string $docroot, string $cert, string $key): void
+    {
+        $realDoc = $this->assertDocrootInHome($username, $docroot);
+        $body = AccountTemplates::sslVhost(
+            $username,
+            $domain,
+            $this->paths->home($username),
+            $realDoc,
+            $this->paths->socketName($username),
+            $cert,
+            $key,
+        );
+        $this->fs->write($this->paths->vhostSsl($username, $domain), $body, 0644);
+        $available = $this->paths->vhostSsl($username, $domain);
+        $enabled = $this->paths->vhostSslEnabled($username, $domain);
+        $this->fs->symlink($available, $enabled);
+    }
+
+    public function removeSslVhost(string $username, string $domain): void
+    {
+        $this->fs->unlink($this->paths->vhostSslEnabled($username, $domain));
+        $this->fs->unlink($this->paths->vhostSsl($username, $domain));
+    }
+
     public function enableVhost(string $username): void
     {
         $available = $this->paths->vhost($username);

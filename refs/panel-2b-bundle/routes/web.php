@@ -11,6 +11,7 @@ use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\PhpController;
+use App\Http\Controllers\SslController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\SystemController;
@@ -76,6 +77,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:cron.manage')->name('cron.store');
     Route::delete('/cron/{cron}', [CronController::class, 'destroy'])
         ->middleware('perm:cron.manage')->name('cron.destroy');
+
+    Route::get('/ssl', [SslController::class, 'index'])
+        ->middleware('perm:ssl.view')->name('ssl.index');
+    Route::post('/ssl/{domain}', [SslController::class, 'issue'])
+        ->middleware('perm:ssl.manage')->name('ssl.issue');
+    Route::delete('/ssl/{domain}', [SslController::class, 'destroy'])
+        ->middleware('perm:ssl.manage')->name('ssl.destroy');
 
     // -- Security (always available to the logged-in user) -------------------
     Route::prefix('security')->name('security.')->group(function (): void {
