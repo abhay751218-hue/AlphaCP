@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.6.0  ·  default panel bundle 0.6.0  ·  agent 0.3.0  ·  alphacp-sync v1.2
+# updater 0.7.0  ·  default panel bundle 0.7.0  ·  agent 0.4.0  ·  alphacp-sync v1.2
+#
+# 0.7.0: Step 5 — panel 0.7.0 (MultiPHP + Cron) + agent 0.4.0 (php.setVersion, cron.set)
 #
 # 0.6.0: Step 5 — panel 0.6.0 (WHM vs cPanel shell, Domains) + agent 0.3.0 (domain.add/remove)
 #
@@ -29,17 +31,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.6.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.6.0}"
+UPDATER_VERSION="0.7.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.7.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-eb226a777b13c562bd2b5c6b6175fde5c820fcde}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-f5a2d19859bfa430f34283b85b6ccf3fec0bbb54}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-59f810d127963bedcf3fdb5998703b56e95a10bb839f71ffafa0d5e68d59999d}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.3.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-eb226a777b13c562bd2b5c6b6175fde5c820fcde}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-95d471977d3f473189590bda6fc5d2c12d005c130ad2cf6dd4fc53caa104de49}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.4.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-f5a2d19859bfa430f34283b85b6ccf3fec0bbb54}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-637e09edd12fdd29dfde8377e936c5bd138946cb11373291b7e5a9bb52eb96fd}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-2c902abe34facdc6c4d7438a30e15367f75cb1456401eace37300fcc7083e0c7}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
