@@ -14,21 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.9.0 — Step 5: AutoSSL (Let's Encrypt)
+### panel-update 0.10.0 — Step 5: MultiPHP INI Editor
 ```bash
-sudo alphacp-sync get 206088738e43a166b95640b32a374ef2e270007f installer/panel-update.sh /tmp/acp-panel-update-0.9.0.sh f5db1c9ae6203b60b620ba0b44ef45c9c2c291652d9758c5e7ac816fa22c984e && sudo bash /tmp/acp-panel-update-0.9.0.sh
+sudo alphacp-sync get fd5cb6f7648883eb57f59892f2bc6fe565ef12f8 installer/panel-update.sh /tmp/acp-panel-update-0.10.0.sh c3ac87e559dc460efc599f59e1a0f6dd9740dd6c97c7581e40c9de5079704c2c && sudo bash /tmp/acp-panel-update-0.10.0.sh
 ```
-- sha256: `f5db1c9ae6203b60b620ba0b44ef45c9c2c291652d9758c5e7ac816fa22c984e`
-- Expected: banner `updater 0.9.0` → agent **0.6.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: SSL/TLS Status — Run AutoSSL (Let's Encrypt HTTP-01) + self-signed fallback.
-- DNS domain is server pe point hona chahiye, warna AutoSSL fail (self-signed chalega).
+- sha256: `c3ac87e559dc460efc599f59e1a0f6dd9740dd6c97c7581e40c9de5079704c2c`
+- Expected: banner `updater 0.10.0` → agent **0.7.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: MultiPHP INI Editor (allowlisted php.ini). Hostile keys reject.
 - WHM: Create Account / packages / user manager. Customer ko Create Account nahi dikhega.
-- Trial/password/APP_KEY nahi badalte. certbot best-effort install.
-- Test: panel-tests **83/0**, provision-sim **36/36**, update-sim **70/70**.
+- Trial/password/APP_KEY nahi badalte.
+- Test: panel-tests **87/0**, provision-sim **38/38**, update-sim **72/72**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.9.0 (`2060887…`) → panel 0.9.0 + agent 0.6.0 | 29 Sep 03:30Z | ✅ UPDATE COMPLETE, HTTP 200, AutoSSL Let's Encrypt |
 | panel-update 0.8.0 (`e854e3a…`) → panel 0.8.0 + agent 0.5.0 | 29 Sep 03:17Z | ✅ UPDATE COMPLETE, HTTP 200, SSL/TLS Status self-signed |
 | panel-update 0.7.0 (`ca2f337…`) → panel 0.7.0 + agent 0.4.0 | 29 Sep 02:57Z | ✅ UPDATE COMPLETE, HTTP 200, MultiPHP + Cron, php-all 7.4–8.4 |
 | panel-update 0.6.0 (`48f94a6…`) → panel 0.6.0 + agent 0.3.0 | 29 Sep 02:41Z | ✅ UPDATE COMPLETE, HTTP 200, domains migration, WHM/cPanel split |
