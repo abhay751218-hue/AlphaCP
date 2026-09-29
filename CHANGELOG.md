@@ -5,7 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
-- **Step 3 provisioning engine (29 Sep)** — hosting account create/suspend/unsuspend/terminate
+- **Step 4 packages & limits (29 Sep)** — WHM-style Packages UI with cPanel-compatible
+  keys (`QUOTA`, `MAXPOP`, `MAXSQL`, …), feature lists, account upgrade/downgrade +
+  quota override (`account.setQuota`). Panel **0.5.0**. Tests: panel-tests **58 pass / 0 fail**.
+- **Step 3 provisioning engine (29 Sep)** — **deployed on dev-srv1** (panel 0.4.0 + agent 0.2.0,
+  HTTP 200, accounts routes + `create_accounts_tables` ran, trial same). hosting account create/suspend/unsuspend/terminate
   with compensating rollback. Agent `0.2.0` tasks: `account.create` (Linux user, `/home/<user>/public_html`,
   Apache vhost, PHP-FPM pool, quota), `account.suspend` / `unsuspend`, `account.terminate` (typed confirm),
   `account.setQuota`. Panel **0.4.0**: Accounts pages, default package, license `max_accounts` gate,

@@ -194,11 +194,11 @@
 |---|---|---|---|
 | 104 | Create a New Account | S3 | ✅ |
 | 105 | List Accounts | S3 | ✅ |
-| 106 | Modify an Account | S3 | 🟡 S3 (show page; full edit S4) |
+| 106 | Modify an Account | S3 | 🟡 S4 (package/quota; IP/password later) |
 | 107 | Suspend / Unsuspend (Manage Account Suspension) | S3 | ✅ |
 | 108 | Terminate Accounts | S3 | ✅ |
-| 109 | Upgrade / Downgrade an Account | S4 | ⏳ S4 |
-| 110 | Quota Modification | S4 | ⏳ S4 |
+| 109 | Upgrade / Downgrade an Account | S4 | ✅ |
+| 110 | Quota Modification | S4 | ✅ |
 | 111 | Password Modification + Force Password Change | S3 | 🟡 S3 (create generates + force-change; dedicated reset S4) |
 | 112 | Change Site's IP Address | S3 | ⏳ S3 |
 | 113 | Rearrange an Account | S15 | ⏳ S15 |

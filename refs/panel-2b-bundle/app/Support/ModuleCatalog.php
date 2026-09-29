@@ -138,7 +138,7 @@ final class ModuleCatalog
                     ['name' => 'Task Queue Monitor',  'step' => 'S2B', 'status' => 'live', 'route' => 'system.tasks'],
                     ['name' => 'Audit Log',           'step' => 'S2B', 'status' => 'live', 'route' => 'audit.index'],
                     ['name' => 'User Manager',        'step' => 'S2B', 'status' => 'live', 'route' => 'users.index'],
-                    ['name' => 'Packages',            'step' => 'S4',  'status' => 'step'],
+                    ['name' => 'Packages',            'step' => 'S4',  'status' => 'live', 'route' => 'packages.index'],
                     ['name' => 'Create Account',      'step' => 'S3',  'status' => 'live', 'route' => 'accounts.create'],
                     ['name' => 'List Accounts',       'step' => 'S3',  'status' => 'live', 'route' => 'accounts.index'],
                     ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'step'],

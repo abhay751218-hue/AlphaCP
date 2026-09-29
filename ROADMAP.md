@@ -8,8 +8,8 @@
 | **S0** | Blueprint: requirements, architecture, DB schema, security matrix, coding standards, license design, installer design, ADRs | ✅ **DONE** |
 | **S1** | Server base stack + **one-click installer** (Phase 1-2) + `alphacp` CLI basics (`status`, `doctor`) | ⏳ next |
 | **S2** | Panel core: auth/RBAC/2FA/audit, **paneld agent**, task queue, license client + trial, base UI shell, systemd units | ✅ **2A/2B** · **2C 🟡** (license client/trial deployed; license-server API pending) |
-| **S3** | Provisioning engine: account create/suspend/unsuspend/terminate/limits (+ rollback), account UI | 🟡 **engine + Accounts UI (0.4.0)** — dedicated IP / full modify S4 |
-| **S4** | Packages & limits manager (+ feature lists, cPanel-compatible limit keys) | ⏳ |
+| **S3** | Provisioning engine: account create/suspend/unsuspend/terminate/limits (+ rollback), account UI | ✅ **deployed 0.4.0** (dedicated IP later) |
+| **S4** | Packages & limits manager (+ feature lists, cPanel-compatible limit keys) | 🟡 **UI + upgrade/quota (0.5.0)** — server deploy pending |
 | **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | ⏳ |
 | **S6** | File Manager, disk usage, FTP (+ jailed shell), SSH keys, Git deploys, trash | ⏳ |
 | **S7** | Email suite: mailboxes/quotas, forwarders, autoresponders, filters, spam/virus, deliverability (SPF/DKIM/DMARC), lists, webmail | ⏳ |

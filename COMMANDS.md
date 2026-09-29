@@ -14,22 +14,12 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.4.0 — Step 3: Accounts UI (panel 0.4.0) + paneld agent 0.2.0
-```bash
-sudo alphacp-sync get 430ccf0574e8b0400a7922b7651179168bb29094 installer/panel-update.sh /tmp/acp-panel-update-0.4.0.sh 865f4167ecd3ca7ce46ba383249ba18fa4574f80f7ee3c614a74f49b5e48844b && sudo bash /tmp/acp-panel-update-0.4.0.sh
-```
-- sha256: `865f4167ecd3ca7ce46ba383249ba18fa4574f80f7ee3c614a74f49b5e48844b`
-- Expected: banner `updater 0.4.0` → agent 0.2.0 installed → `==> UPDATE COMPLETE ✅` → panel HTTP 200.
-- Panel: Accounts create/list/suspend/unsuspend/terminate. Agent: `account.*` tasks + rollback.
-- Trial/license same rehti hai (max_accounts=20). Password/APP_KEY nahi badalte.
-- Test: `bash tools/sim/provision-sim.sh` → 28/28; `bash tools/sim/panel-tests.sh` → 52 pass / 0 fail;
-  `sudo bash tools/sim/update-sim.sh` → **59/59**.
-
-## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
+_(panel-update 0.5.0 — Packages UI — COMMANDS me tab aayega jab updater pin ho jayega)_
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.4.0 (`430ccf0…`) → panel 0.4.0 + agent 0.2.0 | 29 Sep 01:07Z | ✅ UPDATE COMPLETE, HTTP 200, accounts routes + migration, trial same |
 | alphacp-sync v1.2 (`4b4573f…/installer/alphacp-sync.sh`) + `get` test | 29 Sep | ✅ private repo; `sudo alphacp-sync get` pass |
 | alphacp-sync v1.0 setup (`aa2091d…/installer/alphacp-sync.sh`) | 29 Sep | ✅ `main` par pehla snapshot `d5ae8d2` (314 files). Timer har ghante chalta hai. Manual: `sudo alphacp-sync`, status: `sudo alphacp-sync --status` |
 | updater 0.1.0 (dusre AI ka, panel 0.3.1) | 29 Sep | ✅ server par 0.3.1 = source byte-for-byte (snapshot se verify) |

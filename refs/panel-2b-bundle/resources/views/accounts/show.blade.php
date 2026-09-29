@@ -42,6 +42,29 @@
 
     <div class="card">
         <h3>Actions</h3>
+        @can('accounts.modify')
+            @if (! $account->isTerminated())
+                <form method="post" action="{{ route('accounts.upgrade', $account) }}" class="mb">
+                    @csrf
+                    <label for="package_id">Upgrade / downgrade package</label>
+                    <select id="package_id" name="package_id" required>
+                        @foreach ($packages as $package)
+                            <option value="{{ $package->id }}" @selected($account->package_id == $package->id)>
+                                {{ $package->name }} ({{ $package->quotaMb() < 0 ? 'unlimited' : $package->quotaMb().' MB' }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <button class="btn small mt" type="submit">Apply package</button>
+                </form>
+                <form method="post" action="{{ route('accounts.quota', $account) }}" class="mb">
+                    @csrf
+                    <label for="quota_mb">Quota override (MB, -1 unlimited)</label>
+                    <input id="quota_mb" name="quota_mb" type="number" min="-1" required value="{{ old('quota_mb', $account->quota_mb) }}">
+                    <button class="btn small secondary mt" type="submit">Set quota</button>
+                </form>
+            @endif
+        @endcan
+
         @can('accounts.suspend')
             @if (! $account->isTerminated())
                 <form method="post" action="{{ route('accounts.suspend', $account) }}" class="mb">
