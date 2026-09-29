@@ -79,6 +79,11 @@ final class AccountPaths
         return $this->apacheEnabled . '/acp-' . $username . '-' . $this->vhostSlug($domain) . '.conf';
     }
 
+    public function phpIniFile(string $username): string
+    {
+        return $this->home($username) . '/etc/php.ini';
+    }
+
     public function sslDir(string $username, string $domain): string
     {
         return $this->home($username) . '/ssl/' . $this->vhostSlug($domain);

@@ -119,7 +119,7 @@ final class ModuleCatalog
                     ['name' => 'App Installer',      'step' => 'S14', 'status' => 'step'],
                     ['name' => 'WordPress Toolkit',  'step' => 'S14', 'status' => 'step'],
                     ['name' => 'MultiPHP Manager',   'step' => 'S5',  'status' => 'live', 'route' => 'php.index'],
-                    ['name' => 'MultiPHP INI Editor', 'step' => 'S5', 'status' => 'step'],
+                    ['name' => 'MultiPHP INI Editor', 'step' => 'S5', 'status' => 'live', 'route' => 'php.ini'],
                     ['name' => 'Node.js Selector',   'step' => 'S14', 'status' => 'step'],
                     ['name' => 'Optimize Website',   'step' => 'S14', 'status' => 'step'],
                     ['name' => 'PHP Composer',       'step' => 'S14', 'status' => 'step'],

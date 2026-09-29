@@ -31,6 +31,7 @@ use Alphacp\Agent\Tasks\AccountUnsuspend;
 use Alphacp\Agent\Tasks\CronSet;
 use Alphacp\Agent\Tasks\DomainAdd;
 use Alphacp\Agent\Tasks\DomainRemove;
+use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
 use Alphacp\Agent\Tasks\SslIssue;
 use Alphacp\Agent\Tasks\SslRemove;
@@ -177,7 +178,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -392,6 +393,49 @@ test('php.setVersion rewrites the pool and reloads the new fpm', function (): vo
         }
     }
     assert_true($reloaded, 'php8.3-fpm should reload');
+    acp_account_cleanup($harness);
+});
+test('php.setIni writes allowlisted pool values and ~/etc/php.ini', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new PhpSetIni())->handle([
+        'username' => 'alicehost',
+        'directives' => [
+            'memory_limit' => '256M',
+            'display_errors' => 'On',
+            'max_execution_time' => '60',
+        ],
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'active');
+    assert_true($out['directives']['memory_limit'] === '256M');
+    $pool = (string) file_get_contents($harness['root'] . '/php/pool.d/acp-alicehost.conf');
+    assert_true(str_contains($pool, 'php_admin_value[memory_limit] = 256M'));
+    assert_true(str_contains($pool, 'php_admin_flag[display_errors] = on'));
+    assert_true(str_contains($pool, 'php_admin_value[open_basedir]'));
+    $ini = (string) file_get_contents($harness['root'] . '/home/alicehost/etc/php.ini');
+    assert_true(str_contains($ini, 'memory_limit = 256M'));
+    acp_account_cleanup($harness);
+});
+test('php.setIni rejects unknown keys and version switch keeps ini', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $threw = false;
+    try {
+        (new PhpSetIni())->handle([
+            'username' => 'alicehost',
+            'directives' => ['auto_prepend_file' => '/tmp/x.php'],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'unknown php.ini key');
+    }
+    assert_true($threw, 'hostile ini key must fail closed');
+    (new PhpSetIni())->handle([
+        'username' => 'alicehost',
+        'directives' => ['memory_limit' => '128M'],
+    ], $harness['ctx']);
+    (new PhpSetVersion())->handle(['username' => 'alicehost', 'php_version' => '8.2'], $harness['ctx']);
+    $pool = (string) file_get_contents($harness['root'] . '/php/pool.d/acp-alicehost.conf');
+    assert_true(str_contains($pool, 'php_admin_value[memory_limit] = 128M'), 'ini must survive version switch');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {
