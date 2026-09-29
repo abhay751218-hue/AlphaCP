@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.11.0  ·  default panel bundle 0.11.0  ·  agent 0.8.0  ·  alphacp-sync v1.2
+# updater 0.12.0  ·  default panel bundle 0.12.0  ·  agent 0.9.0  ·  alphacp-sync v1.2
+#
+# 0.12.0: Step 5 — panel 0.12.0 (Indexes) + agent 0.9.0 (indexes.set)
 #
 # 0.11.0: Step 5 — panel 0.11.0 (Error Pages) + agent 0.8.0 (errorpages.set)
 #
@@ -39,17 +41,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.11.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.11.0}"
+UPDATER_VERSION="0.12.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.12.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-fb9495f3227a97256bd9509332193f052e0b5e06}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-3713a6ae1e77ff6c4ef5c46c5b083e64e22afb8d}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-c30b64da63867a2bffcc8b724d0008ba8452175a9bba9e411b1dbf9210022d5d}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.8.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-fb9495f3227a97256bd9509332193f052e0b5e06}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-9fce2886b712ff1dccafc716c424fe80cbdcf64dfc8340ed11aabf7ac31d3962}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.9.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-3713a6ae1e77ff6c4ef5c46c5b083e64e22afb8d}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-d2fd943aed880c3c87dde6136633a1f01fa8630cbf90318a6fed0dff7cc712b5}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-8fc80071492a9fb6b45684f8288f47ba322382051410088b4fb1dc6a4b00f7f7}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
