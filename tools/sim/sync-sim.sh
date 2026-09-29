@@ -43,6 +43,14 @@ echo '<?php // token ghp_abcdefghijklmnopqrstuvwxyz0123456789AB' > ${PANEL}/conf
 echo '<?php // license server (sim)' > /opt/alphacp-license/server.php
 printf 'server { listen 8090 ssl; root %s/public; }\n' "${PANEL}" > /etc/nginx/sites-available/alphacp-panel.conf
 printf '#!/bin/sh\necho alphacp cli\n' > ${ACP}/bin/alphacp; chmod +x ${ACP}/bin/alphacp
+# v1.1: releases/ (backup/failed panel copies) + license/trial store
+rm -rf ${ACP}/releases; mkdir -p ${ACP}/releases/panel-backup-20260928224358/app ${ACP}/releases/panel-failed-20260928223644/app
+echo '<?php // old backup' > ${ACP}/releases/panel-backup-20260928224358/app/Old.php
+echo '<?php // failed' > ${ACP}/releases/panel-failed-20260928223644/app/Failed.php
+mkdir -p ${PANEL}/storage/app/private
+cat > ${PANEL}/storage/app/private/license.json <<'EOF'
+{"source":"local_trial","fingerprint":"deadbeefcafebabe0123456789abcdef","payload":{"license_uid":"TRIAL-DEADBEEFCAFEBABE","tier":"trial","max_accounts":20,"issued_at":"2026-09-28T22:40:00+00:00","expires_at":"2099-10-13T22:40:00+00:00"},"signature":null,"stored_at":"2026-09-28T22:40:00+00:00"}
+EOF
 
 # ---------------------------------------------------------------- fake GitHub (bare repo, main = repo ka main)
 rm -rf /tmp/syncsim /var/lib/alphacp-sync; mkdir -p /tmp/syncsim
@@ -58,7 +66,7 @@ count()     { git -C "${REMOTE}" rev-list --count main; }
 echo; echo "=== Run 1: pehla sync ==="
 rc="$(run_sync 1)"; tail -4 /tmp/syncsim/run-1.out | sed 's/^/    | /'
 [[ "$rc" == 0 ]] && grep -q "SYNC OK" /tmp/syncsim/run-1.out && t_ok "sync OK (exit 0)" || { t_fail "sync fail rc=$rc"; cat /tmp/syncsim/run-1.out; }
-grep -q "v1.0" /tmp/syncsim/run-1.out && t_ok "banner v1.0" || t_fail "banner"
+grep -q "v1.1" /tmp/syncsim/run-1.out && t_ok "banner v1.1" || t_fail "banner"
 for f in server-snapshot/STATE.md server-snapshot/README.md server-snapshot/LAST-SYNC.md server-snapshot/MANIFEST.txt \
          server-snapshot/files/usr/local/alphacp/panel/app/Services/License/LicenseManager.php \
          server-snapshot/files/usr/local/alphacp/panel/routes/web.php \
@@ -91,6 +99,12 @@ grep -q "LicenseManager.php" <<<"$ST" && t_ok "STATE: license files list" || t_f
 grep -q "license.env  keys: LICENSE_KEY LICENSE_SERVER TRIAL_DAYS" <<<"$ST" && t_ok "STATE: secret file ke sirf KEY naam" || t_fail "STATE: secret keys list nahi"
 grep -q "Leak.php  (server secret value mila)" <<<"$ST" && t_ok "STATE: skipped leak file report" || t_fail "STATE: skip report nahi"
 grep -q "panel http    : 200" <<<"$ST" && t_ok "STATE: panel http 200" || t_fail "STATE: panel http"
+tree_has server-snapshot/files/usr/local/alphacp/releases && t_fail "releases/ snapshot me chala gaya" || t_ok "v1.1: releases/ snapshot me NAHI"
+grep -q "panel-backup-20260928224358" <<<"$ST" && grep -q "panel-failed-20260928223644" <<<"$ST" && t_ok "v1.1: STATE me releases ke naam" || t_fail "STATE: releases naam nahi"
+grep -q "expires_at : 2099-10-13T22:40:00+00:00   -> valid" <<<"$ST" && grep -q "source     : local_trial" <<<"$ST" && grep -q "signed     : no (local trial)" <<<"$ST" && t_ok "v1.1: STATE me license/trial haalat" || t_fail "STATE: license section nahi"
+grep -q "deadbeefcafebabe" <<<"$ST" && t_fail "fingerprint STATE me leak" || t_ok "v1.1: fingerprint STATE me nahi"
+grep -qE "panel code    : [0-9]+\.[0-9]+\.[0-9]+" <<<"$ST" && t_ok "v1.1: STATE me panel MANIFEST version" || t_fail "STATE: MANIFEST version nahi"
+tree_has server-snapshot/files/usr/local/alphacp/panel/storage/app/private/license.json && t_fail "license.json push ho gaya" || t_ok "license.json push nahi hua"
 [[ "$(git -C "${REMOTE}" show main:AI-HANDOFF.md | sha256sum)" == "$BASE_README" ]] && t_ok "repo ki baaki files untouched" || t_fail "AI-HANDOFF.md badal gaya"
 
 echo; echo "=== Run 2: kuch nahi badla ==="

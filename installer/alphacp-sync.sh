@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — SERVER → GITHUB SYNC  v1.0
+#  AlphaCP — SERVER → GITHUB SYNC  v1.1
+#  v1.1: releases/ (purane backup/failed panel copies) snapshot me nahi — sirf naam STATE.md me;
+#        STATE.md me panel MANIFEST version + license/trial haalat (state/expiry, koi secret nahi)
 # -----------------------------------------------------------------------------
 #  Server par jo bhi install/update hai (panel code, agent, license/trial, configs,
 #  DB schema, versions, routes, services) uska SAAF snapshot GitHub repo ke
@@ -21,7 +23,7 @@
 # =============================================================================
 set -uo pipefail
 
-SYNC_VERSION="1.0"
+SYNC_VERSION="1.1"
 REPO_SLUG="${SYNC_REPO_SLUG:-abhay751218-hue/AlphaCP}"
 BRANCH="${SYNC_BRANCH:-main}"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
@@ -213,7 +215,7 @@ copy_tree() {  # $1 = source dir; secrets/heavy cheezein prune
   local src="$1"
   ( cd / && find "${src#/}" \
       \( -name vendor -o -name node_modules -o -name storage -o -name .git -o -name cache -o -name logs -o -name log \
-         -o -name tmp -o -name backups -o -name backup -o -path "${ACP_HOME#/}/etc" -o -path "${ACP_HOME#/}/var" \
+         -o -name tmp -o -name backups -o -name backup -o -path "${ACP_HOME#/}/etc" -o -path "${ACP_HOME#/}/var" -o -path "${ACP_HOME#/}/releases" \
          -o -name ssl -o -name certs -o -name keys -o -name private \) -prune -o \
       -type f \! \( -name '.env' -o -name '.env.*' -o -name '*.sqlite' -o -name '*.sqlite3' -o -name '*.db' -o -name '*.pem' \
          -o -name '*.key' -o -name '*.crt' -o -name '*.p12' -o -name '*.pfx' -o -name 'id_*' -o -name '*.log' -o -name '*.bak*' \
@@ -317,13 +319,42 @@ PY
   say '```'
   if [[ -f "${PANEL}/artisan" ]]; then
     say "laravel       : $(art --version)"
-    say "ACP_VERSION   : $(envkey ACP_VERSION "${PANEL}/.env")"
+    say "panel code    : $(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "${PANEL}/MANIFEST.json" 2>/dev/null || echo '?')   (MANIFEST.json = asli deployed code version)"
+    say "ACP_VERSION   : $(envkey ACP_VERSION "${PANEL}/.env")   (.env)"
     say "AGENT_VERSION : $(envkey ACP_AGENT_VERSION "${PANEL}/.env")"
     say "APP_ENV       : $(envkey APP_ENV "${PANEL}/.env")   APP_DEBUG: $(envkey APP_DEBUG "${PANEL}/.env")"
   else
     say "panel: ${PANEL} me nahi mila"
   fi
   say "panel http    : $(curl -k -s -o /dev/null -w '%{http_code}' -m 10 https://127.0.0.1:8090/ 2>/dev/null)"
+  say '```'
+  say ""
+  say "## License / trial (sirf state + dates; fingerprint/signature nahi)"
+  say '```'
+  LIC="$(envkey ACP_LICENSE_STORE_PATH "${PANEL}/.env")"; LIC="${LIC:-${PANEL}/storage/app/private/license.json}"
+  if [[ -f "${LIC}" ]]; then
+    python3 - "${LIC}" <<'PY' 2>/dev/null || say "license store padh nahi paaya"
+import json, sys, datetime
+r = json.load(open(sys.argv[1])); p = r.get("payload") or {}
+exp = p.get("expires_at", "")
+try:
+    state = "valid (expiry se pehle)" if datetime.datetime.fromisoformat(exp) > datetime.datetime.now(datetime.timezone.utc) else "EXPIRED"
+except Exception:
+    state = "?"
+print(f"store      : {sys.argv[1]}")
+print(f"source     : {r.get('source', '?')}   tier: {p.get('tier', '?')}   max_accounts: {p.get('max_accounts', '?')}")
+print(f"issued_at  : {p.get('issued_at', '?')}")
+print(f"expires_at : {exp or '?'}   -> {state}")
+print(f"signed     : {'yes' if r.get('signature') else 'no (local trial)'}")
+PY
+  else
+    say "license store nahi mila (${LIC}) — panel ka /license page khulte hi trial shuru hota hai"
+  fi
+  say '```'
+  say ""
+  say "## Releases (${ACP_HOME}/releases — sirf naam, code snapshot me nahi)"
+  say '```'
+  ls -1 "${ACP_HOME}/releases" 2>/dev/null || say "(khaali)"
   say '```'
   say ""
   say "## Services"
