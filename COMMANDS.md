@@ -5,26 +5,35 @@
 > Har script shuru me apna **version banner** print karti hai — banner me wahi version dikhna chahiye
 > jo yahan likha hai. Purani (superseded) commands scrollback se **dobara mat chalao**.
 
+## 🔐 Command format (repo PRIVATE ho ya public — dono me chalta hai)
+Server ki deploy key se file aati hai + sha256 check (alphacp-sync v1.2+ chahiye):
+```bash
+sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>.sh <SHA256> && sudo bash /tmp/<script>-<ver>.sh
+```
+(Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
+
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.2.1 → panel 0.3.2 + alphacp-sync v1.1 — auto-rollback ke saath
+### alphacp-sync v1.2 — private repo support (`get` mode). Repo PRIVATE karne se PEHLE chalao.
 ```bash
-curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/d741f796fd77792c5a77f6fbf8a063609b1e2866/installer/panel-update.sh -o /tmp/acp-panel-update-0.2.1.sh && sudo bash /tmp/acp-panel-update-0.2.1.sh
+curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f55927ee1fbf526037785dcdb82aea1/installer/alphacp-sync.sh -o /tmp/acp-sync-v1.2.sh && sudo bash /tmp/acp-sync-v1.2.sh
 ```
-- script sha256: `d08387eaa34bcaf372286cad66ad175fe08d2e174bceafb62a04ddc45c9622fd`
-- panel artifact: `panel-code-0.3.2.tar.gz` sha256 `7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab` (commit 6001033)
-- sync tool: `alphacp-sync.sh` v1.1 sha256 `427512d87d5573bfbdf6a8d3a07d8505d3dd72738ffe7cfabc9c41c2052914f3` (commit 8cffb0c)
-- Expected: banner `updater 0.2.1` → checksum verified → Composer → preflight → swap → `health HTTP 200`
-  → `==> UPDATE COMPLETE ✅` → `alphacp-sync v1.1 install hua` → `GitHub updated`.
-  Health fail ho to khud purana panel wapas (`Rollback successful`).
-- DB, `.env`, APP_KEY, sessions, license/trial file (`storage/`) same rehte hain. Backups: aakhri 3.
-- Test: `sudo bash tools/sim/update-sim.sh` → 43/43; `bash tools/sim/panel-tests.sh` → 42 pass / 0 fail.
+- sha256: `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852`
+- Expected: banner `v1.2` → (key pehle se hai, dobara add nahi karni) → `==> SYNC OK ✅` (ya "koi badlav nahi").
+- Test: `sudo bash tools/sim/sync-sim.sh` → 60/60 (Run 8 = get: sha verify, galat sha, traversal, PR-ref commit, no key).
+  GitHub par SHA-fetch + `refs/pull/*` fetch asli repo par verify kiya (29 Sep).
+
+### Uske baad panel updates: panel-update 0.3.0 (private-ready) — agli panel release ke saath
+- commit `0c90863a10e6c70984e627af1b819e66ae60b600`, sha256 `204b78af0b59b75614a61455df1ca96b5eb3c05f744b744647da1a33c4da8480`
+- artifact + sync tool pehle `alphacp-sync get` se, fallback public URL. update-sim **54/54** (U5 private+get, U6 private+purana sync → saaf error).
+- Abhi chalane ki zaroorat nahi (server already 0.3.2).
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
 | alphacp-sync v1.0 setup (`aa2091d…/installer/alphacp-sync.sh`) | 29 Sep | ✅ `main` par pehla snapshot `d5ae8d2` (314 files). Timer har ghante chalta hai. Manual: `sudo alphacp-sync`, status: `sudo alphacp-sync --status` |
 | updater 0.1.0 (dusre AI ka, panel 0.3.1) | 29 Sep | ✅ server par 0.3.1 = source byte-for-byte (snapshot se verify) |
+| panel-update 0.2.1 (`d741f79…`) → panel 0.3.2 + sync v1.1 | 29 Sep 00:17Z | ✅ UPDATE COMPLETE, HTTP 200, trial same (expiry 13 Oct), snapshot `ebdbd75` |
 
 ## 🩺 Sirf zaroorat par
 

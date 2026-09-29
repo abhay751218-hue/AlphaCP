@@ -36,9 +36,11 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 2. Ek message me **sirf EK command/step** do. Output maango, phir aage badho.
 3. **Untested command kabhi mat do.** Pehle reproduce karo, phir fix, phir `tools/sim/` me verify karo, uske baad hi command do.
 4. Har script apna **version banner** print kare. User scrollback se purani command chala deta hai.
-5. Command hamesha **commit-pinned GitHub raw link** ho, is format me:
-   `curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/<COMMIT>/installer/<script>.sh -o /tmp/<script>-<ver>.sh && sudo bash /tmp/<script>-<ver>.sh`
-   Link dene se pehle `gh api .../contents/<path>?ref=<COMMIT>` se check karo ki GitHub copy wahi file hai jo test hui thi.
+5. Command hamesha **commit-pinned + sha256-verified** ho. Repo PRIVATE ho sakta hai, isliye ye format (deploy key se):
+   `sudo alphacp-sync get <COMMIT> installer/<script>.sh /tmp/<script>-<ver>.sh <SHA256> && sudo bash /tmp/<script>-<ver>.sh`
+   (Repo public ho tabhi `curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/<COMMIT>/...` chalta hai.)
+   Command dene se pehle `gh api .../contents/<path>?ref=<COMMIT>` se check karo ki GitHub copy wahi file hai jo test hui thi.
+   Pinned commits hamesha reachable rahein: PR merge "Create a merge commit" se (squash bhi chalega — `get` PR refs bhi laata hai).
 6. Server par kuch bhi badalne wali har script ke **end me `alphacp-sync` chalao**, taaki GitHub apne aap update ho jaye:
    `command -v alphacp-sync >/dev/null && alphacp-sync || true`
 7. `COMMANDS.md` + `CHANGELOG.md` update karo. Parity checklist me jo row ho gayi ho use ✅/🟡 karo.
@@ -53,9 +55,9 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 | Command | Kya test karta hai | Last result |
 |---|---|---|
 | `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **42 pass, 0 fail, 6 wasm-skip** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh`: 0.3.0→0.3.2, sha mismatch, health-fail rollback, backup prune, sync-tool upgrade + hook | **43/43** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.3.0: update, sha mismatch, rollback, backup prune, sync-tool upgrade, **private repo (get)** | **54/54** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
-| `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.1 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback) | **51/51** |
+| `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 
 php-wasm ki limits (code ki galti NAHI): PHP 8.4 wasm PHPUnit me crash karta hai → 8.5 use hota hai; Mockery
 console-output mock crash karta hai → runner temp copy me `$mockConsoleOutput=false` lagata hai, isliye
@@ -80,8 +82,9 @@ unka kaam PR se `main` me merge karo (29 Sep: `arena/01a0ea0d-alphacp` ka S2C ka
 - Step 2C (license + 15-day trial) 🟡 — **panel client + offline trial server par deployed (0.3.1)**;
   apna license-server API (`license-server/`, activation/renewal) abhi baaki.
 - Server par abhi (snapshot se verified, 29 Sep): panel **0.3.1** (= source byte-for-byte), Laravel 13.33.0, PHP 8.4.26,
-  MariaDB 10.11, nginx (8090) + Apache (80/443), bind, spamd, redis, fail2ban, paneld. alphacp-sync v1.0 chal raha hai.
-- Next command: panel-update **0.2.1** → panel 0.3.2 (admin-password rescue fix) + alphacp-sync v1.1 (`COMMANDS.md`).
+  MariaDB 10.11, nginx (8090) + Apache (80/443), bind, spamd, redis, fail2ban, paneld.
+- 29 Sep 00:17Z: panel **0.3.2** + alphacp-sync v1.1 deployed (updater 0.2.1) ✅. Trial expiry 13 Oct.
+- Next command: alphacp-sync **v1.2** (private repo support) → phir user repo PRIVATE karega (`COMMANDS.md`).
 - **Next: Step 3 — Provisioning engine** (hosting account create/suspend/unsuspend/terminate: Linux user, home dir,
   Apache vhost, PHP-FPM pool, quota). Uske baad S4 Packages & limits → … → S12 WHM API 1 billing layer.
 

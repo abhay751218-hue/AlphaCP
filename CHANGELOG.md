@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
+  deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
+  PR refs se commit milta hai. sync-sim **60/60**. `panel-update 0.3.0`: artifact/sync-tool pehle `get` se,
+  fallback public URL; update-sim **54/54**.
+- **Deployed (29 Sep 00:17Z):** panel 0.3.2 + alphacp-sync v1.1 via updater 0.2.1 — HTTP 200, trial preserved.
 - **alphacp-sync LIVE (29 Sep)** — server par setup hua, `main` par pehla snapshot `d5ae8d2` (314 files).
   Audit: koi secret nahi (sirf code; `.env`/keys/tokens/license.json nahi). Deployed panel = source 0.3.1 byte-for-byte.
 - **alphacp-sync v1.1** — `releases/` (backup/failed panel copies) snapshot me nahi (sirf naam STATE.md me);
