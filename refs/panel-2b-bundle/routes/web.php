@@ -11,6 +11,7 @@ use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\PhpController;
+use App\Http\Controllers\PhpIniController;
 use App\Http\Controllers\SslController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SecurityController;
@@ -70,6 +71,10 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:software.view')->name('php.index');
     Route::post('/php', [PhpController::class, 'update'])
         ->middleware('perm:software.manage')->name('php.update');
+    Route::get('/php/ini', [PhpIniController::class, 'index'])
+        ->middleware('perm:software.view')->name('php.ini');
+    Route::post('/php/ini', [PhpIniController::class, 'update'])
+        ->middleware('perm:software.manage')->name('php.ini.update');
 
     Route::get('/cron', [CronController::class, 'index'])
         ->middleware('perm:cron.view')->name('cron.index');

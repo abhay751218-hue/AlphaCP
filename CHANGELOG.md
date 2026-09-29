@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 5 MultiPHP INI Editor (29 Sep)** — allowlisted php.ini via
+  `php.setIni` (FPM `php_admin_value`). Panel **0.10.0**, agent **0.7.0**.
+  Tests: panel **87/0**, provision-sim **38/38**.
 - **Step 5 AutoSSL (29 Sep)** — Let's Encrypt via certbot HTTP-01 (`ssl.issue`
   mode=letsencrypt) + Run AutoSSL / include-exclude. Self-signed fallback
   remains. Panel **0.9.0**, agent **0.6.0**.

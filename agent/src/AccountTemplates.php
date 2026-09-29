@@ -114,9 +114,14 @@ CONF;
 CONF;
     }
 
-    public static function pool(string $username, string $home, string $socketName): string
+    /** @param array<string, string> $directives */
+    public static function pool(string $username, string $home, string $socketName, array $directives = []): string
     {
         $sock = '/run/php/' . $socketName;
+        $extra = '';
+        foreach ($directives as $key => $value) {
+            $extra .= PhpIni::poolLine($key, $value) . "\n";
+        }
 
         return <<<CONF
 ; AlphaCP account pool — managed file, do not edit by hand
@@ -134,7 +139,7 @@ php_admin_value[open_basedir] = {$home}:/tmp
 php_admin_value[upload_tmp_dir] = {$home}/tmp
 php_admin_value[session.save_path] = {$home}/tmp
 php_admin_flag[allow_url_fopen] = on
-
+{$extra}
 CONF;
     }
 

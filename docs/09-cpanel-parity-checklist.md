@@ -136,7 +136,7 @@
 | 66 | Node.js® Selector | Node apps + npm | S14 | ⏳ S14 |
 | 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 |
 | 68 | MultiPHP Manager | Per-domain PHP version | S5 | ✅ (account-level; per-domain later) |
-| 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ⏳ S5 |
+| 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ✅ (account-level FPM php_admin_value; per-dir later) |
 | 70 | PHP Composer | Composer in panel | S14 | ⏳ S14 |
 | 71 | PHP PEAR Packages | 🔵 legacy | post-v1 | 🔵 |
 | 72 | Ruby Gems | 🔵 legacy | post-v1 | 🔵 |

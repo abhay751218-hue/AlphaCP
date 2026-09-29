@@ -32,6 +32,9 @@
             <button class="btn mt" type="submit">Apply</button>
         </form>
     @endcan
+    @can('software.view')
+        <p class="mt"><a href="{{ route('php.ini') }}">MultiPHP INI Editor →</a></p>
+    @endcan
 </div>
 @endif
 @endsection

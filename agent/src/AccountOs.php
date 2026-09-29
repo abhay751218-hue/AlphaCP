@@ -380,15 +380,53 @@ final class AccountOs
         $this->fs->unlink($this->paths->vhost($username));
     }
 
-    public function writePool(string $username): void
+    public function writePool(string $username, ?array $directives = null): void
     {
+        $directives ??= $this->readUserIni($username);
         $body = AccountTemplates::pool(
             $username,
             $this->paths->home($username),
             $this->paths->socketName($username),
+            $directives,
         );
         $this->fs->write($this->paths->pool($username), $body, 0644);
         $this->fs->unlink($this->paths->poolDisabled($username));
+    }
+
+    /** @param array<string, string> $directives @return array<string, string> */
+    public function setIni(string $username, array $directives): array
+    {
+        $clean = PhpIni::sanitize($directives);
+        $this->writeUserIni($username, $clean);
+        $this->writePool($username, $clean);
+        $this->reloadPhp();
+        $this->log->info('php.ini ' . count($clean) . " keys for {$username}");
+        return $clean;
+    }
+
+    /** @return array<string, string> */
+    public function readUserIni(string $username): array
+    {
+        $path = $this->paths->phpIniFile($username);
+        if (!$this->fs->isFile($path)) {
+            return [];
+        }
+        $body = (string) file_get_contents($this->fs->assert($path));
+        try {
+            return PhpIni::parseFile($body);
+        } catch (TaskRejectedException) {
+            return [];
+        }
+    }
+
+    /** @param array<string, string> $directives */
+    public function writeUserIni(string $username, array $directives): void
+    {
+        $path = $this->paths->phpIniFile($username);
+        $this->fs->mkdir(dirname($path), 0750);
+        $this->fs->write($path, PhpIni::renderFile($directives), 0640);
+        $this->fs->chownName(dirname($path), $username);
+        $this->fs->chownName($path, $username);
     }
 
     public function disablePool(string $username): void

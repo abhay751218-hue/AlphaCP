@@ -208,6 +208,42 @@ return [
         ],
     ],
 
+    'php.setIni' => [
+        'handler'     => Tasks\PhpSetIni::class,
+        'safety'      => 'mutating',
+        'timeout'     => 45,
+        'description' => 'Write allowlisted MultiPHP INI directives into the account FPM pool.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'directives'],
+            'properties'           => [
+                'username'   => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'directives' => [
+                    'type'                 => 'object',
+                    'additionalProperties' => false,
+                    'properties'           => [
+                        'display_errors'         => ['type' => 'string', 'maxLength' => 8],
+                        'log_errors'             => ['type' => 'string', 'maxLength' => 8],
+                        'allow_url_fopen'        => ['type' => 'string', 'maxLength' => 8],
+                        'short_open_tag'         => ['type' => 'string', 'maxLength' => 8],
+                        'max_execution_time'     => ['type' => 'string', 'maxLength' => 8],
+                        'max_input_time'         => ['type' => 'string', 'maxLength' => 8],
+                        'max_input_vars'         => ['type' => 'string', 'maxLength' => 8],
+                        'memory_limit'           => ['type' => 'string', 'maxLength' => 12],
+                        'post_max_size'          => ['type' => 'string', 'maxLength' => 12],
+                        'upload_max_filesize'    => ['type' => 'string', 'maxLength' => 12],
+                        'date.timezone'          => ['type' => 'string', 'maxLength' => 60],
+                        'error_reporting'        => ['type' => 'string', 'maxLength' => 40],
+                        'session.gc_maxlifetime' => ['type' => 'string', 'maxLength' => 12],
+                        'default_charset'        => ['type' => 'string', 'maxLength' => 20],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',
