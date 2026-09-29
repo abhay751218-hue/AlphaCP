@@ -36,6 +36,7 @@ use Alphacp\Agent\Tasks\IndexesSet;
 use Alphacp\Agent\Tasks\FilesList;
 use Alphacp\Agent\Tasks\FilesSet;
 use Alphacp\Agent\Tasks\HandlersSet;
+use Alphacp\Agent\Tasks\PrivacySet;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -184,7 +185,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.set', 'privacy.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -624,6 +625,61 @@ test('files.list and files.set stay inside home and reject ..', function (): voi
         $threwRoot = str_contains($e->getMessage(), 'home root');
     }
     assert_true($threwRoot, 'home root delete must fail closed');
+    acp_account_cleanup($harness);
+});
+test('privacy.set writes htpasswd + Directory and rejects path escape', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new FilesSet())->handle([
+        'username' => 'alicehost',
+        'op' => 'mkdir',
+        'path' => 'public_html/secret',
+    ], $harness['ctx']);
+    $hash = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+    $out = (new PrivacySet())->handle([
+        'username' => 'alicehost',
+        'entries' => [[
+            'path' => 'public_html/secret',
+            'realm' => 'Secret',
+            'users' => [['name' => 'bob', 'hash' => $hash]],
+        ]],
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'active');
+    $ht = (string) file_get_contents($harness['root'] . '/home/alicehost/etc/privacy/public-html-secret.htpasswd');
+    assert_true(str_contains($ht, 'bob:$2y$10$'));
+    $conf = (string) file_get_contents($harness['root'] . '/home/alicehost/etc/privacy.conf');
+    assert_true(str_contains($conf, 'AuthUserFile '));
+    assert_true(str_contains($conf, 'Require valid-user'));
+    $vhost = (string) file_get_contents($harness['root'] . '/apache/sites-available/acp-alicehost.conf');
+    assert_true(str_contains($vhost, 'privacy.conf'));
+    $threw = false;
+    try {
+        (new PrivacySet())->handle([
+            'username' => 'alicehost',
+            'entries' => [[
+                'path' => '../etc',
+                'realm' => 'x',
+                'users' => [['name' => 'bob', 'hash' => $hash]],
+            ]],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), '..') || str_contains($e->getMessage(), 'escape');
+    }
+    assert_true($threw, 'privacy path escape must fail closed');
+    $threwPlain = false;
+    try {
+        (new PrivacySet())->handle([
+            'username' => 'alicehost',
+            'entries' => [[
+                'path' => 'public_html/secret',
+                'realm' => 'x',
+                'users' => [['name' => 'bob', 'hash' => 'plaintext']],
+            ]],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPlain = str_contains($e->getMessage(), 'bcrypt');
+    }
+    assert_true($threwPlain, 'plaintext password hash must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

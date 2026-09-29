@@ -17,6 +17,7 @@ use App\Http\Controllers\HandlersController;
 use App\Http\Controllers\MimeTypesController;
 use App\Http\Controllers\PhpController;
 use App\Http\Controllers\PhpIniController;
+use App\Http\Controllers\PrivacyController;
 use App\Http\Controllers\SslController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SecurityController;
@@ -115,6 +116,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:files.manage')->name('files.rename');
     Route::post('/files/delete', [FilesController::class, 'destroy'])
         ->middleware('perm:files.manage')->name('files.destroy');
+
+    Route::get('/privacy', [PrivacyController::class, 'index'])
+        ->middleware('perm:privacy.view')->name('privacy.index');
+    Route::post('/privacy', [PrivacyController::class, 'store'])
+        ->middleware('perm:privacy.manage')->name('privacy.store');
+    Route::post('/privacy/delete', [PrivacyController::class, 'destroy'])
+        ->middleware('perm:privacy.manage')->name('privacy.destroy');
 
     Route::get('/cron', [CronController::class, 'index'])
         ->middleware('perm:cron.view')->name('cron.index');

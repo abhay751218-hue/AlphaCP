@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 6 Directory Privacy (29 Sep)** — Apache Basic Auth via `privacy.set`
+  (bcrypt hashes only, path-jailed). Panel **0.16.0**, agent **0.13.0**.
+  Tests: panel **115/0**, provision-sim **44/44**.
 - **Step 6 File Manager slice 1 (29 Sep)** — home-jailed browse/mkdir/edit/delete/rename
   via `files.list` + `files.set`. Zip/chmod/FTP later. Panel **0.15.0**, agent **0.12.0**.
   Tests: panel **110/0**, provision-sim **43/43**, update-sim **82/82**.

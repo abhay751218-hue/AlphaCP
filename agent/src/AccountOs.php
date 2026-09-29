@@ -20,6 +20,76 @@ final class AccountOs
     }
 
     /**
+     * @param  list<array{path: string, realm: string, slug: string, users: list<array{name: string, hash: string}>}> $entries
+     * @return list<array{path: string, realm: string, slug: string, users: list<array{name: string, hash: string}>}>
+     */
+    public function setPrivacy(string $username, array $entries): array
+    {
+        $clean = Privacy::sanitize($entries);
+        $home = $this->paths->home($username);
+        $dir = $this->paths->privacyDir($username);
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $keepSlugs = [];
+        foreach ($clean as $row) {
+            $folder = Files::resolve($home, $row['path']);
+            if (!$this->fs->isDir($folder)) {
+                throw new RuntimeException('privacy folder does not exist: ' . $row['path']);
+            }
+            $lines = [];
+            foreach ($row['users'] as $u) {
+                $lines[] = $u['name'] . ':' . $u['hash'];
+            }
+            $ht = $dir . '/' . $row['slug'] . '.htpasswd';
+            $this->fs->write($ht, implode("\n", $lines) . "\n", 0640);
+            $this->fs->chownName($ht, $username);
+            $keepSlugs[$row['slug']] = true;
+        }
+        foreach ($this->fs->listNames($dir) as $name) {
+            if (!str_ends_with($name, '.htpasswd')) {
+                continue;
+            }
+            $slug = substr($name, 0, -9);
+            if (!isset($keepSlugs[$slug])) {
+                $this->fs->unlink($dir . '/' . $name);
+            }
+        }
+        $confPath = $this->paths->privacyConf($username);
+        $this->fs->mkdir(dirname($confPath), 0750);
+        $this->fs->write($confPath, AccountTemplates::privacyConf($home, $clean), 0644);
+        $this->fs->chownName(dirname($confPath), $username);
+        $this->ensurePrivacyInclude($username);
+        $this->reload($this->paths->apacheService);
+        $this->log->info('privacy ' . count($clean) . " folders for {$username}");
+
+        return $clean;
+    }
+
+    public function ensurePrivacyInclude(string $username): void
+    {
+        $home = $this->paths->home($username);
+        $needle = 'IncludeOptional ' . $home . '/etc/privacy.conf';
+        $files = [$this->paths->vhost($username)];
+        foreach ($this->listExtraVhosts($username) as $extra) {
+            $files[] = $extra;
+        }
+        foreach ($files as $file) {
+            if (!$this->fs->isFile($file)) {
+                continue;
+            }
+            $body = (string) file_get_contents($this->fs->assert($file));
+            if (str_contains($body, 'privacy.conf')) {
+                continue;
+            }
+            if (!str_contains($body, '</VirtualHost>')) {
+                continue;
+            }
+            $body = str_replace('</VirtualHost>', "    {$needle}\n</VirtualHost>", $body);
+            $this->fs->write($file, $body, 0644);
+        }
+    }
+
+    /**
      * @return list<array{name: string, type: string, size: int, mode: string}>
      */
     public function listFiles(string $username, string $rel): array
