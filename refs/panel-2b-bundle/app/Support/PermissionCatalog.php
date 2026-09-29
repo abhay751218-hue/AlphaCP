@@ -71,6 +71,10 @@ final class PermissionCatalog
                 ['errorpages.view', 'View error pages'],
                 ['errorpages.manage', 'Edit custom error pages'],
             ],
+            'indexes' => [
+                ['indexes.view', 'View indexes setting'],
+                ['indexes.manage', 'Change directory listing'],
+            ],
             'databases' => [
                 ['databases.view', 'View databases'],
                 ['databases.manage', 'Create/manage databases'],
@@ -134,6 +138,7 @@ final class PermissionCatalog
                 'metrics.view', 'security.view', 'audit.view', 'system.view',
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
                 'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
+                'indexes.view', 'indexes.manage',
             ],
 
             'user' => [
@@ -142,6 +147,7 @@ final class PermissionCatalog
                 'databases.view', 'dns.view', 'backup.view', 'metrics.view',
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
                 'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
+                'indexes.view', 'indexes.manage',
             ],
 
             'mail' => [

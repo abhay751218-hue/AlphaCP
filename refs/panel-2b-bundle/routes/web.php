@@ -11,6 +11,7 @@ use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\ErrorPagesController;
+use App\Http\Controllers\IndexesController;
 use App\Http\Controllers\PhpController;
 use App\Http\Controllers\PhpIniController;
 use App\Http\Controllers\SslController;
@@ -81,6 +82,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:errorpages.view')->name('errorpages.index');
     Route::post('/errorpages', [ErrorPagesController::class, 'update'])
         ->middleware('perm:errorpages.manage')->name('errorpages.update');
+
+    Route::get('/indexes', [IndexesController::class, 'index'])
+        ->middleware('perm:indexes.view')->name('indexes.index');
+    Route::post('/indexes', [IndexesController::class, 'update'])
+        ->middleware('perm:indexes.manage')->name('indexes.update');
 
     Route::get('/cron', [CronController::class, 'index'])
         ->middleware('perm:cron.view')->name('cron.index');

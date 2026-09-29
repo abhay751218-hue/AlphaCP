@@ -94,6 +94,11 @@ final class AccountPaths
         return $this->home($username) . '/etc/errorpages.conf';
     }
 
+    public function indexesConf(string $username): string
+    {
+        return $this->home($username) . '/etc/indexes.conf';
+    }
+
     public function sslDir(string $username, string $domain): string
     {
         return $this->home($username) . '/ssl/' . $this->vhostSlug($domain);

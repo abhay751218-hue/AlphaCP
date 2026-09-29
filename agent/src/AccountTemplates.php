@@ -22,13 +22,14 @@ final class AccountTemplates
     <Directory {$docroot}>
         AllowOverride All
         Require all granted
-        Options -Indexes +FollowSymLinks
+        Options +FollowSymLinks
     </Directory>
 
     <FilesMatch "\\.php\$">
         SetHandler "proxy:unix:{$sock}|fcgi://localhost"
     </FilesMatch>
 
+    IncludeOptional {$home}/etc/indexes.conf
     IncludeOptional {$home}/etc/errorpages.conf
 
     ErrorLog {$logs}/error.log
@@ -64,13 +65,14 @@ CONF;
     <Directory {$docroot}>
         AllowOverride All
         Require all granted
-        Options -Indexes +FollowSymLinks
+        Options +FollowSymLinks
     </Directory>
 
     <FilesMatch "\\.php\$">
         SetHandler "proxy:unix:{$sock}|fcgi://localhost"
     </FilesMatch>
 
+    IncludeOptional {$home}/etc/indexes.conf
     IncludeOptional {$home}/etc/errorpages.conf
 
     ErrorLog {$logs}/ssl-error.log
@@ -144,6 +146,27 @@ php_admin_value[upload_tmp_dir] = {$home}/tmp
 php_admin_value[session.save_path] = {$home}/tmp
 php_admin_flag[allow_url_fopen] = on
 {$extra}
+CONF;
+    }
+
+    public static function indexesConf(string $home, string $mode): string
+    {
+        $pattern = preg_quote($home, '/');
+        $options = $mode === 'off'
+            ? 'Options -Indexes +FollowSymLinks'
+            : 'Options +Indexes +FollowSymLinks';
+        $indexOpts = match ($mode) {
+            'fancy' => "    IndexOptions FancyIndexing HTMLTable NameWidth=*\n",
+            'simple' => "    IndexOptions NameWidth=*\n",
+            default => '',
+        };
+
+        return <<<CONF
+# AlphaCP indexes — managed file, do not edit by hand
+<DirectoryMatch "^{$pattern}/">
+    {$options}
+{$indexOpts}</DirectoryMatch>
+
 CONF;
     }
 

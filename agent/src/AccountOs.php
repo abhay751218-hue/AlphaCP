@@ -483,6 +483,44 @@ final class AccountOs
         }
     }
 
+    public function setIndexes(string $username, string $mode): string
+    {
+        $mode = Indexes::normalize($mode);
+        $confPath = $this->paths->indexesConf($username);
+        $this->fs->mkdir(dirname($confPath), 0750);
+        $this->fs->write(
+            $confPath,
+            AccountTemplates::indexesConf($this->paths->home($username), $mode),
+            0644,
+        );
+        $this->fs->chownName(dirname($confPath), $username);
+        $this->ensureIndexesInclude($username);
+        $this->reload($this->paths->apacheService);
+        $this->log->info("indexes {$mode} for {$username}");
+        return $mode;
+    }
+
+    public function ensureIndexesInclude(string $username): void
+    {
+        $home = $this->paths->home($username);
+        $needle = 'IncludeOptional ' . $home . '/etc/indexes.conf';
+        $files = [$this->paths->vhost($username)];
+        foreach ($this->listExtraVhosts($username) as $extra) {
+            $files[] = $extra;
+        }
+        foreach ($files as $file) {
+            if (!$this->fs->isFile($file)) {
+                continue;
+            }
+            $body = (string) file_get_contents($this->fs->assert($file));
+            $body = str_replace('Options -Indexes +FollowSymLinks', 'Options +FollowSymLinks', $body);
+            if (!str_contains($body, 'indexes.conf') && str_contains($body, '</VirtualHost>')) {
+                $body = str_replace('</VirtualHost>', "    {$needle}\n</VirtualHost>", $body);
+            }
+            $this->fs->write($file, $body, 0644);
+        }
+    }
+
     public function disablePool(string $username): void
     {
         $live = $this->paths->pool($username);

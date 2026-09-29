@@ -272,6 +272,23 @@ return [
         ],
     ],
 
+    'indexes.set' => [
+        'handler'     => Tasks\IndexesSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Set Apache directory listing mode (off/simple/fancy) for an account.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'mode'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'mode'     => ['type' => 'string', 'enum' => ['off', 'simple', 'fancy']],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',
