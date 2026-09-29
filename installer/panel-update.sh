@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.4.0  ·  default panel bundle 0.4.0  ·  agent 0.2.0  ·  alphacp-sync v1.2
+# updater 0.5.0  ·  default panel bundle 0.5.0  ·  agent 0.2.0  ·  alphacp-sync v1.2
+#
+# 0.5.0: Step 4 — panel 0.5.0 (Packages UI, upgrade/quota). Agent 0.2.0 same.
 #
 # 0.4.0: Step 3 — panel 0.4.0 (Accounts UI) + paneld agent 0.2.0 (account.* tasks)
 #        pehle agent, phir panel swap. Agent fail ho to panel nahi chheḍte.
@@ -25,13 +27,13 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.4.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.4.0}"
+UPDATER_VERSION="0.5.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.5.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-0646d29fbc6d2e814132f5688c5d9cedb02baa80}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-519cd26e6d6a40e1fd4de51293a993d3fb688881}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-e2bfd6e4b8ee013e51a3e116b4e01fe3ef02cd81b143b4be5d2add725570aea8}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-b055cea605e5f20d6615474c5f0d2ff684ac1cf4fd4c8b149c7033a3acf1329f}"
 AGENT_VERSION="${ACP_AGENT_VERSION:-0.2.0}"
 AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-0646d29fbc6d2e814132f5688c5d9cedb02baa80}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"

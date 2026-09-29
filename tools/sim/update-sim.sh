@@ -111,7 +111,7 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.4.0'" grep -q "updater 0.4.0" "${U}/update-U1.out"
+chk "banner 'updater 0.5.0'" grep -q "updater 0.5.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -128,6 +128,7 @@ chk "admin password hash same (DB data preserve)" pw_works
 chk "License code present" test -f "${PANEL}/app/Support/License/LicenseClient.php"
 chk "PasswordGenerator present (0.3.2 fix)" test -f "${PANEL}/app/Support/PasswordGenerator.php"
 chk "AccountsController present (0.4.0)" test -f "${PANEL}/app/Http/Controllers/AccountsController.php"
+chk "PackagesController present (0.5.0)" test -f "${PANEL}/app/Http/Controllers/PackagesController.php"
 chk "agent 0.2.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.2.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
 chk "account.create in paneld allowlist" grep -q "account.create" "${ACP_HOME}/agent/config/tasks.php"
 chk "suspended page installed" test -f "${ACP_HOME}/share/suspended/index.html"
