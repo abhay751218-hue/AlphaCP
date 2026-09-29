@@ -31,6 +31,7 @@ final class AccountTemplates
 
     IncludeOptional {$home}/etc/indexes.conf
     IncludeOptional {$home}/etc/errorpages.conf
+    IncludeOptional {$home}/etc/mime.conf
 
     ErrorLog {$logs}/error.log
     CustomLog {$logs}/access.log combined
@@ -74,6 +75,7 @@ CONF;
 
     IncludeOptional {$home}/etc/indexes.conf
     IncludeOptional {$home}/etc/errorpages.conf
+    IncludeOptional {$home}/etc/mime.conf
 
     ErrorLog {$logs}/ssl-error.log
     CustomLog {$logs}/ssl-access.log combined
@@ -147,6 +149,17 @@ php_admin_value[session.save_path] = {$home}/tmp
 php_admin_flag[allow_url_fopen] = on
 {$extra}
 CONF;
+    }
+
+    /** @param list<array{mime: string, ext: string}> $mappings */
+    public static function mimeConf(array $mappings): string
+    {
+        $lines = ['# AlphaCP mime types — managed file, do not edit by hand'];
+        foreach ($mappings as $row) {
+            $lines[] = 'AddType ' . $row['mime'] . ' .' . $row['ext'];
+        }
+
+        return implode("\n", $lines) . "\n";
     }
 
     public static function indexesConf(string $home, string $mode): string

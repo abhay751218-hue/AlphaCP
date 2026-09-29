@@ -134,7 +134,7 @@ final class ModuleCatalog
                     ['name' => 'Track DNS',      'step' => 'S9',  'status' => 'step'],
                     ['name' => 'Indexes',        'step' => 'S5',  'status' => 'live', 'route' => 'indexes.index'],
                     ['name' => 'Error Pages',    'step' => 'S5',  'status' => 'live', 'route' => 'errorpages.index'],
-                    ['name' => 'MIME Types',     'step' => 'S5',  'status' => 'step'],
+                    ['name' => 'MIME Types',     'step' => 'S5',  'status' => 'live', 'route' => 'mime.index'],
                     ['name' => 'Apache Handlers','step' => 'S5',  'status' => 'step'],
                     ['name' => 'Terminal',       'step' => 'S6',  'status' => 'step'],
                     ['name' => 'Network Tools',  'step' => 'S11', 'status' => 'step'],

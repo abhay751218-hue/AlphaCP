@@ -31,7 +31,7 @@
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/unsuspend/terminate + Accounts UI, rollback) | ✅ **DEPLOYED 0.4.0** (29 Sep 01:07Z) |
 | Step 4 | Packages & limits manager | ✅ **DEPLOYED 0.5.0** (29 Sep 01:21Z) |
-| Step 5 | Domains, vHost, MultiPHP, SSL, Cron | 🟡 **0.11.0 live; Indexes 0.12.0 pending deploy** |
+| Step 5 | Domains, vHost, MultiPHP, SSL, Cron, Indexes, MIME | 🟡 **0.12.0 live; MIME Types 0.13.0 pending deploy** |
 | Step 6 | File Manager + FTP + Git + SSH | ⏳ |
 | Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | ⏳ |
 | Step 8 | Databases (MySQL management) | ⏳ |

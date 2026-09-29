@@ -483,6 +483,49 @@ final class AccountOs
         }
     }
 
+    /** @param list<array{mime: string, ext: string}> $mappings @return list<array{mime: string, ext: string}> */
+    public function setMimeTypes(string $username, array $mappings): array
+    {
+        $clean = MimeTypes::sanitize($mappings);
+        $confPath = $this->paths->mimeConf($username);
+        $this->fs->mkdir(dirname($confPath), 0750);
+        $this->fs->write(
+            $confPath,
+            AccountTemplates::mimeConf($clean),
+            0644,
+        );
+        $this->fs->chownName(dirname($confPath), $username);
+        $this->ensureMimeInclude($username);
+        $this->reload($this->paths->apacheService);
+        $this->log->info('mime types ' . count($clean) . " for {$username}");
+
+        return $clean;
+    }
+
+    public function ensureMimeInclude(string $username): void
+    {
+        $home = $this->paths->home($username);
+        $needle = 'IncludeOptional ' . $home . '/etc/mime.conf';
+        $files = [$this->paths->vhost($username)];
+        foreach ($this->listExtraVhosts($username) as $extra) {
+            $files[] = $extra;
+        }
+        foreach ($files as $file) {
+            if (!$this->fs->isFile($file)) {
+                continue;
+            }
+            $body = (string) file_get_contents($this->fs->assert($file));
+            if (str_contains($body, 'mime.conf')) {
+                continue;
+            }
+            if (!str_contains($body, '</VirtualHost>')) {
+                continue;
+            }
+            $body = str_replace('</VirtualHost>', "    {$needle}\n</VirtualHost>", $body);
+            $this->fs->write($file, $body, 0644);
+        }
+    }
+
     public function setIndexes(string $username, string $mode): string
     {
         $mode = Indexes::normalize($mode);

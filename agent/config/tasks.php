@@ -289,6 +289,35 @@ return [
         ],
     ],
 
+    'mime.set' => [
+        'handler'     => Tasks\MimeTypesSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Replace account Apache AddType MIME mappings (Content-Type only).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'mappings'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'mappings' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['mime', 'ext'],
+                        'properties'           => [
+                            'mime' => ['type' => 'string', 'maxLength' => 80],
+                            'ext'  => ['type' => 'string', 'maxLength' => 16],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',
