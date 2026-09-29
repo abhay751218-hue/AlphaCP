@@ -1,0 +1,10 @@
+# AlphaCP fail2ban jails (managed by installer; more jails arrive with the panel)
+[DEFAULT]
+bantime  = 1h
+findtime = 10m
+maxretry = 5
+backend  = systemd
+
+[sshd]
+enabled = true
+port    = ssh

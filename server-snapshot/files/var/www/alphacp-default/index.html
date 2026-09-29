@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AlphaCP — Server Ready</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { min-height: 100vh; display: grid; place-items: center; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+         background: radial-gradient(1200px 600px at 20% -10%, #1e293b, #0b1220 60%); color: #e2e8f0; padding: 24px; }
+  .card { max-width: 620px; width: 100%; background: rgba(30,41,59,.55); border: 1px solid #334155; border-radius: 18px;
+          padding: 34px 30px; backdrop-filter: blur(6px); box-shadow: 0 30px 70px rgba(0,0,0,.35); }
+  .row { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .logo { width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; font-weight: 900; font-size: 22px;
+          background: linear-gradient(135deg, #4f46e5, #06b6d4); color: #fff; }
+  h1 { font-size: 22px; letter-spacing: .2px; }
+  .sub { color: #94a3b8; font-size: 13.5px; margin-top: 3px; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(16,185,129,.12); border: 1px solid rgba(16,185,129,.4);
+           color: #34d399; font-size: 13px; font-weight: 700; padding: 7px 13px; border-radius: 99px; margin: 6px 0 18px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,.18); }
+  ul { list-style: none; font-size: 14px; color: #cbd5e1; }
+  li { padding: 7px 0 7px 26px; position: relative; border-bottom: 1px dashed #33415555; }
+  li:before { content: "✓"; position: absolute; left: 4px; color: #34d399; font-weight: 800; }
+  .foot { margin-top: 20px; font-size: 12px; color: #64748b; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="row">
+      <div class="logo">A</div>
+      <div>
+        <h1>AlphaCP</h1>
+        <div class="sub">Custom hosting control panel — development server</div>
+      </div>
+    </div>
+    <div class="badge"><span class="dot"></span> Base stack installed &amp; running</div>
+    <ul>
+      <li>Web: Apache + Nginx + PHP-FPM (multi-version)</li>
+      <li>Database: MariaDB (secured, local-only)</li>
+      <li>Cache: Redis (local-only)</li>
+      <li>Firewall (UFW) + Fail2ban active</li>
+      <li>Disk quotas + cgroups v2 ready</li>
+    </ul>
+    <div class="foot">Panel UI arrives in the next development step. This placeholder page is temporary.</div>
+  </div>
+</body>
+</html>

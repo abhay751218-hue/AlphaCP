@@ -1,0 +1,376 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  alphacp — AlphaCP server CLI  (v0.2.0)
+#  Installed to /usr/local/bin/alphacp by installer/step2-install.sh
+#
+#  Commands:
+#    status                 whole-stack health at a glance
+#    doctor [--fix]         deeper checks + optional auto-fix
+#    task types             allowlisted agent tasks
+#    task run TYPE [JSON]   enqueue a task and WAIT for its result
+#    task list [--limit=N] [--status=S]
+#    task show ID           task + its live logs
+#    agent                  paneld agent status / selftest
+#    logs [paneld|install]  tail the agent / installer log
+#    version
+#
+#  Design rule: this CLI only *talks to the queue* — it never performs
+#  privileged work itself. All privileged work happens in paneld.
+# =============================================================================
+set -euo pipefail
+
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+ENV_FILE="${ACP_HOME}/etc/install.env"       # step-1 facts (os, php versions)
+DB_ENV_FILE="${ACP_HOME}/etc/database.env"   # step-2 facts (db creds, ACP_SERVER_ID)
+DB_CNF="${ACP_HOME}/etc/my.cnf"
+DB_NAME="alphacp"
+PANELD_LOG="${ACP_HOME}/logs/paneld.log"
+INSTALL_LOG="/var/log/alphacp-install.log"
+
+C_RESET=$'\033[0m'; C_BOLD=$'\033[1m'; C_DIM=$'\033[2m'
+C_GREEN=$'\033[32m'; C_RED=$'\033[31m'; C_YELLOW=$'\033[33m'; C_BLUE=$'\033[34m'; C_CYAN=$'\033[36m'
+
+say()  { printf '%s\n' "$*"; }
+ok()   { printf '%s[OK]%s %s\n'   "$C_GREEN"  "$C_RESET" "$*"; }
+warn() { printf '%s[!]%s %s\n'    "$C_YELLOW" "$C_RESET" "$*"; }
+err()  { printf '%s[x]%s %s\n'    "$C_RED"    "$C_RESET" "$*" >&2; }
+info() { printf '%s[i]%s %s\n'    "$C_BLUE"   "$C_RESET" "$*"; }
+head2(){ printf '\n%s%s%s\n' "$C_BOLD$C_CYAN" "$*" "$C_RESET"; }
+
+die() { err "$*"; exit 1; }
+
+need_root() { [[ ${EUID} -eq 0 ]] || die "root chahiye: sudo alphacp $*"; }
+
+db() { # db "SQL"  → tab-separated, no header (newlines escaped → safe to parse)
+  mariadb --defaults-extra-file="$DB_CNF" --batch --skip-column-names "$DB_NAME" -e "$1"
+}
+db_raw() { # like db() but keeps real newlines (pretty output for humans)
+  mariadb --defaults-extra-file="$DB_CNF" --batch --raw --skip-column-names "$DB_NAME" -e "$1"
+}
+db_ok() { db "SELECT 1" >/dev/null 2>&1; }
+
+q() { # safe single-quote escaping for SQL strings
+  printf '%s' "$1" | sed "s/'/''/g"
+}
+
+sql_escape_json() { printf '%s' "$1" | sed "s/'/''/g"; }
+
+jq_or_raw() { # pretty-print JSON if jq exists, else raw
+  if command -v jq >/dev/null 2>&1; then jq . ; else cat; fi
+}
+
+load_install_env() {
+  [[ -f "$ENV_FILE" ]] && . "$ENV_FILE" || true
+}
+
+svc_state() { local s; s="$(systemctl is-active "$1" 2>/dev/null | head -1)"; printf '%s' "${s:-unknown}"; }
+svc_enabled() { local s; s="$(systemctl is-enabled "$1" 2>/dev/null | head -1)"; printf '%s' "${s:-unknown}"; }
+
+# small predicates used by doctor (bash -c quoting se bachne ke liye)
+ufw_active()      { ufw status 2>/dev/null | grep -q 'Status: active'; }
+disk_under_85()   { [[ "$(df --output=pcent / | tail -1 | tr -dc '0-9')" -lt 85 ]]; }
+no_failed_tasks() { [[ "$(db "SELECT COUNT(*) FROM tasks WHERE status='failed' AND created_at > NOW() - INTERVAL 1 DAY" 2>/dev/null || echo 1)" == "0" ]]; }
+no_stale_tasks()  { [[ "$(db "SELECT COUNT(*) FROM tasks WHERE status='running' AND claimed_at < NOW() - INTERVAL 20 MINUTE" 2>/dev/null || echo 1)" == "0" ]]; }
+
+agent_tasks_tsv() { php "${ACP_HOME}/agent/bin/paneld" --tasks 2>/dev/null; }
+acp_server_id() { # single source of truth: database.env written by the step-2 installer
+  local id
+  id="$(grep -E '^ACP_SERVER_ID=' "$DB_ENV_FILE" 2>/dev/null | cut -d= -f2 | tr -dc '0-9')"
+  printf '%s' "${id:-1}"
+}
+task_safety()     { agent_tasks_tsv | awk -F'\t' -v t="$1" '$1==t {print $2; exit}'; }
+
+# ---------------------------------------------------------------------------
+#  status
+# ---------------------------------------------------------------------------
+cmd_status() {
+  load_install_env
+  head2 "AlphaCP status — $(hostname)"
+  say "  installer : ${ACP_INSTALLER_VERSION:-unknown} (profile ${ACP_PROFILE:-?})"
+  say "  os        : ${ACP_OS:-unknown} · ${ACP_ARCH:-?}"
+  say "  php       : primary ${ACP_PHP_PRIMARY:-?} · available ${ACP_PHP_VERSIONS:-?}"
+
+  head2 "Services"
+  local s
+  for s in apache2 "php${ACP_PHP_PRIMARY:-8.3}-fpm" mariadb redis-server bind9 fail2ban paneld; do
+    local st; st="$(svc_state "$s")"
+    printf '  %-16s %s\n' "$s" "$([[ "$st" == active ]] && printf '%sactive%s' "$C_GREEN" "$C_RESET" || printf '%s%s%s' "$C_YELLOW" "$st" "$C_RESET")"
+  done
+  for s in nginx exim4 dovecot pure-ftpd; do
+    local st; st="$(svc_state "$s")"
+    printf '  %-16s %s %s\n' "$s" "$st" "$C_DIM(steps ke saath aayega)$C_RESET"
+  done
+
+  head2 "Task queue"
+  if db_ok; then
+    printf '  queued=%s running=%s success=%s failed=%s\n' \
+      "$(db "SELECT COUNT(*) FROM tasks WHERE status='queued'")" \
+      "$(db "SELECT COUNT(*) FROM tasks WHERE status='running'")" \
+      "$(db "SELECT COUNT(*) FROM tasks WHERE status='success'")" \
+      "$(db "SELECT COUNT(*) FROM tasks WHERE status='failed'")"
+    local last; last="$(db "SELECT CONCAT('#', id, ' ', type, ' → ', status, IFNULL(CONCAT(' (', duration_ms, 'ms)'), '')) FROM tasks ORDER BY id DESC LIMIT 1")"
+    [[ -n "$last" ]] && say "  last: ${last}"
+  else
+    warn "database nahi mil raha — Step 2 installer chalaya?"
+  fi
+
+  head2 "Resources"
+  local mem_pct disk_pct
+  mem_pct=$(free | awk '/Mem:/ {printf "%.0f", $3/$2*100}')
+  disk_pct=$(df --output=pcent / | tail -1 | tr -dc '0-9')
+  say "  memory: ${mem_pct}% used · disk(/): ${disk_pct}% used · load: $(cut -d' ' -f1-3 /proc/loadavg)"
+  say ""
+}
+
+# ---------------------------------------------------------------------------
+#  doctor
+# ---------------------------------------------------------------------------
+cmd_doctor() {
+  local fix=0
+  [[ "${1:-}" == "--fix" ]] && fix=1
+  local fails=0 warns=0
+
+  chk() { # chk "label" "test-cmd..." 
+    local label="$1"; shift
+    if "$@" >/dev/null 2>&1; then printf '  %s✔%s %s\n' "$C_GREEN" "$C_RESET" "$label"
+    else printf '  %s✘%s %s\n' "$C_RED" "$C_RESET" "$label"; fails=$((fails+1)); fi
+  }
+  chkw() {
+    local label="$1"; shift
+    if "$@" >/dev/null 2>&1; then printf '  %s✔%s %s\n' "$C_GREEN" "$C_RESET" "$label"
+    else printf '  %s!%s %s\n' "$C_YELLOW" "$C_RESET" "$label"; warns=$((warns+1)); fi
+  }
+
+  head2 "Doctor"
+  chk  "database config readable"      test -f "$DB_CNF"
+  chk  "database reachable"            db_ok
+  chk  "tasks table present"           db "SELECT COUNT(*) FROM tasks"
+  chk  "paneld service active"         systemctl is-active --quiet paneld
+  chk  "apache2 active"                systemctl is-active --quiet apache2
+  chk  "mariadb active"                systemctl is-active --quiet mariadb
+  chk  "redis active"                  systemctl is-active --quiet redis-server
+  chk  "bind9 active"                  systemctl is-active --quiet bind9
+  chk  "fail2ban active"               systemctl is-active --quiet fail2ban
+  chk  "ufw active"                    ufw_active
+  chk  "agent binary present"          test -x "${ACP_HOME}/agent/bin/paneld"
+  chk  "agent selftest passes"         php "${ACP_HOME}/agent/bin/paneld" --selftest
+  chkw "no failed tasks last 24h"      no_failed_tasks
+  chkw "no stale running tasks (>20m)" no_stale_tasks
+  chkw "disk under 85%"                disk_under_85
+  chkw "quota enforcement on /"        quotaon -p /
+
+  if (( fix )); then
+    head2 "Auto-fix"
+    if ! systemctl is-active --quiet paneld; then
+      info "paneld restart kar rahe hain..."
+      systemctl restart paneld || true
+    fi
+    local stale
+    stale="$(db "SELECT COUNT(*) FROM tasks WHERE status='running' AND claimed_at < NOW() - INTERVAL 20 MINUTE" 2>/dev/null || echo 0)"
+    if [[ "${stale:-0}" != "0" ]]; then
+      info "stale tasks recover kar rahe hain..."
+      php "${ACP_HOME}/agent/bin/paneld" --recover-stale || true
+    fi
+    warn "baaki cheezein manually dekho (ya AI ko report bhejo)"
+  fi
+
+  say ""
+  if (( fails == 0 )); then ok "doctor: sab theek ($fails fail, $warns warn)"
+  else err "doctor: $fails problem, $warns warning"; fi
+  return $(( fails > 0 ? 1 : 0 ))
+}
+
+# ---------------------------------------------------------------------------
+#  task commands
+# ---------------------------------------------------------------------------
+require_db() { db_ok || die "database nahi mil raha (${DB_CNF})"; }
+
+task_types() {
+  php "${ACP_HOME}/agent/bin/paneld" --status 2>/dev/null | awk '/"task_types"/,/]/' | grep -oE '"[a-z0-9.]+"' | tr -d '"' | grep -v task_types || true
+}
+
+cmd_task_types() {
+  head2 "Agent task allowlist (type · safety · description)"
+  agent_tasks_tsv | awk -F'\t' '{printf "  %-22s %-12s %s\n", $1, $2, $3}'
+  say ""
+  info "Naya task add karna ho to: agent/config/tasks.php — docs/08-module-blueprint.md dekho"
+}
+
+cmd_task_run() {
+  require_db
+  local type="${1:-}" ; shift || true
+  local payload='{}' wait_s=60
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --payload=*) payload="${1#*=}" ;;
+      --wait=*)    wait_s="${1#*=}" ;;
+      ''|'{}')     ;;
+      \{*)         payload="$1" ;;
+      *)           die "unknown argument: $1" ;;
+    esac
+    shift
+  done
+
+  [[ -n "$type" ]] || die "usage: alphacp task run <type> [--payload='{...}'] [--wait=60]"
+
+  # Validate payload is JSON before it ever reaches the database.
+  if command -v jq >/dev/null 2>&1; then
+    printf '%s' "$payload" | jq -e . >/dev/null 2>&1 || die "payload valid JSON nahi hai: $payload"
+    payload="$(printf '%s' "$payload" | jq -c .)"
+  fi
+
+  local safety
+  safety="$(task_safety "$type")"
+  [[ -n "$safety" ]] || die "unknown task type '${type}' — allowlist dekho: alphacp task types"
+  if [[ "$safety" == "destructive" ]]; then
+    warn "ye DESTRUCTIVE task hai — payload me _confirm key zaroori hai"
+  fi
+
+  local id
+  id="$(db "INSERT INTO tasks (server_id, type, safety, payload, status, requested_src, created_at, updated_at)
+            VALUES ($(acp_server_id), '$(q "$type")', '$(q "$safety")', '$(sql_escape_json "$payload")', 'queued', 'cli', NOW(), NOW());
+            SELECT LAST_INSERT_ID();")"
+
+  info "task #${id} (${type}) queue me gaya — agent ka intezaar..."
+  local waited=0 status="" result="" error=""
+  while (( waited < wait_s )); do
+    IFS=$'\t' read -r status result error < <(db "SELECT status, IFNULL(result,''), IFNULL(error,'') FROM tasks WHERE id=${id}")
+    case "$status" in
+      success|failed|cancelled) break ;;
+    esac
+    sleep 1; waited=$((waited+1))
+    if (( waited % 5 == 0 )); then printf '  %s...%ss%s\n' "$C_DIM" "$waited" "$C_RESET"; fi
+  done
+
+  say ""
+  case "$status" in
+    success)
+      ok "task #${id} SUCCESS (${waited}s)"
+      say "--- result ---"
+      printf '%s\n' "$result" | jq_or_raw
+      ;;
+    failed)
+      err "task #${id} FAILED: ${error}"
+      cmd_task_show "$id" || true
+      return 1
+      ;;
+    *)
+      warn "task #${id} abhi '${status}' hai (${waited}s baad bhi khatam nahi hua)"
+      info "dekho: alphacp task show ${id}   |   log: alphacp logs paneld"
+      return 1
+      ;;
+  esac
+}
+
+cmd_task_list() {
+  require_db
+  local limit=15 status=""
+  for a in "$@"; do
+    case "$a" in
+      --limit=*)  limit="${a#*=}" ;;
+      --status=*) status="${a#*=}" ;;
+    esac
+  done
+  local where=""
+  [[ -n "$status" ]] && where="WHERE status='$(q "$status")'"
+
+  head2 "Tasks (last ${limit})"
+  db "SELECT CONCAT(LPAD(id,5,' '), '  ', RPAD(type,22,' '), ' ', RPAD(status,8,' '), ' ', IFNULL(CONCAT(duration_ms,'ms'),'-'))
+        FROM tasks ${where} ORDER BY id DESC LIMIT ${limit}" | sed 's/^/  /'
+  say ""
+}
+
+cmd_task_show() {
+  require_db
+  local id="${1:-}"
+  [[ -n "$id" ]] || die "usage: alphacp task show <id>"
+  [[ "$id" =~ ^[0-9]+$ ]] || die "task id number hona chahiye"
+
+  head2 "Task #${id}"
+  db_raw "SELECT CONCAT('type     : ', type, CHAR(10),
+                     'safety   : ', safety, CHAR(10),
+                     'status   : ', status, CHAR(10),
+                     'attempts : ', attempts, '/', max_attempts, CHAR(10),
+                     'source   : ', requested_src, CHAR(10),
+                     'created  : ', created_at, CHAR(10),
+                     'finished : ', IFNULL(finished_at,'-'), CHAR(10),
+                     'duration : ', IFNULL(CONCAT(duration_ms,' ms'),'-'), CHAR(10),
+                     'payload  : ', payload, CHAR(10),
+                     'error    : ', IFNULL(error,'-'), CHAR(10),
+                     'result   : ', IFNULL(result,'-'))
+        FROM tasks WHERE id=${id}"
+
+  head2 "Logs"
+  db_raw "SELECT CONCAT(LPAD(id,4,' '), ' [', RPAD(level,7,' '), '] ', line) FROM task_logs WHERE task_id=${id} ORDER BY id" | sed 's/^/  /'
+  say ""
+}
+
+# ---------------------------------------------------------------------------
+#  agent passthrough
+# ---------------------------------------------------------------------------
+cmd_agent() {
+  case "${1:-status}" in
+    status)   php "${ACP_HOME}/agent/bin/paneld" --status ;;
+    selftest) php "${ACP_HOME}/agent/bin/paneld" --selftest ;;
+    restart)  need_root restart; systemctl restart paneld && ok "paneld restarted" ;;
+    recover)  php "${ACP_HOME}/agent/bin/paneld" --recover-stale ;;
+    *)        die "usage: alphacp agent [status|selftest|restart|recover]" ;;
+  esac
+}
+
+cmd_logs() {
+  case "${1:-paneld}" in
+    paneld)  tail -n "${2:-40}" "$PANELD_LOG" 2>/dev/null || warn "no paneld log yet" ;;
+    install) tail -n "${2:-40}" "$INSTALL_LOG" 2>/dev/null || warn "no install log" ;;
+    *)       die "usage: alphacp logs [paneld|install] [lines]" ;;
+  esac
+}
+
+cmd_version() {
+  load_install_env
+  say "alphacp CLI 0.2.0 · installer ${ACP_INSTALLER_VERSION:-?} · $(php "${ACP_HOME}/agent/bin/paneld" --version 2>/dev/null || echo 'paneld unknown')"
+}
+
+cmd_help() {
+  say ""
+  say "${C_BOLD}alphacp${C_RESET} v0.2.0 — AlphaCP server CLI"
+  say ""
+  say "  ${C_BOLD}status${C_RESET}                      stack health ek nazar me"
+  say "  ${C_BOLD}doctor${C_RESET} [--fix]              deep checks (+auto-fix)"
+  say "  ${C_BOLD}task types${C_RESET}                  agent ke allowlisted tasks"
+  say "  ${C_BOLD}task run${C_RESET} TYPE [--payload=J] task chalao aur result dekho"
+  say "  ${C_BOLD}task list${C_RESET} [--limit=N]       recent tasks"
+  say "  ${C_BOLD}task show${C_RESET} ID                 task + live logs"
+  say "  ${C_BOLD}agent${C_RESET} [status|selftest|restart|recover]"
+  say "  ${C_BOLD}logs${C_RESET} [paneld|install] [n]   log tail"
+  say "  ${C_BOLD}version${C_RESET}"
+  say ""
+  say "  Examples:"
+  say "    sudo alphacp task run system.info"
+  say "    sudo alphacp task run agent.ping"
+  say "    sudo alphacp task run service.status"
+  say ""
+}
+
+# ---------------------------------------------------------------------------
+main() {
+  local cmd="${1:-help}"; shift || true
+  case "$cmd" in
+    status)      cmd_status "$@" ;;
+    doctor)      cmd_doctor "$@" ;;
+    task)        case "${1:-list}" in
+                   types) cmd_task_types ;;
+                   run)   shift; cmd_task_run "$@" ;;
+                   list)  shift; cmd_task_list "$@" ;;
+                   show)  shift; cmd_task_show "$@" ;;
+                   *)     die "usage: alphacp task [types|run|list|show]" ;;
+                 esac ;;
+    agent)       cmd_agent "$@" ;;
+    logs)        cmd_logs "$@" ;;
+    version|-v|--version) cmd_version ;;
+    help|-h|--help|"")    cmd_help ;;
+    *)           err "unknown command: $cmd"; cmd_help; exit 2 ;;
+  esac
+}
+
+main "$@"
