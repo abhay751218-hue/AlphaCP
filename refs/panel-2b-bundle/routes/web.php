@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\TwoFactorController;
@@ -64,6 +65,22 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         Route::get('/sessions', [SecurityController::class, 'sessions'])->name('sessions');
         Route::delete('/sessions/{id}', [SecurityController::class, 'destroySession'])->name('sessions.destroy');
     });
+
+    // -- Hosting accounts (Step 3). /create MUST sit before /{account}.
+    Route::get('/accounts', [AccountsController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('accounts.index');
+    Route::get('/accounts/create', [AccountsController::class, 'create'])
+        ->middleware('perm:accounts.create')->name('accounts.create');
+    Route::post('/accounts', [AccountsController::class, 'store'])
+        ->middleware('perm:accounts.create')->name('accounts.store');
+    Route::get('/accounts/{account}', [AccountsController::class, 'show'])
+        ->middleware('perm:accounts.view')->name('accounts.show');
+    Route::post('/accounts/{account}/suspend', [AccountsController::class, 'suspend'])
+        ->middleware('perm:accounts.suspend')->name('accounts.suspend');
+    Route::post('/accounts/{account}/unsuspend', [AccountsController::class, 'unsuspend'])
+        ->middleware('perm:accounts.suspend')->name('accounts.unsuspend');
+    Route::post('/accounts/{account}/terminate', [AccountsController::class, 'terminate'])
+        ->middleware('perm:accounts.terminate')->name('accounts.terminate');
 
     // -- Users (panel logins) -------------------------------------------------
     Route::middleware('perm:users.view')->group(function (): void {

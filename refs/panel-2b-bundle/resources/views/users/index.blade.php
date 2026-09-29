@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'User Manager')
-@section('subtitle', 'Panel logins (hosting ACCOUNTS Step 3 me aayenge)')
+@section('subtitle', 'Panel logins — hosting accounts alag page par hain (Accounts)')
 
 @section('actions')
     @can('users.manage')

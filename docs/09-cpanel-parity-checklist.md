@@ -192,14 +192,14 @@
 ### Account Functions / Information
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 104 | Create a New Account | S3 | ⏳ S3 |
-| 105 | List Accounts | S3 | ⏳ S3 |
-| 106 | Modify an Account | S3 | ⏳ S3 |
-| 107 | Suspend / Unsuspend (Manage Account Suspension) | S3 | ⏳ S3 |
-| 108 | Terminate Accounts | S3 | ⏳ S3 |
+| 104 | Create a New Account | S3 | ✅ |
+| 105 | List Accounts | S3 | ✅ |
+| 106 | Modify an Account | S3 | 🟡 S3 (show page; full edit S4) |
+| 107 | Suspend / Unsuspend (Manage Account Suspension) | S3 | ✅ |
+| 108 | Terminate Accounts | S3 | ✅ |
 | 109 | Upgrade / Downgrade an Account | S4 | ⏳ S4 |
 | 110 | Quota Modification | S4 | ⏳ S4 |
-| 111 | Password Modification + Force Password Change | S3 | ⏳ S3 |
+| 111 | Password Modification + Force Password Change | S3 | 🟡 S3 (create generates + force-change; dedicated reset S4) |
 | 112 | Change Site's IP Address | S3 | ⏳ S3 |
 | 113 | Rearrange an Account | S15 | ⏳ S15 |
 | 114 | Limit/Reset Bandwidth Usage + Unsuspend Bandwidth Exceeders | S11 | ⏳ S11 |
@@ -208,7 +208,7 @@
 | 117 | Email All Users | S11 | ⏳ S11 |
 | 118 | Web Template Editor | S5 | ⏳ S5 |
 | 119 | List Parked Domains / List Subdomains | S5 | ⏳ S5 |
-| 120 | List Suspended Accounts / Show Accounts Over Quota | S3 | ⏳ S3 |
+| 120 | List Suspended Accounts / Show Accounts Over Quota | S3 | 🟡 S3 (status on list; over-quota S11) |
 | 121 | View Bandwidth Usage | S11 | ⏳ S11 |
 | 122 | Manage Demo Mode | S15 | ⏳ S15 |
 

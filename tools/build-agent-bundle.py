@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Build the reproducible code-only Laravel 13 panel payload.
+"""Build a reproducible paneld tarball from agent/.
 
-Source of truth: refs/panel-2b-bundle/
-Output: artifacts/panel-code-<version>.tar.gz  (version = refs/panel-2b-bundle/MANIFEST.json)
-
-The installer runs Composer on the target server, so vendor/ is intentionally
-not included. A zero-mtime tar + gzip makes the SHA-256 reproducible.
+Output: artifacts/agent-<version>.tar.gz
+Version is ACP_AGENT_VERSION in agent/src/Bootstrap.php.
+Prefix inside the tar: agent/
 """
 
 from __future__ import annotations
@@ -13,15 +11,19 @@ from __future__ import annotations
 import gzip
 import hashlib
 import io
-import json
 import pathlib
+import re
 import tarfile
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SOURCE = ROOT / "refs" / "panel-2b-bundle"
-VERSION = json.loads((SOURCE / "MANIFEST.json").read_text())["version"]
-OUTPUT = ROOT / "artifacts" / f"panel-code-{VERSION}.tar.gz"
-EXCLUDED = {"database/database.sqlite", ".phpunit.result.cache"}
+SOURCE = ROOT / "agent"
+BOOT = (SOURCE / "src" / "Bootstrap.php").read_text()
+match = re.search(r"define\('ACP_AGENT_VERSION',\s*'([^']+)'\)", BOOT)
+if not match:
+    raise SystemExit("ACP_AGENT_VERSION missing in agent/src/Bootstrap.php")
+VERSION = match.group(1)
+OUTPUT = ROOT / "artifacts" / f"agent-{VERSION}.tar.gz"
+EXCLUDED = {".phpunit.result.cache"}
 
 
 def build() -> tuple[bytes, int]:
@@ -33,15 +35,16 @@ def build() -> tuple[bytes, int]:
             relative = path.relative_to(SOURCE).as_posix()
             if relative in EXCLUDED:
                 continue
-            info = tar.gettarinfo(str(path), arcname=f"panel/{relative}")
+            info = tar.gettarinfo(str(path), arcname=f"agent/{relative}")
             info.uid = info.gid = 0
             info.uname = info.gname = "root"
             info.mtime = 0
-            info.mode = 0o755 if path.name == "artisan" else 0o644
+            info.mode = 0o755 if path.name == "paneld" or path.suffix == ".php" and path.parent.name == "bin" else 0o644
+            if path.name == "paneld":
+                info.mode = 0o755
             with path.open("rb") as handle:
                 tar.addfile(info, handle)
             count += 1
-
     compressed = io.BytesIO()
     with gzip.GzipFile(filename="", mode="wb", fileobj=compressed, compresslevel=9, mtime=0) as stream:
         stream.write(raw.getvalue())
