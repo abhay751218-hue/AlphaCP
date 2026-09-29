@@ -14,23 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-_(panel-update 0.8.0 — SSL/TLS — updater pin ke baad)_
-
-## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
-
-### panel-update 0.7.0 — Step 5: MultiPHP + Cron
+### panel-update 0.8.0 — Step 5: SSL/TLS Status (self-signed)
 ```bash
-sudo alphacp-sync get ca2f33728a159db403ced1ebe4dea0f64d63895b installer/panel-update.sh /tmp/acp-panel-update-0.7.0.sh a60a6bbc34deef8e86a86292731831a0d895c5d0f16df8e22e78b32d9c64d868 && sudo bash /tmp/acp-panel-update-0.7.0.sh
+sudo alphacp-sync get e854e3a2e6e5c4ff9d54b20c489937a3709ce12a installer/panel-update.sh /tmp/acp-panel-update-0.8.0.sh 034387dedf5d12fa0eabf9d53ec6f31d5a5327ecf3f6da293cb620cb84b4fc1a && sudo bash /tmp/acp-panel-update-0.8.0.sh
 ```
-- sha256: `a60a6bbc34deef8e86a86292731831a0d895c5d0f16df8e22e78b32d9c64d868`
-- Expected: banner `updater 0.7.0` → agent **0.4.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: MultiPHP Manager + Cron Jobs. WHM account page se bhi PHP.
+- sha256: `034387dedf5d12fa0eabf9d53ec6f31d5a5327ecf3f6da293cb620cb84b4fc1a`
+- Expected: banner `updater 0.8.0` → agent **0.5.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: SSL/TLS Status (self-signed issue/remove). Let's Encrypt AutoSSL next.
+- WHM: Create Account / packages / user manager. Customer ko Create Account nahi dikhega.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **76/0**, provision-sim **33/33**, update-sim **66/66**.
+- Test: panel-tests **80/0**, provision-sim **34/34**, update-sim **68/68**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.7.0 (`ca2f337…`) → panel 0.7.0 + agent 0.4.0 | 29 Sep 02:57Z | ✅ UPDATE COMPLETE, HTTP 200, MultiPHP + Cron, php-all 7.4–8.4 |
 | panel-update 0.6.0 (`48f94a6…`) → panel 0.6.0 + agent 0.3.0 | 29 Sep 02:41Z | ✅ UPDATE COMPLETE, HTTP 200, domains migration, WHM/cPanel split |
 | panel-update 0.5.0 (`35b2497…`) → panel 0.5.0 + agent 0.2.0 | 29 Sep 01:21Z | ✅ UPDATE COMPLETE, HTTP 200, packages migration, trial same |
 | panel-update 0.4.0 (`430ccf0…`) → panel 0.4.0 + agent 0.2.0 | 29 Sep 01:07Z | ✅ UPDATE COMPLETE, HTTP 200, accounts routes + migration, trial same |
