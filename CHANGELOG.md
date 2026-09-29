@@ -7,7 +7,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 ### Added
 - **Step 5 Indexes (29 Sep)** — Apache directory listing (`off`/`simple`/`fancy`)
   via `indexes.set`. Panel **0.12.0**, agent **0.9.0**.
-  Tests: panel **95/0**, provision-sim **40/40**.
+  Tests: panel **95/0**, provision-sim **40/40**, update-sim **76/76**.
+  Deploy via `panel-update.sh` 0.12.0.
 - **Step 5 Error Pages (29 Sep)** — custom 400/401/403/404/500/503 HTML via
   `errorpages.set` (Apache ErrorDocument). Panel **0.11.0**, agent **0.8.0**.
   Tests: panel **91/0**, provision-sim **39/39**.

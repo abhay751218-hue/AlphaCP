@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.11.0 — Step 5: Error Pages
+### panel-update 0.12.0 — Step 5: Indexes
 ```bash
-sudo alphacp-sync get 14e8fcf8112e8abdb2d9b944634557daa32d4afa installer/panel-update.sh /tmp/acp-panel-update-0.11.0.sh 5aac7bb46629191f054c88c1723bbe7c2c421ee3f4976f1e9d8bd6c37dd0d5c2 && sudo bash /tmp/acp-panel-update-0.11.0.sh
+sudo alphacp-sync get be1ba8c8f9d2e5635af208b94ec9f6538314384f installer/panel-update.sh /tmp/acp-panel-update-0.12.0.sh 40c2a6e83a207a80b323918d9362bfdf2637a1b9b30d79c1e9fc6c77bbada63a && sudo bash /tmp/acp-panel-update-0.12.0.sh
 ```
-- sha256: `5aac7bb46629191f054c88c1723bbe7c2c421ee3f4976f1e9d8bd6c37dd0d5c2`
-- Expected: banner `updater 0.11.0` → agent **0.8.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Error Pages (400/401/403/404/500/503 HTML). PHP/SSI reject.
-- WHM: Create Account / packages / user manager. Customer ko Create Account nahi dikhega.
+- sha256: `40c2a6e83a207a80b323918d9362bfdf2637a1b9b30d79c1e9fc6c77bbada63a`
+- Expected: banner `updater 0.12.0` → agent **0.9.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Indexes (off / simple / fancy directory listing). Error Pages, INI, AutoSSL same.
+- WHM: Create Account / packages / user manager. Customer ko Indexes tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **91/0**, provision-sim **39/39**, update-sim **74/74**.
+- Test: panel-tests **95/0**, provision-sim **40/40**, update-sim **76/76**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.11.0 (`14e8fcf…`) → panel 0.11.0 + agent 0.8.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Error Pages |
 | panel-update 0.10.0 (`fd5cb6f…`) → panel 0.10.0 + agent 0.7.0 | 29 Sep 03:41Z | ✅ UPDATE COMPLETE, HTTP 200, MultiPHP INI Editor |
 | panel-update 0.9.0 (`2060887…`) → panel 0.9.0 + agent 0.6.0 | 29 Sep 03:30Z | ✅ UPDATE COMPLETE, HTTP 200, AutoSSL Let's Encrypt |
 | panel-update 0.8.0 (`e854e3a…`) → panel 0.8.0 + agent 0.5.0 | 29 Sep 03:17Z | ✅ UPDATE COMPLETE, HTTP 200, SSL/TLS Status self-signed |
