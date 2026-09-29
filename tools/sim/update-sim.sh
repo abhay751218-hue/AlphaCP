@@ -8,7 +8,8 @@
 #            composer : 0.3.0 bundle ka vendor/ (composer.lock same hona chahiye — check hota hai)
 #            systemctl: doctor-sim ka stub
 #  U1 normal update 0.3.0 -> 0.3.2      U2 sha256 mismatch -> kuch nahi chhedta
-#  U3 health fail -> auto rollback       U4 backups prune (KEEP=1)      U5 alphacp-sync hook
+#  U3 health fail -> auto rollback       U4 backups prune (KEEP=1) + sync-tool checksum fail
+#  U1 me alphacp-sync v1.0 -> v1.1 upgrade + sync hook bhi
 # =============================================================================
 set -uo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -31,12 +32,17 @@ rm -rf "${U}"; mkdir -p "${U}/bin" "${U}/state"
 TMPV="$(mktemp -d)"; unzip -q -o "${REPO}/alphacp-code-bundle.zip" artifacts/panel-bundle-0.3.0.tar.gz -d "${TMPV}"
 cp "${TMPV}/artifacts/panel-bundle-0.3.0.tar.gz" "${U}/vendor-bundle.tar.gz"; rm -rf "${TMPV}"
 cp "${ART}" "${U}/artifact.tar.gz"
+cp "${REPO}/installer/alphacp-sync.sh" "${U}/sync-v11.sh"
+SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
+install_old_sync() { mkdir -p "${ACP_HOME}/bin"; git -C "${REPO}" show aa2091dc3ee28850266b8348aea1ea89408c64c2:installer/alphacp-sync.sh > "${SYNC_BIN}"; chmod 0755 "${SYNC_BIN}"; }
+install_old_sync   # server par v1.0 setup hai
 SHA="$(sha256sum "${ART}" | cut -d' ' -f1)"
 
 cat > "${U}/bin/curl" <<'EOF'
 #!/bin/bash
 # download -> local artifact ; 127.0.0.1:8090 -> doctor-sim ka asli-Laravel curl stub
 out=""; url=""; for a in "$@"; do [[ "$prev" == "-o" ]] && out="$a"; [[ "$a" == http* ]] && url="$a"; prev="$a"; done
+if [[ "$url" == *raw.githubusercontent.com*/installer/alphacp-sync.sh ]]; then echo "download $url" >> /tmp/updsim/state/calls.log; if [[ -n "$out" ]]; then cp /tmp/updsim/sync-v11.sh "$out"; else cat /tmp/updsim/sync-v11.sh; fi; exit 0; fi
 if [[ "$url" == *raw.githubusercontent.com* ]]; then echo "download $url" >> /tmp/updsim/state/calls.log; if [[ -n "$out" ]]; then cp /tmp/updsim/artifact.tar.gz "$out"; else cat /tmp/updsim/artifact.tar.gz; fi; exit 0; fi
 if [[ "$url" == *127.0.0.1:8090* && -f /tmp/updsim/state/fail-health-once ]]; then
   rm -f /tmp/updsim/state/fail-health-once; echo "health FORCED 500" >> /tmp/updsim/state/calls.log
@@ -81,7 +87,11 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.2.0'" grep -q "updater 0.2.0" "${U}/update-U1.out"
+chk "banner 'updater 0.2.1'" grep -q "updater 0.2.1" "${U}/update-U1.out"
+chk "alphacp-sync v1.0 -> v1.1 upgrade hua" grep -q '^SYNC_VERSION="1.1"' "${SYNC_BIN}"
+chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
+chk "sync tool 0755" test "$(stat -c %a "${SYNC_BIN}")" = 755
+chk "'alphacp-sync v1.1 install hua' dikha" grep -q "alphacp-sync v1.1 install hua" "${U}/update-U1.out"
 chk "'Update complete'" grep -q "UPDATE COMPLETE" "${U}/update-U1.out"
 chk "download commit-pinned URL se (branch nahi)" grep -qE "download https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/[0-9a-f]{40}/" "${U}/state/calls.log"
 chk "MANIFEST version = ${ART_VER}" test "$(panel_ver)" = "${ART_VER}"
@@ -126,7 +136,10 @@ chk "admin password hash same" pw_works
 
 # ================================================================= U4
 echo; echo "=== U4: backups prune (ACP_KEEP_BACKUPS=1) ==="
-sleep 1; run_update U4 ACP_KEEP_BACKUPS=1; rc=$?
+sleep 1; install_old_sync
+run_update U4 ACP_KEEP_BACKUPS=1 ACP_SYNC_TOOL_SHA256=badbadbad; rc=$?
+chk "sync tool checksum galat -> warning, v1.0 hi rehta" grep -q '^SYNC_VERSION="1.0"' "${SYNC_BIN}"
+chk "sync tool fail par bhi panel update safal" grep -q "UPDATE COMPLETE" "${U}/update-U4.out"
 chk "exit 0" test ${rc} -eq 0
 chk "sirf 1 backup bacha" test "$(nbackups)" -eq 1
 chk "'purana backup hataya' log" grep -q "purana backup hataya" "${U}/update-U4.out"

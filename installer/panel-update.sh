@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.2.0  ·  default panel bundle 0.3.2
+# updater 0.2.1  ·  default panel bundle 0.3.2  ·  alphacp-sync v1.1
+#
+# 0.2.1: alphacp-sync pehle se setup ho to use v1.1 par upgrade (sha-verified), phir sync.
 #
 # 0.2.0: version/URL/SHA ek jagah (commit-pinned URL, branch nahi), .env ACP_VERSION update,
 #        sirf aakhri 3 backups rakhta hai, end me alphacp-sync (GitHub auto-update).
@@ -17,11 +19,14 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.2.0"
+UPDATER_VERSION="0.2.1"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.3.2}"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/6001033f0ee6e76614a390bc394e8d7e76ea4bdf/artifacts/panel-code-0.3.2.tar.gz}"
 BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
+SYNC_TOOL_VERSION="1.1"
+SYNC_TOOL_URL="${ACP_SYNC_TOOL_URL:-https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/8cffb0c3bded2806481ead4f7b043a6c75d49277/installer/alphacp-sync.sh}"
+SYNC_TOOL_SHA256="${ACP_SYNC_TOOL_SHA256:-427512d87d5573bfbdf6a8d3a07d8505d3dd72738ffe7cfabc9c41c2052914f3}"
 LOG_FILE="/var/log/alphacp-panel-update.log"
 STAMP="$(date -u +%Y%m%d%H%M%S)"
 RELEASES="${ACP_HOME}/releases"
@@ -238,6 +243,19 @@ say "URL: https://127.0.0.1:${PANEL_PORT}/"
 # purane backups: sirf aakhri KEEP_BACKUPS rakho (disk na bhare)
 mapfile -t OLD_BACKUPS < <(ls -1d "${RELEASES}"/panel-backup-* 2>/dev/null | sort | head -n "-${KEEP_BACKUPS}")
 for d in "${OLD_BACKUPS[@]}"; do [[ -n "${d}" && -d "${d}" ]] && rm -rf "${d}" && info "purana backup hataya: $(basename "${d}")"; done
+
+# alphacp-sync tool upgrade (sirf agar pehle se setup hai; deploy key wahi rehti hai)
+SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
+if [[ -x "${SYNC_BIN}" ]] && ! grep -q "^SYNC_VERSION=\"${SYNC_TOOL_VERSION}\"" "${SYNC_BIN}"; then
+  if curl -fsSL --retry 3 --connect-timeout 20 --max-time 60 "${SYNC_TOOL_URL}" -o "${TMP_DIR}/alphacp-sync.sh" \
+     && [[ "$(sha256sum "${TMP_DIR}/alphacp-sync.sh" | awk '{print $1}')" == "${SYNC_TOOL_SHA256}" ]] \
+     && bash -n "${TMP_DIR}/alphacp-sync.sh"; then
+    install -m 0755 "${TMP_DIR}/alphacp-sync.sh" "${SYNC_BIN}"
+    ok "alphacp-sync v${SYNC_TOOL_VERSION} install hua"
+  else
+    warn "alphacp-sync v${SYNC_TOOL_VERSION} download/checksum fail — purana sync tool hi chalega"
+  fi
+fi
 
 # GitHub ko bhi update karo (alphacp-sync setup ho to) — fail ho to bhi update safal hai
 if command -v alphacp-sync >/dev/null 2>&1; then
