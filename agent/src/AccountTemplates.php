@@ -32,6 +32,7 @@ final class AccountTemplates
     IncludeOptional {$home}/etc/indexes.conf
     IncludeOptional {$home}/etc/errorpages.conf
     IncludeOptional {$home}/etc/mime.conf
+    IncludeOptional {$home}/etc/handlers.conf
 
     ErrorLog {$logs}/error.log
     CustomLog {$logs}/access.log combined
@@ -76,6 +77,7 @@ CONF;
     IncludeOptional {$home}/etc/indexes.conf
     IncludeOptional {$home}/etc/errorpages.conf
     IncludeOptional {$home}/etc/mime.conf
+    IncludeOptional {$home}/etc/handlers.conf
 
     ErrorLog {$logs}/ssl-error.log
     CustomLog {$logs}/ssl-access.log combined
@@ -149,6 +151,17 @@ php_admin_value[session.save_path] = {$home}/tmp
 php_admin_flag[allow_url_fopen] = on
 {$extra}
 CONF;
+    }
+
+    /** @param list<array{handler: string, ext: string}> $mappings */
+    public static function handlersConf(array $mappings): string
+    {
+        $lines = ['# AlphaCP apache handlers — managed file, do not edit by hand'];
+        foreach ($mappings as $row) {
+            $lines[] = 'AddHandler ' . $row['handler'] . ' .' . $row['ext'];
+        }
+
+        return implode("\n", $lines) . "\n";
     }
 
     /** @param list<array{mime: string, ext: string}> $mappings */

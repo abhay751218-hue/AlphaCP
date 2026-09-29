@@ -153,7 +153,7 @@
 | 78 | Indexes | Directory listing control | S5 | ✅ (account-level off/simple/fancy) |
 | 79 | Error Pages | Custom 404/500 etc. | S5 | ✅ (account-level 4xx/5xx HTML) |
 | 80 | MIME Types | Custom MIME | S5 | ✅ (account-level AddType; PHP/CGI/SSI blocked) |
-| 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 |
+| 81 | Apache Handlers | Custom handlers | S5 | ✅ (account-level AddHandler; PHP/proxy blocked) |
 | 82 | Network Tools | Ping/traceroute/lookup | S11 | ⏳ S11 |
 | 83 | Terminal | Browser SSH (jailed) | S6 | ⏳ S6 |
 | 84 | Hotlink Protection | Image hotlink block | S13 | ⏳ S13 |

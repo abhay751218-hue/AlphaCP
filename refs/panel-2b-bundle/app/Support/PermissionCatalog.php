@@ -79,6 +79,10 @@ final class PermissionCatalog
                 ['mime.view', 'View MIME types'],
                 ['mime.manage', 'Add/remove MIME types'],
             ],
+            'handlers' => [
+                ['handlers.view', 'View Apache handlers'],
+                ['handlers.manage', 'Add/remove Apache handlers'],
+            ],
             'databases' => [
                 ['databases.view', 'View databases'],
                 ['databases.manage', 'Create/manage databases'],
@@ -143,6 +147,7 @@ final class PermissionCatalog
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
                 'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
                 'indexes.view', 'indexes.manage', 'mime.view', 'mime.manage',
+                'handlers.view', 'handlers.manage',
             ],
 
             'user' => [
@@ -152,6 +157,7 @@ final class PermissionCatalog
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
                 'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
                 'indexes.view', 'indexes.manage', 'mime.view', 'mime.manage',
+                'handlers.view', 'handlers.manage',
             ],
 
             'mail' => [
