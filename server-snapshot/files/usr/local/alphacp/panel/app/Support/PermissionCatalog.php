@@ -120,8 +120,8 @@ final class PermissionCatalog
 
             'user' => [
                 'core.access', 'core.self', 'files.view', 'files.manage',
-                'email.view', 'email.manage', 'domains.view', 'databases.view',
-                'dns.view', 'backup.view', 'metrics.view',
+                'email.view', 'email.manage', 'domains.view', 'domains.manage',
+                'databases.view', 'dns.view', 'backup.view', 'metrics.view',
             ],
 
             'mail' => [

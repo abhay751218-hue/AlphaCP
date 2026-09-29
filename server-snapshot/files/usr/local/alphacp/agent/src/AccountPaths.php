@@ -58,6 +58,27 @@ final class AccountPaths
         return $this->apacheEnabled . '/acp-' . $username . '.conf';
     }
 
+    /** Extra (addon/sub/parked/redirect) vhost slug from a validated FQDN. */
+    public function vhostSlug(string $domain): string
+    {
+        $slug = strtolower((string) preg_replace('/[^a-z0-9]+/', '-', $domain));
+        $slug = trim($slug, '-');
+        if ($slug === '') {
+            $slug = 'domain';
+        }
+        return substr($slug, 0, 80);
+    }
+
+    public function vhostExtra(string $username, string $domain): string
+    {
+        return $this->apacheSites . '/acp-' . $username . '-' . $this->vhostSlug($domain) . '.conf';
+    }
+
+    public function vhostExtraEnabled(string $username, string $domain): string
+    {
+        return $this->apacheEnabled . '/acp-' . $username . '-' . $this->vhostSlug($domain) . '.conf';
+    }
+
     public function pool(string $username): string
     {
         return $this->phpPoolDir . '/acp-' . $username . '.conf';

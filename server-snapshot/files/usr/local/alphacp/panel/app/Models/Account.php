@@ -48,6 +48,11 @@ class Account extends Model
         return $this->hasMany(AccountEvent::class);
     }
 
+    public function domains(): HasMany
+    {
+        return $this->hasMany(Domain::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

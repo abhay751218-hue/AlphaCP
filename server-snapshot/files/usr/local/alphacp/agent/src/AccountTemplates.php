@@ -36,6 +36,22 @@ final class AccountTemplates
 CONF;
     }
 
+    public static function redirectVhost(string $username, string $domain, string $target, int $code = 301): string
+    {
+        $code = $code === 302 ? 302 : 301;
+
+        return <<<CONF
+# AlphaCP redirect vhost — managed file, do not edit by hand
+<VirtualHost *:80>
+    ServerName {$domain}
+    ServerAlias www.{$domain}
+    ServerAdmin {$username}@{$domain}
+    Redirect {$code} / {$target}
+</VirtualHost>
+
+CONF;
+    }
+
     public static function suspendedVhost(string $username, string $domain, string $suspendedRoot): string
     {
         return <<<CONF

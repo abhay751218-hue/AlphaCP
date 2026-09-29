@@ -30,6 +30,7 @@ final class AccountTerminate implements TaskInterface
         }
 
         $os = new AccountOs($ctx->cmd, new SafeFs($ctx->paths), AccountPaths::fromEnv(), $ctx->log);
+        $os->removeExtraVhosts($username);
         $os->removeVhost($username);
         $os->removePool($username);
         try {

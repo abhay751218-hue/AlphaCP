@@ -144,6 +144,109 @@ final class AccountOs
         $this->enableVhost($username);
     }
 
+    public function assertDocrootInHome(string $username, string $docroot): string
+    {
+        $home = $this->paths->home($username);
+        $real = $this->fs->assert($docroot);
+        $prefix = rtrim($home, '/') . '/';
+        if ($real !== rtrim($home, '/') && !str_starts_with($real, $prefix)) {
+            throw new RuntimeException('document_root outside account home');
+        }
+        return $real;
+    }
+
+    public function ensureDocroot(string $username, string $docroot): string
+    {
+        $real = $this->assertDocrootInHome($username, $docroot);
+        $this->fs->mkdir($real, 0755);
+        $this->fs->chownName($real, $username);
+        $index = $real . '/index.html';
+        if (!$this->fs->isFile($index)) {
+            $this->fs->write($index, AccountTemplates::welcomePage($username), 0644);
+            $this->fs->chownName($index, $username);
+        }
+        return $real;
+    }
+
+    public function writeExtraVhost(
+        string $username,
+        string $domain,
+        string $type,
+        string $docroot,
+        ?string $redirectUrl = null,
+        int $redirectCode = 301,
+    ): void {
+        if ($type === 'redirect') {
+            $target = (string) $redirectUrl;
+            if ($target === '' || !preg_match('#^https?://#i', $target)) {
+                throw new RuntimeException('redirect_url must be http(s)');
+            }
+            $body = AccountTemplates::redirectVhost($username, $domain, $target, $redirectCode);
+        } else {
+            $home = $this->paths->home($username);
+            $real = $this->assertDocrootInHome($username, $docroot);
+            $body = AccountTemplates::vhost(
+                $username,
+                $domain,
+                $home,
+                $real,
+                $this->paths->socketName($username),
+            );
+        }
+        $this->fs->write($this->paths->vhostExtra($username, $domain), $body, 0644);
+        $this->enableExtraVhost($username, $domain);
+    }
+
+    public function enableExtraVhost(string $username, string $domain): void
+    {
+        $available = $this->paths->vhostExtra($username, $domain);
+        $enabled = $this->paths->vhostExtraEnabled($username, $domain);
+        if (!$this->fs->isFile($available)) {
+            throw new RuntimeException("extra vhost missing: {$available}");
+        }
+        $this->fs->symlink($available, $enabled);
+    }
+
+    public function removeExtraVhost(string $username, string $domain): void
+    {
+        $this->fs->unlink($this->paths->vhostExtraEnabled($username, $domain));
+        $this->fs->unlink($this->paths->vhostExtra($username, $domain));
+    }
+
+    /** @return list<string> available extra vhost paths */
+    public function listExtraVhosts(string $username): array
+    {
+        $dir = $this->fs->assert($this->paths->apacheSites);
+        $prefix = 'acp-' . $username . '-';
+        $out = [];
+        foreach (glob($dir . '/' . $prefix . '*.conf') ?: [] as $file) {
+            $out[] = $file;
+        }
+        return $out;
+    }
+
+    public function disableExtraVhosts(string $username): void
+    {
+        foreach ($this->listExtraVhosts($username) as $available) {
+            $this->fs->unlink($this->paths->apacheEnabled . '/' . basename($available));
+        }
+    }
+
+    public function enableExtraVhosts(string $username): void
+    {
+        foreach ($this->listExtraVhosts($username) as $available) {
+            $this->fs->symlink($available, $this->paths->apacheEnabled . '/' . basename($available));
+        }
+    }
+
+    public function removeExtraVhosts(string $username): void
+    {
+        foreach ($this->listExtraVhosts($username) as $available) {
+            $this->fs->unlink($this->paths->apacheEnabled . '/' . basename($available));
+            $this->fs->unlink($available);
+        }
+    }
+
     public function enableVhost(string $username): void
     {
         $available = $this->paths->vhost($username);

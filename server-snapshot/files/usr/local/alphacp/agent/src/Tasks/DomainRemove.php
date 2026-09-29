@@ -10,11 +10,11 @@ use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskRejectedException;
 
 /**
- * account.suspend — lock Linux user, swap vhost to suspended page, disable pool.
+ * domain.remove — drop extra vhost. Docroot files stay (cPanel-like).
  *
- * @acp-task account.suspend
+ * @acp-task domain.remove
  */
-final class AccountSuspend implements TaskInterface
+final class DomainRemove implements TaskInterface
 {
     public function handle(array $payload, TaskContext $ctx): array
     {
@@ -25,22 +25,18 @@ final class AccountSuspend implements TaskInterface
             throw new TaskRejectedException($err);
         }
         if ($ctx->paths === null) {
-            throw new TaskRejectedException('account.suspend requires PathGuard roots');
+            throw new TaskRejectedException('domain.remove requires PathGuard roots');
         }
 
         $os = new AccountOs($ctx->cmd, new SafeFs($ctx->paths), AccountPaths::fromEnv(), $ctx->log);
-        $os->lockUser($username);
-        $os->writeSuspendedVhost($username, $domain);
-        $os->disableExtraVhosts($username);
-        $os->disablePool($username);
+        $os->removeExtraVhost($username, $domain);
         $os->reloadServices();
-        $ctx->log->info("account {$username} suspended");
+        $ctx->log->info("domain {$domain} removed for {$username}");
 
         return [
             'username' => $username,
             'domain'   => $domain,
-            'status'   => 'suspended',
-            'reason'   => (string) ($payload['reason'] ?? ''),
+            'status'   => 'removed',
         ];
     }
 }

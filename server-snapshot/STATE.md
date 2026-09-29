@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.5.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.5.0   (.env)
-AGENT_VERSION : 0.2.0
+panel code    : 0.6.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.6.0   (.env)
+AGENT_VERSION : 0.3.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -37,15 +37,16 @@ signed     : no (local trial)
 ```
 agent-backup-20260929010705
 agent-backup-20260929012116
-panel-backup-20260929001729
+agent-backup-20260929024057
 panel-backup-20260929010705
 panel-backup-20260929012116
+panel-backup-20260929024057
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -93,6 +94,7 @@ alphacp:admin-password
   2026_09_28_000002_agent_side_tables_if_missing   [1] Ran
   2026_09_29_000003_create_accounts_tables   [2] Ran
   2026_09_29_000004_packages_feature_lists_and_limits   [3] Ran
+  2026_09_29_000005_create_domains_table   [4] Ran
 ```
 
 ## Routes (web)
@@ -109,6 +111,9 @@ POST               /accounts/{account}/unsuspend                 accounts.unsusp
 POST               /accounts/{account}/upgrade                   accounts.upgrade
 GET|HEAD           /audit                                        audit.index
 GET|HEAD           /dashboard                                    dashboard
+GET|HEAD           /domains                                      domains.index
+POST               /domains                                      domains.store
+DELETE             /domains/{domain}                             domains.destroy
 GET|HEAD           /license                                      license.index
 POST               /license/activate                             license.activate
 POST               /login                                        login.attempt

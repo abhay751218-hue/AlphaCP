@@ -153,6 +153,44 @@ return [
         ],
     ],
 
+    'domain.add' => [
+        'handler'     => Tasks\DomainAdd::class,
+        'safety'      => 'mutating',
+        'timeout'     => 45,
+        'description' => 'Add addon/sub/parked/redirect vhost under an account.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'domain', 'type', 'document_root'],
+            'properties'           => [
+                'username'       => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'domain'         => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
+                'type'           => ['type' => 'string', 'enum' => ['addon', 'sub', 'parked', 'redirect']],
+                'document_root'  => ['type' => 'string', 'minLength' => 2, 'maxLength' => 255],
+                'redirect_url'   => ['type' => 'string', 'maxLength' => 500],
+                'redirect_code'  => ['type' => 'integer', 'enum' => [301, 302]],
+            ],
+        ],
+    ],
+
+    'domain.remove' => [
+        'handler'     => Tasks\DomainRemove::class,
+        'safety'      => 'mutating',
+        'timeout'     => 45,
+        'description' => 'Remove extra vhost; document root files stay.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'domain'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'domain'   => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
     'account.setQuota' => [
         'handler'     => Tasks\AccountSetQuota::class,
         'safety'      => 'mutating',
