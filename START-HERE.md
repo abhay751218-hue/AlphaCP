@@ -56,7 +56,7 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 |---|---|---|
 | `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **52 pass, 0 fail, 6 wasm-skip** (0.4.0) |
 | `bash tools/sim/provision-sim.sh` | Agent account tasks (create/suspend/terminate/quota/rollback, FakeCommandExecutor) | **28/28** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.3.0: update, sha mismatch, rollback, backup prune, sync-tool upgrade, **private repo (get)** | **54/54** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.4.0: panel 0.4.0 + agent 0.2.0, sha mismatch, rollback, backup prune, sync-tool, **private repo (get)** | **59/59** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 

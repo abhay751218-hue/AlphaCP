@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.3.0  ·  default panel bundle 0.3.2  ·  alphacp-sync v1.2
+# updater 0.4.0  ·  default panel bundle 0.4.0  ·  agent 0.2.0  ·  alphacp-sync v1.2
+#
+# 0.4.0: Step 3 — panel 0.4.0 (Accounts UI) + paneld agent 0.2.0 (account.* tasks)
+#        pehle agent, phir panel swap. Agent fail ho to panel nahi chheḍte.
 #
 # 0.3.0: PRIVATE repo support — artifact/sync-tool pehle `alphacp-sync get` (deploy key) se,
 #        na ho to public raw.githubusercontent (fallback). sha256 dono raaston par check.
@@ -22,13 +25,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.3.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.3.2}"
+UPDATER_VERSION="0.4.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.4.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-6001033f0ee6e76614a390bc394e8d7e76ea4bdf}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-0646d29fbc6d2e814132f5688c5d9cedb02baa80}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-e2bfd6e4b8ee013e51a3e116b4e01fe3ef02cd81b143b4be5d2add725570aea8}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.2.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-0646d29fbc6d2e814132f5688c5d9cedb02baa80}"
+AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-34abb2ed5e2835289d28d5084ae29c234114ddff4d2a4b1d3f277f265ad7ce8e}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -104,7 +111,7 @@ FPM_UNIT="php${FPM_VERSION}-fpm"
 
 say ""
 say "${C_BOLD}AlphaCP existing-server updater ${UPDATER_VERSION}${C_RESET}   (yahan '${UPDATER_VERSION}' dikhe = sahi command)"
-say "Panel bundle: ${PANEL_VERSION}"
+say "Panel bundle: ${PANEL_VERSION}  ·  agent: ${AGENT_VERSION}"
 say "PHP-FPM: ${FPM_UNIT} · PHP: $(${PHP_BIN} -r 'echo PHP_VERSION;' 2>/dev/null || echo unknown)"
 say ""
 
@@ -127,6 +134,45 @@ ACTUAL_SHA="$(sha256sum "${TMP_DIR}/panel-code.tar.gz" | awk '{print $1}')"
   || die "checksum mismatch: got ${ACTUAL_SHA}, expected ${BUNDLE_SHA256}"
 ok "artifact checksum verified: ${ACTUAL_SHA:0:16}…"
 tar tzf "${TMP_DIR}/panel-code.tar.gz" >/dev/null 2>&1 || die "artifact corrupt"
+
+info "agent ${AGENT_VERSION} download ho raha hai"
+fetch_repo_file "${AGENT_COMMIT}" "${AGENT_PATH}" "${TMP_DIR}/agent.tar.gz" "${AGENT_SHA256}" \
+  || die "agent artifact download fail — repo private hai to pehle alphacp-sync v1.2 chahiye (COMMANDS.md)"
+AGENT_ACTUAL="$(sha256sum "${TMP_DIR}/agent.tar.gz" | awk '{print $1}')"
+[[ "${AGENT_ACTUAL}" == "${AGENT_SHA256}" ]] \
+  || die "agent checksum mismatch: got ${AGENT_ACTUAL}, expected ${AGENT_SHA256}"
+tar tzf "${TMP_DIR}/agent.tar.gz" >/dev/null 2>&1 || die "agent artifact corrupt"
+ok "agent checksum verified: ${AGENT_ACTUAL:0:16}…"
+
+AGENT_ROOT="${ACP_HOME}/agent"
+AGENT_STAGE="${TMP_DIR}/agent-new"
+mkdir -p "${AGENT_STAGE}"
+tar xzf "${TMP_DIR}/agent.tar.gz" -C "${AGENT_STAGE}"
+[[ -x "${AGENT_STAGE}/agent/bin/paneld" || -f "${AGENT_STAGE}/agent/bin/paneld" ]] || die "agent paneld missing"
+grep -q 'account.create' "${AGENT_STAGE}/agent/config/tasks.php" || die "agent 0.2.0 tasks missing (account.create)"
+if [[ -d "${AGENT_ROOT}" ]]; then
+  rm -rf "${RELEASES}/agent-backup-${STAMP}"
+  cp -a "${AGENT_ROOT}" "${RELEASES}/agent-backup-${STAMP}"
+fi
+rm -rf "${AGENT_ROOT}"
+mv "${AGENT_STAGE}/agent" "${AGENT_ROOT}"
+chmod 0755 "${AGENT_ROOT}/bin/paneld"
+ok "agent ${AGENT_VERSION} installed → ${AGENT_ROOT}"
+
+install -d "${ACP_HOME}/share/suspended"
+cat > "${ACP_HOME}/share/suspended/index.html" <<'HTML'
+<!doctype html><html><head><meta charset="utf-8"><title>Account suspended</title></head>
+<body style="font-family:system-ui;padding:48px;background:#1b1020;color:#fca5a5">
+<h1>Account suspended</h1><p>This hosting account is suspended. Contact your provider.</p>
+</body></html>
+HTML
+chmod 0644 "${ACP_HOME}/share/suspended/index.html"
+if command -v a2enmod >/dev/null 2>&1; then
+  a2enmod proxy_fcgi rewrite headers >/dev/null 2>&1 || warn "a2enmod proxy_fcgi/rewrite skip"
+fi
+if [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; then
+  systemctl restart paneld >>"${LOG_FILE}" 2>&1 && ok "paneld restarted" || warn "paneld restart skip (unit missing?)"
+fi
 
 NEW_PANEL="${RELEASES}/panel-${STAMP}"
 mkdir -p "${NEW_PANEL}"
@@ -162,6 +208,11 @@ if grep -q '^ACP_VERSION=' "${NEW_PANEL}/.env"; then
   sed -i "s/^ACP_VERSION=.*/ACP_VERSION=${PANEL_VERSION}/" "${NEW_PANEL}/.env"
 else
   printf '\nACP_VERSION=%s\n' "${PANEL_VERSION}" >> "${NEW_PANEL}/.env"
+fi
+if grep -q '^ACP_AGENT_VERSION=' "${NEW_PANEL}/.env"; then
+  sed -i "s/^ACP_AGENT_VERSION=.*/ACP_AGENT_VERSION=${AGENT_VERSION}/" "${NEW_PANEL}/.env"
+else
+  printf '\nACP_AGENT_VERSION=%s\n' "${AGENT_VERSION}" >> "${NEW_PANEL}/.env"
 fi
 chown "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/.env"
 chmod 0640 "${NEW_PANEL}/.env"

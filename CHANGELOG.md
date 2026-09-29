@@ -10,7 +10,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   Apache vhost, PHP-FPM pool, quota), `account.suspend` / `unsuspend`, `account.terminate` (typed confirm),
   `account.setQuota`. Panel **0.4.0**: Accounts pages, default package, license `max_accounts` gate,
   no plaintext password in the task payload (SHA-512 `shadow_hash` only). Tests: provision-sim **28/28**,
-  panel-tests **52 pass / 0 fail / 6 wasm-skip**.
+  panel-tests **52 pass / 0 fail / 6 wasm-skip**, update-sim **59/59**.
+  Deploy via `panel-update.sh` 0.4.0 (agent tarball pehle, phir panel).
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
   PR refs se commit milta hai. sync-sim **60/60**. `panel-update 0.3.0`: artifact/sync-tool pehle `get` se,

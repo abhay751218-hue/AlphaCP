@@ -33,9 +33,25 @@ rm -rf "${U}"; mkdir -p "${U}/bin" "${U}/state"
 TMPV="$(mktemp -d)"; unzip -q -o "${REPO}/alphacp-code-bundle.zip" artifacts/panel-bundle-0.3.0.tar.gz -d "${TMPV}"
 cp "${TMPV}/artifacts/panel-bundle-0.3.0.tar.gz" "${U}/vendor-bundle.tar.gz"; rm -rf "${TMPV}"
 cp "${ART}" "${U}/artifact.tar.gz"
+cp "${REPO}/artifacts/agent-0.2.0.tar.gz" "${U}/agent.tar.gz"
 cp "${REPO}/installer/alphacp-sync.sh" "${U}/sync-v11.sh"
 SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
-install_old_sync() { mkdir -p "${ACP_HOME}/bin"; git -C "${REPO}" show aa2091dc3ee28850266b8348aea1ea89408c64c2:installer/alphacp-sync.sh > "${SYNC_BIN}"; chmod 0755 "${SYNC_BIN}"; }
+install_old_sync() {
+  mkdir -p "${ACP_HOME}/bin"
+  if git -C "${REPO}" cat-file -e aa2091dc3ee28850266b8348aea1ea89408c64c2^{commit} 2>/dev/null \
+     && git -C "${REPO}" show aa2091dc3ee28850266b8348aea1ea89408c64c2:installer/alphacp-sync.sh > "${SYNC_BIN}" 2>/dev/null; then
+    :
+  else
+    # shallow clone fallback — real v1.0 file repo me na ho to stub (no get mode)
+    cat > "${SYNC_BIN}" <<'STUB'
+#!/bin/bash
+SYNC_VERSION="1.0"
+echo "alphacp-sync v1.0 stub $*"
+exit 0
+STUB
+  fi
+  chmod 0755 "${SYNC_BIN}"
+}
 install_old_sync   # server par v1.0 setup hai
 install_new_sync() { install -m 0755 "${REPO}/installer/alphacp-sync.sh" "${SYNC_BIN}"; }
 # alphacp-sync get ke liye "GitHub" = is repo ka bare clone (file://), deploy key = dummy file
@@ -49,6 +65,7 @@ cat > "${U}/bin/curl" <<'EOF'
 out=""; url=""; for a in "$@"; do [[ "$prev" == "-o" ]] && out="$a"; [[ "$a" == http* ]] && url="$a"; prev="$a"; done
 if [[ "$url" == *raw.githubusercontent.com* && -f /tmp/updsim/state/private ]]; then echo "download $url -> 404 (private)" >> /tmp/updsim/state/calls.log; echo "curl: (22) The requested URL returned error: 404" >&2; exit 22; fi
 if [[ "$url" == *raw.githubusercontent.com*/installer/alphacp-sync.sh ]]; then echo "download $url" >> /tmp/updsim/state/calls.log; if [[ -n "$out" ]]; then cp /tmp/updsim/sync-v11.sh "$out"; else cat /tmp/updsim/sync-v11.sh; fi; exit 0; fi
+if [[ "$url" == *raw.githubusercontent.com*/artifacts/agent-* ]]; then echo "download $url" >> /tmp/updsim/state/calls.log; if [[ -n "$out" ]]; then cp /tmp/updsim/agent.tar.gz "$out"; else cat /tmp/updsim/agent.tar.gz; fi; exit 0; fi
 if [[ "$url" == *raw.githubusercontent.com* ]]; then echo "download $url" >> /tmp/updsim/state/calls.log; if [[ -n "$out" ]]; then cp /tmp/updsim/artifact.tar.gz "$out"; else cat /tmp/updsim/artifact.tar.gz; fi; exit 0; fi
 if [[ "$url" == *127.0.0.1:8090* && -f /tmp/updsim/state/fail-health-once ]]; then
   rm -f /tmp/updsim/state/fail-health-once; echo "health FORCED 500" >> /tmp/updsim/state/calls.log
@@ -94,7 +111,7 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.3.0'" grep -q "updater 0.3.0" "${U}/update-U1.out"
+chk "banner 'updater 0.4.0'" grep -q "updater 0.4.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -110,6 +127,11 @@ chk "update ke baad HTTP 200" test "$(http_now)" = 200
 chk "admin password hash same (DB data preserve)" pw_works
 chk "License code present" test -f "${PANEL}/app/Support/License/LicenseClient.php"
 chk "PasswordGenerator present (0.3.2 fix)" test -f "${PANEL}/app/Support/PasswordGenerator.php"
+chk "AccountsController present (0.4.0)" test -f "${PANEL}/app/Http/Controllers/AccountsController.php"
+chk "agent 0.2.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.2.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
+chk "account.create in paneld allowlist" grep -q "account.create" "${ACP_HOME}/agent/config/tasks.php"
+chk "suspended page installed" test -f "${ACP_HOME}/share/suspended/index.html"
+chk ".env ACP_AGENT_VERSION=0.2.0" grep -q "^ACP_AGENT_VERSION=0.2.0$" "${PANEL}/.env"
 chk "route cache me /license" grep -rqs "license" "${PANEL}/bootstrap/cache/"
 chk "backup bana (1)" test "$(nbackups)" -eq 1
 chk "backup = purana ${BEFORE_VER}" grep -q "\"version\": \"${BEFORE_VER}\"" "$(find "${REL}" -maxdepth 1 -name 'panel-backup-*' | head -1)/MANIFEST.json"
