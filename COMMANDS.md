@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.13.0 — Step 5: MIME Types
+### panel-update 0.14.0 — Step 5: Apache Handlers
 ```bash
-sudo alphacp-sync get b2c1fc70e9c12cf89488f2613e44172173b8f90c installer/panel-update.sh /tmp/acp-panel-update-0.13.0.sh 320825212fe943fef208706b4fe33d063338752c1effaef401bc8bd65c7dc2f7 && sudo bash /tmp/acp-panel-update-0.13.0.sh
+sudo alphacp-sync get beaca4c000215647e8c39970d2ef9a2528436223 installer/panel-update.sh /tmp/acp-panel-update-0.14.0.sh a1f98eb8c45db9f4d313e4d4d6465cb5ffc4173227db164a3cb0b2666f6b735a && sudo bash /tmp/acp-panel-update-0.14.0.sh
 ```
-- sha256: `320825212fe943fef208706b4fe33d063338752c1effaef401bc8bd65c7dc2f7`
-- Expected: banner `updater 0.13.0` → agent **0.10.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: MIME Types (AddType). PHP/CGI/SSI blocked. Indexes, Error Pages, INI, AutoSSL same.
-- WHM: Create Account / packages / user manager. Customer ko MIME Types tile dikhega, WHM me nahi.
+- sha256: `a1f98eb8c45db9f4d313e4d4d6465cb5ffc4173227db164a3cb0b2666f6b735a`
+- Expected: banner `updater 0.14.0` → agent **0.11.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Apache Handlers (allowlisted AddHandler). PHP/proxy/fcgi blocked. MIME, Indexes, Error Pages same.
+- WHM: Create Account / packages / user manager. Customer ko Handlers tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **100/0**, provision-sim **41/41**, update-sim **78/78**.
+- Test: panel-tests **105/0**, provision-sim **42/42**, update-sim **80/80**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.13.0 (`b2c1fc7…`) → panel 0.13.0 + agent 0.10.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, MIME Types |
 | panel-update 0.12.0 (`be1ba8c…`) → panel 0.12.0 + agent 0.9.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Indexes |
 | panel-update 0.11.0 (`14e8fcf…`) → panel 0.11.0 + agent 0.8.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Error Pages |
 | panel-update 0.10.0 (`fd5cb6f…`) → panel 0.10.0 + agent 0.7.0 | 29 Sep 03:41Z | ✅ UPDATE COMPLETE, HTTP 200, MultiPHP INI Editor |
