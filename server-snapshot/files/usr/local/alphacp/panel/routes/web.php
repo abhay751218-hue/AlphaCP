@@ -12,6 +12,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\ErrorPagesController;
 use App\Http\Controllers\IndexesController;
+use App\Http\Controllers\DiskUsageController;
 use App\Http\Controllers\FilesController;
 use App\Http\Controllers\HandlersController;
 use App\Http\Controllers\MimeTypesController;
@@ -116,6 +117,9 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:files.manage')->name('files.rename');
     Route::post('/files/delete', [FilesController::class, 'destroy'])
         ->middleware('perm:files.manage')->name('files.destroy');
+
+    Route::get('/disk', [DiskUsageController::class, 'index'])
+        ->middleware('perm:files.view')->name('disk.index');
 
     Route::get('/privacy', [PrivacyController::class, 'index'])
         ->middleware('perm:privacy.view')->name('privacy.index');

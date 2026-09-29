@@ -10,6 +10,8 @@ final class Files
 {
     public const MAX_WRITE = 262144;
     public const MAX_LIST = 500;
+    public const MAX_USAGE_NODES = 2000;
+    public const MAX_USAGE_CHILDREN = 200;
     public const OPS = ['mkdir', 'write', 'delete', 'rename'];
 
     public static function normalizeRel(string $rel): string

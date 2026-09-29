@@ -35,6 +35,7 @@ use Alphacp\Agent\Tasks\ErrorPagesSet;
 use Alphacp\Agent\Tasks\IndexesSet;
 use Alphacp\Agent\Tasks\FilesList;
 use Alphacp\Agent\Tasks\FilesSet;
+use Alphacp\Agent\Tasks\FilesUsage;
 use Alphacp\Agent\Tasks\HandlersSet;
 use Alphacp\Agent\Tasks\PrivacySet;
 use Alphacp\Agent\Tasks\MimeTypesSet;
@@ -185,7 +186,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.set', 'privacy.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -625,6 +626,48 @@ test('files.list and files.set stay inside home and reject ..', function (): voi
         $threwRoot = str_contains($e->getMessage(), 'home root');
     }
     assert_true($threwRoot, 'home root delete must fail closed');
+    acp_account_cleanup($harness);
+});
+test('files.usage reports sizes, skips symlink, rejects ..', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new FilesSet())->handle([
+        'username' => 'alicehost',
+        'op' => 'mkdir',
+        'path' => 'public_html/docs',
+    ], $harness['ctx']);
+    (new FilesSet())->handle([
+        'username' => 'alicehost',
+        'op' => 'write',
+        'path' => 'public_html/docs/hello.txt',
+        'content' => 'namaste',
+    ], $harness['ctx']);
+    $out = (new FilesUsage())->handle(['username' => 'alicehost', 'path' => 'public_html'], $harness['ctx']);
+    assert_true($out['status'] === 'ok');
+    assert_true($out['bytes'] >= 7, 'folder bytes should include hello.txt');
+    assert_true($out['truncated'] === false);
+    $names = array_column($out['entries'], 'name');
+    assert_true(in_array('docs', $names, true), 'docs dir should appear');
+    $docs = null;
+    foreach ($out['entries'] as $row) {
+        if ($row['name'] === 'docs') {
+            $docs = $row;
+            break;
+        }
+    }
+    assert_true($docs !== null && $docs['type'] === 'dir' && $docs['bytes'] >= 7);
+    $link = $harness['root'] . '/home/alicehost/public_html/escape';
+    symlink('/etc', $link);
+    $out2 = (new FilesUsage())->handle(['username' => 'alicehost', 'path' => 'public_html'], $harness['ctx']);
+    $names2 = array_column($out2['entries'], 'name');
+    assert_true(!in_array('escape', $names2, true), 'symlink must be skipped');
+    $threw = false;
+    try {
+        (new FilesUsage())->handle(['username' => 'alicehost', 'path' => '../etc'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), '..') || str_contains($e->getMessage(), 'escape');
+    }
+    assert_true($threw, 'path escape must fail closed');
     acp_account_cleanup($harness);
 });
 test('privacy.set writes htpasswd + Directory and rejects path escape', function (): void {
