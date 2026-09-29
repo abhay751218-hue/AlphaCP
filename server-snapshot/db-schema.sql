@@ -129,6 +129,19 @@ CREATE TABLE `failed_jobs` (
   KEY `failed_jobs_connection_queue_failed_at_index` (`connection`,`queue`,`failed_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `feature_lists`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `feature_lists` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `features` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`features`)),
+  `is_default` tinyint(1) NOT NULL DEFAULT 0,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `job_batches`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -194,6 +207,7 @@ CREATE TABLE `packages` (
   `owner_id` bigint(20) unsigned DEFAULT NULL,
   `name` varchar(100) NOT NULL,
   `description` varchar(255) DEFAULT NULL,
+  `feature_list_id` bigint(20) unsigned DEFAULT NULL,
   `QUOTA` int(11) NOT NULL DEFAULT 1024,
   `BWLIMIT` int(11) NOT NULL DEFAULT -1,
   `MAXPOP` int(11) NOT NULL DEFAULT -1,
@@ -210,6 +224,20 @@ CREATE TABLE `packages` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `deleted_at` timestamp NULL DEFAULT NULL,
+  `MAXFWD` int(11) NOT NULL DEFAULT -1,
+  `MAXRESP` int(11) NOT NULL DEFAULT -1,
+  `MAXPASS` int(11) NOT NULL DEFAULT -1,
+  `MAXLST` int(11) NOT NULL DEFAULT -1,
+  `MAILBOXQUOTA` int(11) NOT NULL DEFAULT -1,
+  `DBQUOTA` int(11) NOT NULL DEFAULT -1,
+  `MAXEMAILPERHOUR` int(11) NOT NULL DEFAULT 300,
+  `MAXMSGSIZE` int(11) NOT NULL DEFAULT 50,
+  `CPULIMIT` int(11) NOT NULL DEFAULT -1,
+  `RAMLIMIT` int(11) NOT NULL DEFAULT -1,
+  `IOLIMIT` int(11) NOT NULL DEFAULT -1,
+  `NPROCLIMIT` int(11) NOT NULL DEFAULT -1,
+  `EPLIMIT` int(11) NOT NULL DEFAULT -1,
+  `DEDICATEDIP` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `packages_owner_id_index` (`owner_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

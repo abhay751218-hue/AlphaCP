@@ -155,6 +155,7 @@ class AccountsController extends Controller
 
         return view('accounts.show', [
             'account' => $account->load(['package', 'owner', 'events']),
+            'packages' => Package::query()->where('status', 'active')->orderBy('name')->get(),
             'task' => DB::table('tasks')->where('account_id', $account->id)->orderByDesc('id')->first(),
         ]);
     }
@@ -222,6 +223,57 @@ class AccountsController extends Controller
         Audit::log('account.terminate', 'critical', 'account', $account->id, ['username' => $live]);
 
         return redirect()->route('accounts.index')->with('warning', "Account '{$live}' terminate queue me hai.");
+    }
+
+    public function upgrade(Request $request, Account $account): RedirectResponse
+    {
+        if ($account->isTerminated()) {
+            return back()->withErrors(['package_id' => 'Terminated account upgrade nahi hota.']);
+        }
+        $data = $request->validate([
+            'package_id' => ['required', 'integer', Rule::exists('packages', 'id')],
+        ]);
+        $package = Package::query()->findOrFail($data['package_id']);
+        if ($package->status !== 'active') {
+            return back()->withErrors(['package_id' => 'Archived package assign nahi hota.']);
+        }
+
+        $before = $account->package?->name;
+        $account->forceFill([
+            'package_id' => $package->id,
+            'quota_mb' => $package->quotaMb(),
+        ])->save();
+        $account->recordEvent('account.upgrade', 'Package '.$before.' → '.$package->name);
+
+        AccountProvisioner::enqueue($account, 'account.setQuota', [
+            'username' => $this->liveUsername($account),
+            'quota_mb' => $package->quotaMb(),
+        ]);
+        Audit::log('account.upgrade', 'warning', 'account', $account->id, [
+            'from' => $before, 'to' => $package->name, 'quota_mb' => $package->quotaMb(),
+        ]);
+
+        return redirect()->route('accounts.show', $account)
+            ->with('success', "Package '{$package->name}' queue me apply ho raha hai (quota {$package->quotaMb()} MB).");
+    }
+
+    public function quota(Request $request, Account $account): RedirectResponse
+    {
+        if ($account->isTerminated()) {
+            return back()->withErrors(['quota_mb' => 'Terminated account quota nahi badalti.']);
+        }
+        $data = $request->validate([
+            'quota_mb' => ['required', 'integer', 'min:-1', 'max:10485760'],
+        ]);
+        $account->forceFill(['quota_mb' => $data['quota_mb']])->save();
+        $account->recordEvent('account.quota', 'Quota → '.$data['quota_mb']);
+        AccountProvisioner::enqueue($account, 'account.setQuota', [
+            'username' => $this->liveUsername($account),
+            'quota_mb' => $data['quota_mb'],
+        ]);
+        Audit::log('account.quota', 'warning', 'account', $account->id, ['quota_mb' => $data['quota_mb']]);
+
+        return redirect()->route('accounts.show', $account)->with('success', 'Quota change queue me hai.');
     }
 
     private function liveUsername(Account $account): string

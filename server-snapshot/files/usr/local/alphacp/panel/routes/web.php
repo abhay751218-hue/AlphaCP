@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AuditController;
+use App\Http\Controllers\PackagesController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\DashboardController;
@@ -81,6 +82,20 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.suspend')->name('accounts.unsuspend');
     Route::post('/accounts/{account}/terminate', [AccountsController::class, 'terminate'])
         ->middleware('perm:accounts.terminate')->name('accounts.terminate');
+    Route::post('/accounts/{account}/upgrade', [AccountsController::class, 'upgrade'])
+        ->middleware('perm:accounts.modify')->name('accounts.upgrade');
+    Route::post('/accounts/{account}/quota', [AccountsController::class, 'quota'])
+        ->middleware('perm:accounts.modify')->name('accounts.quota');
+
+    Route::get('/packages', [PackagesController::class, 'index'])
+        ->middleware('perm:packages.view')->name('packages.index');
+    Route::middleware('perm:packages.manage')->group(function (): void {
+        Route::get('/packages/create', [PackagesController::class, 'create'])->name('packages.create');
+        Route::post('/packages', [PackagesController::class, 'store'])->name('packages.store');
+        Route::get('/packages/{package}/edit', [PackagesController::class, 'edit'])->name('packages.edit');
+        Route::put('/packages/{package}', [PackagesController::class, 'update'])->name('packages.update');
+        Route::post('/packages/{package}/archive', [PackagesController::class, 'archive'])->name('packages.archive');
+    });
 
     // -- Users (panel logins) -------------------------------------------------
     Route::middleware('perm:users.view')->group(function (): void {

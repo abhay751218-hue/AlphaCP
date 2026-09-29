@@ -17,8 +17,8 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.4.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.4.0   (.env)
+panel code    : 0.5.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.5.0   (.env)
 AGENT_VERSION : 0.2.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
@@ -36,15 +36,16 @@ signed     : no (local trial)
 ## Releases (/usr/local/alphacp/releases — sirf naam, code snapshot me nahi)
 ```
 agent-backup-20260929010705
-panel-backup-20260928224358
+agent-backup-20260929012116
 panel-backup-20260929001729
 panel-backup-20260929010705
+panel-backup-20260929012116
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -91,6 +92,7 @@ alphacp:admin-password
   2026_09_28_000001_create_panel_core_tables   [1] Ran
   2026_09_28_000002_agent_side_tables_if_missing   [1] Ran
   2026_09_29_000003_create_accounts_tables   [2] Ran
+  2026_09_29_000004_packages_feature_lists_and_limits   [3] Ran
 ```
 
 ## Routes (web)
@@ -100,15 +102,23 @@ GET|HEAD           /accounts                                     accounts.index
 POST               /accounts                                     accounts.store
 GET|HEAD           /accounts/create                              accounts.create
 GET|HEAD           /accounts/{account}                           accounts.show
+POST               /accounts/{account}/quota                     accounts.quota
 POST               /accounts/{account}/suspend                   accounts.suspend
 POST               /accounts/{account}/terminate                 accounts.terminate
 POST               /accounts/{account}/unsuspend                 accounts.unsuspend
+POST               /accounts/{account}/upgrade                   accounts.upgrade
 GET|HEAD           /audit                                        audit.index
 GET|HEAD           /dashboard                                    dashboard
 GET|HEAD           /license                                      license.index
 POST               /license/activate                             license.activate
 POST               /login                                        login.attempt
 POST               /logout                                       logout
+GET|HEAD           /packages                                     packages.index
+POST               /packages                                     packages.store
+GET|HEAD           /packages/create                              packages.create
+PUT                /packages/{package}                           packages.update
+POST               /packages/{package}/archive                   packages.archive
+GET|HEAD           /packages/{package}/edit                      packages.edit
 GET|HEAD           /security                                     security.index
 POST               /security/2fa/confirm                         security.2fa.confirm
 POST               /security/2fa/disable                         security.2fa.disable

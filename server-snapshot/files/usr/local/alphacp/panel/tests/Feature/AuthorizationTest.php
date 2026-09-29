@@ -54,6 +54,7 @@ class AuthorizationTest extends TestCase
         $this->asPanelUser($customer)->get('/audit')->assertForbidden();
         $this->asPanelUser($customer)->get('/system')->assertForbidden();
         $this->asPanelUser($customer)->get('/accounts')->assertForbidden();
+        $this->asPanelUser($customer)->get('/packages')->assertForbidden();
     }
 
     public function test_mail_only_role_can_only_reach_its_own_security_page(): void
