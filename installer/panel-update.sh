@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.2.1  ·  default panel bundle 0.3.2  ·  alphacp-sync v1.1
+# updater 0.3.0  ·  default panel bundle 0.3.2  ·  alphacp-sync v1.2
+#
+# 0.3.0: PRIVATE repo support — artifact/sync-tool pehle `alphacp-sync get` (deploy key) se,
+#        na ho to public raw.githubusercontent (fallback). sha256 dono raaston par check.
 #
 # 0.2.1: alphacp-sync pehle se setup ho to use v1.1 par upgrade (sha-verified), phir sync.
 #
@@ -19,14 +22,37 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.2.1"
+UPDATER_VERSION="0.3.0"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.3.2}"
-BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/6001033f0ee6e76614a390bc394e8d7e76ea4bdf/artifacts/panel-code-0.3.2.tar.gz}"
+REPO_SLUG="abhay751218-hue/AlphaCP"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-6001033f0ee6e76614a390bc394e8d7e76ea4bdf}"
+BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
+BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
 BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
-SYNC_TOOL_VERSION="1.1"
-SYNC_TOOL_URL="${ACP_SYNC_TOOL_URL:-https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/8cffb0c3bded2806481ead4f7b043a6c75d49277/installer/alphacp-sync.sh}"
-SYNC_TOOL_SHA256="${ACP_SYNC_TOOL_SHA256:-427512d87d5573bfbdf6a8d3a07d8505d3dd72738ffe7cfabc9c41c2052914f3}"
+SYNC_TOOL_VERSION="1.2"
+SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
+SYNC_TOOL_SHA256="${ACP_SYNC_TOOL_SHA256:-c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852}"
+SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
+
+# repo file laao: $1 commit  $2 path  $3 out  $4 sha256
+# 1) alphacp-sync get (deploy key — private repo me bhi)  2) public raw URL (fallback)
+fetch_repo_file() {
+  local commit="$1" path="$2" out="$3" sha="$4"
+  rm -f "${out}"
+  if [[ -x "${SYNC_BIN}" ]] && grep -q 'MODE="get"' "${SYNC_BIN}" 2>/dev/null; then
+    if "${SYNC_BIN}" get "${commit}" "${path}" "${out}" "${sha}" >>"${LOG_FILE}" 2>&1; then
+      FETCH_VIA="alphacp-sync get (deploy key)"; return 0
+    fi
+    log "WARN alphacp-sync get fail (${path}); public URL try"
+  fi
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 \
+       "https://raw.githubusercontent.com/${REPO_SLUG}/${commit}/${path}" -o "${out}" 2>>"${LOG_FILE}"; then
+    FETCH_VIA="raw.githubusercontent (public)"; return 0
+  fi
+  return 1
+}
+FETCH_VIA=""
 LOG_FILE="/var/log/alphacp-panel-update.log"
 STAMP="$(date -u +%Y%m%d%H%M%S)"
 RELEASES="${ACP_HOME}/releases"
@@ -86,9 +112,15 @@ TMP_DIR="$(mktemp -d /tmp/alphacp-update.XXXXXX)"
 trap 'rm -rf "${TMP_DIR}"; cleanup_preflight' EXIT
 
 info "new panel artifact download ho raha hai"
-curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 \
-  "${BUNDLE_URL}" >"${TMP_DIR}/panel-code.tar.gz" \
-  || die "artifact download fail"
+if [[ -n "${BUNDLE_URL}" ]]; then
+  curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 \
+    "${BUNDLE_URL}" >"${TMP_DIR}/panel-code.tar.gz" || die "artifact download fail (${BUNDLE_URL})"
+  FETCH_VIA="custom URL"
+else
+  fetch_repo_file "${BUNDLE_COMMIT}" "${BUNDLE_PATH}" "${TMP_DIR}/panel-code.tar.gz" "${BUNDLE_SHA256}" \
+    || die "artifact download fail — repo private hai to pehle alphacp-sync v1.2 chahiye (COMMANDS.md)"
+fi
+info "artifact source: ${FETCH_VIA}"
 
 ACTUAL_SHA="$(sha256sum "${TMP_DIR}/panel-code.tar.gz" | awk '{print $1}')"
 [[ "${ACTUAL_SHA}" == "${BUNDLE_SHA256}" ]] \
@@ -245,9 +277,8 @@ mapfile -t OLD_BACKUPS < <(ls -1d "${RELEASES}"/panel-backup-* 2>/dev/null | sor
 for d in "${OLD_BACKUPS[@]}"; do [[ -n "${d}" && -d "${d}" ]] && rm -rf "${d}" && info "purana backup hataya: $(basename "${d}")"; done
 
 # alphacp-sync tool upgrade (sirf agar pehle se setup hai; deploy key wahi rehti hai)
-SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
 if [[ -x "${SYNC_BIN}" ]] && ! grep -q "^SYNC_VERSION=\"${SYNC_TOOL_VERSION}\"" "${SYNC_BIN}"; then
-  if curl -fsSL --retry 3 --connect-timeout 20 --max-time 60 "${SYNC_TOOL_URL}" -o "${TMP_DIR}/alphacp-sync.sh" \
+  if fetch_repo_file "${SYNC_TOOL_COMMIT}" installer/alphacp-sync.sh "${TMP_DIR}/alphacp-sync.sh" "${SYNC_TOOL_SHA256}" \
      && [[ "$(sha256sum "${TMP_DIR}/alphacp-sync.sh" | awk '{print $1}')" == "${SYNC_TOOL_SHA256}" ]] \
      && bash -n "${TMP_DIR}/alphacp-sync.sh"; then
     install -m 0755 "${TMP_DIR}/alphacp-sync.sh" "${SYNC_BIN}"

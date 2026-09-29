@@ -9,7 +9,8 @@
 #            systemctl: doctor-sim ka stub
 #  U1 normal update 0.3.0 -> 0.3.2      U2 sha256 mismatch -> kuch nahi chhedta
 #  U3 health fail -> auto rollback       U4 backups prune (KEEP=1) + sync-tool checksum fail
-#  U1 me alphacp-sync v1.0 -> v1.1 upgrade + sync hook bhi
+#  U1 me alphacp-sync v1.0 -> v1.2 upgrade + sync hook bhi
+#  U5 private repo (raw 404) + sync v1.2 -> get      U6 private + purana sync -> saaf error
 # =============================================================================
 set -uo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -36,12 +37,17 @@ cp "${REPO}/installer/alphacp-sync.sh" "${U}/sync-v11.sh"
 SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
 install_old_sync() { mkdir -p "${ACP_HOME}/bin"; git -C "${REPO}" show aa2091dc3ee28850266b8348aea1ea89408c64c2:installer/alphacp-sync.sh > "${SYNC_BIN}"; chmod 0755 "${SYNC_BIN}"; }
 install_old_sync   # server par v1.0 setup hai
+install_new_sync() { install -m 0755 "${REPO}/installer/alphacp-sync.sh" "${SYNC_BIN}"; }
+# alphacp-sync get ke liye "GitHub" = is repo ka bare clone (file://), deploy key = dummy file
+rm -rf "${U}/remote.git"; git clone -q --bare "${REPO}" "${U}/remote.git"
+mkdir -p "${U}/conf"; echo dummy > "${U}/conf/github_deploy_key"; chmod 0600 "${U}/conf/github_deploy_key"
 SHA="$(sha256sum "${ART}" | cut -d' ' -f1)"
 
 cat > "${U}/bin/curl" <<'EOF'
 #!/bin/bash
 # download -> local artifact ; 127.0.0.1:8090 -> doctor-sim ka asli-Laravel curl stub
 out=""; url=""; for a in "$@"; do [[ "$prev" == "-o" ]] && out="$a"; [[ "$a" == http* ]] && url="$a"; prev="$a"; done
+if [[ "$url" == *raw.githubusercontent.com* && -f /tmp/updsim/state/private ]]; then echo "download $url -> 404 (private)" >> /tmp/updsim/state/calls.log; echo "curl: (22) The requested URL returned error: 404" >&2; exit 22; fi
 if [[ "$url" == *raw.githubusercontent.com*/installer/alphacp-sync.sh ]]; then echo "download $url" >> /tmp/updsim/state/calls.log; if [[ -n "$out" ]]; then cp /tmp/updsim/sync-v11.sh "$out"; else cat /tmp/updsim/sync-v11.sh; fi; exit 0; fi
 if [[ "$url" == *raw.githubusercontent.com* ]]; then echo "download $url" >> /tmp/updsim/state/calls.log; if [[ -n "$out" ]]; then cp /tmp/updsim/artifact.tar.gz "$out"; else cat /tmp/updsim/artifact.tar.gz; fi; exit 0; fi
 if [[ "$url" == *127.0.0.1:8090* && -f /tmp/updsim/state/fail-health-once ]]; then
@@ -65,7 +71,8 @@ chmod 0755 "${U}/bin/"*
 
 run_update() {  # $1 = label, rest = env overrides
   local label="$1"; shift
-  ( cd /root && env PATH="${U}/bin:/tmp/acpsim/bin:${PATH}" ACP_PANEL_BUNDLE_SHA256="${SHA}" ACP_PANEL_VERSION="${ART_VER}" "$@" bash "${UPDATER}" ) \
+  ( cd /root && env PATH="${U}/bin:/tmp/acpsim/bin:${PATH}" ACP_PANEL_BUNDLE_SHA256="${SHA}" ACP_PANEL_VERSION="${ART_VER}" \
+    SYNC_REPO_URL="file://${U}/remote.git" SYNC_CONF_DIR="${U}/conf" SYNC_WORK_DIR="${U}/syncwork" "$@" bash "${UPDATER}" ) \
     > "${U}/update-${label}.out" 2>&1
   local rc=$?; sed 's/^/    | /' "${U}/update-${label}.out"; return ${rc}
 }
@@ -87,11 +94,12 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.2.1'" grep -q "updater 0.2.1" "${U}/update-U1.out"
-chk "alphacp-sync v1.0 -> v1.1 upgrade hua" grep -q '^SYNC_VERSION="1.1"' "${SYNC_BIN}"
+chk "banner 'updater 0.3.0'" grep -q "updater 0.3.0" "${U}/update-U1.out"
+chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
+chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
 chk "sync tool 0755" test "$(stat -c %a "${SYNC_BIN}")" = 755
-chk "'alphacp-sync v1.1 install hua' dikha" grep -q "alphacp-sync v1.1 install hua" "${U}/update-U1.out"
+chk "'alphacp-sync v1.2 install hua' dikha" grep -q "alphacp-sync v1.2 install hua" "${U}/update-U1.out"
 chk "'Update complete'" grep -q "UPDATE COMPLETE" "${U}/update-U1.out"
 chk "download commit-pinned URL se (branch nahi)" grep -qE "download https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/[0-9a-f]{40}/" "${U}/state/calls.log"
 chk "MANIFEST version = ${ART_VER}" test "$(panel_ver)" = "${ART_VER}"
@@ -145,6 +153,27 @@ chk "sirf 1 backup bacha" test "$(nbackups)" -eq 1
 chk "'purana backup hataya' log" grep -q "purana backup hataya" "${U}/update-U4.out"
 chk "HTTP 200" test "$(http_now)" = 200
 chk "storage preserve hua (marker)" grep -q "${MARK}" "${PANEL}/storage/app/private/marker.txt"
+
+# ================================================================= U5
+echo; echo "=== U5: repo PRIVATE (raw URL 404) + sync v1.2 -> 'get' se update ==="
+sleep 1; install_new_sync; touch "${U}/state/private"; echo "U5-marker" > "${PANEL}/storage/app/private/u5.txt"
+run_update U5; rc=$?
+chk "exit 0" test ${rc} -eq 0
+chk "artifact source: alphacp-sync get (deploy key)" grep -q "artifact source: alphacp-sync get (deploy key)" "${U}/update-U5.out"
+chk "raw URL try hi nahi hua (get pehle)" bash -c "! grep -q 'artifact.*404' '${U}/state/calls.log'"
+chk "UPDATE COMPLETE" grep -q "UPDATE COMPLETE" "${U}/update-U5.out"
+chk "HTTP 200" test "$(http_now)" = 200
+chk "storage preserve (U5 marker)" grep -q "U5-marker" "${PANEL}/storage/app/private/u5.txt"
+
+# ================================================================= U6
+echo; echo "=== U6: repo PRIVATE + purana sync v1.0 (no get) -> saaf error, panel untouched ==="
+sleep 1; install_old_sync; B6="$(nbackups)"
+run_update U6; rc=$?
+chk "exit != 0" test ${rc} -ne 0
+chk "message: alphacp-sync v1.2 chahiye" grep -q "alphacp-sync v1.2 chahiye" "${U}/update-U6.out"
+chk "koi naya backup/swap nahi" test "$(nbackups)" -eq "${B6}"
+chk "HTTP 200 abhi bhi" test "$(http_now)" = 200
+rm -f "${U}/state/private"
 
 echo; echo "=== UPDATE-SIM: ${PASS} pass, ${FAIL} fail ==="
 [[ ${FAIL} -eq 0 ]]
