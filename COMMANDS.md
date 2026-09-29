@@ -14,20 +14,22 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.8.0 — Step 5: SSL/TLS Status (self-signed)
+### panel-update 0.9.0 — Step 5: AutoSSL (Let's Encrypt)
 ```bash
-sudo alphacp-sync get e854e3a2e6e5c4ff9d54b20c489937a3709ce12a installer/panel-update.sh /tmp/acp-panel-update-0.8.0.sh 034387dedf5d12fa0eabf9d53ec6f31d5a5327ecf3f6da293cb620cb84b4fc1a && sudo bash /tmp/acp-panel-update-0.8.0.sh
+sudo alphacp-sync get 206088738e43a166b95640b32a374ef2e270007f installer/panel-update.sh /tmp/acp-panel-update-0.9.0.sh f5db1c9ae6203b60b620ba0b44ef45c9c2c291652d9758c5e7ac816fa22c984e && sudo bash /tmp/acp-panel-update-0.9.0.sh
 ```
-- sha256: `034387dedf5d12fa0eabf9d53ec6f31d5a5327ecf3f6da293cb620cb84b4fc1a`
-- Expected: banner `updater 0.8.0` → agent **0.5.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: SSL/TLS Status (self-signed issue/remove). Let's Encrypt AutoSSL next.
+- sha256: `f5db1c9ae6203b60b620ba0b44ef45c9c2c291652d9758c5e7ac816fa22c984e`
+- Expected: banner `updater 0.9.0` → agent **0.6.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: SSL/TLS Status — Run AutoSSL (Let's Encrypt HTTP-01) + self-signed fallback.
+- DNS domain is server pe point hona chahiye, warna AutoSSL fail (self-signed chalega).
 - WHM: Create Account / packages / user manager. Customer ko Create Account nahi dikhega.
-- Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **80/0**, provision-sim **34/34**, update-sim **68/68**.
+- Trial/password/APP_KEY nahi badalte. certbot best-effort install.
+- Test: panel-tests **83/0**, provision-sim **36/36**, update-sim **70/70**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.8.0 (`e854e3a…`) → panel 0.8.0 + agent 0.5.0 | 29 Sep 03:17Z | ✅ UPDATE COMPLETE, HTTP 200, SSL/TLS Status self-signed |
 | panel-update 0.7.0 (`ca2f337…`) → panel 0.7.0 + agent 0.4.0 | 29 Sep 02:57Z | ✅ UPDATE COMPLETE, HTTP 200, MultiPHP + Cron, php-all 7.4–8.4 |
 | panel-update 0.6.0 (`48f94a6…`) → panel 0.6.0 + agent 0.3.0 | 29 Sep 02:41Z | ✅ UPDATE COMPLETE, HTTP 200, domains migration, WHM/cPanel split |
 | panel-update 0.5.0 (`35b2497…`) → panel 0.5.0 + agent 0.2.0 | 29 Sep 01:21Z | ✅ UPDATE COMPLETE, HTTP 200, packages migration, trial same |
