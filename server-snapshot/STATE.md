@@ -44,7 +44,7 @@ panel-failed-20260928223644
 
 ## Services
 ```
-alphacp-sync               failed
+alphacp-sync               activating
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
