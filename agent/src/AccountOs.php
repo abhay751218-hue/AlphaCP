@@ -90,6 +90,66 @@ final class AccountOs
     }
 
     /**
+     * @param  list<array{type: string, key: string, comment: string}> $keys
+     * @return array{keys: list<array{type: string, key: string, comment: string}>, shell: string}
+     */
+    public function setSsh(string $username, array $keys, ?string $shell): array
+    {
+        $keys = Ssh::sanitizeKeys($keys);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, '.ssh');
+        $file = Files::resolve($home, '.ssh/authorized_keys');
+        if (is_link($dir) || is_link($file)) {
+            throw new RuntimeException('ssh path is a symlink');
+        }
+        if (is_file($dir)) {
+            throw new RuntimeException('ssh dir is a file');
+        }
+        $this->fs->mkdir($dir, 0700);
+        $this->fs->chownName($dir, $username);
+        $lines = [];
+        foreach ($keys as $row) {
+            $lines[] = Ssh::format($row);
+        }
+        $body = $lines === [] ? '' : implode("\n", $lines) . "\n";
+        $this->fs->write($file, $body, 0600);
+        $this->fs->chownName($file, $username);
+
+        $current = $this->sshShell($username);
+        if ($shell !== null) {
+            $shell = Ssh::normalizeShell($shell);
+            $path = $shell === 'bash' ? Ssh::BASH : $this->paths->nologin;
+            $result = $this->cmd->run(['/usr/sbin/usermod', '-s', $path, $username], 15);
+            if (!$result->ok()) {
+                throw new RuntimeException('usermod -s failed: ' . $result->stderr);
+            }
+            $current = $shell;
+            $this->log->info("ssh shell {$shell} for {$username}");
+        }
+        $this->log->info('ssh keys ' . count($keys) . " for {$username}");
+
+        return ['keys' => $keys, 'shell' => $current];
+    }
+
+    public function sshShell(string $username): string
+    {
+        $result = $this->cmd->run(['/usr/bin/getent', 'passwd', $username], 10);
+        if (!$result->ok()) {
+            return 'nologin';
+        }
+        $parts = explode(':', trim($result->stdout));
+        $path = $parts[6] ?? $this->paths->nologin;
+        if ($path === Ssh::BASH || $path === '/usr/bin/bash') {
+            return 'bash';
+        }
+        if ($path === $this->paths->nologin || str_ends_with($path, 'nologin')) {
+            return 'nologin';
+        }
+
+        return 'other';
+    }
+
+    /**
      * @return list<array{name: string, type: string, size: int, mode: string}>
      */
     public function listFiles(string $username, string $rel): array

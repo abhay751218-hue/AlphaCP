@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 6 SSH Access (29 Sep)** — authorized_keys via `ssh.set` (public keys
+  only; nologin/bash when HASSHELL). Panel **0.18.0**, agent **0.15.0**.
+  Tests: panel **126/0**, provision-sim **46/46**, update-sim **89/89**.
+  Deploy via `panel-update.sh` 0.18.0.
 - **Step 6 Disk Usage (29 Sep)** — folder-wise space via readonly `files.usage`
   (home-jailed, symlink skip, 2000-node cap). Panel **0.17.0**, agent **0.14.0**.
   Tests: panel **120/0**, provision-sim **45/45**, update-sim **86/86**.

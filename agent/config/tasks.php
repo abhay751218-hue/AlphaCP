@@ -443,6 +443,37 @@ return [
         ],
     ],
 
+    'ssh.set' => [
+        'handler'     => Tasks\SshSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write ~/.ssh/authorized_keys and optional nologin/bash shell.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'keys'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'shell'    => ['type' => 'string', 'enum' => ['nologin', 'bash']],
+                'keys'     => [
+                    'type'     => 'array',
+                    'maxItems' => 20,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['type', 'key'],
+                        'properties'           => [
+                            'type'    => ['type' => 'string', 'enum' => ['ssh-ed25519', 'ssh-rsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521']],
+                            'key'     => ['type' => 'string', 'maxLength' => 8192],
+                            'comment' => ['type' => 'string', 'maxLength' => 64],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

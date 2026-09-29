@@ -20,6 +20,9 @@ final class FakeCommandExecutor implements CommandExecutor
     /** @var array<string, true> */
     public array $locked = [];
 
+    /** @var array<string, string> username => login shell path */
+    public array $shells = [];
+
     public ?string $crontabBody = null;
 
     public ?string $failWhenContains = null;
@@ -51,7 +54,8 @@ final class FakeCommandExecutor implements CommandExecutor
         $user = $argv[2] ?? '';
         if (($argv[1] ?? '') === 'passwd' && isset($this->users[$user])) {
             $gecos = $this->users[$user];
-            $line = "{$user}:x:1500:1500:{$gecos}:/home/{$user}:/usr/sbin/nologin\n";
+            $shell = $this->shells[$user] ?? '/usr/sbin/nologin';
+            $line = "{$user}:x:1500:1500:{$gecos}:/home/{$user}:{$shell}\n";
             return new CommandResult($argv, 0, $line, '', 1);
         }
         return new CommandResult($argv, 2, '', 'not found', 1);
@@ -97,6 +101,11 @@ final class FakeCommandExecutor implements CommandExecutor
         }
         if (in_array('-U', $argv, true)) {
             unset($this->locked[$user]);
+        }
+        foreach ($argv as $i => $arg) {
+            if ($arg === '-s' && isset($argv[$i + 1])) {
+                $this->shells[$user] = $argv[$i + 1];
+            }
         }
         return new CommandResult($argv, 0, '', '', 1);
     }

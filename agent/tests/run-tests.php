@@ -38,6 +38,7 @@ use Alphacp\Agent\Tasks\FilesSet;
 use Alphacp\Agent\Tasks\FilesUsage;
 use Alphacp\Agent\Tasks\HandlersSet;
 use Alphacp\Agent\Tasks\PrivacySet;
+use Alphacp\Agent\Tasks\SshSet;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -186,7 +187,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -723,6 +724,51 @@ test('privacy.set writes htpasswd + Directory and rejects path escape', function
         $threwPlain = str_contains($e->getMessage(), 'bcrypt');
     }
     assert_true($threwPlain, 'plaintext password hash must fail closed');
+    acp_account_cleanup($harness);
+});
+test('ssh.set writes authorized_keys, sets bash, rejects private key', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $pub = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl laptop';
+    $parsed = \Alphacp\Agent\Ssh::parseLine($pub);
+    $out = (new SshSet())->handle([
+        'username' => 'alicehost',
+        'keys' => [$parsed],
+        'shell' => 'bash',
+    ], $harness['ctx']);
+    assert_true($out['keys'] === 1);
+    assert_true($out['shell'] === 'bash');
+    $file = $harness['root'] . '/home/alicehost/.ssh/authorized_keys';
+    assert_true(is_file($file), 'authorized_keys should exist');
+    assert_true(str_contains((string) file_get_contents($file), 'ssh-ed25519'));
+    assert_true(($harness['cmd']->shells['alicehost'] ?? '') === '/bin/bash');
+    $link = $harness['root'] . '/home/alicehost/.ssh-escape';
+    @unlink($file);
+    @rmdir($harness['root'] . '/home/alicehost/.ssh');
+    symlink('/etc', $harness['root'] . '/home/alicehost/.ssh');
+    $threwLink = false;
+    try {
+        (new SshSet())->handle([
+            'username' => 'alicehost',
+            'keys' => [$parsed],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwLink = str_contains($e->getMessage(), 'symlink');
+    }
+    assert_true($threwLink, 'symlink .ssh must fail closed');
+    @unlink($harness['root'] . '/home/alicehost/.ssh');
+    $threwPriv = false;
+    try {
+        (new SshSet())->handle([
+            'username' => 'alicehost',
+            'keys' => [['type' => 'ssh-ed25519', 'key' => 'BEGIN PRIVATE KEY']],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPriv = str_contains($e->getMessage(), 'base64')
+            || str_contains($e->getMessage(), 'private')
+            || str_contains($e->getMessage(), 'blob');
+    }
+    assert_true($threwPriv, 'private/malformed key must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

@@ -19,6 +19,7 @@ use App\Http\Controllers\MimeTypesController;
 use App\Http\Controllers\PhpController;
 use App\Http\Controllers\PhpIniController;
 use App\Http\Controllers\PrivacyController;
+use App\Http\Controllers\SshController;
 use App\Http\Controllers\SslController;
 use App\Http\Controllers\LicenseController;
 use App\Http\Controllers\SecurityController;
@@ -120,6 +121,15 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
 
     Route::get('/disk', [DiskUsageController::class, 'index'])
         ->middleware('perm:files.view')->name('disk.index');
+
+    Route::get('/ssh', [SshController::class, 'index'])
+        ->middleware('perm:ssh.view')->name('ssh.index');
+    Route::post('/ssh', [SshController::class, 'store'])
+        ->middleware('perm:ssh.manage')->name('ssh.store');
+    Route::post('/ssh/delete', [SshController::class, 'destroy'])
+        ->middleware('perm:ssh.manage')->name('ssh.destroy');
+    Route::post('/ssh/shell', [SshController::class, 'shell'])
+        ->middleware('perm:ssh.manage')->name('ssh.shell');
 
     Route::get('/privacy', [PrivacyController::class, 'index'])
         ->middleware('perm:privacy.view')->name('privacy.index');

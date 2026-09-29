@@ -55,6 +55,10 @@ final class PermissionCatalog
                 ['privacy.view', 'View directory privacy'],
                 ['privacy.manage', 'Protect folders with Basic Auth'],
             ],
+            'ssh' => [
+                ['ssh.view', 'View SSH keys'],
+                ['ssh.manage', 'Manage SSH keys and shell'],
+            ],
             'email' => [
                 ['email.view', 'View email accounts'],
                 ['email.manage', 'Create/manage email'],
@@ -152,6 +156,7 @@ final class PermissionCatalog
                 'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
                 'indexes.view', 'indexes.manage', 'mime.view', 'mime.manage',
                 'handlers.view', 'handlers.manage', 'privacy.view', 'privacy.manage',
+                'ssh.view', 'ssh.manage',
             ],
 
             'user' => [
@@ -162,6 +167,7 @@ final class PermissionCatalog
                 'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
                 'indexes.view', 'indexes.manage', 'mime.view', 'mime.manage',
                 'handlers.view', 'handlers.manage', 'privacy.view', 'privacy.manage',
+                'ssh.view', 'ssh.manage',
             ],
 
             'mail' => [

@@ -107,7 +107,7 @@ final class ModuleCatalog
                     ['name' => 'SSL/TLS Status', 'step' => 'S5',  'status' => 'live', 'route' => 'ssl.index', 'audience' => 'cpanel'],
                     ['name' => 'IP Blocker',     'step' => 'S13', 'status' => 'step'],
                     ['name' => 'ModSecurity',    'step' => 'S13', 'status' => 'step'],
-                    ['name' => 'SSH Access',     'step' => 'S6',  'status' => 'step'],
+                    ['name' => 'SSH Access',     'step' => 'S6',  'status' => 'live', 'route' => 'ssh.index', 'audience' => 'cpanel'],
                     ['name' => 'Hotlink Protection', 'step' => 'S13', 'status' => 'step'],
                 ],
             ],

@@ -116,7 +116,7 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 54 | SSH Access | Keys + shell access control | S6 | ⏳ S6 |
+| 54 | SSH Access | Keys + shell access control | S6 | ✅ (authorized_keys; nologin/bash if HASSHELL; no virtfs) |
 | 55 | IP Blocker | IP/range block | S13 | ⏳ S13 |
 | 56 | SSL/TLS | CSR, cert install, keys | S5 | ✅ (Let's Encrypt AutoSSL + self-signed) |
 | 57 | SSL/TLS Status | Sab domains ka SSL ek table | S5 | ✅ |
