@@ -17,7 +17,7 @@
 7. **CURRENT BLOCKER (aaj hi solve kiya, PROVEN)**: panel `https://13.207.123.177:8090` par har web request **HTTP 500** de raha tha. Asli wajah: Ubuntu/Ondrej ka `php8.4-fpm` systemd unit **`ProtectSystem=full`** lagata hai → php-fpm worker ke liye **`/usr` read-only** ho jata hai → hamara panel `/usr/local/alphacp` me hai → Laravel log/session/compiled-view likh hi nahi sakta → 500. **CLI par ye bandish nahi lagti** — isliye har probe "sab OK" dikhata tha.
 8. **Fix (ready + locally proven)**: systemd drop-in `ReadWritePaths=/usr/local/alphacp` + daemon-reload + restart. Doctor script v1.6 me ye automatic hai: **`curl -sSL https://paste.rs/G72oK -o /tmp/v16.sh && sudo bash /tmp/v16.sh`**
 9. Local proof (server jaisi condition bana kar): 500 → doctor v1.6 → **200 → PANEL READY ✅** → login flow bhi pass (POST /login → 302 → `/security/password` "Change Password · AlphaCP").
-10. **Server par ab tak ye command chalayi nahi gayi** (01:41 par purani v1.5 chali thi). Sabse pehla kaam: v1.6 chalana, phir browser login `admin` / `AlphaCP@2026`.
+10. **Server par ab tak ye command chalayi nahi gayi** (01:41 par purani v1.5 chali thi). Sabse pehla kaam: v1.6 chalana, phir browser login `admin` / (password: `sudo cat /usr/local/alphacp/var/panel-admin.txt`).
 11. Uske baad: S2B acceptance (login → forced password change → 2FA → dashboard), phir S2C = **license client + trial**, phir S3 (account provisioning), S4…S15.
 12. User ki language: **Hindi/Hinglish**. User ko ek baar me **sirf EK command/step** do (kabhi bundle mat karo), aur jo command do woh **pehle khud test kar chuke ho**.
 13. User ko sabse zyada narazgi is baat par hai: same problem baar-baar aana aur untested commands. Isliye: **reproduce → fix → verify → phir hi ek command do.**
@@ -69,7 +69,7 @@ Ye docs ban gaye (workspace me hain, zip me bhi):
 
 ### Step 2B-1 — Panel bundle v0.3.0 ✅ INSTALLED LIVE (29 Sep 00:02)
 - `artifacts/panel-bundle-0.3.0.tar.gz` (12.9 MB) = **Laravel 13.33.0** panel: login, RBAC, 2FA, User Manager, audit log, system/security pages.
-- Install kiya: `https://paste.rs/0r1Mi` (installer v0.3.3) → panel `https://13.207.123.177:8090` par live, user `admin`, password `/usr/local/alphacp/var/panel-admin.txt` (aur `/root/.alphacp-admin-credentials`), **password = `AlphaCP@2026`**.
+- Install kiya: `https://paste.rs/0r1Mi` (installer v0.3.3) → panel `https://13.207.123.177:8090` par live, user `admin`, password `/usr/local/alphacp/var/panel-admin.txt` (aur `/root/.alphacp-admin-credentials`), **purana password public ho gaya tha — doctor v1.7 use rotate karta hai**.
 - Install ke baad se **har browser request 500** de rahi thi. Pichhle kai din isi ko fix karne me gaye (perms, artisan-user, DB sync, php7.4 stale pool) — **asli wajah aaj mili** (section 3).
 
 ### Ab ka status (29 Sep 01:45)
@@ -150,7 +150,7 @@ warna kisi bhi naye Ubuntu+Ondrej server par fresh install bhi 500 dega.
 | Cheez | Value |
 |---|---|
 | Panel URL | `https://13.207.123.177:8090/` |
-| Panel user / pass | `admin` / **`AlphaCP@2026`** |
+| Panel user / pass | `admin` / ~~(public ho chuka tha)~~ → doctor v1.7 ne random password se badal diya; server par: `sudo cat /usr/local/alphacp/var/panel-admin.txt` |
 | Password file (server) | `/usr/local/alphacp/var/panel-admin.txt` (`panel_pass=…`, 0600) |
 | Root creds copy | `/root/.alphacp-admin-credentials` |
 | APP_KEY file | `/usr/local/alphacp/var/panel-appkey.txt` (0600) |
@@ -196,7 +196,7 @@ warna kisi bhi naye Ubuntu+Ondrej server par fresh install bhi 500 dega.
 
 1. **v1.6 doctor chalao** (server par): `curl -sSL https://paste.rs/G72oK -o /tmp/v16.sh && sudo bash /tmp/v16.sh`
    → expect: `PANEL READY ✅`
-2. **Browser login**: `https://13.207.123.177:8090` → cert warning → Advanced → Proceed → `admin` / `AlphaCP@2026`
+2. **Browser login**: `https://13.207.123.177:8090` → cert warning → Advanced → Proceed → `admin` / (password: `sudo cat /usr/local/alphacp/var/panel-admin.txt`)
    → forced password change → 2FA setup → dashboard = **Step 2B-1 acceptance complete**.
 3. Installer **v0.3.7** banao: `step2b-setup.sh` me wahi systemd drop-in add karo (aur `install.sh` me bhi) + doctor v1.6 jaisa
    Step 2b/2c verification. Local harness `tools/local-e2e-final.sh` se test karo (harness me `ProtectSystem=full` mimic

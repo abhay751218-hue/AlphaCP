@@ -1,0 +1,296 @@
+#!/usr/bin/env bash
+# =============================================================================
+# AlphaCP — safe panel code updater
+# updater 0.3.0  ·  default panel bundle 0.3.2  ·  alphacp-sync v1.2
+#
+# 0.3.0: PRIVATE repo support — artifact/sync-tool pehle `alphacp-sync get` (deploy key) se,
+#        na ho to public raw.githubusercontent (fallback). sha256 dono raaston par check.
+#
+# 0.2.1: alphacp-sync pehle se setup ho to use v1.1 par upgrade (sha-verified), phir sync.
+#
+# 0.2.0: version/URL/SHA ek jagah (commit-pinned URL, branch nahi), .env ACP_VERSION update,
+#        sirf aakhri 3 backups rakhta hai, end me alphacp-sync (GitHub auto-update).
+#
+# Use on an EXISTING AlphaCP server only. It preserves the current .env,
+# APP_KEY, database, panel-admin credentials and storage, stages the new code,
+# runs Composer/migrations as a preflight, then atomically swaps the panel.
+# A failed HTTP health check automatically rolls back to the previous panel.
+# =============================================================================
+set -Eeuo pipefail
+
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
+PANEL_USER="${PANEL_USER:-alphacp}"
+PANEL_PORT="${PANEL_PORT:-8090}"
+UPDATER_VERSION="0.3.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.3.2}"
+REPO_SLUG="abhay751218-hue/AlphaCP"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-6001033f0ee6e76614a390bc394e8d7e76ea4bdf}"
+BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
+BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab}"
+KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
+SYNC_TOOL_VERSION="1.2"
+SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
+SYNC_TOOL_SHA256="${ACP_SYNC_TOOL_SHA256:-c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852}"
+SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
+
+# repo file laao: $1 commit  $2 path  $3 out  $4 sha256
+# 1) alphacp-sync get (deploy key — private repo me bhi)  2) public raw URL (fallback)
+fetch_repo_file() {
+  local commit="$1" path="$2" out="$3" sha="$4"
+  rm -f "${out}"
+  if [[ -x "${SYNC_BIN}" ]] && grep -q 'MODE="get"' "${SYNC_BIN}" 2>/dev/null; then
+    if "${SYNC_BIN}" get "${commit}" "${path}" "${out}" "${sha}" >>"${LOG_FILE}" 2>&1; then
+      FETCH_VIA="alphacp-sync get (deploy key)"; return 0
+    fi
+    log "WARN alphacp-sync get fail (${path}); public URL try"
+  fi
+  if curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 \
+       "https://raw.githubusercontent.com/${REPO_SLUG}/${commit}/${path}" -o "${out}" 2>>"${LOG_FILE}"; then
+    FETCH_VIA="raw.githubusercontent (public)"; return 0
+  fi
+  return 1
+}
+FETCH_VIA=""
+LOG_FILE="/var/log/alphacp-panel-update.log"
+STAMP="$(date -u +%Y%m%d%H%M%S)"
+RELEASES="${ACP_HOME}/releases"
+NEW_PANEL=""
+BACKUP_PANEL=""
+SWAPPED=0
+
+C_BOLD=$'\033[1m'; C_RED=$'\033[31m'; C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'; C_RESET=$'\033[0m'
+say() { printf '%s\n' "$*"; }
+log() { printf '%s [%s]\n' "$(date -u '+%F %T')Z" "$*" >>"${LOG_FILE}" 2>/dev/null || true; }
+ok() { log "OK   $*"; say "${C_GREEN}[OK]${C_RESET} $*"; }
+info() { log "INFO $*"; say "[i] $*"; }
+warn() { log "WARN $*"; say "${C_YELLOW}[!]${C_RESET} $*"; }
+die() { log "FAIL $*"; say "${C_RED}[x]${C_RESET} $*"; say "Log: ${LOG_FILE}"; exit 1; }
+
+cleanup_preflight() {
+  if (( SWAPPED == 0 )) && [[ -n "${NEW_PANEL}" && -d "${NEW_PANEL}" ]]; then
+    rm -rf "${NEW_PANEL}"
+  fi
+}
+trap cleanup_preflight EXIT
+
+[[ "${EUID}" -eq 0 ]] || die "root chahiye: sudo bash $0"
+command -v curl >/dev/null 2>&1 || die "curl missing"
+command -v sha256sum >/dev/null 2>&1 || die "sha256sum missing"
+command -v tar >/dev/null 2>&1 || die "tar missing"
+command -v composer >/dev/null 2>&1 || die "composer missing"
+id -u "${PANEL_USER}" >/dev/null 2>&1 || die "panel user '${PANEL_USER}' missing"
+[[ -f "${PANEL_ROOT}/artisan" ]] || die "existing panel nahi mila: ${PANEL_ROOT}"
+[[ -f "${PANEL_ROOT}/.env" ]] || die "existing panel .env missing — update rok diya"
+[[ -d "${PANEL_ROOT}/vendor" ]] || die "existing vendor missing — update rok diya"
+
+cd /
+mkdir -p "${RELEASES}"
+: > "${LOG_FILE}" 2>/dev/null || true
+chmod 0600 "${LOG_FILE}" 2>/dev/null || true
+
+# Detect the PHP-FPM pool that owns the panel socket. Never guess the oldest PHP.
+POOL_FILE="$(grep -rl 'alphacp-fpm.sock' /etc/php/*/fpm/pool.d/ 2>/dev/null | sort -V | tail -1 || true)"
+FPM_VERSION=""
+if [[ -n "${POOL_FILE}" ]]; then
+  FPM_VERSION="$(printf '%s' "${POOL_FILE}" | cut -d/ -f4)"
+fi
+FPM_VERSION="${FPM_VERSION:-8.4}"
+PHP_BIN="/usr/bin/php${FPM_VERSION}"
+[[ -x "${PHP_BIN}" ]] || PHP_BIN="$(command -v php || true)"
+[[ -x "${PHP_BIN}" ]] || die "PHP ${FPM_VERSION} CLI missing"
+FPM_UNIT="php${FPM_VERSION}-fpm"
+
+say ""
+say "${C_BOLD}AlphaCP existing-server updater ${UPDATER_VERSION}${C_RESET}   (yahan '${UPDATER_VERSION}' dikhe = sahi command)"
+say "Panel bundle: ${PANEL_VERSION}"
+say "PHP-FPM: ${FPM_UNIT} · PHP: $(${PHP_BIN} -r 'echo PHP_VERSION;' 2>/dev/null || echo unknown)"
+say ""
+
+TMP_DIR="$(mktemp -d /tmp/alphacp-update.XXXXXX)"
+trap 'rm -rf "${TMP_DIR}"; cleanup_preflight' EXIT
+
+info "new panel artifact download ho raha hai"
+if [[ -n "${BUNDLE_URL}" ]]; then
+  curl -fsSL --retry 3 --retry-delay 2 --connect-timeout 20 --max-time 180 \
+    "${BUNDLE_URL}" >"${TMP_DIR}/panel-code.tar.gz" || die "artifact download fail (${BUNDLE_URL})"
+  FETCH_VIA="custom URL"
+else
+  fetch_repo_file "${BUNDLE_COMMIT}" "${BUNDLE_PATH}" "${TMP_DIR}/panel-code.tar.gz" "${BUNDLE_SHA256}" \
+    || die "artifact download fail — repo private hai to pehle alphacp-sync v1.2 chahiye (COMMANDS.md)"
+fi
+info "artifact source: ${FETCH_VIA}"
+
+ACTUAL_SHA="$(sha256sum "${TMP_DIR}/panel-code.tar.gz" | awk '{print $1}')"
+[[ "${ACTUAL_SHA}" == "${BUNDLE_SHA256}" ]] \
+  || die "checksum mismatch: got ${ACTUAL_SHA}, expected ${BUNDLE_SHA256}"
+ok "artifact checksum verified: ${ACTUAL_SHA:0:16}…"
+tar tzf "${TMP_DIR}/panel-code.tar.gz" >/dev/null 2>&1 || die "artifact corrupt"
+
+NEW_PANEL="${RELEASES}/panel-${STAMP}"
+mkdir -p "${NEW_PANEL}"
+tar xzf "${TMP_DIR}/panel-code.tar.gz" -C "${NEW_PANEL}" --strip-components=1
+[[ -f "${NEW_PANEL}/artisan" ]] || die "new artisan missing"
+grep -q '"laravel/framework": "\^13' "${NEW_PANEL}/composer.json" \
+  || die "new artifact Laravel 13 nahi hai"
+
+# Preserve runtime state, APP_KEY, sessions and compiled user-facing assets.
+cp -a "${PANEL_ROOT}/.env" "${NEW_PANEL}/.env"
+if [[ -d "${PANEL_ROOT}/storage" ]]; then
+  cp -a "${PANEL_ROOT}/storage" "${NEW_PANEL}/storage"
+fi
+# SQLite DB panel ke andar ho (dev/test setups) to wo bhi saath le jao — warna swap ke baad DB "gayab".
+# (dev-srv1 MariaDB use karta hai; ye sirf safety net hai.) Swap se theek pehle dobara copy hota hai.
+preserve_sqlite() {
+  local f
+  for f in "${PANEL_ROOT}"/database/*.sqlite "${PANEL_ROOT}"/database/*.sqlite-wal "${PANEL_ROOT}"/database/*.sqlite-shm; do
+    [[ -f "${f}" ]] && cp -a "${f}" "${NEW_PANEL}/database/"
+  done
+  return 0
+}
+preserve_sqlite
+mkdir -p "${NEW_PANEL}/storage/app/private" \
+         "${NEW_PANEL}/storage/framework/cache/data" \
+         "${NEW_PANEL}/storage/framework/sessions" \
+         "${NEW_PANEL}/storage/framework/views" \
+         "${NEW_PANEL}/storage/logs" \
+         "${NEW_PANEL}/bootstrap/cache"
+chown -R "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/storage" "${NEW_PANEL}/bootstrap/cache"
+# naye panel ki .env me version (rollback par purani .env wapas aati hai)
+if grep -q '^ACP_VERSION=' "${NEW_PANEL}/.env"; then
+  sed -i "s/^ACP_VERSION=.*/ACP_VERSION=${PANEL_VERSION}/" "${NEW_PANEL}/.env"
+else
+  printf '\nACP_VERSION=%s\n' "${PANEL_VERSION}" >> "${NEW_PANEL}/.env"
+fi
+chown "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/.env"
+chmod 0640 "${NEW_PANEL}/.env"
+
+info "Composer dependencies install ho rahi hain"
+(
+  cd "${NEW_PANEL}"
+  COMPOSER_ALLOW_SUPERUSER=1 composer install --no-dev --no-interaction --no-progress
+) >>"${LOG_FILE}" 2>&1 || die "composer install fail — ${LOG_FILE} dekho"
+[[ -f "${NEW_PANEL}/vendor/autoload.php" ]] || die "new vendor missing"
+ok "Composer install complete"
+
+artisan_new() {
+  (cd "${NEW_PANEL}" && runuser -u "${PANEL_USER}" -- env ACP_HOME="${ACP_HOME}" "${PHP_BIN}" artisan "$@")
+}
+
+info "Laravel preflight (database untouched except pending additive migrations)"
+artisan_new --version >>"${LOG_FILE}" 2>&1 || die "new Laravel boot fail"
+artisan_new config:clear >>"${LOG_FILE}" 2>&1 || die "config clear fail"
+artisan_new view:clear >>"${LOG_FILE}" 2>&1 || die "view clear fail"
+artisan_new migrate --force >>"${LOG_FILE}" 2>&1 || die "migration preflight fail"
+# Do not cache config/routes while the app lives in /releases. Laravel stores
+# absolute view/config paths; those paths would violate the FPM open_basedir
+# allowlist after the atomic swap. Caches are rebuilt from the final panel path.
+chown -R "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/storage" "${NEW_PANEL}/bootstrap/cache"
+ok "Laravel preflight complete"
+
+# Permanent fix for Ubuntu/Ondrej ProtectSystem=full before FPM restarts.
+if [[ -d /run/systemd/system && -x "$(command -v systemctl)" ]]; then
+  DROPIN="/etc/systemd/system/${FPM_UNIT}.service.d/alphacp-panel.conf"
+  install -d "$(dirname "${DROPIN}")"
+  cat >"${DROPIN}" <<EOF
+# AlphaCP panel: php-fpm workers ko panel runtime me likhne do.
+[Service]
+ReadWritePaths=-${ACP_HOME}
+ReadWritePaths=-/run/php
+EOF
+  chmod 0644 "${DROPIN}"
+  systemctl daemon-reload >>"${LOG_FILE}" 2>&1 || die "systemd daemon-reload fail"
+  ok "php-fpm sandbox allowlist ready"
+fi
+
+BACKUP_PANEL="${RELEASES}/panel-backup-${STAMP}"
+
+rollback_current() {
+  local reason="$1"
+  warn "${reason}; automatic rollback start"
+  local failed_panel="${RELEASES}/panel-failed-${STAMP}"
+  if [[ -d "${PANEL_ROOT}" ]]; then
+    mv "${PANEL_ROOT}" "${failed_panel}"
+  fi
+  if [[ -d "${BACKUP_PANEL}" ]]; then
+    mv "${BACKUP_PANEL}" "${PANEL_ROOT}"
+  else
+    say "${C_RED}Backup panel directory missing: ${BACKUP_PANEL}${C_RESET}"
+    exit 1
+  fi
+  systemctl restart "${FPM_UNIT}" >>"${LOG_FILE}" 2>&1 || true
+  local rollback_code
+  rollback_code="$(curl -k -sS -o /dev/null -w '%{http_code}' -m 20 "https://127.0.0.1:${PANEL_PORT}/" 2>/dev/null || true)"
+  if [[ "${rollback_code}" == "200" ]]; then
+    say "${C_YELLOW}Rollback successful — old panel HTTP 200 restored.${C_RESET}"
+  else
+    say "${C_RED}Rollback health check bhi HTTP ${rollback_code:-none}; ${LOG_FILE} turant check karein.${C_RESET}"
+  fi
+  exit 1
+}
+
+info "atomic panel swap ho raha hai"
+preserve_sqlite
+mv "${PANEL_ROOT}" "${BACKUP_PANEL}"
+mv "${NEW_PANEL}" "${PANEL_ROOT}"
+SWAPPED=1
+NEW_PANEL=""
+
+# Rebuild all absolute-path caches only after the app is at its final path.
+# This is essential because the FPM pool open_basedir allowlist contains
+# /usr/local/alphacp/panel, not /usr/local/alphacp/releases/....
+artisan_current() {
+  (cd "${PANEL_ROOT}" && runuser -u "${PANEL_USER}" -- env ACP_HOME="${ACP_HOME}" "${PHP_BIN}" artisan "$@")
+}
+if ! artisan_current config:clear >>"${LOG_FILE}" 2>&1; then
+  rollback_current "final config clear fail"
+fi
+if ! artisan_current view:clear >>"${LOG_FILE}" 2>&1; then
+  rollback_current "final view clear fail"
+fi
+if ! artisan_current route:cache >>"${LOG_FILE}" 2>&1; then
+  rollback_current "final route cache fail"
+fi
+if ! artisan_current config:cache >>"${LOG_FILE}" 2>&1; then
+  rollback_current "final config cache fail"
+fi
+chown -R "${PANEL_USER}:${PANEL_USER}" "${PANEL_ROOT}/storage" "${PANEL_ROOT}/bootstrap/cache"
+
+systemctl restart "${FPM_UNIT}" >>"${LOG_FILE}" 2>&1 || true
+sleep 2
+
+CODE="$(curl -k -sS -o "${TMP_DIR}/health.html" -w '%{http_code}' -m 20 "https://127.0.0.1:${PANEL_PORT}/" 2>/dev/null || true)"
+if [[ "${CODE}" != "200" ]]; then
+  rollback_current "health check HTTP ${CODE:-none}"
+fi
+
+ok "new panel health HTTP 200"
+say ""
+say "${C_GREEN}${C_BOLD}==> UPDATE COMPLETE ✅${C_RESET}"
+say "New panel: ${PANEL_VERSION}"
+say "Backup: ${BACKUP_PANEL}"
+say "URL: https://127.0.0.1:${PANEL_PORT}/"
+
+# purane backups: sirf aakhri KEEP_BACKUPS rakho (disk na bhare)
+mapfile -t OLD_BACKUPS < <(ls -1d "${RELEASES}"/panel-backup-* 2>/dev/null | sort | head -n "-${KEEP_BACKUPS}")
+for d in "${OLD_BACKUPS[@]}"; do [[ -n "${d}" && -d "${d}" ]] && rm -rf "${d}" && info "purana backup hataya: $(basename "${d}")"; done
+
+# alphacp-sync tool upgrade (sirf agar pehle se setup hai; deploy key wahi rehti hai)
+if [[ -x "${SYNC_BIN}" ]] && ! grep -q "^SYNC_VERSION=\"${SYNC_TOOL_VERSION}\"" "${SYNC_BIN}"; then
+  if fetch_repo_file "${SYNC_TOOL_COMMIT}" installer/alphacp-sync.sh "${TMP_DIR}/alphacp-sync.sh" "${SYNC_TOOL_SHA256}" \
+     && [[ "$(sha256sum "${TMP_DIR}/alphacp-sync.sh" | awk '{print $1}')" == "${SYNC_TOOL_SHA256}" ]] \
+     && bash -n "${TMP_DIR}/alphacp-sync.sh"; then
+    install -m 0755 "${TMP_DIR}/alphacp-sync.sh" "${SYNC_BIN}"
+    ok "alphacp-sync v${SYNC_TOOL_VERSION} install hua"
+  else
+    warn "alphacp-sync v${SYNC_TOOL_VERSION} download/checksum fail — purana sync tool hi chalega"
+  fi
+fi
+
+# GitHub ko bhi update karo (alphacp-sync setup ho to) — fail ho to bhi update safal hai
+if command -v alphacp-sync >/dev/null 2>&1; then
+  info "GitHub sync (alphacp-sync) chala raha hoon"
+  alphacp-sync </dev/null >>"${LOG_FILE}" 2>&1 && ok "GitHub updated (server-snapshot)" || warn "GitHub sync fail — baad me: sudo alphacp-sync"
+fi
+say "— panel-update ${UPDATER_VERSION}"
