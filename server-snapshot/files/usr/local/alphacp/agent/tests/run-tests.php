@@ -28,8 +28,10 @@ use Alphacp\Agent\Tasks\AccountSetQuota;
 use Alphacp\Agent\Tasks\AccountSuspend;
 use Alphacp\Agent\Tasks\AccountTerminate;
 use Alphacp\Agent\Tasks\AccountUnsuspend;
+use Alphacp\Agent\Tasks\CronSet;
 use Alphacp\Agent\Tasks\DomainAdd;
 use Alphacp\Agent\Tasks\DomainRemove;
+use Alphacp\Agent\Tasks\PhpSetVersion;
 use Alphacp\Agent\Tasks\TaskContext;
 use Alphacp\Agent\Tests\FakeCommandExecutor;
 
@@ -173,7 +175,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'cron.set'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -371,6 +373,52 @@ test('domain.remove drops extra vhost; terminate cleans leftovers', function ():
     assert_true(!is_file($harness['root'] . '/apache/sites-available/acp-alicehost-park-example-com.conf'));
     acp_account_cleanup($harness);
 });
+test('php.setVersion rewrites the pool and reloads the new fpm', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new PhpSetVersion())->handle([
+        'username' => 'alicehost',
+        'php_version' => '8.3',
+    ], $harness['ctx']);
+    assert_true($out['php_version'] === '8.3');
+    $pool = (string) file_get_contents($harness['root'] . '/php/pool.d/acp-alicehost.conf');
+    assert_true(str_contains($pool, 'alicehost'));
+    $reloaded = false;
+    foreach ($harness['cmd']->calls as $argv) {
+        if (in_array('php8.3-fpm', $argv, true)) {
+            $reloaded = true;
+        }
+    }
+    assert_true($reloaded, 'php8.3-fpm should reload');
+    acp_account_cleanup($harness);
+});
+test('cron.set writes crontab body and rejects newlines', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new CronSet())->handle([
+        'username' => 'alicehost',
+        'jobs' => [[
+            'minute' => '0', 'hour' => '1', 'day' => '*', 'month' => '*', 'weekday' => '*',
+            'command' => '/home/alicehost/bin/daily.sh',
+        ]],
+    ], $harness['ctx']);
+    assert_true($out['jobs'] === 1);
+    assert_true(str_contains((string) $harness['cmd']->crontabBody, '/home/alicehost/bin/daily.sh'));
+    $threw = false;
+    try {
+        (new CronSet())->handle([
+            'username' => 'alicehost',
+            'jobs' => [[
+                'minute' => '*', 'hour' => '*', 'day' => '*', 'month' => '*', 'weekday' => '*',
+                'command' => "echo hi\nrm -rf /",
+            ]],
+        ], $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'newline in command must fail');
+    acp_account_cleanup($harness);
+});
 test('SafeFs refuses writes outside the allowlisted roots', function (): void {
     $harness = acp_account_harness();
     $fs = new SafeFs($harness['ctx']->paths);
@@ -407,7 +455,6 @@ function acp_account_harness(): array
     putenv('ACP_APACHE_ENABLED=' . $root . '/apache/sites-enabled');
     putenv('ACP_PHP_POOL_DIR=' . $root . '/php/pool.d');
     putenv('ACP_SUSPENDED_ROOT=' . $root . '/suspended');
-    putenv('ACP_PHP_FPM_SERVICE=php8.4-fpm');
     putenv('ACP_APACHE_SERVICE=apache2');
     putenv('ACP_NOLOGIN=/usr/sbin/nologin');
     putenv('ACP_PHP_VERSION=8.4');

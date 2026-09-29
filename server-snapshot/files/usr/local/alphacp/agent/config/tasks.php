@@ -95,7 +95,7 @@ return [
                 'domain'      => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
                 'shadow_hash' => ['type' => 'string', 'minLength' => 20, 'maxLength' => 200, 'pattern' => '^\\$6\\$.+'],
                 'quota_mb'    => ['type' => 'integer', 'minimum' => -1, 'maximum' => 10485760],
-                'php_version' => ['type' => 'string', 'pattern' => '^8\\.[0-9]$'],
+                'php_version' => ['type' => 'string', 'pattern' => '^(7\\.4|8\\.[0-9])$'],
             ],
         ],
     ],
@@ -187,6 +187,56 @@ return [
             'properties'           => [
                 'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
                 'domain'   => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
+    'php.setVersion' => [
+        'handler'     => Tasks\PhpSetVersion::class,
+        'safety'      => 'mutating',
+        'timeout'     => 45,
+        'description' => 'Move account PHP-FPM pool to another MultiPHP version.',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'php_version'],
+            'properties'           => [
+                'username'    => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'php_version' => ['type' => 'string', 'pattern' => '^(7\\.4|8\\.[0-9])$'],
+            ],
+        ],
+    ],
+
+    'cron.set' => [
+        'handler'     => Tasks\CronSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Replace the account crontab (empty jobs clears it).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'jobs'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'jobs'     => [
+                    'type'     => 'array',
+                    'maxItems' => 100,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['minute', 'hour', 'day', 'month', 'weekday', 'command'],
+                        'properties'           => [
+                            'minute'  => ['type' => 'string', 'maxLength' => 40, 'pattern' => '^[0-9*,/-]+$'],
+                            'hour'    => ['type' => 'string', 'maxLength' => 40, 'pattern' => '^[0-9*,/-]+$'],
+                            'day'     => ['type' => 'string', 'maxLength' => 40, 'pattern' => '^[0-9*,/-]+$'],
+                            'month'   => ['type' => 'string', 'maxLength' => 40, 'pattern' => '^[0-9*,/-]+$'],
+                            'weekday' => ['type' => 'string', 'maxLength' => 40, 'pattern' => '^[0-9*,/-]+$'],
+                            'command' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 500],
+                        ],
+                    ],
+                ],
             ],
         ],
     ],

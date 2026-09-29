@@ -27,6 +27,8 @@
             @can('system.view')<a href="{{ route('system.index') }}">System</a>@endcan
         @else
             @can('domains.view')<a href="{{ route('domains.index') }}">Domains</a>@endcan
+            @can('software.view')<a href="{{ route('php.index') }}">MultiPHP</a>@endcan
+            @can('cron.view')<a href="{{ route('cron.index') }}">Cron</a>@endcan
             <a href="{{ route('security.index') }}">Security</a>
         @endif
     </nav>

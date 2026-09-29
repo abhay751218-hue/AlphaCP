@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.6.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.6.0   (.env)
-AGENT_VERSION : 0.3.0
+panel code    : 0.7.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.7.0   (.env)
+AGENT_VERSION : 0.4.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -38,9 +38,10 @@ signed     : no (local trial)
 agent-backup-20260929010705
 agent-backup-20260929012116
 agent-backup-20260929024057
-panel-backup-20260929010705
+agent-backup-20260929025640
 panel-backup-20260929012116
 panel-backup-20260929024057
+panel-backup-20260929025640
 panel-failed-20260928223644
 ```
 
@@ -95,6 +96,7 @@ alphacp:admin-password
   2026_09_29_000003_create_accounts_tables   [2] Ran
   2026_09_29_000004_packages_feature_lists_and_limits   [3] Ran
   2026_09_29_000005_create_domains_table   [4] Ran
+  2026_09_29_000006_create_cron_jobs_and_software_perms   [5] Ran
 ```
 
 ## Routes (web)
@@ -104,12 +106,16 @@ GET|HEAD           /accounts                                     accounts.index
 POST               /accounts                                     accounts.store
 GET|HEAD           /accounts/create                              accounts.create
 GET|HEAD           /accounts/{account}                           accounts.show
+POST               /accounts/{account}/php                       accounts.php
 POST               /accounts/{account}/quota                     accounts.quota
 POST               /accounts/{account}/suspend                   accounts.suspend
 POST               /accounts/{account}/terminate                 accounts.terminate
 POST               /accounts/{account}/unsuspend                 accounts.unsuspend
 POST               /accounts/{account}/upgrade                   accounts.upgrade
 GET|HEAD           /audit                                        audit.index
+GET|HEAD           /cron                                         cron.index
+POST               /cron                                         cron.store
+DELETE             /cron/{cron}                                  cron.destroy
 GET|HEAD           /dashboard                                    dashboard
 GET|HEAD           /domains                                      domains.index
 POST               /domains                                      domains.store
@@ -124,6 +130,8 @@ GET|HEAD           /packages/create                              packages.create
 PUT                /packages/{package}                           packages.update
 POST               /packages/{package}/archive                   packages.archive
 GET|HEAD           /packages/{package}/edit                      packages.edit
+GET|HEAD           /php                                          php.index
+POST               /php                                          php.update
 GET|HEAD           /security                                     security.index
 POST               /security/2fa/confirm                         security.2fa.confirm
 POST               /security/2fa/disable                         security.2fa.disable

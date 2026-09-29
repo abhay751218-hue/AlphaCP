@@ -52,7 +52,7 @@ final class AccountIdentity
 
     public static function phpVersion(string $version): ?string
     {
-        if (preg_match('/^8\.[0-9]$/', $version) !== 1) {
+        if (preg_match('/^(7\.4|8\.[0-9])$/', $version) !== 1) {
             return 'php_version must look like 8.4';
         }
         return null;

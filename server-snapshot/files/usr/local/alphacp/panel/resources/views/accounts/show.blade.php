@@ -62,6 +62,16 @@
                     <input id="quota_mb" name="quota_mb" type="number" min="-1" required value="{{ old('quota_mb', $account->quota_mb) }}">
                     <button class="btn small secondary mt" type="submit">Set quota</button>
                 </form>
+                <form method="post" action="{{ route('accounts.php', $account) }}" class="mb">
+                    @csrf
+                    <label for="php_version">MultiPHP version</label>
+                    <select id="php_version" name="php_version" required>
+                        @foreach (\App\Support\PhpVersions::all() as $php)
+                            <option value="{{ $php }}" @selected($account->php_version === $php)>PHP {{ $php }}</option>
+                        @endforeach
+                    </select>
+                    <button class="btn small secondary mt" type="submit">Apply PHP</button>
+                </form>
             @endif
         @endcan
 

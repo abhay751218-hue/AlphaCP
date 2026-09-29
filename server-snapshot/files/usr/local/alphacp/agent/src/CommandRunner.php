@@ -35,6 +35,7 @@ final class CommandRunner implements CommandExecutor
         '/usr/sbin/usermod',
         '/usr/sbin/setquota',
         '/usr/bin/setquota',
+        '/usr/bin/crontab',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

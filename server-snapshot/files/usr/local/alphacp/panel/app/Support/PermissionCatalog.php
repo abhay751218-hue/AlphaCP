@@ -59,6 +59,14 @@ final class PermissionCatalog
                 ['domains.view', 'View domains'],
                 ['domains.manage', 'Add/remove domains'],
             ],
+            'software' => [
+                ['software.view', 'View MultiPHP / software'],
+                ['software.manage', 'Change PHP version'],
+            ],
+            'cron' => [
+                ['cron.view', 'View cron jobs'],
+                ['cron.manage', 'Create/delete cron jobs'],
+            ],
             'databases' => [
                 ['databases.view', 'View databases'],
                 ['databases.manage', 'Create/manage databases'],
@@ -116,12 +124,14 @@ final class PermissionCatalog
                 'email.view', 'email.manage', 'domains.view', 'domains.manage',
                 'databases.view', 'databases.manage', 'dns.view', 'backup.view',
                 'metrics.view', 'security.view', 'audit.view', 'system.view',
+                'software.view', 'software.manage', 'cron.view', 'cron.manage',
             ],
 
             'user' => [
                 'core.access', 'core.self', 'files.view', 'files.manage',
                 'email.view', 'email.manage', 'domains.view', 'domains.manage',
                 'databases.view', 'dns.view', 'backup.view', 'metrics.view',
+                'software.view', 'software.manage', 'cron.view', 'cron.manage',
             ],
 
             'mail' => [
