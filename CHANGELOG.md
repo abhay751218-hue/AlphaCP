@@ -7,7 +7,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 ### Added
 - **Step 5 MIME Types (29 Sep)** — custom Apache `AddType` via `mime.set`
   (PHP/CGI/SSI extensions fail closed). Panel **0.13.0**, agent **0.10.0**.
-  Tests: panel **100/0**, provision-sim **41/41**.
+  Tests: panel **100/0**, provision-sim **41/41**, update-sim **78/78**.
+  Deploy via `panel-update.sh` 0.13.0.
 - **Step 5 Indexes (29 Sep)** — Apache directory listing (`off`/`simple`/`fancy`)
   via `indexes.set`. Panel **0.12.0**, agent **0.9.0**.
   Tests: panel **95/0**, provision-sim **40/40**, update-sim **76/76**.

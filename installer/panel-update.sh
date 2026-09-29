@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.12.0  ·  default panel bundle 0.12.0  ·  agent 0.9.0  ·  alphacp-sync v1.2
+# updater 0.13.0  ·  default panel bundle 0.13.0  ·  agent 0.10.0  ·  alphacp-sync v1.2
+#
+# 0.13.0: Step 5 — panel 0.13.0 (MIME Types) + agent 0.10.0 (mime.set)
 #
 # 0.12.0: Step 5 — panel 0.12.0 (Indexes) + agent 0.9.0 (indexes.set)
 #
@@ -41,17 +43,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.12.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.12.0}"
+UPDATER_VERSION="0.13.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.13.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-3713a6ae1e77ff6c4ef5c46c5b083e64e22afb8d}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-657e2fbd95d0ee46c409eff55bb3a0adcdd315dc}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-9fce2886b712ff1dccafc716c424fe80cbdcf64dfc8340ed11aabf7ac31d3962}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.9.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-3713a6ae1e77ff6c4ef5c46c5b083e64e22afb8d}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-952b25faabad29db059afb40da14443dde8241a7080ec8477662b4a09c4f880d}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.10.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-657e2fbd95d0ee46c409eff55bb3a0adcdd315dc}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-8fc80071492a9fb6b45684f8288f47ba322382051410088b4fb1dc6a4b00f7f7}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-9495da48529beffe0bf2a64a64b94cdadb2a814a7ef570c24db0bbcafa1603f8}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
