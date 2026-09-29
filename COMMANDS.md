@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.15.0 — Step 6: File Manager
+### panel-update 0.16.0 — Step 6: Directory Privacy
 ```bash
-sudo alphacp-sync get a03bdc75f53a0623fba1db6fde47c4ca6e50db78 installer/panel-update.sh /tmp/acp-panel-update-0.15.0.sh f52c3b59744b5269bf5d61c31f574d543f09c0c3378a6871bd88b88affa46a4e && sudo bash /tmp/acp-panel-update-0.15.0.sh
+sudo alphacp-sync get 55142ec6bda53752739c01c4e81cc8a3a6bf5b99 installer/panel-update.sh /tmp/acp-panel-update-0.16.0.sh 9fd0385f87713e1ce6b30f57b15b265a5f812c7091d9cb65ba6acdb192f2093b && sudo bash /tmp/acp-panel-update-0.16.0.sh
 ```
-- sha256: `f52c3b59744b5269bf5d61c31f574d543f09c0c3378a6871bd88b88affa46a4e`
-- Expected: banner `updater 0.15.0` → agent **0.12.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: File Manager (browse/mkdir/edit/delete/rename, home-jailed). Zip/chmod later.
-- WHM: Create Account / packages / user manager. Customer ko File Manager tile dikhega, WHM me nahi.
+- sha256: `9fd0385f87713e1ce6b30f57b15b265a5f812c7091d9cb65ba6acdb192f2093b`
+- Expected: banner `updater 0.16.0` → agent **0.13.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Directory Privacy (Apache Basic Auth). Password bcrypt hash, plaintext agent tak nahi jata.
+- WHM: Create Account / packages / user manager. Customer ko Directory Privacy tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **110/0**, provision-sim **43/43**, update-sim **82/82**.
+- Test: panel-tests **115/0**, provision-sim **44/44**, update-sim **84/84**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.15.0 (`a03bdc7…`) → panel 0.15.0 + agent 0.12.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, File Manager |
 | panel-update 0.14.0 (`beaca4c…`) → panel 0.14.0 + agent 0.11.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Apache Handlers |
 | panel-update 0.13.0 (`b2c1fc7…`) → panel 0.13.0 + agent 0.10.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, MIME Types |
 | panel-update 0.12.0 (`be1ba8c…`) → panel 0.12.0 + agent 0.9.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Indexes |
