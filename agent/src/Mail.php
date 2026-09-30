@@ -10,6 +10,7 @@ namespace Alphacp\Agent;
 final class Mail
 {
     public const MAX = 50;
+    public const MAX_FWD = 50;
 
     /**
      * @param  list<mixed> $raw
@@ -101,5 +102,61 @@ final class Mail
         }
 
         return $addr . ':{BLF-CRYPT}' . $row['hash'] . ':' . $uid . ':' . $gid . '::' . $maildir . '::' . $extra;
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{local: string, domain: string, dest: string}>
+     */
+    public static function sanitizeForwards(array $raw): array
+    {
+        if (count($raw) > self::MAX_FWD) {
+            throw new TaskRejectedException('too many forwarders (50 max)');
+        }
+        $bySrc = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid forwarder at {$i}");
+            }
+            $local = self::normalizeLocal((string) ($row['local'] ?? ''));
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $dest = self::normalizeDest((string) ($row['dest'] ?? ''));
+            $src = $local . '@' . $domain;
+            if ($src === $dest) {
+                throw new TaskRejectedException('forwarder dest cannot equal source');
+            }
+            $bySrc[$src] = ['local' => $local, 'domain' => $domain, 'dest' => $dest];
+        }
+        ksort($bySrc);
+
+        return array_values($bySrc);
+    }
+
+    public static function normalizeDest(string $dest): string
+    {
+        $dest = strtolower(trim($dest));
+        if ($dest === '' || strpbrk($dest, "\r\n|:;`$()\\/") !== false) {
+            throw new TaskRejectedException('forwarder dest must be an email (no pipe/shell)');
+        }
+        $at = strrpos($dest, '@');
+        if ($at === false) {
+            throw new TaskRejectedException('forwarder dest must be an email');
+        }
+        $local = substr($dest, 0, $at);
+        $domain = substr($dest, $at + 1);
+        if (preg_match('/^[a-z0-9](?:[a-z0-9._+-]{0,62}[a-z0-9])?$/', $local) !== 1) {
+            throw new TaskRejectedException('invalid forwarder dest local');
+        }
+        $err = AccountIdentity::domain($domain);
+        if ($err !== null) {
+            throw new TaskRejectedException('invalid forwarder dest domain');
+        }
+
+        return $local . '@' . $domain;
+    }
+
+    public static function aliasLine(array $row): string
+    {
+        return $row['local'] . '@' . $row['domain'] . ': ' . $row['dest'];
     }
 }

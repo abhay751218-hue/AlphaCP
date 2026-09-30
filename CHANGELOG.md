@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Forwarders (30 Sep)** — address→address via `mail.forward`
+  (aliases file; pipe/shell dest fail closed). Panel **0.20.0**, agent **0.17.0**.
+  Tests: panel **138/0**, provision-sim **48/48**, update-sim **92/92**.
+  Deploy via `panel-update.sh` 0.20.0.
 - **Step 7 Email Accounts (29 Sep)** — virtual mailboxes via `mail.set`
   (Maildir + bcrypt passwd-file). Panel **0.19.0**, agent **0.16.0**.
   Tests: panel **132/0**, provision-sim **47/47**, update-sim **90/90**.

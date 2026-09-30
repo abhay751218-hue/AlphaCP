@@ -63,6 +63,11 @@ class Account extends Model
         return $this->hasMany(Mailbox::class);
     }
 
+    public function forwarders(): HasMany
+    {
+        return $this->hasMany(Forwarder::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

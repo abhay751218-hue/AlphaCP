@@ -193,6 +193,36 @@ final class AccountOs
         return $boxes;
     }
 
+    /**
+     * @param  list<array{local: string, domain: string, dest: string}> $rows
+     * @return list<array{local: string, domain: string, dest: string}>
+     */
+    public function setForwards(string $username, array $rows): array
+    {
+        $rows = Mail::sanitizeForwards($rows);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/aliases');
+        if (is_link($file)) {
+            throw new RuntimeException('mail aliases is a symlink');
+        }
+        $lines = [];
+        foreach ($rows as $row) {
+            $lines[] = Mail::aliasLine($row);
+        }
+        $body = $lines === [] ? '' : implode("\n", $lines) . "\n";
+        $this->fs->write($file, $body, 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail forwards ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

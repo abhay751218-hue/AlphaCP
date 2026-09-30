@@ -56,7 +56,7 @@
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
 | 13 | Email Accounts | Mailboxes + quota | S7 | ✅ (virtual Maildir; bcrypt passwd-file; MAXPOP) |
-| 14 | Forwarders | Email forward | S7 | ⏳ S7 |
+| 14 | Forwarders | Email forward | S7 | ✅ (address→address aliases; no pipe/shell) |
 | 15 | Email Routing | MX/local routing per domain | S7 | ⏳ S7 |
 | 16 | Autoresponders | Vacation/auto reply | S7 | ⏳ S7 |
 | 17 | Default Address | Catch-all | S7 | ⏳ S7 |
