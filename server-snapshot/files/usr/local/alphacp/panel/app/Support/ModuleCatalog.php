@@ -48,7 +48,7 @@ final class ModuleCatalog
                 'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'Email Accounts',      'step' => 'S7', 'status' => 'live', 'route' => 'email.index'],
-                    ['name' => 'Forwarders',          'step' => 'S7', 'status' => 'step'],
+                    ['name' => 'Forwarders',          'step' => 'S7', 'status' => 'live', 'route' => 'forwarders.index'],
                     ['name' => 'Autoresponders',      'step' => 'S7', 'status' => 'step'],
                     ['name' => 'Email Filters',       'step' => 'S7', 'status' => 'step'],
                     ['name' => 'Deliverability',      'step' => 'S7', 'status' => 'step'],

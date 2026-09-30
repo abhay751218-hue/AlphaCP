@@ -11,6 +11,7 @@ use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\ErrorPagesController;
+use App\Http\Controllers\ForwardersController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\IndexesController;
 use App\Http\Controllers\DiskUsageController;
@@ -129,6 +130,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('email.store');
     Route::delete('/email/{mailbox}', [MailController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('email.destroy');
+
+    Route::get('/forwarders', [ForwardersController::class, 'index'])
+        ->middleware('perm:email.view')->name('forwarders.index');
+    Route::post('/forwarders', [ForwardersController::class, 'store'])
+        ->middleware('perm:email.manage')->name('forwarders.store');
+    Route::delete('/forwarders/{forwarder}', [ForwardersController::class, 'destroy'])
+        ->middleware('perm:email.manage')->name('forwarders.destroy');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

@@ -44,4 +44,23 @@ final class Mail
 
         return $hash;
     }
+
+    public static function tryDest(string $dest): ?string
+    {
+        $dest = strtolower(trim($dest));
+        if ($dest === '' || strpbrk($dest, "\r\n|:;`$()\\/") !== false) {
+            return null;
+        }
+        $at = strrpos($dest, '@');
+        if ($at === false) {
+            return null;
+        }
+        $local = substr($dest, 0, $at);
+        $domain = self::tryDomain(substr($dest, $at + 1));
+        if (preg_match('/^[a-z0-9](?:[a-z0-9._+-]{0,62}[a-z0-9])?$/', $local) !== 1 || $domain === null) {
+            return null;
+        }
+
+        return $local . '@' . $domain;
+    }
 }
