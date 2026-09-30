@@ -89,6 +89,11 @@ class Account extends Model
         return $this->hasOne(SpamSetting::class);
     }
 
+    public function mailingLists(): HasMany
+    {
+        return $this->hasMany(MailingList::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

@@ -443,6 +443,36 @@ return [
         ],
     ],
 
+    'mail.list' => [
+        'handler'     => Tasks\MailList::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Replace mailing lists (JSON, owner email only, no mailman).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'lists'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'lists'    => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['local', 'domain', 'owner'],
+                        'properties'           => [
+                            'local'  => ['type' => 'string', 'maxLength' => 32],
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'owner'  => ['type' => 'string', 'maxLength' => 190],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.spam' => [
         'handler'     => Tasks\MailSpam::class,
         'safety'      => 'mutating',

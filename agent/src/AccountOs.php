@@ -353,6 +353,31 @@ final class AccountOs
         return $cfg;
     }
 
+    /**
+     * @param  list<array{local: string, domain: string, owner: string}> $rows
+     * @return list<array{local: string, domain: string, owner: string}>
+     */
+    public function setLists(string $username, array $rows): array
+    {
+        $rows = Mail::sanitizeLists($rows);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/lists.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail lists is a symlink');
+        }
+        $this->fs->write($file, Mail::listsJson($rows), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail lists ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

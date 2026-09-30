@@ -60,7 +60,7 @@
 | 15 | Email Routing | MX/local routing per domain | S7 | ⏳ S7 |
 | 16 | Autoresponders | Vacation/auto reply | S7 | ✅ (JSON vacation file; no pipe/shell) |
 | 17 | Default Address | Catch-all | S7 | ✅ (`*@domain` → email; no pipe/shell) |
-| 18 | Mailing Lists | Mailman lists | S7 | ⏳ S7 |
+| 18 | Mailing Lists | Mailman lists | S7 | ✅ (list+owner JSON; no mailman daemon) |
 | 19 | Track Delivery | Delivery trace | S7 | ⏳ S7 |
 | 20 | Global Email Filters | Server-side filters | S7 | ⏳ S7 |
 | 21 | Email Filters | Per-mailbox filters | S7 | ✅ (contains-match JSON; discard/folder; no pipe) |
