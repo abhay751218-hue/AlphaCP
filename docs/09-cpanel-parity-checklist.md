@@ -57,7 +57,7 @@
 |---|---|---|---|---|
 | 13 | Email Accounts | Mailboxes + quota | S7 | ✅ (virtual Maildir; bcrypt passwd-file; MAXPOP) |
 | 14 | Forwarders | Email forward | S7 | ✅ (address→address aliases; no pipe/shell) |
-| 15 | Email Routing | MX/local routing per domain | S7 | ⏳ S7 |
+| 15 | Email Routing | MX/local routing per domain | S7 | ✅ (auto/local/backup/remote JSON; no Exim rewrite) |
 | 16 | Autoresponders | Vacation/auto reply | S7 | ✅ (JSON vacation file; no pipe/shell) |
 | 17 | Default Address | Catch-all | S7 | ✅ (`*@domain` → email; no pipe/shell) |
 | 18 | Mailing Lists | Mailman lists | S7 | ✅ (list+owner JSON; no mailman daemon) |

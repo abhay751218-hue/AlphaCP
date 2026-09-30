@@ -33,7 +33,7 @@
 | Step 4 | Packages & limits manager | ✅ **DEPLOYED 0.5.0** (29 Sep 01:21Z) |
 | Step 5 | Domains, vHost, MultiPHP, SSL, Cron, Indexes, MIME, Handlers | ✅ **0.14.0 live** |
 | Step 6 | File Manager + FTP + Git + SSH | 🟡 **FM + Privacy + Disk Usage + SSH live** |
-| Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **through Spam Filters live; Mailing Lists 0.26.0 pending deploy** |
+| Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **through Mailing Lists live; Email Routing 0.27.0 pending deploy** |
 | Step 8 | Databases (MySQL management) | ⏳ |
 | Step 9 | DNS management + nameservers | ⏳ |
 | Step 10 | Backup / Restore / Migration | ⏳ |

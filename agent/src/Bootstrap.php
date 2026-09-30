@@ -8,7 +8,7 @@ declare(strict_types=1);
  * No Composer, no vendor/, only the PHP standard library.
  */
 
-define('ACP_AGENT_VERSION', '0.23.0');
+define('ACP_AGENT_VERSION', '0.24.0');
 define('ACP_AGENT_ROOT', dirname(__DIR__));                       // .../agent
 define('ACP_HOME', rtrim(getenv('ACP_HOME') ?: '/usr/local/alphacp', '/'));
 

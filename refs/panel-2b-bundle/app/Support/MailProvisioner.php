@@ -10,6 +10,7 @@ use App\Models\Catchall;
 use App\Models\Forwarder;
 use App\Models\Mailbox;
 use App\Models\MailFilter;
+use App\Models\EmailRoute;
 use App\Models\MailingList;
 use App\Models\SpamSetting;
 
@@ -186,5 +187,23 @@ final class MailProvisioner
         }
 
         return $account->mailingLists()->count() >= $max;
+    }
+
+    public static function enqueueRouting(Account $account): int
+    {
+        $rows = $account->emailRoutes()->orderBy('id')->get()->map(static fn (EmailRoute $row): array => [
+            'domain' => $row->domain,
+            'mode' => $row->mode,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'mail.routing', [
+            'username' => $account->username,
+            'routes' => $rows,
+        ]);
+    }
+
+    public static function routingLimitReached(Account $account): bool
+    {
+        return $account->emailRoutes()->count() >= 50;
     }
 }

@@ -378,6 +378,31 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  list<array{domain: string, mode: string}> $rows
+     * @return list<array{domain: string, mode: string}>
+     */
+    public function setRouting(string $username, array $rows): array
+    {
+        $rows = Mail::sanitizeRouting($rows);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/routing.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail routing is a symlink');
+        }
+        $this->fs->write($file, Mail::routingJson($rows), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail routing ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

@@ -443,6 +443,35 @@ return [
         ],
     ],
 
+    'mail.routing' => [
+        'handler'     => Tasks\MailRouting::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Replace per-domain mail routing mode (JSON; auto/local/backup/remote).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'routes'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'routes'   => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'mode'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'mode'   => ['type' => 'string', 'enum' => ['auto', 'local', 'backup', 'remote']],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.list' => [
         'handler'     => Tasks\MailList::class,
         'safety'      => 'mutating',

@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Email Routing (30 Sep)** — per-domain auto/local/backup/remote via `mail.routing`
+  (JSON; no Exim rewrite; hostile domain/mode fail closed). Panel **0.27.0**, agent **0.24.0**.
+  Tests: panel **180/0**, provision-sim **55/55**, update-sim **106/106**.
+  Deploy via `panel-update.sh` 0.27.0.
 - **Step 7 Mailing Lists (30 Sep)** — list+owner via `mail.list`
   (JSON; no mailman; pipe owner fail closed). Panel **0.26.0**, agent **0.23.0**.
   Tests: panel **174/0**, provision-sim **54/54**, update-sim **104/104**.
