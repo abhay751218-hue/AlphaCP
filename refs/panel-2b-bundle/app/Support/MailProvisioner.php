@@ -206,4 +206,12 @@ final class MailProvisioner
     {
         return $account->emailRoutes()->count() >= 50;
     }
+
+    public static function enqueueTrack(Account $account, string $query): int
+    {
+        return AccountProvisioner::enqueue($account, 'mail.track', [
+            'username' => $account->username,
+            'query' => $query,
+        ]);
+    }
 }

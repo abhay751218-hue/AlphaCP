@@ -403,6 +403,26 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @return list<array{id: string, time: string, sender: string, recipient: string, status: string}>
+     */
+    public function track(string $username, string $query): array
+    {
+        $query = Mail::normalizeDest($query);
+        $home = $this->paths->home($username);
+        $file = Files::resolve($home, 'etc/mail/track.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail track is a symlink');
+        }
+        if (!$this->fs->exists($file)) {
+            return [];
+        }
+        $hits = Mail::filterTrack($query, $this->fs->read($file));
+        $this->log->info('mail track ' . count($hits) . " for {$username}");
+
+        return $hits;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

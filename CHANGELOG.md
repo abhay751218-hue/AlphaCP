@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Track Delivery (30 Sep)** — recipient search via `mail.track`
+  (jailed `track.json`; no Exim log; pipe query fail closed). Panel **0.28.0**, agent **0.25.0**.
+  Tests: panel **186/0**, provision-sim **56/56**, update-sim **108/108**.
+  Deploy via `panel-update.sh` 0.28.0.
 - **Step 7 Email Routing (30 Sep)** — per-domain auto/local/backup/remote via `mail.routing`
   (JSON; no Exim rewrite; hostile domain/mode fail closed). Panel **0.27.0**, agent **0.24.0**.
   Tests: panel **180/0**, provision-sim **55/55**, update-sim **106/106**.
