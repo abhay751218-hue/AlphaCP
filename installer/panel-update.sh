@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.18.0  ·  default panel bundle 0.18.0  ·  agent 0.15.0  ·  alphacp-sync v1.2
+# updater 0.19.0  ·  default panel bundle 0.19.0  ·  agent 0.16.0  ·  alphacp-sync v1.2
+#
+# 0.19.0: Step 7 — panel 0.19.0 (Email Accounts) + agent 0.16.0 (mail.set)
 #
 # 0.18.0: Step 6 — panel 0.18.0 (SSH Access) + agent 0.15.0 (ssh.set)
 #
@@ -53,17 +55,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.18.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.18.0}"
+UPDATER_VERSION="0.19.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.19.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-9d4bcdee3adc0e11cc724b16287c102af80ebc21}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-59bf69b4eb3fabb0eba942bec4163a9a9ae035d5}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-e0911be51e1420332af4cfb3729b02a365cfa5f24046aee5abfbe76ffcc8b2ec}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.15.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-9d4bcdee3adc0e11cc724b16287c102af80ebc21}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-83e52635374663b9d8d5316f11d4cd96a75087f2418ed98344bcc254a59c235b}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.16.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-59bf69b4eb3fabb0eba942bec4163a9a9ae035d5}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-5dfa8000d322a7e018f95e5d0904c9059cda665a7bfce31c36fc2eec66160ae5}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-c0d3a2976e41b862838de0caa81b756e077d0539405c191fdd3c3f1bde01a38f}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
