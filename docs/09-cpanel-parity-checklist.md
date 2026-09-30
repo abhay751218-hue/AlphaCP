@@ -63,7 +63,7 @@
 | 18 | Mailing Lists | Mailman lists | S7 | ⏳ S7 |
 | 19 | Track Delivery | Delivery trace | S7 | ⏳ S7 |
 | 20 | Global Email Filters | Server-side filters | S7 | ⏳ S7 |
-| 21 | Email Filters | Per-mailbox filters | S7 | ⏳ S7 |
+| 21 | Email Filters | Per-mailbox filters | S7 | ✅ (contains-match JSON; discard/folder; no pipe) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ⏳ S7 |
 | 23 | Address Importer | Bulk CSV import | S7 | ⏳ S7 |
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ⏳ S7 |

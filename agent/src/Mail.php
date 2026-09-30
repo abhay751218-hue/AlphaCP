@@ -13,6 +13,7 @@ final class Mail
     public const MAX_FWD = 50;
     public const MAX_RESP = 50;
     public const MAX_CATCH = 50;
+    public const MAX_FILTER = 50;
 
     /**
      * @param  list<mixed> $raw
@@ -272,5 +273,93 @@ final class Mail
     public static function catchallLine(array $row): string
     {
         return '*@' . $row['domain'] . ': ' . $row['dest'];
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{local: string, domain: string, field: string, needle: string, action: string, folder: string}>
+     */
+    public static function sanitizeFilters(array $raw): array
+    {
+        if (count($raw) > self::MAX_FILTER) {
+            throw new TaskRejectedException('too many filters (50 max)');
+        }
+        $out = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid filter at {$i}");
+            }
+            $local = self::normalizeLocal((string) ($row['local'] ?? ''));
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $field = self::normalizeFilterField((string) ($row['field'] ?? ''));
+            $needle = self::normalizeNeedle((string) ($row['needle'] ?? ''));
+            $action = self::normalizeFilterAction((string) ($row['action'] ?? ''));
+            $folder = '';
+            if ($action === 'folder') {
+                $folder = self::normalizeLocal((string) ($row['folder'] ?? ''));
+            }
+            $out[] = [
+                'local' => $local,
+                'domain' => $domain,
+                'field' => $field,
+                'needle' => $needle,
+                'action' => $action,
+                'folder' => $folder,
+            ];
+        }
+        usort($out, static function (array $a, array $b): int {
+            $ka = $a['local'] . '@' . $a['domain'] . '|' . $a['field'] . '|' . $a['needle'];
+            $kb = $b['local'] . '@' . $b['domain'] . '|' . $b['field'] . '|' . $b['needle'];
+
+            return $ka <=> $kb;
+        });
+
+        return $out;
+    }
+
+    public static function normalizeFilterField(string $field): string
+    {
+        $field = strtolower(trim($field));
+        if (!in_array($field, ['from', 'subject', 'to'], true)) {
+            throw new TaskRejectedException('filter field must be from/subject/to');
+        }
+
+        return $field;
+    }
+
+    public static function normalizeNeedle(string $needle): string
+    {
+        $needle = trim($needle);
+        if ($needle === '' || strlen($needle) > 100 || strpbrk($needle, "\r\n|:;`$()\\/") !== false) {
+            throw new TaskRejectedException('filter needle invalid (no pipe/shell)');
+        }
+        if (preg_match('/^[a-zA-Z0-9 .,_@+-]+$/', $needle) !== 1) {
+            throw new TaskRejectedException('filter needle charset');
+        }
+
+        return $needle;
+    }
+
+    public static function normalizeFilterAction(string $action): string
+    {
+        $action = strtolower(trim($action));
+        if (!in_array($action, ['discard', 'folder'], true)) {
+            throw new TaskRejectedException('filter action must be discard or folder');
+        }
+
+        return $action;
+    }
+
+    /**
+     * @param  list<array{local: string, domain: string, field: string, needle: string, action: string, folder: string}> $rows
+     */
+    public static function filtersJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('filter json encode failed');
+        }
+
+        return $json . "\n";
     }
 }

@@ -9,6 +9,7 @@ use App\Models\Autoresponder;
 use App\Models\Catchall;
 use App\Models\Forwarder;
 use App\Models\Mailbox;
+use App\Models\MailFilter;
 
 final class MailProvisioner
 {
@@ -114,5 +115,27 @@ final class MailProvisioner
             'username' => $account->username,
             'catchalls' => $rows,
         ]);
+    }
+
+    public static function enqueueFilters(Account $account): int
+    {
+        $rows = $account->mailFilters()->orderBy('id')->get()->map(static fn (MailFilter $row): array => [
+            'local' => $row->localpart,
+            'domain' => $row->domain,
+            'field' => $row->field,
+            'needle' => $row->needle,
+            'action' => $row->action,
+            'folder' => (string) $row->folder,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'mail.filter', [
+            'username' => $account->username,
+            'filters' => $rows,
+        ]);
+    }
+
+    public static function filterLimitReached(Account $account): bool
+    {
+        return $account->mailFilters()->count() >= 50;
     }
 }

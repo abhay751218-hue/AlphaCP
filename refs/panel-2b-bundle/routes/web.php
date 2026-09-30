@@ -13,6 +13,7 @@ use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\ErrorPagesController;
 use App\Http\Controllers\AutorespondersController;
 use App\Http\Controllers\DefaultAddressController;
+use App\Http\Controllers\EmailFiltersController;
 use App\Http\Controllers\ForwardersController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\IndexesController;
@@ -153,6 +154,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('default-address.store');
     Route::delete('/default-address/{catchall}', [DefaultAddressController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('default-address.destroy');
+
+    Route::get('/email-filters', [EmailFiltersController::class, 'index'])
+        ->middleware('perm:email.view')->name('email-filters.index');
+    Route::post('/email-filters', [EmailFiltersController::class, 'store'])
+        ->middleware('perm:email.manage')->name('email-filters.store');
+    Route::delete('/email-filters/{filter}', [EmailFiltersController::class, 'destroy'])
+        ->middleware('perm:email.manage')->name('email-filters.destroy');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

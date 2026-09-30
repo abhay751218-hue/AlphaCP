@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Email Filters (30 Sep)** — contains-match via `mail.filter`
+  (JSON; discard/folder; pipe/regex/shell fail closed). Panel **0.23.0**, agent **0.20.0**.
+  Tests: panel **156/0**, provision-sim **51/51**, update-sim **98/98**.
+  Deploy via `panel-update.sh` 0.23.0.
 - **Step 7 Default Address (30 Sep)** — catch-all via `mail.catchall`
   (`*@domain` → email; pipe/shell dest fail closed). Panel **0.22.0**, agent **0.19.0**.
   Tests: panel **150/0**, provision-sim **50/50**, update-sim **96/96**.

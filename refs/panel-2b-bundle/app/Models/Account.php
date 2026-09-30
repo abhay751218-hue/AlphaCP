@@ -78,6 +78,11 @@ class Account extends Model
         return $this->hasMany(Catchall::class);
     }
 
+    public function mailFilters(): HasMany
+    {
+        return $this->hasMany(MailFilter::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
