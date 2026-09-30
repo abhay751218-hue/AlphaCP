@@ -48,6 +48,7 @@ use Alphacp\Agent\Tasks\MailDeliverability;
 use Alphacp\Agent\Tasks\MailSpam;
 use Alphacp\Agent\Tasks\MailList;
 use Alphacp\Agent\Tasks\MailRouting;
+use Alphacp\Agent\Tasks\MailTrack;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -196,7 +197,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1096,6 +1097,41 @@ test('mail.routing writes json and rejects hostile domain', function (): void {
         $threwMode = true;
     }
     assert_true($threwMode, 'invalid mode must fail closed');
+    acp_account_cleanup($harness);
+});
+test('mail.track reads json and rejects pipe query', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $dir = $harness['root'] . '/home/alicehost/etc/mail';
+    if (!is_dir($dir)) {
+        mkdir($dir, 0750, true);
+    }
+    file_put_contents($dir . '/track.json', json_encode([
+        ['id' => 'm1', 'time' => '2026-09-30T00:00:00Z', 'sender' => 'a@example.net', 'recipient' => 'alice@example.net', 'status' => 'sent'],
+        ['id' => 'bad', 'time' => 'x', 'sender' => 'a@example.net', 'recipient' => '|/bin/sh', 'status' => 'sent'],
+    ], JSON_UNESCAPED_SLASHES) . "\n");
+    $out = (new MailTrack())->handle([
+        'username' => 'alicehost',
+        'query' => 'alice@example.net',
+    ], $harness['ctx']);
+    assert_true($out['hits'][0]['recipient'] === 'alice@example.net');
+    assert_true(count($out['hits']) === 1);
+    assert_true(!str_contains(json_encode($out['hits']), '|'));
+    $empty = (new MailTrack())->handle([
+        'username' => 'alicehost',
+        'query' => 'nobody@example.net',
+    ], $harness['ctx']);
+    assert_true($empty['hits'] === []);
+    $threwPipe = false;
+    try {
+        (new MailTrack())->handle([
+            'username' => 'alicehost',
+            'query' => '|/bin/sh',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPipe = str_contains($e->getMessage(), 'pipe') || str_contains($e->getMessage(), 'dest');
+    }
+    assert_true($threwPipe, 'pipe query must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

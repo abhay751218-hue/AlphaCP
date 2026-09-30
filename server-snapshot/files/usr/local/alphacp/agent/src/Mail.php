@@ -18,7 +18,9 @@ final class Mail
     public const MAX_SPAM_LIST = 50;
     public const MAX_LST = 50;
     public const MAX_RTE = 50;
+    public const MAX_TRACK = 50;
     public const MODES = ['auto', 'local', 'backup', 'remote'];
+    public const TRACK_STATUSES = ['sent', 'deferred', 'bounced', 'rejected'];
     public const SPF = 'v=spf1 a mx ~all';
     public const DMARC = 'v=DMARC1; p=none;';
     public const DKIM_SELECTOR = 'default';
@@ -562,5 +564,61 @@ final class Mail
         }
 
         return $json . "\n";
+    }
+
+    /**
+     * @return list<array{id: string, time: string, sender: string, recipient: string, status: string}>
+     */
+    public static function filterTrack(string $query, string $json): array
+    {
+        $want = self::normalizeDest($query);
+        $data = json_decode($json, true);
+        if (!is_array($data)) {
+            return [];
+        }
+        $out = [];
+        foreach ($data as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            try {
+                $recip = self::normalizeDest((string) ($row['recipient'] ?? ''));
+            } catch (TaskRejectedException $e) {
+                continue;
+            }
+            if ($recip !== $want) {
+                continue;
+            }
+            $status = strtolower(trim((string) ($row['status'] ?? '')));
+            if (!in_array($status, self::TRACK_STATUSES, true)) {
+                $status = 'unknown';
+            }
+            $sender = '';
+            try {
+                $sender = self::normalizeDest((string) ($row['sender'] ?? ''));
+            } catch (TaskRejectedException $e) {
+                $sender = '';
+            }
+            $id = (string) ($row['id'] ?? '');
+            if (preg_match('/^[A-Za-z0-9._-]{1,64}$/', $id) !== 1) {
+                $id = '';
+            }
+            $time = (string) ($row['time'] ?? '');
+            if (preg_match('/^[0-9T:+-]{1,32}$/', $time) !== 1) {
+                $time = '';
+            }
+            $out[] = [
+                'id' => $id,
+                'time' => $time,
+                'sender' => $sender,
+                'recipient' => $recip,
+                'status' => $status,
+            ];
+            if (count($out) >= self::MAX_TRACK) {
+                break;
+            }
+        }
+
+        return $out;
     }
 }

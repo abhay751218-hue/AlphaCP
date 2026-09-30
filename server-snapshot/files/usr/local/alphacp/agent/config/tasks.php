@@ -443,6 +443,23 @@ return [
         ],
     ],
 
+    'mail.track' => [
+        'handler'     => Tasks\MailTrack::class,
+        'safety'      => 'readonly',
+        'timeout'     => 20,
+        'description' => 'Search jailed track.json by recipient email (no Exim log, no pipe).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'query'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'query'    => ['type' => 'string', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
     'mail.routing' => [
         'handler'     => Tasks\MailRouting::class,
         'safety'      => 'mutating',
