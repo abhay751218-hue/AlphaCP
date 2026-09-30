@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.31.0 — Step 7: Encryption
+### panel-update 0.32.0 — Step 7: BoxTrapper
 ```bash
-sudo alphacp-sync get 8617eab7c54cf78d4262beda2066274bde8f6d57 installer/panel-update.sh /tmp/acp-panel-update-0.31.0.sh db920ad5ec3159c7e1aaa87b93d0e9bc1aed1d8121e2376baa54be9985fc8115 && sudo bash /tmp/acp-panel-update-0.31.0.sh
+sudo alphacp-sync get 8e19b702a36aa15900763b00773465c1225504cd installer/panel-update.sh /tmp/acp-panel-update-0.32.0.sh bcc4ca615c9d7fc707ebf9dc46bcaac76f260fe018654387ca1d88fa242270ca && sudo bash /tmp/acp-panel-update-0.32.0.sh
 ```
-- sha256: `db920ad5ec3159c7e1aaa87b93d0e9bc1aed1d8121e2376baa54be9985fc8115`
-- Expected: banner `updater 0.31.0` → agent **0.27.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Encryption (GnuPG identity JSON). Pipe comment fail closed. No gpg, no private key.
-- WHM: Create Account / packages / user manager. Customer ko Encryption tile dikhega, WHM me nahi.
+- sha256: `bcc4ca615c9d7fc707ebf9dc46bcaac76f260fe018654387ca1d88fa242270ca`
+- Expected: banner `updater 0.32.0` → agent **0.28.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: BoxTrapper (enabled + allowlist JSON). Pipe dest fail closed. No challenge daemon.
+- WHM: Create Account / packages / user manager. Customer ko BoxTrapper tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **204/0**, provision-sim **58/58**, update-sim **113/113**.
+- Test: panel-tests **210/0**, provision-sim **59/59**, update-sim **115/115**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.31.0 (`8617eab…`) → panel 0.31.0 + agent 0.27.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Encryption |
 | panel-update 0.30.0 (`5fc5fb7…`) → panel 0.30.0 + agent 0.26.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Address Importer |
 | panel-update 0.29.0 (`acb64df…`) → panel 0.29.0 + agent 0.26.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Global Email Filters |
 | panel-update 0.28.0 (`0120747…`) → panel 0.28.0 + agent 0.25.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Track Delivery |
