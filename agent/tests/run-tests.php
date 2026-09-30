@@ -42,6 +42,7 @@ use Alphacp\Agent\Tasks\SshSet;
 use Alphacp\Agent\Tasks\MailSet;
 use Alphacp\Agent\Tasks\MailForward;
 use Alphacp\Agent\Tasks\MailAutorespond;
+use Alphacp\Agent\Tasks\MailCatchall;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -190,7 +191,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -890,6 +891,36 @@ test('mail.autorespond writes json and rejects pipe body', function (): void {
         $threwPipe = str_contains($e->getMessage(), 'pipe') || str_contains($e->getMessage(), 'body');
     }
     assert_true($threwPipe, 'pipe body must fail closed');
+    acp_account_cleanup($harness);
+});
+test('mail.catchall writes catchall and rejects pipe dest', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new MailCatchall())->handle([
+        'username' => 'alicehost',
+        'catchalls' => [[
+            'domain' => 'shop.example.com',
+            'dest' => 'alice@example.net',
+        ]],
+    ], $harness['ctx']);
+    assert_true($out['catchalls'] === 1);
+    $file = $harness['root'] . '/home/alicehost/etc/mail/catchall';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, '*@shop.example.com: alice@example.net'));
+    $threwPipe = false;
+    try {
+        (new MailCatchall())->handle([
+            'username' => 'alicehost',
+            'catchalls' => [[
+                'domain' => 'shop.example.com',
+                'dest' => '|/bin/sh',
+            ]],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPipe = str_contains($e->getMessage(), 'pipe') || str_contains($e->getMessage(), 'dest');
+    }
+    assert_true($threwPipe, 'pipe dest must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

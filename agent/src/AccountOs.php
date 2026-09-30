@@ -248,6 +248,36 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  list<array{domain: string, dest: string}> $rows
+     * @return list<array{domain: string, dest: string}>
+     */
+    public function setCatchalls(string $username, array $rows): array
+    {
+        $rows = Mail::sanitizeCatchalls($rows);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/catchall');
+        if (is_link($file)) {
+            throw new RuntimeException('mail catchall is a symlink');
+        }
+        $lines = [];
+        foreach ($rows as $row) {
+            $lines[] = Mail::catchallLine($row);
+        }
+        $body = $lines === [] ? '' : implode("\n", $lines) . "\n";
+        $this->fs->write($file, $body, 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail catchall ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

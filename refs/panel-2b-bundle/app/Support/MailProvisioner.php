@@ -6,6 +6,7 @@ namespace App\Support;
 
 use App\Models\Account;
 use App\Models\Autoresponder;
+use App\Models\Catchall;
 use App\Models\Forwarder;
 use App\Models\Mailbox;
 
@@ -100,5 +101,18 @@ final class MailProvisioner
         }
 
         return $account->autoresponders()->count() >= $max;
+    }
+
+    public static function enqueueCatchalls(Account $account): int
+    {
+        $rows = $account->catchalls()->orderBy('id')->get()->map(static fn (Catchall $row): array => [
+            'domain' => $row->domain,
+            'dest' => $row->dest,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'mail.catchall', [
+            'username' => $account->username,
+            'catchalls' => $rows,
+        ]);
     }
 }

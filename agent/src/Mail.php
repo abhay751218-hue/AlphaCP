@@ -12,6 +12,7 @@ final class Mail
     public const MAX = 50;
     public const MAX_FWD = 50;
     public const MAX_RESP = 50;
+    public const MAX_CATCH = 50;
 
     /**
      * @param  list<mixed> $raw
@@ -243,5 +244,33 @@ final class Mail
         }
 
         return $json . "\n";
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{domain: string, dest: string}>
+     */
+    public static function sanitizeCatchalls(array $raw): array
+    {
+        if (count($raw) > self::MAX_CATCH) {
+            throw new TaskRejectedException('too many catch-alls (50 max)');
+        }
+        $byDomain = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid catch-all at {$i}");
+            }
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $dest = self::normalizeDest((string) ($row['dest'] ?? ''));
+            $byDomain[$domain] = ['domain' => $domain, 'dest' => $dest];
+        }
+        ksort($byDomain);
+
+        return array_values($byDomain);
+    }
+
+    public static function catchallLine(array $row): string
+    {
+        return '*@' . $row['domain'] . ': ' . $row['dest'];
     }
 }

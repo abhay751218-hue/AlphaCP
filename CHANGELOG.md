@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Default Address (30 Sep)** — catch-all via `mail.catchall`
+  (`*@domain` → email; pipe/shell dest fail closed). Panel **0.22.0**, agent **0.19.0**.
+  Tests: panel **150/0**, provision-sim **50/50**, update-sim **96/96**.
+  Deploy via `panel-update.sh` 0.22.0.
 - **Step 7 Autoresponders (30 Sep)** — vacation auto-reply via `mail.autorespond`
   (JSON file; pipe/shell body fail closed). Panel **0.21.0**, agent **0.18.0**.
   Tests: panel **144/0**, provision-sim **49/49**, update-sim **94/94**.
