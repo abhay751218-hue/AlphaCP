@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Autoresponders (30 Sep)** — vacation auto-reply via `mail.autorespond`
+  (JSON file; pipe/shell body fail closed). Panel **0.21.0**, agent **0.18.0**.
+  Tests: panel **144/0**, provision-sim **49/49**, update-sim **94/94**.
+  Deploy via `panel-update.sh` 0.21.0.
 - **Step 7 Forwarders (30 Sep)** — address→address via `mail.forward`
   (aliases file; pipe/shell dest fail closed). Panel **0.20.0**, agent **0.17.0**.
   Tests: panel **138/0**, provision-sim **48/48**, update-sim **92/92**.

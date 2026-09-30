@@ -11,6 +11,7 @@ final class Mail
 {
     public const MAX = 50;
     public const MAX_FWD = 50;
+    public const MAX_RESP = 50;
 
     /**
      * @param  list<mixed> $raw
@@ -158,5 +159,89 @@ final class Mail
     public static function aliasLine(array $row): string
     {
         return $row['local'] . '@' . $row['domain'] . ': ' . $row['dest'];
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{local: string, domain: string, subject: string, body: string, interval_h: int}>
+     */
+    public static function sanitizeResponders(array $raw): array
+    {
+        if (count($raw) > self::MAX_RESP) {
+            throw new TaskRejectedException('too many autoresponders (50 max)');
+        }
+        $bySrc = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid autoresponder at {$i}");
+            }
+            $local = self::normalizeLocal((string) ($row['local'] ?? ''));
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $subject = self::normalizeSubject((string) ($row['subject'] ?? ''));
+            $body = self::normalizeBody((string) ($row['body'] ?? ''));
+            $interval = self::normalizeInterval($row['interval_h'] ?? 24);
+            $src = $local . '@' . $domain;
+            $bySrc[$src] = [
+                'local' => $local,
+                'domain' => $domain,
+                'subject' => $subject,
+                'body' => $body,
+                'interval_h' => $interval,
+            ];
+        }
+        ksort($bySrc);
+
+        return array_values($bySrc);
+    }
+
+    public static function normalizeSubject(string $subject): string
+    {
+        $subject = trim($subject);
+        if ($subject === '' || strlen($subject) > 200 || strpbrk($subject, "\r\n|:;`$()\\/") !== false) {
+            throw new TaskRejectedException('autoresponder subject invalid (no pipe/shell)');
+        }
+
+        return $subject;
+    }
+
+    public static function normalizeBody(string $body): string
+    {
+        $body = str_replace("\r\n", "\n", $body);
+        $body = str_replace("\r", "\n", $body);
+        $body = trim($body);
+        if ($body === '' || strlen($body) > 4000) {
+            throw new TaskRejectedException('autoresponder body length');
+        }
+        if (strpbrk($body, "\0|:;`$") !== false || str_contains($body, '$(')) {
+            throw new TaskRejectedException('autoresponder body must not contain pipe/shell');
+        }
+
+        return $body;
+    }
+
+    public static function normalizeInterval(mixed $hours): int
+    {
+        if (!is_int($hours) && !(is_string($hours) && preg_match('/^[0-9]+$/', $hours) === 1)) {
+            throw new TaskRejectedException('invalid autoresponder interval');
+        }
+        $n = (int) $hours;
+        if ($n < 0 || $n > 168) {
+            throw new TaskRejectedException('autoresponder interval out of range');
+        }
+
+        return $n;
+    }
+
+    /**
+     * @param  list<array{local: string, domain: string, subject: string, body: string, interval_h: int}> $rows
+     */
+    public static function respondJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('autoresponder json encode failed');
+        }
+
+        return $json . "\n";
     }
 }

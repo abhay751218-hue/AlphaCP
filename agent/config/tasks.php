@@ -443,6 +443,38 @@ return [
         ],
     ],
 
+    'mail.autorespond' => [
+        'handler'     => Tasks\MailAutorespond::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Replace vacation autoresponders (JSON file, no pipe/shell).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'responders'],
+            'properties'           => [
+                'username'   => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'responders' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['local', 'domain', 'subject', 'body'],
+                        'properties'           => [
+                            'local'      => ['type' => 'string', 'maxLength' => 32],
+                            'domain'     => ['type' => 'string', 'maxLength' => 190],
+                            'subject'    => ['type' => 'string', 'maxLength' => 200],
+                            'body'       => ['type' => 'string', 'maxLength' => 4000],
+                            'interval_h' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 168],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.forward' => [
         'handler'     => Tasks\MailForward::class,
         'safety'      => 'mutating',

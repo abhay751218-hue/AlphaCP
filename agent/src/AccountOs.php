@@ -223,6 +223,31 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  list<array{local: string, domain: string, subject: string, body: string, interval_h: int}> $rows
+     * @return list<array{local: string, domain: string, subject: string, body: string, interval_h: int}>
+     */
+    public function setAutorespond(string $username, array $rows): array
+    {
+        $rows = Mail::sanitizeResponders($rows);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/autorespond');
+        if (is_link($file)) {
+            throw new RuntimeException('mail autorespond is a symlink');
+        }
+        $this->fs->write($file, Mail::respondJson($rows), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail autorespond ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

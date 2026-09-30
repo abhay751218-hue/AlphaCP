@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Models\Account;
+use App\Models\Autoresponder;
 use App\Models\Forwarder;
 use App\Models\Mailbox;
 
@@ -73,5 +74,31 @@ final class MailProvisioner
         }
 
         return $account->forwarders()->count() >= $max;
+    }
+
+    public static function enqueueResponders(Account $account): int
+    {
+        $rows = $account->autoresponders()->orderBy('id')->get()->map(static fn (Autoresponder $row): array => [
+            'local' => $row->localpart,
+            'domain' => $row->domain,
+            'subject' => $row->subject,
+            'body' => $row->body,
+            'interval_h' => (int) $row->interval_h,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'mail.autorespond', [
+            'username' => $account->username,
+            'responders' => $rows,
+        ]);
+    }
+
+    public static function respLimitReached(Account $account): bool
+    {
+        $max = (int) ($account->package?->MAXRESP ?? -1);
+        if ($max < 0) {
+            return false;
+        }
+
+        return $account->autoresponders()->count() >= $max;
     }
 }
