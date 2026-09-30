@@ -65,7 +65,7 @@
 | 20 | Global Email Filters | Server-side filters | S7 | ✅ (account-wide contains-match JSON; no pipe) |
 | 21 | Email Filters | Per-mailbox filters | S7 | ✅ (contains-match JSON; discard/folder; no pipe) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF/DMARC copy records; DNS/DKIM keys later) |
-| 23 | Address Importer | Bulk CSV import | S7 | ⏳ S7 |
+| 23 | Address Importer | Bulk CSV import | S7 | ✅ (CSV local,domain,password → mail.set; no pipe) |
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (score 1–10 + lists JSON; no daemon) |
 | 25 | Encryption | PGP/GnuPG email keys | S7 | ⏳ S7 |
 | 26 | BoxTrapper | Challenge-response anti-spam | S7 | ⏳ S7 |

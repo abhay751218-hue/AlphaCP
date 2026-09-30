@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Address Importer (30 Sep)** — CSV mailboxes via existing `mail.set`
+  (pipe/foreign domain fail closed; plaintext never queued). Panel **0.30.0**, agent **0.26.0**.
+  Tests: panel **198/0**, provision-sim **57/57**, update-sim **111/111**.
+  Deploy via `panel-update.sh` 0.30.0.
 - **Step 7 Global Email Filters (30 Sep)** — account-wide contains-match via `mail.gfilter`
   (JSON; no mailbox local; pipe needle fail closed). Panel **0.29.0**, agent **0.26.0**.
   Tests: panel **192/0**, provision-sim **57/57**, update-sim **110/110**.

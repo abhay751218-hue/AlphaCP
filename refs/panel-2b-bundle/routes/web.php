@@ -19,6 +19,7 @@ use App\Http\Controllers\ForwardersController;
 use App\Http\Controllers\EmailRoutingController;
 use App\Http\Controllers\TrackDeliveryController;
 use App\Http\Controllers\GlobalFiltersController;
+use App\Http\Controllers\AddressImporterController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -201,6 +202,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('global-filters.store');
     Route::delete('/global-filters/{global_filter}', [GlobalFiltersController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('global-filters.destroy');
+
+    Route::get('/address-importer', [AddressImporterController::class, 'index'])
+        ->middleware('perm:email.view')->name('address-importer.index');
+    Route::post('/address-importer', [AddressImporterController::class, 'store'])
+        ->middleware('perm:email.manage')->name('address-importer.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');
