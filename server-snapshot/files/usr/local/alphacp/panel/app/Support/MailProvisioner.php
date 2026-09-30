@@ -10,6 +10,7 @@ use App\Models\Catchall;
 use App\Models\Forwarder;
 use App\Models\Mailbox;
 use App\Models\MailFilter;
+use App\Models\MailingList;
 use App\Models\SpamSetting;
 
 final class MailProvisioner
@@ -161,5 +162,29 @@ final class MailProvisioner
             'blacklist' => array_values($black),
             'whitelist' => array_values($white),
         ]);
+    }
+
+    public static function enqueueLists(Account $account): int
+    {
+        $rows = $account->mailingLists()->orderBy('id')->get()->map(static fn (MailingList $row): array => [
+            'local' => $row->localpart,
+            'domain' => $row->domain,
+            'owner' => $row->owner,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'mail.list', [
+            'username' => $account->username,
+            'lists' => $rows,
+        ]);
+    }
+
+    public static function listLimitReached(Account $account): bool
+    {
+        $max = (int) ($account->package?->MAXLST ?? -1);
+        if ($max < 0) {
+            return false;
+        }
+
+        return $account->mailingLists()->count() >= $max;
     }
 }

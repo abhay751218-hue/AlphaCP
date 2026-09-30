@@ -16,6 +16,7 @@ final class Mail
     public const MAX_FILTER = 50;
     public const MAX_DELIV = 50;
     public const MAX_SPAM_LIST = 50;
+    public const MAX_LST = 50;
     public const SPF = 'v=spf1 a mx ~all';
     public const DMARC = 'v=DMARC1; p=none;';
     public const DKIM_SELECTOR = 'default';
@@ -472,6 +473,44 @@ final class Mail
         $json = json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (!is_string($json)) {
             throw new TaskRejectedException('spam json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{local: string, domain: string, owner: string}>
+     */
+    public static function sanitizeLists(array $raw): array
+    {
+        if (count($raw) > self::MAX_LST) {
+            throw new TaskRejectedException('too many mailing lists (50 max)');
+        }
+        $byName = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid mailing list at {$i}");
+            }
+            $local = self::normalizeLocal((string) ($row['local'] ?? ''));
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $owner = self::normalizeDest((string) ($row['owner'] ?? ''));
+            $key = $local . '@' . $domain;
+            $byName[$key] = ['local' => $local, 'domain' => $domain, 'owner' => $owner];
+        }
+        ksort($byName);
+
+        return array_values($byName);
+    }
+
+    /**
+     * @param  list<array{local: string, domain: string, owner: string}> $rows
+     */
+    public static function listsJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('mailing list json encode failed');
         }
 
         return $json . "\n";

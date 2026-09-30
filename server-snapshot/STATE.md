@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.25.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.25.0   (.env)
-AGENT_VERSION : 0.22.0
+panel code    : 0.26.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.26.0   (.env)
+AGENT_VERSION : 0.23.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -57,15 +57,16 @@ agent-backup-20260930103748
 agent-backup-20260930142539
 agent-backup-20260930144737
 agent-backup-20260930151358
-panel-backup-20260930142539
+agent-backup-20260930155140
 panel-backup-20260930144737
 panel-backup-20260930151358
+panel-backup-20260930155140
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -130,6 +131,7 @@ alphacp:admin-password
   2026_09_29_000019_create_catchalls_table   [18] Ran
   2026_09_29_000020_create_mail_filters_table   [19] Ran
   2026_09_29_000021_create_spam_settings_table   [20] Ran
+  2026_09_29_000022_create_mailing_lists_table   [21] Ran
 ```
 
 ## Routes (web)
@@ -187,6 +189,9 @@ GET|HEAD           /license                                      license.index
 POST               /license/activate                             license.activate
 POST               /login                                        login.attempt
 POST               /logout                                       logout
+GET|HEAD           /mailing-lists                                mailing-lists.index
+POST               /mailing-lists                                mailing-lists.store
+DELETE             /mailing-lists/{mailing_list}                 mailing-lists.destroy
 GET|HEAD           /mime                                         mime.index
 POST               /mime                                         mime.store
 DELETE             /mime/{ext}                                   mime.destroy
