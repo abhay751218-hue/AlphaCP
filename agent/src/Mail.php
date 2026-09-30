@@ -21,6 +21,7 @@ final class Mail
     public const MAX_TRACK = 50;
     public const MAX_GFILTER = 50;
     public const MAX_GPG = 50;
+    public const MAX_BOX = 50;
     public const MODES = ['auto', 'local', 'backup', 'remote'];
     public const TRACK_STATUSES = ['sent', 'deferred', 'bounced', 'rejected'];
     public const SPF = 'v=spf1 a mx ~all';
@@ -713,6 +714,49 @@ final class Mail
         $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (!is_string($json)) {
             throw new TaskRejectedException('encryption json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  array<string, mixed> $raw
+     * @return array{enabled: bool, allowlist: list<string>}
+     */
+    public static function sanitizeBoxtrapper(array $raw): array
+    {
+        $enabled = self::normalizeEnabled($raw['enabled'] ?? false);
+        $allow = self::sanitizeEmailList($raw['allowlist'] ?? [], 'allowlist');
+
+        return [
+            'enabled' => $enabled,
+            'allowlist' => $allow,
+        ];
+    }
+
+    public static function normalizeEnabled(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if ($value === 1 || $value === '1' || $value === 'true') {
+            return true;
+        }
+        if ($value === 0 || $value === '0' || $value === 'false' || $value === '') {
+            return false;
+        }
+
+        throw new TaskRejectedException('invalid boxtrapper enabled');
+    }
+
+    /**
+     * @param  array{enabled: bool, allowlist: list<string>} $cfg
+     */
+    public static function boxtrapperJson(array $cfg): string
+    {
+        $json = json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('boxtrapper json encode failed');
         }
 
         return $json . "\n";

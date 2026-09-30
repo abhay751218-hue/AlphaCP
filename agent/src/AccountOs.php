@@ -473,6 +473,31 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  array{enabled: bool, allowlist: list<string>} $cfg
+     * @return array{enabled: bool, allowlist: list<string>}
+     */
+    public function setBoxtrapper(string $username, array $cfg): array
+    {
+        $cfg = Mail::sanitizeBoxtrapper($cfg);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/boxtrapper.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail boxtrapper is a symlink');
+        }
+        $this->fs->write($file, Mail::boxtrapperJson($cfg), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail boxtrapper ' . ($cfg['enabled'] ? 'on' : 'off') . " for {$username}");
+
+        return $cfg;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

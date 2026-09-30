@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 BoxTrapper (30 Sep)** — enabled + allowlist via `mail.boxtrapper`
+  (JSON; no daemon; pipe dest fail closed). Panel **0.32.0**, agent **0.28.0**.
+  Tests: panel **210/0**, provision-sim **59/59**, update-sim **115/115**.
+  Deploy via `panel-update.sh` 0.32.0.
 - **Step 7 Encryption (30 Sep)** — GnuPG identity rows via `mail.encrypt`
   (JSON; no gpg binary, no private key; pipe comment fail closed). Panel **0.31.0**, agent **0.27.0**.
   Tests: panel **204/0**, provision-sim **58/58**, update-sim **113/113**.
