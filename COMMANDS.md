@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.28.0 — Step 7: Track Delivery
+### panel-update 0.29.0 — Step 7: Global Email Filters
 ```bash
-sudo alphacp-sync get 012074752335c08772087104a34456230b2d0cd7 installer/panel-update.sh /tmp/acp-panel-update-0.28.0.sh 112ee0d5bc0bb0c5f590df2d3d0e902feecaf13cd14c221d20c44dad8958cc38 && sudo bash /tmp/acp-panel-update-0.28.0.sh
+sudo alphacp-sync get acb64df5e9770622b662e311442c7de675162ff8 installer/panel-update.sh /tmp/acp-panel-update-0.29.0.sh 993dfcc2e376b8f5725af960614c1dc85ba8d96216dd3bfbe5e28f862f970cb1 && sudo bash /tmp/acp-panel-update-0.29.0.sh
 ```
-- sha256: `112ee0d5bc0bb0c5f590df2d3d0e902feecaf13cd14c221d20c44dad8958cc38`
-- Expected: banner `updater 0.28.0` → agent **0.25.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Track Delivery (recipient search in jailed track.json). Pipe query fail closed. No Exim log.
-- WHM: Create Account / packages / user manager. Customer ko Track Delivery tile dikhega, WHM me nahi.
+- sha256: `993dfcc2e376b8f5725af960614c1dc85ba8d96216dd3bfbe5e28f862f970cb1`
+- Expected: banner `updater 0.29.0` → agent **0.26.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Global Email Filters (account-wide contains-match JSON). Pipe needle fail closed.
+- WHM: Create Account / packages / user manager. Customer ko Global Email Filters tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **186/0**, provision-sim **56/56**, update-sim **108/108**.
+- Test: panel-tests **192/0**, provision-sim **57/57**, update-sim **110/110**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.28.0 (`0120747…`) → panel 0.28.0 + agent 0.25.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Track Delivery |
 | panel-update 0.27.0 (`c3a4404…`) → panel 0.27.0 + agent 0.24.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Email Routing |
 | panel-update 0.26.0 (`9c8d47e…`) → panel 0.26.0 + agent 0.23.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Mailing Lists |
 | panel-update 0.25.0 (`75e7dee…`) → panel 0.25.0 + agent 0.22.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Spam Filters |
