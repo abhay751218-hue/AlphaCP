@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.17.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.17.0   (.env)
-AGENT_VERSION : 0.14.0
+panel code    : 0.18.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.18.0   (.env)
+AGENT_VERSION : 0.15.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -49,15 +49,16 @@ agent-backup-20260929153015
 agent-backup-20260929154229
 agent-backup-20260929160317
 agent-backup-20260929162453
-panel-backup-20260929154229
+agent-backup-20260930080151
 panel-backup-20260929160317
 panel-backup-20260929162453
+panel-backup-20260930080151
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -115,6 +116,7 @@ alphacp:admin-password
   2026_09_29_000012_add_handlers_permissions   [11] Ran
   2026_09_29_000013_add_files_permissions   [12] Ran
   2026_09_29_000014_add_privacy_permissions   [13] Ran
+  2026_09_29_000015_add_ssh_permissions   [14] Ran
 ```
 
 ## Routes (web)
@@ -179,6 +181,10 @@ GET|HEAD           /security/password                            security.passwo
 POST               /security/password                            security.password.update
 GET|HEAD           /security/sessions                            security.sessions
 DELETE             /security/sessions/{id}                       security.sessions.destroy
+GET|HEAD           /ssh                                          ssh.index
+POST               /ssh                                          ssh.store
+POST               /ssh/delete                                   ssh.destroy
+POST               /ssh/shell                                    ssh.shell
 GET|HEAD           /ssl                                          ssl.index
 POST               /ssl/autossl                                  ssl.autossl
 POST               /ssl/{domain}                                 ssl.issue
@@ -228,4 +234,5 @@ GET|HEAD           /{fallbackPlaceholder}
 ```
 /usr/local/alphacp/agent/src/AccountOs.php  (secret jaisa pattern)
 /usr/local/alphacp/agent/tests/FakeCommandExecutor.php  (secret jaisa pattern)
+/usr/local/alphacp/panel/tests/Feature/SshTest.php  (secret jaisa pattern)
 ```
