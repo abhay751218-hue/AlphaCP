@@ -60,6 +60,7 @@ final class ModuleCatalog
                     ['name' => 'Global Email Filters', 'step' => 'S7', 'status' => 'live', 'route' => 'global-filters.index'],
                     ['name' => 'Address Importer',    'step' => 'S7', 'status' => 'live', 'route' => 'address-importer.index'],
                     ['name' => 'Encryption',          'step' => 'S7', 'status' => 'live', 'route' => 'encryption.index'],
+                    ['name' => 'BoxTrapper',          'step' => 'S7', 'status' => 'live', 'route' => 'boxtrapper.index'],
                     ['name' => 'Webmail',             'step' => 'S7', 'status' => 'step'],
                 ],
             ],

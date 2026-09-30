@@ -11,6 +11,7 @@ use App\Models\Forwarder;
 use App\Models\Mailbox;
 use App\Models\MailFilter;
 use App\Models\EmailRoute;
+use App\Models\BoxTrapperSetting;
 use App\Models\EncryptionKey;
 use App\Models\GlobalFilter;
 use App\Models\MailingList;
@@ -255,5 +256,17 @@ final class MailProvisioner
     public static function encryptLimitReached(Account $account): bool
     {
         return $account->encryptionKeys()->count() >= 50;
+    }
+
+    public static function enqueueBoxtrapper(Account $account): int
+    {
+        $row = BoxTrapperSetting::query()->where('account_id', $account->id)->first();
+        $allow = is_array($row?->allowlist) ? $row->allowlist : [];
+
+        return AccountProvisioner::enqueue($account, 'mail.boxtrapper', [
+            'username' => $account->username,
+            'enabled' => (bool) ($row?->enabled ?? false),
+            'allowlist' => array_values($allow),
+        ]);
     }
 }

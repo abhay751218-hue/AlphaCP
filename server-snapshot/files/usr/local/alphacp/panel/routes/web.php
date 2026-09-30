@@ -21,6 +21,7 @@ use App\Http\Controllers\TrackDeliveryController;
 use App\Http\Controllers\GlobalFiltersController;
 use App\Http\Controllers\AddressImporterController;
 use App\Http\Controllers\EncryptionController;
+use App\Http\Controllers\BoxTrapperController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -215,6 +216,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('encryption.store');
     Route::delete('/encryption/{encryption_key}', [EncryptionController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('encryption.destroy');
+
+    Route::get('/boxtrapper', [BoxTrapperController::class, 'index'])
+        ->middleware('perm:email.view')->name('boxtrapper.index');
+    Route::post('/boxtrapper', [BoxTrapperController::class, 'store'])
+        ->middleware('perm:email.manage')->name('boxtrapper.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.31.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.31.0   (.env)
-AGENT_VERSION : 0.27.0
+panel code    : 0.32.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.32.0   (.env)
+AGENT_VERSION : 0.28.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -63,15 +63,16 @@ agent-backup-20260930164306
 agent-backup-20260930171354
 agent-backup-20260930182126
 agent-backup-20260930184114
-panel-backup-20260930171354
+agent-backup-20260930192045
 panel-backup-20260930182126
 panel-backup-20260930184114
+panel-backup-20260930192045
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -140,6 +141,7 @@ alphacp:admin-password
   2026_09_29_000023_create_email_routes_table   [22] Ran
   2026_09_29_000024_create_global_filters_table   [23] Ran
   2026_09_29_000025_create_encryption_keys_table   [24] Ran
+  2026_09_29_000026_create_boxtrapper_settings_table   [25] Ran
 ```
 
 ## Routes (web)
@@ -161,6 +163,8 @@ GET|HEAD           /audit                                        audit.index
 GET|HEAD           /autoresponders                               autoresponders.index
 POST               /autoresponders                               autoresponders.store
 DELETE             /autoresponders/{autoresponder}               autoresponders.destroy
+GET|HEAD           /boxtrapper                                   boxtrapper.index
+POST               /boxtrapper                                   boxtrapper.store
 GET|HEAD           /cron                                         cron.index
 POST               /cron                                         cron.store
 DELETE             /cron/{cron}                                  cron.destroy

@@ -443,6 +443,28 @@ return [
         ],
     ],
 
+    'mail.boxtrapper' => [
+        'handler'     => Tasks\MailBoxtrapper::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write BoxTrapper enabled + allowlist (JSON, email only, no daemon).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'enabled'],
+            'properties'           => [
+                'username'  => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'enabled'   => ['type' => 'boolean'],
+                'allowlist' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => ['type' => 'string', 'maxLength' => 190],
+                ],
+            ],
+        ],
+    ],
+
     'mail.encrypt' => [
         'handler'     => Tasks\MailEncrypt::class,
         'safety'      => 'mutating',

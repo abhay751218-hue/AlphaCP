@@ -109,6 +109,11 @@ class Account extends Model
         return $this->hasMany(EncryptionKey::class);
     }
 
+    public function boxTrapperSetting(): HasOne
+    {
+        return $this->hasOne(BoxTrapperSetting::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
