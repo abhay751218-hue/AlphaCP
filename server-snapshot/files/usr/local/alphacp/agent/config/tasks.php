@@ -443,6 +443,35 @@ return [
         ],
     ],
 
+    'mail.catchall' => [
+        'handler'     => Tasks\MailCatchall::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Replace default address catch-alls (email dest only).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'catchalls'],
+            'properties'           => [
+                'username'  => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'catchalls' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'dest'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'dest'   => ['type' => 'string', 'maxLength' => 190],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.autorespond' => [
         'handler'     => Tasks\MailAutorespond::class,
         'safety'      => 'mutating',

@@ -73,6 +73,11 @@ class Account extends Model
         return $this->hasMany(Autoresponder::class);
     }
 
+    public function catchalls(): HasMany
+    {
+        return $this->hasMany(Catchall::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

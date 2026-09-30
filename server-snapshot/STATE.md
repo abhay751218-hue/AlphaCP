@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.21.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.21.0   (.env)
-AGENT_VERSION : 0.18.0
+panel code    : 0.22.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.22.0   (.env)
+AGENT_VERSION : 0.19.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -53,15 +53,16 @@ agent-backup-20260930080151
 agent-backup-20260930082428
 agent-backup-20260930085017
 agent-backup-20260930102015
-panel-backup-20260930082428
+agent-backup-20260930103748
 panel-backup-20260930085017
 panel-backup-20260930102015
+panel-backup-20260930103748
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -123,6 +124,7 @@ alphacp:admin-password
   2026_09_29_000016_create_mailboxes_table   [15] Ran
   2026_09_29_000017_create_forwarders_table   [16] Ran
   2026_09_29_000018_create_autoresponders_table   [17] Ran
+  2026_09_29_000019_create_catchalls_table   [18] Ran
 ```
 
 ## Routes (web)
@@ -146,6 +148,9 @@ GET|HEAD           /cron                                         cron.index
 POST               /cron                                         cron.store
 DELETE             /cron/{cron}                                  cron.destroy
 GET|HEAD           /dashboard                                    dashboard
+GET|HEAD           /default-address                              default-address.index
+POST               /default-address                              default-address.store
+DELETE             /default-address/{catchall}                   default-address.destroy
 GET|HEAD           /disk                                         disk.index
 GET|HEAD           /domains                                      domains.index
 POST               /domains                                      domains.store
