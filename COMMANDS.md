@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.22.0 — Step 7: Default Address
+### panel-update 0.23.0 — Step 7: Email Filters
 ```bash
-sudo alphacp-sync get 30bb628b464827f35b605dc7dfeb4f91765a449a installer/panel-update.sh /tmp/acp-panel-update-0.22.0.sh 774c7f5212044ec0fb6595cd9e47e85df420325d969e4779f134e79caccb4ce5 && sudo bash /tmp/acp-panel-update-0.22.0.sh
+sudo alphacp-sync get 548da67c0dbbd591d97d82cf89ac4cdf3554d1b8 installer/panel-update.sh /tmp/acp-panel-update-0.23.0.sh d4fd7eef026071d7d4e4c4c1587076e9c2016ea3dca772b63ee502a5df348e82 && sudo bash /tmp/acp-panel-update-0.23.0.sh
 ```
-- sha256: `774c7f5212044ec0fb6595cd9e47e85df420325d969e4779f134e79caccb4ce5`
-- Expected: banner `updater 0.22.0` → agent **0.19.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Default Address (catch-all `*@domain` → email). Pipe/shell dest fail closed.
-- WHM: Create Account / packages / user manager. Customer ko Default Address tile dikhega, WHM me nahi.
+- sha256: `d4fd7eef026071d7d4e4c4c1587076e9c2016ea3dca772b63ee502a5df348e82`
+- Expected: banner `updater 0.23.0` → agent **0.20.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Email Filters (contains-match discard/folder). Pipe/regex/shell fail closed.
+- WHM: Create Account / packages / user manager. Customer ko Email Filters tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **150/0**, provision-sim **50/50**, update-sim **96/96**.
+- Test: panel-tests **156/0**, provision-sim **51/51**, update-sim **98/98**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.22.0 (`30bb628…`) → panel 0.22.0 + agent 0.19.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Default Address |
 | panel-update 0.21.0 (`920ea35…`) → panel 0.21.0 + agent 0.18.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Autoresponders |
 | panel-update 0.20.0 (`d71a2ab…`) → panel 0.20.0 + agent 0.17.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Forwarders |
 | panel-update 0.19.0 (`373d7e2…`) → panel 0.19.0 + agent 0.16.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Email Accounts |
