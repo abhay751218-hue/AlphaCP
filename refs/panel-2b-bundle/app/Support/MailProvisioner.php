@@ -11,6 +11,7 @@ use App\Models\Forwarder;
 use App\Models\Mailbox;
 use App\Models\MailFilter;
 use App\Models\EmailRoute;
+use App\Models\GlobalFilter;
 use App\Models\MailingList;
 use App\Models\SpamSetting;
 
@@ -213,5 +214,26 @@ final class MailProvisioner
             'username' => $account->username,
             'query' => $query,
         ]);
+    }
+
+    public static function enqueueGlobalFilters(Account $account): int
+    {
+        $rows = $account->globalFilters()->orderBy('id')->get()->map(static fn (GlobalFilter $row): array => [
+            'domain' => $row->domain,
+            'field' => $row->field,
+            'needle' => $row->needle,
+            'action' => $row->action,
+            'folder' => $row->folder,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'mail.gfilter', [
+            'username' => $account->username,
+            'filters' => $rows,
+        ]);
+    }
+
+    public static function gfilterLimitReached(Account $account): bool
+    {
+        return $account->globalFilters()->count() >= 50;
     }
 }

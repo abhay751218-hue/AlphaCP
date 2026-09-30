@@ -62,7 +62,7 @@
 | 17 | Default Address | Catch-all | S7 | ✅ (`*@domain` → email; no pipe/shell) |
 | 18 | Mailing Lists | Mailman lists | S7 | ✅ (list+owner JSON; no mailman daemon) |
 | 19 | Track Delivery | Delivery trace | S7 | ✅ (jailed track.json search; no Exim log) |
-| 20 | Global Email Filters | Server-side filters | S7 | ⏳ S7 |
+| 20 | Global Email Filters | Server-side filters | S7 | ✅ (account-wide contains-match JSON; no pipe) |
 | 21 | Email Filters | Per-mailbox filters | S7 | ✅ (contains-match JSON; discard/folder; no pipe) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF/DMARC copy records; DNS/DKIM keys later) |
 | 23 | Address Importer | Bulk CSV import | S7 | ⏳ S7 |

@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Global Email Filters (30 Sep)** — account-wide contains-match via `mail.gfilter`
+  (JSON; no mailbox local; pipe needle fail closed). Panel **0.29.0**, agent **0.26.0**.
+  Tests: panel **192/0**, provision-sim **57/57**, update-sim **110/110**.
+  Deploy via `panel-update.sh` 0.29.0.
 - **Step 7 Track Delivery (30 Sep)** — recipient search via `mail.track`
   (jailed `track.json`; no Exim log; pipe query fail closed). Panel **0.28.0**, agent **0.25.0**.
   Tests: panel **186/0**, provision-sim **56/56**, update-sim **108/108**.

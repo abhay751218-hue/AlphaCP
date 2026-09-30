@@ -443,6 +443,38 @@ return [
         ],
     ],
 
+    'mail.gfilter' => [
+        'handler'     => Tasks\MailGfilter::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Replace account-wide email filters (JSON, contains-match, no pipe).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'filters'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'filters'  => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'field', 'needle', 'action'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'field'  => ['type' => 'string', 'enum' => ['from', 'subject', 'to']],
+                            'needle' => ['type' => 'string', 'maxLength' => 100],
+                            'action' => ['type' => 'string', 'enum' => ['discard', 'folder']],
+                            'folder' => ['type' => 'string', 'maxLength' => 32],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.track' => [
         'handler'     => Tasks\MailTrack::class,
         'safety'      => 'readonly',

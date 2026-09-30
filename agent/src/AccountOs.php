@@ -423,6 +423,31 @@ final class AccountOs
         return $hits;
     }
 
+    /**
+     * @param  list<array{domain: string, field: string, needle: string, action: string, folder: string}> $rows
+     * @return list<array{domain: string, field: string, needle: string, action: string, folder: string}>
+     */
+    public function setGlobalFilters(string $username, array $rows): array
+    {
+        $rows = Mail::sanitizeGlobalFilters($rows);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/global-filters.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail global filters is a symlink');
+        }
+        $this->fs->write($file, Mail::globalFiltersJson($rows), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail global filters ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {
