@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.24.0 — Step 7: Deliverability
+### panel-update 0.25.0 — Step 7: Spam Filters
 ```bash
-sudo alphacp-sync get d8269bdd75d3faeff4364b2c03367a45124b21dc installer/panel-update.sh /tmp/acp-panel-update-0.24.0.sh d4439cb19c5578a307d47feeddfa8c5fb0aa7cb007101c923b0fd5e67c3d40e7 && sudo bash /tmp/acp-panel-update-0.24.0.sh
+sudo alphacp-sync get 75e7deee0a17b2f186f72231dffee4fcad2681ea installer/panel-update.sh /tmp/acp-panel-update-0.25.0.sh 1f9b3d15cd730d7300f92b6b68fe8239bacc40058a25fabc8a9f3a95b1a4d646 && sudo bash /tmp/acp-panel-update-0.25.0.sh
 ```
-- sha256: `d4439cb19c5578a307d47feeddfa8c5fb0aa7cb007101c923b0fd5e67c3d40e7`
-- Expected: banner `updater 0.24.0` → agent **0.21.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Deliverability (SPF/DMARC copy records). DNS write nahi. DKIM keys later.
-- WHM: Create Account / packages / user manager. Customer ko Deliverability tile dikhega, WHM me nahi.
+- sha256: `1f9b3d15cd730d7300f92b6b68fe8239bacc40058a25fabc8a9f3a95b1a4d646`
+- Expected: banner `updater 0.25.0` → agent **0.22.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Spam Filters (score + blacklist/whitelist). Pipe dest fail closed. SA daemon later.
+- WHM: Create Account / packages / user manager. Customer ko Spam Filters tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **162/0**, provision-sim **52/52**, update-sim **100/100**.
+- Test: panel-tests **168/0**, provision-sim **53/53**, update-sim **102/102**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.24.0 (`d8269bd…`) → panel 0.24.0 + agent 0.21.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Deliverability |
 | panel-update 0.23.0 (`548da67…`) → panel 0.23.0 + agent 0.20.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Email Filters |
 | panel-update 0.22.0 (`30bb628…`) → panel 0.22.0 + agent 0.19.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Default Address |
 | panel-update 0.21.0 (`920ea35…`) → panel 0.21.0 + agent 0.18.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Autoresponders |
