@@ -443,6 +443,46 @@ return [
         ],
     ],
 
+    'mail.calendar' => [
+        'handler'     => Tasks\MailCalendar::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write calendar + contact names (JSON; no CalDAV/CardDAV daemon).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'calendars', 'contacts'],
+            'properties'           => [
+                'username'  => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'calendars' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['name'],
+                        'properties'           => [
+                            'name' => ['type' => 'string', 'maxLength' => 64],
+                        ],
+                    ],
+                ],
+                'contacts' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['name'],
+                        'properties'           => [
+                            'name' => ['type' => 'string', 'maxLength' => 64],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.boxtrapper' => [
         'handler'     => Tasks\MailBoxtrapper::class,
         'safety'      => 'mutating',

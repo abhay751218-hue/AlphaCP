@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Calendar (1 Oct)** — calendar + contact names via `mail.calendar`
+  (JSON; no CalDAV/CardDAV daemon; pipe name fail closed). Panel **0.33.0**, agent **0.29.0**.
+  Tests: panel **216/0**, provision-sim **60/60**, update-sim **117/117**.
+  Deploy via `panel-update.sh` 0.33.0.
 - **Step 7 BoxTrapper (30 Sep)** — enabled + allowlist via `mail.boxtrapper`
   (JSON; no daemon; pipe dest fail closed). Panel **0.32.0**, agent **0.28.0**.
   Tests: panel **210/0**, provision-sim **59/59**, update-sim **115/115**.

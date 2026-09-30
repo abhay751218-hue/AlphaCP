@@ -69,7 +69,7 @@
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (score 1–10 + lists JSON; no daemon) |
 | 25 | Encryption | PGP/GnuPG email keys | S7 | ✅ (identity JSON; no gpg/private key) |
 | 26 | BoxTrapper | Challenge-response anti-spam | S7 | ✅ (enabled+allowlist JSON; no daemon) |
-| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ⏳ S7 |
+| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ✅ (calendar+contact names JSON; no CalDAV) |
 | 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ⏳ S7 |
 | 29 | Webmail | Roundcube/Horde link | S7 | ⏳ S7 |
 

@@ -22,6 +22,7 @@ use App\Http\Controllers\GlobalFiltersController;
 use App\Http\Controllers\AddressImporterController;
 use App\Http\Controllers\EncryptionController;
 use App\Http\Controllers\BoxTrapperController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -221,6 +222,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.view')->name('boxtrapper.index');
     Route::post('/boxtrapper', [BoxTrapperController::class, 'store'])
         ->middleware('perm:email.manage')->name('boxtrapper.store');
+
+    Route::get('/calendar', [CalendarController::class, 'index'])
+        ->middleware('perm:email.view')->name('calendar.index');
+    Route::post('/calendar', [CalendarController::class, 'store'])
+        ->middleware('perm:email.manage')->name('calendar.store');
+    Route::delete('/calendar/{calendar_item}', [CalendarController::class, 'destroy'])
+        ->middleware('perm:email.manage')->name('calendar.destroy');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

@@ -114,6 +114,11 @@ class Account extends Model
         return $this->hasOne(BoxTrapperSetting::class);
     }
 
+    public function calendarItems(): HasMany
+    {
+        return $this->hasMany(CalendarItem::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

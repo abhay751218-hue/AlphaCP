@@ -498,6 +498,34 @@ final class AccountOs
         return $cfg;
     }
 
+    /**
+     * @param  array{calendars: list<array{name: string}>, contacts: list<array{name: string}>} $cfg
+     * @return array{calendars: list<array{name: string}>, contacts: list<array{name: string}>}
+     */
+    public function setCalendar(string $username, array $cfg): array
+    {
+        $cfg = [
+            'calendars' => Mail::sanitizeCalNames($cfg['calendars'] ?? [], 'calendar'),
+            'contacts' => Mail::sanitizeCalNames($cfg['contacts'] ?? [], 'contact'),
+        ];
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/calendar.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail calendar is a symlink');
+        }
+        $this->fs->write($file, Mail::calendarJson($cfg), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail calendar ' . count($cfg['calendars']) . '+' . count($cfg['contacts']) . " for {$username}");
+
+        return $cfg;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

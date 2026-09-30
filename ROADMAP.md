@@ -12,7 +12,7 @@
 | **S4** | Packages & limits manager (+ feature lists, cPanel-compatible limit keys) | ✅ **deployed 0.5.0** |
 | **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | ✅ **through Apache Handlers (0.14.0)** |
 | **S6** | File Manager, disk usage, FTP (+ jailed shell), SSH keys, Git deploys, trash | 🟡 **FM + Privacy + Disk Usage + SSH (0.18.0)** — zip/FTP/jail later |
-| **S7** | Email suite: mailboxes/quotas, forwarders, autoresponders, filters, spam/virus, deliverability (SPF/DKIM/DMARC), lists, webmail | 🟡 **through BoxTrapper (0.32.0)** — webmail later |
+| **S7** | Email suite: mailboxes/quotas, forwarders, autoresponders, filters, spam/virus, deliverability (SPF/DKIM/DMARC), lists, webmail | 🟡 **through Calendar (0.33.0)** — webmail later |
 | **S8** | Databases: create/manage, users, privileges, size limits, phpMyAdmin SSO, remote access | ⏳ |
 | **S9** | DNS: zone editor, templates, nameservers, cluster | ⏳ |
 | **S10** | Backup/restore + schedules + remote destinations + **cPanel backup import** | ⏳ |
