@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.32.0  ·  default panel bundle 0.32.0  ·  agent 0.28.0  ·  alphacp-sync v1.2
+# updater 0.33.0  ·  default panel bundle 0.33.0  ·  agent 0.29.0  ·  alphacp-sync v1.2
+#
+# 0.33.0: Step 7 — panel 0.33.0 (Calendar) + agent 0.29.0 (mail.calendar)
 #
 # 0.32.0: Step 7 — panel 0.32.0 (BoxTrapper) + agent 0.28.0 (mail.boxtrapper)
 #
@@ -81,17 +83,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.32.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.32.0}"
+UPDATER_VERSION="0.33.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.33.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-b445ae55ddcfaf21ad53df3dcc7ea07001318641}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-140119552c457a061fb30a8a7cd15c51a24273de}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-9d5194e4f65e043b2b46ff28dda4128a27f1c39101b9ab344c2168c500a45251}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.28.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-b445ae55ddcfaf21ad53df3dcc7ea07001318641}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-d5f62e40f3d9eafa9c0339ebbdd1a8d908b6a2e5dd2426636cf0b5d93285d0b9}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.29.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-140119552c457a061fb30a8a7cd15c51a24273de}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-9d2b1d883bae76727f4f9b07813039c99f34d06cafb9be7638e159878e384e89}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-06aa27eceaf3690a5a45f7725bf63b0c6fa33ccc28a19f96f1d65dc1b4c2c208}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
