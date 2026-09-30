@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.19.0 — Step 7: Email Accounts
+### panel-update 0.20.0 — Step 7: Forwarders
 ```bash
-sudo alphacp-sync get 373d7e2e5416729b43811c59d783e48abf192afc installer/panel-update.sh /tmp/acp-panel-update-0.19.0.sh 9b8cc6ff10265af454d6f2cd69f667843f407a6c2620f7c76d4967ad9cdca7ac && sudo bash /tmp/acp-panel-update-0.19.0.sh
+sudo alphacp-sync get d71a2ab1aab433077980720f7a2df9077e6b3bdf installer/panel-update.sh /tmp/acp-panel-update-0.20.0.sh 7210698ec143cbdadaf7528ab8e3592c4987aa6658c38e4e93d0a52640b0e8bb && sudo bash /tmp/acp-panel-update-0.20.0.sh
 ```
-- sha256: `9b8cc6ff10265af454d6f2cd69f667843f407a6c2620f7c76d4967ad9cdca7ac`
-- Expected: banner `updater 0.19.0` → agent **0.16.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Email Accounts (virtual mailbox + quota). Password bcrypt hash, plaintext agent tak nahi jata.
-- WHM: Create Account / packages / user manager. Customer ko Email Accounts tile dikhega, WHM me nahi.
+- sha256: `7210698ec143cbdadaf7528ab8e3592c4987aa6658c38e4e93d0a52640b0e8bb`
+- Expected: banner `updater 0.20.0` → agent **0.17.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Forwarders (address → address). Pipe/shell dest fail closed.
+- WHM: Create Account / packages / user manager. Customer ko Forwarders tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **132/0**, provision-sim **47/47**, update-sim **90/90**.
+- Test: panel-tests **138/0**, provision-sim **48/48**, update-sim **92/92**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.19.0 (`373d7e2…`) → panel 0.19.0 + agent 0.16.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Email Accounts |
 | panel-update 0.18.0 (`379c9ea…`) → panel 0.18.0 + agent 0.15.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, SSH Access |
 | panel-update 0.17.0 (`c9bdbf5…`) → panel 0.17.0 + agent 0.14.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Disk Usage |
 | panel-update 0.16.0 (`55142ec…`) → panel 0.16.0 + agent 0.13.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Directory Privacy |
