@@ -15,6 +15,7 @@ final class Mail
     public const MAX_CATCH = 50;
     public const MAX_FILTER = 50;
     public const MAX_DELIV = 50;
+    public const MAX_SPAM_LIST = 50;
     public const SPF = 'v=spf1 a mx ~all';
     public const DMARC = 'v=DMARC1; p=none;';
     public const DKIM_SELECTOR = 'default';
@@ -406,6 +407,71 @@ final class Mail
         $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (!is_string($json)) {
             throw new TaskRejectedException('deliverability json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  array<string, mixed> $raw
+     * @return array{required_score: int, blacklist: list<string>, whitelist: list<string>}
+     */
+    public static function sanitizeSpam(array $raw): array
+    {
+        $score = self::normalizeScore($raw['required_score'] ?? 5);
+        $black = self::sanitizeEmailList($raw['blacklist'] ?? [], 'blacklist');
+        $white = self::sanitizeEmailList($raw['whitelist'] ?? [], 'whitelist');
+
+        return [
+            'required_score' => $score,
+            'blacklist' => $black,
+            'whitelist' => $white,
+        ];
+    }
+
+    public static function normalizeScore(mixed $score): int
+    {
+        if (!is_int($score) && !(is_string($score) && preg_match('/^[0-9]+$/', $score) === 1)) {
+            throw new TaskRejectedException('invalid spam score');
+        }
+        $n = (int) $score;
+        if ($n < 1 || $n > 10) {
+            throw new TaskRejectedException('spam score out of range');
+        }
+
+        return $n;
+    }
+
+    /**
+     * @param  mixed $raw
+     * @return list<string>
+     */
+    public static function sanitizeEmailList(mixed $raw, string $label): array
+    {
+        if (!is_array($raw)) {
+            throw new TaskRejectedException("{$label} must be an array");
+        }
+        if (count($raw) > self::MAX_SPAM_LIST) {
+            throw new TaskRejectedException("too many {$label} (50 max)");
+        }
+        $out = [];
+        foreach ($raw as $addr) {
+            $email = self::normalizeDest((string) $addr);
+            $out[$email] = $email;
+        }
+        ksort($out);
+
+        return array_values($out);
+    }
+
+    /**
+     * @param  array{required_score: int, blacklist: list<string>, whitelist: list<string>} $cfg
+     */
+    public static function spamJson(array $cfg): string
+    {
+        $json = json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('spam json encode failed');
         }
 
         return $json . "\n";

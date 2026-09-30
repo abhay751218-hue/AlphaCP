@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Spam Filters (30 Sep)** — score + blacklist/whitelist via `mail.spam`
+  (JSON; pipe dest fail closed). Panel **0.25.0**, agent **0.22.0**.
+  Tests: panel **168/0**, provision-sim **53/53**, update-sim **102/102**.
+  Deploy via `panel-update.sh` 0.25.0.
 - **Step 7 Deliverability (30 Sep)** — SPF/DMARC copy records via `mail.deliverability`
   (no DNS write, no openssl). Panel **0.24.0**, agent **0.21.0**.
   Tests: panel **162/0**, provision-sim **52/52**, update-sim **100/100**.

@@ -328,6 +328,31 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  array{required_score: int, blacklist: list<string>, whitelist: list<string>} $cfg
+     * @return array{required_score: int, blacklist: list<string>, whitelist: list<string>}
+     */
+    public function setSpam(string $username, array $cfg): array
+    {
+        $cfg = Mail::sanitizeSpam($cfg);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/spam.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail spam is a symlink');
+        }
+        $this->fs->write($file, Mail::spamJson($cfg), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail spam score ' . $cfg['required_score'] . " for {$username}");
+
+        return $cfg;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

@@ -66,7 +66,7 @@
 | 21 | Email Filters | Per-mailbox filters | S7 | ✅ (contains-match JSON; discard/folder; no pipe) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF/DMARC copy records; DNS/DKIM keys later) |
 | 23 | Address Importer | Bulk CSV import | S7 | ⏳ S7 |
-| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ⏳ S7 |
+| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (score 1–10 + lists JSON; no daemon) |
 | 25 | Encryption | PGP/GnuPG email keys | S7 | ⏳ S7 |
 | 26 | BoxTrapper | Challenge-response anti-spam | S7 | ⏳ S7 |
 | 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ⏳ S7 |

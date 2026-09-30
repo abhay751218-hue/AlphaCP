@@ -45,6 +45,7 @@ use Alphacp\Agent\Tasks\MailAutorespond;
 use Alphacp\Agent\Tasks\MailCatchall;
 use Alphacp\Agent\Tasks\MailFilter;
 use Alphacp\Agent\Tasks\MailDeliverability;
+use Alphacp\Agent\Tasks\MailSpam;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -986,6 +987,35 @@ test('mail.deliverability writes json and rejects hostile domain', function (): 
         $threw = true;
     }
     assert_true($threw, 'hostile domain must fail closed');
+    acp_account_cleanup($harness);
+});
+test('mail.spam writes json and rejects pipe dest', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new MailSpam())->handle([
+        'username' => 'alicehost',
+        'required_score' => 5,
+        'blacklist' => ['spam@example.net'],
+        'whitelist' => [],
+    ], $harness['ctx']);
+    assert_true($out['required_score'] === 5);
+    assert_true($out['blacklist'] === 1);
+    $file = $harness['root'] . '/home/alicehost/etc/mail/spam.json';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, 'spam@example.net'));
+    assert_true(!str_contains($body, '|'));
+    $threwPipe = false;
+    try {
+        (new MailSpam())->handle([
+            'username' => 'alicehost',
+            'required_score' => 5,
+            'blacklist' => ['|/bin/sh'],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPipe = str_contains($e->getMessage(), 'pipe') || str_contains($e->getMessage(), 'dest');
+    }
+    assert_true($threwPipe, 'pipe dest must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {
