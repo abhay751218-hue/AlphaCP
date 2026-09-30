@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.28.0  ·  default panel bundle 0.28.0  ·  agent 0.25.0  ·  alphacp-sync v1.2
+# updater 0.29.0  ·  default panel bundle 0.29.0  ·  agent 0.26.0  ·  alphacp-sync v1.2
+#
+# 0.29.0: Step 7 — panel 0.29.0 (Global Email Filters) + agent 0.26.0 (mail.gfilter)
 #
 # 0.28.0: Step 7 — panel 0.28.0 (Track Delivery) + agent 0.25.0 (mail.track)
 #
@@ -73,17 +75,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.28.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.28.0}"
+UPDATER_VERSION="0.29.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.29.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-5c2f9e94c8883b0e58a8c8396857e4524f1bb868}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-7a6bfb8f0a16aabbbb4bbbb5c309ab730ac4bd53}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-3a9b2f95bd5afe5d536735f9461dbe73b1c41fa49e8b57d8ed277278a821bbb7}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.25.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-5c2f9e94c8883b0e58a8c8396857e4524f1bb868}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-a6f235ca4563cf1b4467b60a3526d1f0b5b35a1dd3bc69fbcb20b4a29babd406}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.26.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-7a6bfb8f0a16aabbbb4bbbb5c309ab730ac4bd53}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-458a77303ef246b1ce95b7d7cdec62b4e3476fd2cf6091e5848b5aaed7ad86a3}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-6e4d459f2caf9b44ab0cdb85b4de1c0124f8f7d1648b180dc9585ca8c6c9dc38}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
