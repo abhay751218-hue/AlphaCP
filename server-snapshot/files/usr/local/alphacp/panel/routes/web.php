@@ -16,6 +16,7 @@ use App\Http\Controllers\DefaultAddressController;
 use App\Http\Controllers\DeliverabilityController;
 use App\Http\Controllers\EmailFiltersController;
 use App\Http\Controllers\ForwardersController;
+use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\IndexesController;
 use App\Http\Controllers\DiskUsageController;
@@ -167,6 +168,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.view')->name('deliverability.index');
     Route::post('/deliverability', [DeliverabilityController::class, 'store'])
         ->middleware('perm:email.manage')->name('deliverability.store');
+
+    Route::get('/spam-filters', [SpamFiltersController::class, 'index'])
+        ->middleware('perm:email.view')->name('spam-filters.index');
+    Route::post('/spam-filters', [SpamFiltersController::class, 'store'])
+        ->middleware('perm:email.manage')->name('spam-filters.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

@@ -443,6 +443,33 @@ return [
         ],
     ],
 
+    'mail.spam' => [
+        'handler'     => Tasks\MailSpam::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write spam score + blacklist/whitelist (JSON, email only).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'required_score'],
+            'properties'           => [
+                'username'       => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'required_score' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 10],
+                'blacklist'      => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => ['type' => 'string', 'maxLength' => 190],
+                ],
+                'whitelist'      => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => ['type' => 'string', 'maxLength' => 190],
+                ],
+            ],
+        ],
+    ],
+
     'mail.deliverability' => [
         'handler'     => Tasks\MailDeliverability::class,
         'safety'      => 'mutating',

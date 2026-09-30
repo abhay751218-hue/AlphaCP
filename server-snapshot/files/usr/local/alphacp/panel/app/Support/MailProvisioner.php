@@ -10,6 +10,7 @@ use App\Models\Catchall;
 use App\Models\Forwarder;
 use App\Models\Mailbox;
 use App\Models\MailFilter;
+use App\Models\SpamSetting;
 
 final class MailProvisioner
 {
@@ -145,6 +146,20 @@ final class MailProvisioner
         return AccountProvisioner::enqueue($account, 'mail.deliverability', [
             'username' => $account->username,
             'domains' => array_values($domains),
+        ]);
+    }
+
+    public static function enqueueSpam(Account $account): int
+    {
+        $row = SpamSetting::query()->where('account_id', $account->id)->first();
+        $black = is_array($row?->blacklist) ? $row->blacklist : [];
+        $white = is_array($row?->whitelist) ? $row->whitelist : [];
+
+        return AccountProvisioner::enqueue($account, 'mail.spam', [
+            'username' => $account->username,
+            'required_score' => (int) ($row?->required_score ?? 5),
+            'blacklist' => array_values($black),
+            'whitelist' => array_values($white),
         ]);
     }
 }

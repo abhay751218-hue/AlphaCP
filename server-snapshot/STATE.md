@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.24.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.24.0   (.env)
-AGENT_VERSION : 0.21.0
+panel code    : 0.25.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.25.0   (.env)
+AGENT_VERSION : 0.22.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -56,9 +56,10 @@ agent-backup-20260930102015
 agent-backup-20260930103748
 agent-backup-20260930142539
 agent-backup-20260930144737
-panel-backup-20260930103748
+agent-backup-20260930151358
 panel-backup-20260930142539
 panel-backup-20260930144737
+panel-backup-20260930151358
 panel-failed-20260928223644
 ```
 
@@ -128,6 +129,7 @@ alphacp:admin-password
   2026_09_29_000018_create_autoresponders_table   [17] Ran
   2026_09_29_000019_create_catchalls_table   [18] Ran
   2026_09_29_000020_create_mail_filters_table   [19] Ran
+  2026_09_29_000021_create_spam_settings_table   [20] Ran
 ```
 
 ## Routes (web)
@@ -209,6 +211,8 @@ GET|HEAD           /security/password                            security.passwo
 POST               /security/password                            security.password.update
 GET|HEAD           /security/sessions                            security.sessions
 DELETE             /security/sessions/{id}                       security.sessions.destroy
+GET|HEAD           /spam-filters                                 spam-filters.index
+POST               /spam-filters                                 spam-filters.store
 GET|HEAD           /ssh                                          ssh.index
 POST               /ssh                                          ssh.store
 POST               /ssh/delete                                   ssh.destroy
