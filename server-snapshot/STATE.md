@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.20.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.20.0   (.env)
-AGENT_VERSION : 0.17.0
+panel code    : 0.21.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.21.0   (.env)
+AGENT_VERSION : 0.18.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -52,15 +52,16 @@ agent-backup-20260929162453
 agent-backup-20260930080151
 agent-backup-20260930082428
 agent-backup-20260930085017
-panel-backup-20260930080151
+agent-backup-20260930102015
 panel-backup-20260930082428
 panel-backup-20260930085017
+panel-backup-20260930102015
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -121,6 +122,7 @@ alphacp:admin-password
   2026_09_29_000015_add_ssh_permissions   [14] Ran
   2026_09_29_000016_create_mailboxes_table   [15] Ran
   2026_09_29_000017_create_forwarders_table   [16] Ran
+  2026_09_29_000018_create_autoresponders_table   [17] Ran
 ```
 
 ## Routes (web)
@@ -137,6 +139,9 @@ POST               /accounts/{account}/terminate                 accounts.termin
 POST               /accounts/{account}/unsuspend                 accounts.unsuspend
 POST               /accounts/{account}/upgrade                   accounts.upgrade
 GET|HEAD           /audit                                        audit.index
+GET|HEAD           /autoresponders                               autoresponders.index
+POST               /autoresponders                               autoresponders.store
+DELETE             /autoresponders/{autoresponder}               autoresponders.destroy
 GET|HEAD           /cron                                         cron.index
 POST               /cron                                         cron.store
 DELETE             /cron/{cron}                                  cron.destroy

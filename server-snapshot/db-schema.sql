@@ -91,6 +91,24 @@ CREATE TABLE `audit_logs` (
   KEY `idx_audit_actor` (`actor_type`,`actor_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Immutable audit trail';
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `autoresponders`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `autoresponders` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `account_id` bigint(20) unsigned NOT NULL,
+  `localpart` varchar(32) NOT NULL,
+  `domain` varchar(190) NOT NULL,
+  `subject` varchar(200) NOT NULL,
+  `body` text NOT NULL,
+  `interval_h` smallint(5) unsigned NOT NULL DEFAULT 24,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `autoresponders_account_id_localpart_domain_unique` (`account_id`,`localpart`,`domain`),
+  KEY `autoresponders_account_id_index` (`account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `cache`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;

@@ -63,4 +63,29 @@ final class Mail
 
         return $local . '@' . $domain;
     }
+
+    public static function trySubject(string $subject): ?string
+    {
+        $subject = trim($subject);
+        if ($subject === '' || strlen($subject) > 200 || strpbrk($subject, "\r\n|:;`$()\\/") !== false) {
+            return null;
+        }
+
+        return $subject;
+    }
+
+    public static function tryBody(string $body): ?string
+    {
+        $body = str_replace("\r\n", "\n", $body);
+        $body = str_replace("\r", "\n", $body);
+        $body = trim($body);
+        if ($body === '' || strlen($body) > 4000) {
+            return null;
+        }
+        if (strpbrk($body, "\0|:;`$") !== false || str_contains($body, '$(')) {
+            return null;
+        }
+
+        return $body;
+    }
 }

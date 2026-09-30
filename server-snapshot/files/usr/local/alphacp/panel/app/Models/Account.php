@@ -68,6 +68,11 @@ class Account extends Model
         return $this->hasMany(Forwarder::class);
     }
 
+    public function autoresponders(): HasMany
+    {
+        return $this->hasMany(Autoresponder::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
