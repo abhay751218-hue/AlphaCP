@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.32.0 — Step 7: BoxTrapper
+### panel-update 0.33.0 — Step 7: Calendar
 ```bash
-sudo alphacp-sync get 8e19b702a36aa15900763b00773465c1225504cd installer/panel-update.sh /tmp/acp-panel-update-0.32.0.sh bcc4ca615c9d7fc707ebf9dc46bcaac76f260fe018654387ca1d88fa242270ca && sudo bash /tmp/acp-panel-update-0.32.0.sh
+sudo alphacp-sync get 7ba12236ad0898160fa60368e8fdd3562f1de517 installer/panel-update.sh /tmp/acp-panel-update-0.33.0.sh b347e42c1e842131393c6e8dc61981e8e81abce1a085ff3a8008023157eba460 && sudo bash /tmp/acp-panel-update-0.33.0.sh
 ```
-- sha256: `bcc4ca615c9d7fc707ebf9dc46bcaac76f260fe018654387ca1d88fa242270ca`
-- Expected: banner `updater 0.32.0` → agent **0.28.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: BoxTrapper (enabled + allowlist JSON). Pipe dest fail closed. No challenge daemon.
-- WHM: Create Account / packages / user manager. Customer ko BoxTrapper tile dikhega, WHM me nahi.
+- sha256: `b347e42c1e842131393c6e8dc61981e8e81abce1a085ff3a8008023157eba460`
+- Expected: banner `updater 0.33.0` → agent **0.29.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Calendar (calendar + contact names JSON). Pipe name fail closed. No CalDAV/CardDAV.
+- WHM: Create Account / packages / user manager. Customer ko Calendar tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **210/0**, provision-sim **59/59**, update-sim **115/115**.
+- Test: panel-tests **216/0**, provision-sim **60/60**, update-sim **117/117**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.32.0 (`8e19b70…`) → panel 0.32.0 + agent 0.28.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, BoxTrapper |
 | panel-update 0.31.0 (`8617eab…`) → panel 0.31.0 + agent 0.27.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Encryption |
 | panel-update 0.30.0 (`5fc5fb7…`) → panel 0.30.0 + agent 0.26.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Address Importer |
 | panel-update 0.29.0 (`acb64df…`) → panel 0.29.0 + agent 0.26.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Global Email Filters |
