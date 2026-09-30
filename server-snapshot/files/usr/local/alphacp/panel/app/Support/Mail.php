@@ -32,9 +32,21 @@ final class Mail
         return $domain;
     }
 
-    public static function hashPassword(string $password): ?string
+    public static function tryPassword(string $password): ?string
     {
         if (strlen($password) < 8 || strlen($password) > 72) {
+            return null;
+        }
+        if (strpbrk($password, "\r\n|:;`$()\\/") !== false) {
+            return null;
+        }
+
+        return $password;
+    }
+
+    public static function hashPassword(string $password): ?string
+    {
+        if (self::tryPassword($password) === null) {
             return null;
         }
         $hash = password_hash($password, PASSWORD_BCRYPT);
@@ -128,6 +140,108 @@ final class Mail
             'spf' => self::SPF,
             'dmarc' => self::DMARC,
             'dkim_selector' => self::DKIM_SELECTOR,
+        ];
+    }
+
+    /**
+     * CSV: local,domain,password[,quota]  OR  email,password
+     *
+     * @param  list<string> $allowedDomains
+     * @return list<array{local: string, domain: string, password: string, quota_mb: int}>|null
+     */
+    public static function parseImport(string $csv, array $allowedDomains): ?array
+    {
+        $csv = str_replace(["\r\n", "\r"], "\n", $csv);
+        if (str_starts_with($csv, "\u{FEFF}")) {
+            $csv = substr($csv, strlen("\u{FEFF}"));
+        }
+        if ($csv === '' || strlen($csv) > 32000) {
+            return null;
+        }
+        $rows = [];
+        foreach (explode("\n", $csv) as $i => $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            $cols = str_getcsv($line);
+            if (! is_array($cols) || $cols === []) {
+                return null;
+            }
+            $cols = array_map(static fn ($c): string => is_string($c) ? trim($c) : '', $cols);
+            if ($i === 0 && in_array(strtolower((string) ($cols[0] ?? '')), ['local', 'email', 'address'], true)) {
+                continue;
+            }
+            $parsed = self::parseImportRow($cols);
+            if ($parsed === null || ! in_array($parsed['domain'], $allowedDomains, true)) {
+                return null;
+            }
+            $key = $parsed['local'] . '@' . $parsed['domain'];
+            $rows[$key] = $parsed;
+            if (count($rows) > self::MAX) {
+                return null;
+            }
+        }
+        if ($rows === []) {
+            return null;
+        }
+
+        return array_values($rows);
+    }
+
+    /**
+     * @param  list<string> $cols
+     * @return array{local: string, domain: string, password: string, quota_mb: int}|null
+     */
+    private static function parseImportRow(array $cols): ?array
+    {
+        $n = count($cols);
+        $local = null;
+        $domain = null;
+        $password = null;
+        $quota = 0;
+        if ($n === 2) {
+            $addr = self::tryDest($cols[0]);
+            $password = self::tryPassword($cols[1]);
+            if ($addr === null || $password === null) {
+                return null;
+            }
+            $at = strrpos($addr, '@');
+            if ($at === false) {
+                return null;
+            }
+            $local = substr($addr, 0, $at);
+            $domain = substr($addr, $at + 1);
+        } elseif ($n === 3 || $n === 4) {
+            $local = self::tryLocal($cols[0]);
+            $domain = self::tryDomain($cols[1]);
+            $password = self::tryPassword($cols[2]);
+            if ($n === 4) {
+                if ($cols[3] === '' || preg_match('/^-?[0-9]+$/', $cols[3]) !== 1) {
+                    return null;
+                }
+                $quota = (int) $cols[3];
+                if ($quota < -1 || $quota > 102400) {
+                    return null;
+                }
+            }
+        } else {
+            return null;
+        }
+        if ($local === null || $domain === null || $password === null) {
+            return null;
+        }
+        foreach ($cols as $cell) {
+            if ($cell !== '' && str_contains('=+-@|', $cell[0])) {
+                return null;
+            }
+        }
+
+        return [
+            'local' => $local,
+            'domain' => $domain,
+            'password' => $password,
+            'quota_mb' => $quota,
         ];
     }
 }

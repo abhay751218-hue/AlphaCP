@@ -17,8 +17,8 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.29.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.29.0   (.env)
+panel code    : 0.30.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.30.0   (.env)
 AGENT_VERSION : 0.26.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
@@ -61,15 +61,16 @@ agent-backup-20260930155140
 agent-backup-20260930161700
 agent-backup-20260930164306
 agent-backup-20260930171354
-panel-backup-20260930161700
+agent-backup-20260930182126
 panel-backup-20260930164306
 panel-backup-20260930171354
+panel-backup-20260930182126
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -152,6 +153,8 @@ POST               /accounts/{account}/suspend                   accounts.suspen
 POST               /accounts/{account}/terminate                 accounts.terminate
 POST               /accounts/{account}/unsuspend                 accounts.unsuspend
 POST               /accounts/{account}/upgrade                   accounts.upgrade
+GET|HEAD           /address-importer                             address-importer.index
+POST               /address-importer                             address-importer.store
 GET|HEAD           /audit                                        audit.index
 GET|HEAD           /autoresponders                               autoresponders.index
 POST               /autoresponders                               autoresponders.store
