@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.18.0 — Step 6: SSH Access
+### panel-update 0.19.0 — Step 7: Email Accounts
 ```bash
-sudo alphacp-sync get 379c9eae584d4b1e55fdeb0a7625c43908cb916d installer/panel-update.sh /tmp/acp-panel-update-0.18.0.sh 8d765d757f62b47562feaba0c3dcb92d3a51666bc9b698162689873c710167cf && sudo bash /tmp/acp-panel-update-0.18.0.sh
+sudo alphacp-sync get 373d7e2e5416729b43811c59d783e48abf192afc installer/panel-update.sh /tmp/acp-panel-update-0.19.0.sh 9b8cc6ff10265af454d6f2cd69f667843f407a6c2620f7c76d4967ad9cdca7ac && sudo bash /tmp/acp-panel-update-0.19.0.sh
 ```
-- sha256: `8d765d757f62b47562feaba0c3dcb92d3a51666bc9b698162689873c710167cf`
-- Expected: banner `updater 0.18.0` → agent **0.15.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: SSH Access (authorized_keys). Private key/options fail closed. Bash sirf HASSHELL on.
-- WHM: Create Account / packages / user manager. Customer ko SSH Access tile dikhega, WHM me nahi.
+- sha256: `9b8cc6ff10265af454d6f2cd69f667843f407a6c2620f7c76d4967ad9cdca7ac`
+- Expected: banner `updater 0.19.0` → agent **0.16.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Email Accounts (virtual mailbox + quota). Password bcrypt hash, plaintext agent tak nahi jata.
+- WHM: Create Account / packages / user manager. Customer ko Email Accounts tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **126/0**, provision-sim **46/46**, update-sim **88/88**.
+- Test: panel-tests **132/0**, provision-sim **47/47**, update-sim **90/90**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.18.0 (`379c9ea…`) → panel 0.18.0 + agent 0.15.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, SSH Access |
 | panel-update 0.17.0 (`c9bdbf5…`) → panel 0.17.0 + agent 0.14.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Disk Usage |
 | panel-update 0.16.0 (`55142ec…`) → panel 0.16.0 + agent 0.13.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Directory Privacy |
 | panel-update 0.15.0 (`a03bdc7…`) → panel 0.15.0 + agent 0.12.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, File Manager |
