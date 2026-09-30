@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.20.0 — Step 7: Forwarders
+### panel-update 0.21.0 — Step 7: Autoresponders
 ```bash
-sudo alphacp-sync get d71a2ab1aab433077980720f7a2df9077e6b3bdf installer/panel-update.sh /tmp/acp-panel-update-0.20.0.sh 7210698ec143cbdadaf7528ab8e3592c4987aa6658c38e4e93d0a52640b0e8bb && sudo bash /tmp/acp-panel-update-0.20.0.sh
+sudo alphacp-sync get 920ea351fcd45a2943145439981e421b6c535b65 installer/panel-update.sh /tmp/acp-panel-update-0.21.0.sh 0f763d19d8a9f8a2e124e5ba59ddff121b1c8fe79a65a81ff0f20790e1eec6cf && sudo bash /tmp/acp-panel-update-0.21.0.sh
 ```
-- sha256: `7210698ec143cbdadaf7528ab8e3592c4987aa6658c38e4e93d0a52640b0e8bb`
-- Expected: banner `updater 0.20.0` → agent **0.17.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Forwarders (address → address). Pipe/shell dest fail closed.
-- WHM: Create Account / packages / user manager. Customer ko Forwarders tile dikhega, WHM me nahi.
+- sha256: `0f763d19d8a9f8a2e124e5ba59ddff121b1c8fe79a65a81ff0f20790e1eec6cf`
+- Expected: banner `updater 0.21.0` → agent **0.18.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Autoresponders (vacation auto-reply). Pipe/shell body fail closed.
+- WHM: Create Account / packages / user manager. Customer ko Autoresponders tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **138/0**, provision-sim **48/48**, update-sim **92/92**.
+- Test: panel-tests **144/0**, provision-sim **49/49**, update-sim **94/94**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.20.0 (`d71a2ab…`) → panel 0.20.0 + agent 0.17.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Forwarders |
 | panel-update 0.19.0 (`373d7e2…`) → panel 0.19.0 + agent 0.16.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Email Accounts |
 | panel-update 0.18.0 (`379c9ea…`) → panel 0.18.0 + agent 0.15.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, SSH Access |
 | panel-update 0.17.0 (`c9bdbf5…`) → panel 0.17.0 + agent 0.14.0 | 29 Sep | ✅ UPDATE COMPLETE, HTTP 200, Disk Usage |
