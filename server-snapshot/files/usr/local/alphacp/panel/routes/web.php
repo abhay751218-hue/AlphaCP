@@ -16,6 +16,7 @@ use App\Http\Controllers\DefaultAddressController;
 use App\Http\Controllers\DeliverabilityController;
 use App\Http\Controllers\EmailFiltersController;
 use App\Http\Controllers\ForwardersController;
+use App\Http\Controllers\EmailRoutingController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -181,6 +182,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('mailing-lists.store');
     Route::delete('/mailing-lists/{mailing_list}', [MailingListsController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('mailing-lists.destroy');
+
+    Route::get('/email-routing', [EmailRoutingController::class, 'index'])
+        ->middleware('perm:email.view')->name('email-routing.index');
+    Route::post('/email-routing', [EmailRoutingController::class, 'store'])
+        ->middleware('perm:email.manage')->name('email-routing.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

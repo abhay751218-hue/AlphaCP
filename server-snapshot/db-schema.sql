@@ -192,6 +192,21 @@ CREATE TABLE `domains` (
   KEY `domains_type_index` (`type`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `email_routes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `email_routes` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `account_id` bigint(20) unsigned NOT NULL,
+  `domain` varchar(190) NOT NULL,
+  `mode` varchar(16) NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email_routes_account_id_domain_unique` (`account_id`,`domain`),
+  KEY `email_routes_account_id_index` (`account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `failed_jobs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;

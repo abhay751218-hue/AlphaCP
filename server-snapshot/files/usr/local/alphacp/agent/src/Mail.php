@@ -17,6 +17,8 @@ final class Mail
     public const MAX_DELIV = 50;
     public const MAX_SPAM_LIST = 50;
     public const MAX_LST = 50;
+    public const MAX_RTE = 50;
+    public const MODES = ['auto', 'local', 'backup', 'remote'];
     public const SPF = 'v=spf1 a mx ~all';
     public const DMARC = 'v=DMARC1; p=none;';
     public const DKIM_SELECTOR = 'default';
@@ -511,6 +513,52 @@ final class Mail
         $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (!is_string($json)) {
             throw new TaskRejectedException('mailing list json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{domain: string, mode: string}>
+     */
+    public static function sanitizeRouting(array $raw): array
+    {
+        if (count($raw) > self::MAX_RTE) {
+            throw new TaskRejectedException('too many routing rows (50 max)');
+        }
+        $byDomain = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid routing row at {$i}");
+            }
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $mode = self::normalizeMode((string) ($row['mode'] ?? ''));
+            $byDomain[$domain] = ['domain' => $domain, 'mode' => $mode];
+        }
+        ksort($byDomain);
+
+        return array_values($byDomain);
+    }
+
+    public static function normalizeMode(string $mode): string
+    {
+        $mode = strtolower(trim($mode));
+        if (!in_array($mode, self::MODES, true)) {
+            throw new TaskRejectedException('routing mode must be auto, local, backup or remote');
+        }
+
+        return $mode;
+    }
+
+    /**
+     * @param  list<array{domain: string, mode: string}> $rows
+     */
+    public static function routingJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('routing json encode failed');
         }
 
         return $json . "\n";

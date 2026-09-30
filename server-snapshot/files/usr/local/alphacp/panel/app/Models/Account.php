@@ -94,6 +94,11 @@ class Account extends Model
         return $this->hasMany(MailingList::class);
     }
 
+    public function emailRoutes(): HasMany
+    {
+        return $this->hasMany(EmailRoute::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

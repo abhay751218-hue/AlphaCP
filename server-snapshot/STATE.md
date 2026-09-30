@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.26.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.26.0   (.env)
-AGENT_VERSION : 0.23.0
+panel code    : 0.27.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.27.0   (.env)
+AGENT_VERSION : 0.24.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -58,9 +58,10 @@ agent-backup-20260930142539
 agent-backup-20260930144737
 agent-backup-20260930151358
 agent-backup-20260930155140
-panel-backup-20260930144737
+agent-backup-20260930161700
 panel-backup-20260930151358
 panel-backup-20260930155140
+panel-backup-20260930161700
 panel-failed-20260928223644
 ```
 
@@ -132,6 +133,7 @@ alphacp:admin-password
   2026_09_29_000020_create_mail_filters_table   [19] Ran
   2026_09_29_000021_create_spam_settings_table   [20] Ran
   2026_09_29_000022_create_mailing_lists_table   [21] Ran
+  2026_09_29_000023_create_email_routes_table   [22] Ran
 ```
 
 ## Routes (web)
@@ -169,6 +171,8 @@ POST               /email                                        email.store
 GET|HEAD           /email-filters                                email-filters.index
 POST               /email-filters                                email-filters.store
 DELETE             /email-filters/{filter}                       email-filters.destroy
+GET|HEAD           /email-routing                                email-routing.index
+POST               /email-routing                                email-routing.store
 DELETE             /email/{mailbox}                              email.destroy
 GET|HEAD           /errorpages                                   errorpages.index
 POST               /errorpages                                   errorpages.update
