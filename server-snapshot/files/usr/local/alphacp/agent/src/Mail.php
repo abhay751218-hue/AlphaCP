@@ -20,6 +20,7 @@ final class Mail
     public const MAX_RTE = 50;
     public const MAX_TRACK = 50;
     public const MAX_GFILTER = 50;
+    public const MAX_GPG = 50;
     public const MODES = ['auto', 'local', 'backup', 'remote'];
     public const TRACK_STATUSES = ['sent', 'deferred', 'bounced', 'rejected'];
     public const SPF = 'v=spf1 a mx ~all';
@@ -671,6 +672,47 @@ final class Mail
         $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (!is_string($json)) {
             throw new TaskRejectedException('global filter json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{local: string, domain: string, comment: string}>
+     */
+    public static function sanitizeEncrypt(array $raw): array
+    {
+        if (count($raw) > self::MAX_GPG) {
+            throw new TaskRejectedException('too many encryption keys (50 max)');
+        }
+        $byAddr = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid encryption key at {$i}");
+            }
+            $local = self::normalizeLocal((string) ($row['local'] ?? ''));
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $comment = self::normalizeNeedle((string) ($row['comment'] ?? ''));
+            $byAddr[$local . '@' . $domain] = [
+                'local' => $local,
+                'domain' => $domain,
+                'comment' => $comment,
+            ];
+        }
+        ksort($byAddr);
+
+        return array_values($byAddr);
+    }
+
+    /**
+     * @param  list<array{local: string, domain: string, comment: string}> $rows
+     */
+    public static function encryptJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('encryption json encode failed');
         }
 
         return $json . "\n";

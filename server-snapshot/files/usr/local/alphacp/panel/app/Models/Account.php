@@ -104,6 +104,11 @@ class Account extends Model
         return $this->hasMany(GlobalFilter::class);
     }
 
+    public function encryptionKeys(): HasMany
+    {
+        return $this->hasMany(EncryptionKey::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

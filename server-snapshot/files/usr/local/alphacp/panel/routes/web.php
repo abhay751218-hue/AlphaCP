@@ -20,6 +20,7 @@ use App\Http\Controllers\EmailRoutingController;
 use App\Http\Controllers\TrackDeliveryController;
 use App\Http\Controllers\GlobalFiltersController;
 use App\Http\Controllers\AddressImporterController;
+use App\Http\Controllers\EncryptionController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -207,6 +208,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.view')->name('address-importer.index');
     Route::post('/address-importer', [AddressImporterController::class, 'store'])
         ->middleware('perm:email.manage')->name('address-importer.store');
+
+    Route::get('/encryption', [EncryptionController::class, 'index'])
+        ->middleware('perm:email.view')->name('encryption.index');
+    Route::post('/encryption', [EncryptionController::class, 'store'])
+        ->middleware('perm:email.manage')->name('encryption.store');
+    Route::delete('/encryption/{encryption_key}', [EncryptionController::class, 'destroy'])
+        ->middleware('perm:email.manage')->name('encryption.destroy');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

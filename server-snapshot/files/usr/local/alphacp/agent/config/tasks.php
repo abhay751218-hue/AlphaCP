@@ -443,6 +443,36 @@ return [
         ],
     ],
 
+    'mail.encrypt' => [
+        'handler'     => Tasks\MailEncrypt::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Replace GnuPG identity rows (JSON; no gpg binary, no private key).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'keys'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'keys'     => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['local', 'domain', 'comment'],
+                        'properties'           => [
+                            'local'   => ['type' => 'string', 'maxLength' => 32],
+                            'domain'  => ['type' => 'string', 'maxLength' => 190],
+                            'comment' => ['type' => 'string', 'maxLength' => 100],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.gfilter' => [
         'handler'     => Tasks\MailGfilter::class,
         'safety'      => 'mutating',

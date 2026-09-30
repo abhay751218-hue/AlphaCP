@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.30.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.30.0   (.env)
-AGENT_VERSION : 0.26.0
+panel code    : 0.31.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.31.0   (.env)
+AGENT_VERSION : 0.27.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -62,9 +62,10 @@ agent-backup-20260930161700
 agent-backup-20260930164306
 agent-backup-20260930171354
 agent-backup-20260930182126
-panel-backup-20260930164306
+agent-backup-20260930184114
 panel-backup-20260930171354
 panel-backup-20260930182126
+panel-backup-20260930184114
 panel-failed-20260928223644
 ```
 
@@ -138,6 +139,7 @@ alphacp:admin-password
   2026_09_29_000022_create_mailing_lists_table   [21] Ran
   2026_09_29_000023_create_email_routes_table   [22] Ran
   2026_09_29_000024_create_global_filters_table   [23] Ran
+  2026_09_29_000025_create_encryption_keys_table   [24] Ran
 ```
 
 ## Routes (web)
@@ -180,6 +182,9 @@ DELETE             /email-filters/{filter}                       email-filters.d
 GET|HEAD           /email-routing                                email-routing.index
 POST               /email-routing                                email-routing.store
 DELETE             /email/{mailbox}                              email.destroy
+GET|HEAD           /encryption                                   encryption.index
+POST               /encryption                                   encryption.store
+DELETE             /encryption/{encryption_key}                  encryption.destroy
 GET|HEAD           /errorpages                                   errorpages.index
 POST               /errorpages                                   errorpages.update
 GET|HEAD           /files                                        files.index
