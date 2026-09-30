@@ -88,4 +88,31 @@ final class Mail
 
         return $body;
     }
+
+    public static function tryFilterField(string $field): ?string
+    {
+        $field = strtolower(trim($field));
+
+        return in_array($field, ['from', 'subject', 'to'], true) ? $field : null;
+    }
+
+    public static function tryNeedle(string $needle): ?string
+    {
+        $needle = trim($needle);
+        if ($needle === '' || strlen($needle) > 100 || strpbrk($needle, "\r\n|:;`$()\\/") !== false) {
+            return null;
+        }
+        if (preg_match('/^[a-zA-Z0-9 .,_@+-]+$/', $needle) !== 1) {
+            return null;
+        }
+
+        return $needle;
+    }
+
+    public static function tryFilterAction(string $action): ?string
+    {
+        $action = strtolower(trim($action));
+
+        return in_array($action, ['discard', 'folder'], true) ? $action : null;
+    }
 }
