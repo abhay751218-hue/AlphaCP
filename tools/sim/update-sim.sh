@@ -112,7 +112,7 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.22.0'" grep -q "updater 0.22.0" "${U}/update-U1.out"
+chk "banner 'updater 0.23.0'" grep -q "updater 0.23.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -148,7 +148,8 @@ chk "MailController present (0.19.0)" test -f "${PANEL}/app/Http/Controllers/Mai
 chk "ForwardersController present (0.20.0)" test -f "${PANEL}/app/Http/Controllers/ForwardersController.php"
 chk "AutorespondersController present (0.21.0)" test -f "${PANEL}/app/Http/Controllers/AutorespondersController.php"
 chk "DefaultAddressController present (0.22.0)" test -f "${PANEL}/app/Http/Controllers/DefaultAddressController.php"
-chk "agent 0.19.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.19.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
+chk "EmailFiltersController present (0.23.0)" test -f "${PANEL}/app/Http/Controllers/EmailFiltersController.php"
+chk "agent 0.20.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.20.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
 chk "account.create in paneld allowlist" grep -q "account.create" "${ACP_HOME}/agent/config/tasks.php"
 chk "domain.add in paneld allowlist" grep -q "domain.add" "${ACP_HOME}/agent/config/tasks.php"
 chk "php.setVersion in paneld allowlist" grep -q "php.setVersion" "${ACP_HOME}/agent/config/tasks.php"
@@ -167,9 +168,10 @@ chk "mail.set in paneld allowlist" grep -q "mail.set" "${ACP_HOME}/agent/config/
 chk "mail.forward in paneld allowlist" grep -q "mail.forward" "${ACP_HOME}/agent/config/tasks.php"
 chk "mail.autorespond in paneld allowlist" grep -q "mail.autorespond" "${ACP_HOME}/agent/config/tasks.php"
 chk "mail.catchall in paneld allowlist" grep -q "mail.catchall" "${ACP_HOME}/agent/config/tasks.php"
+chk "mail.filter in paneld allowlist" grep -q "mail.filter" "${ACP_HOME}/agent/config/tasks.php"
 chk "issueLetsEncrypt in agent" grep -q "issueLetsEncrypt" "${ACP_HOME}/agent/src/AccountOs.php"
 chk "suspended page installed" test -f "${ACP_HOME}/share/suspended/index.html"
-chk ".env ACP_AGENT_VERSION=0.19.0" grep -q "^ACP_AGENT_VERSION=0.19.0$" "${PANEL}/.env"
+chk ".env ACP_AGENT_VERSION=0.20.0" grep -q "^ACP_AGENT_VERSION=0.20.0$" "${PANEL}/.env"
 chk "route cache me /license" grep -rqs "license" "${PANEL}/bootstrap/cache/"
 chk "backup bana (1)" test "$(nbackups)" -eq 1
 chk "backup = purana ${BEFORE_VER}" grep -q "\"version\": \"${BEFORE_VER}\"" "$(find "${REL}" -maxdepth 1 -name 'panel-backup-*' | head -1)/MANIFEST.json"
