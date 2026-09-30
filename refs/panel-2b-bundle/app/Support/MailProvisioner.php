@@ -11,6 +11,7 @@ use App\Models\Forwarder;
 use App\Models\Mailbox;
 use App\Models\MailFilter;
 use App\Models\EmailRoute;
+use App\Models\EncryptionKey;
 use App\Models\GlobalFilter;
 use App\Models\MailingList;
 use App\Models\SpamSetting;
@@ -235,5 +236,24 @@ final class MailProvisioner
     public static function gfilterLimitReached(Account $account): bool
     {
         return $account->globalFilters()->count() >= 50;
+    }
+
+    public static function enqueueEncrypt(Account $account): int
+    {
+        $rows = $account->encryptionKeys()->orderBy('id')->get()->map(static fn (EncryptionKey $row): array => [
+            'local' => $row->localpart,
+            'domain' => $row->domain,
+            'comment' => $row->comment,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'mail.encrypt', [
+            'username' => $account->username,
+            'keys' => $rows,
+        ]);
+    }
+
+    public static function encryptLimitReached(Account $account): bool
+    {
+        return $account->encryptionKeys()->count() >= 50;
     }
 }

@@ -448,6 +448,31 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  list<array{local: string, domain: string, comment: string}> $rows
+     * @return list<array{local: string, domain: string, comment: string}>
+     */
+    public function setEncrypt(string $username, array $rows): array
+    {
+        $rows = Mail::sanitizeEncrypt($rows);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/encrypt.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail encrypt is a symlink');
+        }
+        $this->fs->write($file, Mail::encryptJson($rows), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail encrypt ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

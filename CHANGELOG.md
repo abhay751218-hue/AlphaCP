@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Encryption (30 Sep)** — GnuPG identity rows via `mail.encrypt`
+  (JSON; no gpg binary, no private key; pipe comment fail closed). Panel **0.31.0**, agent **0.27.0**.
+  Tests: panel **204/0**, provision-sim **58/58**, update-sim **113/113**.
+  Deploy via `panel-update.sh` 0.31.0.
 - **Step 7 Address Importer (30 Sep)** — CSV mailboxes via existing `mail.set`
   (pipe/foreign domain fail closed; plaintext never queued). Panel **0.30.0**, agent **0.26.0**.
   Tests: panel **198/0**, provision-sim **57/57**, update-sim **111/111**.
