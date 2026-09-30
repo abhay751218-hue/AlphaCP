@@ -443,6 +443,27 @@ return [
         ],
     ],
 
+    'mail.deliverability' => [
+        'handler'     => Tasks\MailDeliverability::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write recommended SPF/DMARC records (no DNS write).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'domains'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'domains'  => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => ['type' => 'string', 'maxLength' => 190],
+                ],
+            ],
+        ],
+    ],
+
     'mail.filter' => [
         'handler'     => Tasks\MailFilter::class,
         'safety'      => 'mutating',

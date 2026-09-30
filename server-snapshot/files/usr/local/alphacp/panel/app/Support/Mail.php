@@ -115,4 +115,19 @@ final class Mail
 
         return in_array($action, ['discard', 'folder'], true) ? $action : null;
     }
+
+    public const SPF = 'v=spf1 a mx ~all';
+    public const DMARC = 'v=DMARC1; p=none;';
+    public const DKIM_SELECTOR = 'default';
+
+    /** @return array{domain: string, spf: string, dmarc: string, dkim_selector: string} */
+    public static function recordsFor(string $domain): array
+    {
+        return [
+            'domain' => $domain,
+            'spf' => self::SPF,
+            'dmarc' => self::DMARC,
+            'dkim_selector' => self::DKIM_SELECTOR,
+        ];
+    }
 }
