@@ -14,6 +14,10 @@ final class Mail
     public const MAX_RESP = 50;
     public const MAX_CATCH = 50;
     public const MAX_FILTER = 50;
+    public const MAX_DELIV = 50;
+    public const SPF = 'v=spf1 a mx ~all';
+    public const DMARC = 'v=DMARC1; p=none;';
+    public const DKIM_SELECTOR = 'default';
 
     /**
      * @param  list<mixed> $raw
@@ -358,6 +362,50 @@ final class Mail
         $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (!is_string($json)) {
             throw new TaskRejectedException('filter json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{domain: string, spf: string, dmarc: string, dkim_selector: string}>
+     */
+    public static function sanitizeDeliverability(array $raw): array
+    {
+        if (count($raw) > self::MAX_DELIV) {
+            throw new TaskRejectedException('too many deliverability domains (50 max)');
+        }
+        $byDomain = [];
+        foreach ($raw as $i => $row) {
+            $domain = is_string($row) ? $row : (is_array($row) ? (string) ($row['domain'] ?? '') : '');
+            $domain = self::normalizeDomain($domain);
+            $byDomain[$domain] = self::recordsFor($domain);
+        }
+        ksort($byDomain);
+
+        return array_values($byDomain);
+    }
+
+    /** @return array{domain: string, spf: string, dmarc: string, dkim_selector: string} */
+    public static function recordsFor(string $domain): array
+    {
+        return [
+            'domain' => $domain,
+            'spf' => self::SPF,
+            'dmarc' => self::DMARC,
+            'dkim_selector' => self::DKIM_SELECTOR,
+        ];
+    }
+
+    /**
+     * @param  list<array{domain: string, spf: string, dmarc: string, dkim_selector: string}> $rows
+     */
+    public static function deliverabilityJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('deliverability json encode failed');
         }
 
         return $json . "\n";

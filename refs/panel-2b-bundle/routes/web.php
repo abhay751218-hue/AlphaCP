@@ -13,6 +13,7 @@ use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\ErrorPagesController;
 use App\Http\Controllers\AutorespondersController;
 use App\Http\Controllers\DefaultAddressController;
+use App\Http\Controllers\DeliverabilityController;
 use App\Http\Controllers\EmailFiltersController;
 use App\Http\Controllers\ForwardersController;
 use App\Http\Controllers\MailController;
@@ -161,6 +162,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('email-filters.store');
     Route::delete('/email-filters/{filter}', [EmailFiltersController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('email-filters.destroy');
+
+    Route::get('/deliverability', [DeliverabilityController::class, 'index'])
+        ->middleware('perm:email.view')->name('deliverability.index');
+    Route::post('/deliverability', [DeliverabilityController::class, 'store'])
+        ->middleware('perm:email.manage')->name('deliverability.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

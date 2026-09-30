@@ -44,6 +44,7 @@ use Alphacp\Agent\Tasks\MailForward;
 use Alphacp\Agent\Tasks\MailAutorespond;
 use Alphacp\Agent\Tasks\MailCatchall;
 use Alphacp\Agent\Tasks\MailFilter;
+use Alphacp\Agent\Tasks\MailDeliverability;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -959,6 +960,32 @@ test('mail.filter writes json and rejects pipe needle', function (): void {
         $threwPipe = str_contains($e->getMessage(), 'pipe') || str_contains($e->getMessage(), 'needle');
     }
     assert_true($threwPipe, 'pipe needle must fail closed');
+    acp_account_cleanup($harness);
+});
+test('mail.deliverability writes json and rejects hostile domain', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new MailDeliverability())->handle([
+        'username' => 'alicehost',
+        'domains' => ['shop.example.com'],
+    ], $harness['ctx']);
+    assert_true($out['domains'] === 1);
+    $file = $harness['root'] . '/home/alicehost/etc/mail/deliverability.json';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, 'v=spf1 a mx ~all'));
+    assert_true(str_contains($body, 'v=DMARC1; p=none;'));
+    assert_true(!str_contains($body, '|'));
+    $threw = false;
+    try {
+        (new MailDeliverability())->handle([
+            'username' => 'alicehost',
+            'domains' => ['|/bin/sh'],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'hostile domain must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

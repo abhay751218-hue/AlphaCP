@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Deliverability (30 Sep)** — SPF/DMARC copy records via `mail.deliverability`
+  (no DNS write, no openssl). Panel **0.24.0**, agent **0.21.0**.
+  Tests: panel **162/0**, provision-sim **52/52**, update-sim **100/100**.
+  Deploy via `panel-update.sh` 0.24.0.
 - **Step 7 Email Filters (30 Sep)** — contains-match via `mail.filter`
   (JSON; discard/folder; pipe/regex/shell fail closed). Panel **0.23.0**, agent **0.20.0**.
   Tests: panel **156/0**, provision-sim **51/51**, update-sim **98/98**.

@@ -303,6 +303,31 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  list<array{domain: string, spf: string, dmarc: string, dkim_selector: string}> $rows
+     * @return list<array{domain: string, spf: string, dmarc: string, dkim_selector: string}>
+     */
+    public function setDeliverability(string $username, array $rows): array
+    {
+        $rows = Mail::sanitizeDeliverability($rows);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/deliverability.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail deliverability is a symlink');
+        }
+        $this->fs->write($file, Mail::deliverabilityJson($rows), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail deliverability ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

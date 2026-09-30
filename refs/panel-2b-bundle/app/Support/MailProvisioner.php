@@ -138,4 +138,13 @@ final class MailProvisioner
     {
         return $account->mailFilters()->count() >= 50;
     }
+
+    /** @param list<string> $domains */
+    public static function enqueueDeliverability(Account $account, array $domains): int
+    {
+        return AccountProvisioner::enqueue($account, 'mail.deliverability', [
+            'username' => $account->username,
+            'domains' => array_values($domains),
+        ]);
+    }
 }
