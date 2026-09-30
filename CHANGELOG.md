@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Email Accounts (29 Sep)** — virtual mailboxes via `mail.set`
+  (Maildir + bcrypt passwd-file). Panel **0.19.0**, agent **0.16.0**.
+  Tests: panel **132/0**, provision-sim **47/47**, update-sim **90/90**.
+  Deploy via `panel-update.sh` 0.19.0.
 - **Step 6 SSH Access (29 Sep)** — authorized_keys via `ssh.set` (public keys
   only; nologin/bash when HASSHELL). Panel **0.18.0**, agent **0.15.0**.
   Tests: panel **126/0**, provision-sim **46/46**, update-sim **88/88**.

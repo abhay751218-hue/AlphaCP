@@ -150,6 +150,67 @@ final class AccountOs
     }
 
     /**
+     * @param  list<array{local: string, domain: string, hash: string, quota_mb: int}> $boxes
+     * @return list<array{local: string, domain: string, hash: string, quota_mb: int}>
+     */
+    public function setMail(string $username, array $boxes): array
+    {
+        $boxes = Mail::sanitize($boxes);
+        $home = $this->paths->home($username);
+        [$uid, $gid] = $this->passwdIds($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $lines = [];
+        foreach ($boxes as $row) {
+            $rel = 'mail/' . $row['domain'] . '/' . $row['local'];
+            $boxHome = Files::resolve($home, $rel);
+            if (is_link($boxHome)) {
+                throw new RuntimeException('maildir is a symlink: ' . $rel);
+            }
+            foreach (['cur', 'new', 'tmp'] as $leaf) {
+                $p = Files::resolve($home, $rel . '/' . $leaf);
+                if (is_link($p)) {
+                    throw new RuntimeException('maildir leaf is a symlink');
+                }
+                $this->fs->mkdir($p, 0700);
+                $this->fs->chownName($p, $username);
+            }
+            $lines[] = Mail::passwdLine($row, $uid, $gid, $home);
+        }
+        $passwd = Files::resolve($home, 'etc/mail/passwd');
+        if (is_link($passwd)) {
+            throw new RuntimeException('mail passwd is a symlink');
+        }
+        $body = $lines === [] ? '' : implode("\n", $lines) . "\n";
+        $this->fs->write($passwd, $body, 0640);
+        $this->fs->chownName($passwd, $username);
+        $this->log->info('mail ' . count($boxes) . " mailboxes for {$username}");
+
+        return $boxes;
+    }
+
+    /** @return array{0:int,1:int} */
+    private function passwdIds(string $username): array
+    {
+        $result = $this->cmd->run(['/usr/bin/getent', 'passwd', $username], 10);
+        if (!$result->ok()) {
+            throw new RuntimeException('getent passwd failed');
+        }
+        $parts = explode(':', trim($result->stdout));
+        $uid = (int) ($parts[2] ?? 0);
+        $gid = (int) ($parts[3] ?? 0);
+        if ($uid < 1000 || $gid < 1000) {
+            throw new RuntimeException('mailbox uid/gid out of range');
+        }
+
+        return [$uid, $gid];
+    }
+
+    /**
      * @return list<array{name: string, type: string, size: int, mode: string}>
      */
     public function listFiles(string $username, string $rel): array

@@ -39,6 +39,7 @@ use Alphacp\Agent\Tasks\FilesUsage;
 use Alphacp\Agent\Tasks\HandlersSet;
 use Alphacp\Agent\Tasks\PrivacySet;
 use Alphacp\Agent\Tasks\SshSet;
+use Alphacp\Agent\Tasks\MailSet;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -187,7 +188,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -769,6 +770,56 @@ test('ssh.set writes authorized_keys, sets bash, rejects private key', function 
             || str_contains($e->getMessage(), 'blob');
     }
     assert_true($threwPriv, 'private/malformed key must fail closed');
+    acp_account_cleanup($harness);
+});
+test('mail.set writes maildir+passwd and rejects plaintext / hostile local', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $hash = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+    $out = (new MailSet())->handle([
+        'username' => 'alicehost',
+        'mailboxes' => [[
+            'local' => 'bob',
+            'domain' => 'shop.example.com',
+            'hash' => $hash,
+            'quota_mb' => 512,
+        ]],
+    ], $harness['ctx']);
+    assert_true($out['mailboxes'] === 1);
+    $passwd = $harness['root'] . '/home/alicehost/etc/mail/passwd';
+    assert_true(is_file($passwd));
+    $body = (string) file_get_contents($passwd);
+    assert_true(str_contains($body, 'bob@shop.example.com:{BLF-CRYPT}$2y$'));
+    assert_true(str_contains($body, 'storage=512M'));
+    assert_true(is_dir($harness['root'] . '/home/alicehost/mail/shop.example.com/bob/cur'));
+    $threwPlain = false;
+    try {
+        (new MailSet())->handle([
+            'username' => 'alicehost',
+            'mailboxes' => [[
+                'local' => 'bob',
+                'domain' => 'shop.example.com',
+                'hash' => 'plaintext',
+            ]],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPlain = str_contains($e->getMessage(), 'bcrypt');
+    }
+    assert_true($threwPlain, 'plaintext mailbox hash must fail closed');
+    $threwLocal = false;
+    try {
+        (new MailSet())->handle([
+            'username' => 'alicehost',
+            'mailboxes' => [[
+                'local' => '../root',
+                'domain' => 'shop.example.com',
+                'hash' => $hash,
+            ]],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwLocal = str_contains($e->getMessage(), 'local') || str_contains($e->getMessage(), 'escape');
+    }
+    assert_true($threwLocal, 'hostile local part must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

@@ -11,6 +11,7 @@ use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DomainsController;
 use App\Http\Controllers\ErrorPagesController;
+use App\Http\Controllers\MailController;
 use App\Http\Controllers\IndexesController;
 use App\Http\Controllers\DiskUsageController;
 use App\Http\Controllers\FilesController;
@@ -121,6 +122,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
 
     Route::get('/disk', [DiskUsageController::class, 'index'])
         ->middleware('perm:files.view')->name('disk.index');
+
+    Route::get('/email', [MailController::class, 'index'])
+        ->middleware('perm:email.view')->name('email.index');
+    Route::post('/email', [MailController::class, 'store'])
+        ->middleware('perm:email.manage')->name('email.store');
+    Route::delete('/email/{mailbox}', [MailController::class, 'destroy'])
+        ->middleware('perm:email.manage')->name('email.destroy');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');
