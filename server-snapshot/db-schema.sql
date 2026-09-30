@@ -235,6 +235,24 @@ CREATE TABLE `login_attempts` (
   KEY `login_attempts_username_created_at_index` (`username`,`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `mailboxes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `mailboxes` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `account_id` bigint(20) unsigned NOT NULL,
+  `localpart` varchar(32) NOT NULL,
+  `domain` varchar(190) NOT NULL,
+  `quota_mb` int(11) NOT NULL DEFAULT 1024,
+  `password_hash` varchar(72) NOT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `mailboxes_account_id_localpart_domain_unique` (`account_id`,`localpart`,`domain`),
+  KEY `mailboxes_account_id_index` (`account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `migrations`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;

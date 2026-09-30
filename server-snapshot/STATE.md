@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.18.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.18.0   (.env)
-AGENT_VERSION : 0.15.0
+panel code    : 0.19.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.19.0   (.env)
+AGENT_VERSION : 0.16.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -50,15 +50,16 @@ agent-backup-20260929154229
 agent-backup-20260929160317
 agent-backup-20260929162453
 agent-backup-20260930080151
-panel-backup-20260929160317
+agent-backup-20260930082428
 panel-backup-20260929162453
 panel-backup-20260930080151
+panel-backup-20260930082428
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -117,6 +118,7 @@ alphacp:admin-password
   2026_09_29_000013_add_files_permissions   [12] Ran
   2026_09_29_000014_add_privacy_permissions   [13] Ran
   2026_09_29_000015_add_ssh_permissions   [14] Ran
+  2026_09_29_000016_create_mailboxes_table   [15] Ran
 ```
 
 ## Routes (web)
@@ -141,6 +143,9 @@ GET|HEAD           /disk                                         disk.index
 GET|HEAD           /domains                                      domains.index
 POST               /domains                                      domains.store
 DELETE             /domains/{domain}                             domains.destroy
+GET|HEAD           /email                                        email.index
+POST               /email                                        email.store
+DELETE             /email/{mailbox}                              email.destroy
 GET|HEAD           /errorpages                                   errorpages.index
 POST               /errorpages                                   errorpages.update
 GET|HEAD           /files                                        files.index

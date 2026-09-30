@@ -58,6 +58,11 @@ class Account extends Model
         return $this->hasMany(CronJob::class);
     }
 
+    public function mailboxes(): HasMany
+    {
+        return $this->hasMany(Mailbox::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
