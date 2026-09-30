@@ -19,6 +19,7 @@ final class Mail
     public const MAX_LST = 50;
     public const MAX_RTE = 50;
     public const MAX_TRACK = 50;
+    public const MAX_GFILTER = 50;
     public const MODES = ['auto', 'local', 'backup', 'remote'];
     public const TRACK_STATUSES = ['sent', 'deferred', 'bounced', 'rejected'];
     public const SPF = 'v=spf1 a mx ~all';
@@ -620,5 +621,58 @@ final class Mail
         }
 
         return $out;
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{domain: string, field: string, needle: string, action: string, folder: string}>
+     */
+    public static function sanitizeGlobalFilters(array $raw): array
+    {
+        if (count($raw) > self::MAX_GFILTER) {
+            throw new TaskRejectedException('too many global filters (50 max)');
+        }
+        $out = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid global filter at {$i}");
+            }
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $field = self::normalizeFilterField((string) ($row['field'] ?? ''));
+            $needle = self::normalizeNeedle((string) ($row['needle'] ?? ''));
+            $action = self::normalizeFilterAction((string) ($row['action'] ?? ''));
+            $folder = '';
+            if ($action === 'folder') {
+                $folder = self::normalizeLocal((string) ($row['folder'] ?? ''));
+            }
+            $out[] = [
+                'domain' => $domain,
+                'field' => $field,
+                'needle' => $needle,
+                'action' => $action,
+                'folder' => $folder,
+            ];
+        }
+        usort($out, static function (array $a, array $b): int {
+            $ka = $a['domain'] . '|' . $a['field'] . '|' . $a['needle'];
+            $kb = $b['domain'] . '|' . $b['field'] . '|' . $b['needle'];
+
+            return $ka <=> $kb;
+        });
+
+        return $out;
+    }
+
+    /**
+     * @param  list<array{domain: string, field: string, needle: string, action: string, folder: string}> $rows
+     */
+    public static function globalFiltersJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('global filter json encode failed');
+        }
+
+        return $json . "\n";
     }
 }

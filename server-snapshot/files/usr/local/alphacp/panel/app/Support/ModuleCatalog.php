@@ -57,6 +57,7 @@ final class ModuleCatalog
                     ['name' => 'Mailing Lists',       'step' => 'S7', 'status' => 'live', 'route' => 'mailing-lists.index'],
                     ['name' => 'Email Routing',       'step' => 'S7', 'status' => 'live', 'route' => 'email-routing.index'],
                     ['name' => 'Track Delivery',      'step' => 'S7', 'status' => 'live', 'route' => 'track-delivery.index'],
+                    ['name' => 'Global Email Filters', 'step' => 'S7', 'status' => 'live', 'route' => 'global-filters.index'],
                     ['name' => 'Webmail',             'step' => 'S7', 'status' => 'step'],
                 ],
             ],

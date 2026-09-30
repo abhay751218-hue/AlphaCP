@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.28.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.28.0   (.env)
-AGENT_VERSION : 0.25.0
+panel code    : 0.29.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.29.0   (.env)
+AGENT_VERSION : 0.26.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -60,9 +60,10 @@ agent-backup-20260930151358
 agent-backup-20260930155140
 agent-backup-20260930161700
 agent-backup-20260930164306
-panel-backup-20260930155140
+agent-backup-20260930171354
 panel-backup-20260930161700
 panel-backup-20260930164306
+panel-backup-20260930171354
 panel-failed-20260928223644
 ```
 
@@ -135,6 +136,7 @@ alphacp:admin-password
   2026_09_29_000021_create_spam_settings_table   [20] Ran
   2026_09_29_000022_create_mailing_lists_table   [21] Ran
   2026_09_29_000023_create_email_routes_table   [22] Ran
+  2026_09_29_000024_create_global_filters_table   [23] Ran
 ```
 
 ## Routes (web)
@@ -185,6 +187,9 @@ POST               /files/write                                  files.write
 GET|HEAD           /forwarders                                   forwarders.index
 POST               /forwarders                                   forwarders.store
 DELETE             /forwarders/{forwarder}                       forwarders.destroy
+GET|HEAD           /global-filters                               global-filters.index
+POST               /global-filters                               global-filters.store
+DELETE             /global-filters/{global_filter}               global-filters.destroy
 GET|HEAD           /handlers                                     handlers.index
 POST               /handlers                                     handlers.store
 DELETE             /handlers/{ext}                               handlers.destroy

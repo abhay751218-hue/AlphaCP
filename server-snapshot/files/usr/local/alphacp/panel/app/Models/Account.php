@@ -99,6 +99,11 @@ class Account extends Model
         return $this->hasMany(EmailRoute::class);
     }
 
+    public function globalFilters(): HasMany
+    {
+        return $this->hasMany(GlobalFilter::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';
