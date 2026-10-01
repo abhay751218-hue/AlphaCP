@@ -12,6 +12,7 @@ use App\Models\Mailbox;
 use App\Models\MailFilter;
 use App\Models\EmailRoute;
 use App\Models\BoxTrapperSetting;
+use App\Models\CalendarItem;
 use App\Models\EncryptionKey;
 use App\Models\GlobalFilter;
 use App\Models\MailingList;
@@ -268,5 +269,27 @@ final class MailProvisioner
             'enabled' => (bool) ($row?->enabled ?? false),
             'allowlist' => array_values($allow),
         ]);
+    }
+
+    public static function enqueueCalendar(Account $account): int
+    {
+        $items = $account->calendarItems()->orderBy('id')->get();
+        $calendars = $items->where('kind', 'calendar')->map(static fn (CalendarItem $row): array => [
+            'name' => $row->name,
+        ])->values()->all();
+        $contacts = $items->where('kind', 'contact')->map(static fn (CalendarItem $row): array => [
+            'name' => $row->name,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'mail.calendar', [
+            'username' => $account->username,
+            'calendars' => $calendars,
+            'contacts' => $contacts,
+        ]);
+    }
+
+    public static function calendarLimitReached(Account $account, string $kind): bool
+    {
+        return $account->calendarItems()->where('kind', $kind)->count() >= 50;
     }
 }

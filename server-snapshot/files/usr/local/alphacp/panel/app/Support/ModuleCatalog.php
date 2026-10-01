@@ -61,6 +61,7 @@ final class ModuleCatalog
                     ['name' => 'Address Importer',    'step' => 'S7', 'status' => 'live', 'route' => 'address-importer.index'],
                     ['name' => 'Encryption',          'step' => 'S7', 'status' => 'live', 'route' => 'encryption.index'],
                     ['name' => 'BoxTrapper',          'step' => 'S7', 'status' => 'live', 'route' => 'boxtrapper.index'],
+                    ['name' => 'Calendar',            'step' => 'S7', 'status' => 'live', 'route' => 'calendar.index'],
                     ['name' => 'Webmail',             'step' => 'S7', 'status' => 'step'],
                 ],
             ],

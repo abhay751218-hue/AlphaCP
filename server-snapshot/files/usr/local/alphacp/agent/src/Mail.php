@@ -22,6 +22,7 @@ final class Mail
     public const MAX_GFILTER = 50;
     public const MAX_GPG = 50;
     public const MAX_BOX = 50;
+    public const MAX_CAL = 50;
     public const MODES = ['auto', 'local', 'backup', 'remote'];
     public const TRACK_STATUSES = ['sent', 'deferred', 'bounced', 'rejected'];
     public const SPF = 'v=spf1 a mx ~all';
@@ -757,6 +758,54 @@ final class Mail
         $json = json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (!is_string($json)) {
             throw new TaskRejectedException('boxtrapper json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{name: string}>
+     */
+    public static function sanitizeCalNames(array $raw, string $label): array
+    {
+        if (count($raw) > self::MAX_CAL) {
+            throw new TaskRejectedException("too many {$label}s (50 max)");
+        }
+        $byName = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid {$label} at {$i}");
+            }
+            $name = self::normalizeCalName((string) ($row['name'] ?? ''), $label);
+            $byName[strtolower($name)] = ['name' => $name];
+        }
+        ksort($byName);
+
+        return array_values($byName);
+    }
+
+    public static function normalizeCalName(string $name, string $label = 'calendar'): string
+    {
+        $name = trim($name);
+        if ($name === '' || strlen($name) > 64 || strpbrk($name, "\r\n|:;`$()\\/") !== false) {
+            throw new TaskRejectedException("{$label} name invalid (no pipe/shell)");
+        }
+        if (preg_match('/^[A-Za-z0-9][A-Za-z0-9 ._+-]{0,63}$/', $name) !== 1) {
+            throw new TaskRejectedException("{$label} name charset");
+        }
+
+        return $name;
+    }
+
+    /**
+     * @param  array{calendars: list<array{name: string}>, contacts: list<array{name: string}>} $cfg
+     */
+    public static function calendarJson(array $cfg): string
+    {
+        $json = json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('calendar json encode failed');
         }
 
         return $json . "\n";

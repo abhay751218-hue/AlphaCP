@@ -121,6 +121,19 @@ final class Mail
         return $needle;
     }
 
+    public static function tryCalName(string $name): ?string
+    {
+        $name = trim($name);
+        if ($name === '' || strlen($name) > 64 || strpbrk($name, "\r\n|:;`$()\\/") !== false) {
+            return null;
+        }
+        if (preg_match('/^[A-Za-z0-9][A-Za-z0-9 ._+-]{0,63}$/', $name) !== 1) {
+            return null;
+        }
+
+        return $name;
+    }
+
     public static function tryFilterAction(string $action): ?string
     {
         $action = strtolower(trim($action));
