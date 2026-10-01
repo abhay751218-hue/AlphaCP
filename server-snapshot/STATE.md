@@ -17,8 +17,8 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.36.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.36.0   (.env)
+panel code    : 0.37.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.37.0   (.env)
 AGENT_VERSION : 0.32.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
@@ -68,9 +68,10 @@ agent-backup-20261001090030
 agent-backup-20261001093302
 agent-backup-20261001100058
 agent-backup-20261001152446
-panel-backup-20261001093302
+agent-backup-20261001154551
 panel-backup-20261001100058
 panel-backup-20261001152446
+panel-backup-20261001154551
 panel-failed-20260928223644
 ```
 
@@ -230,6 +231,8 @@ POST               /mime                                         mime.store
 DELETE             /mime/{ext}                                   mime.destroy
 GET|HEAD           /mysql                                        mysql.index
 POST               /mysql                                        mysql.store
+GET|HEAD           /mysql-wizard                                 mysql-wizard.index
+POST               /mysql-wizard                                 mysql-wizard.store
 DELETE             /mysql/{mysql_database}                       mysql.destroy
 GET|HEAD           /packages                                     packages.index
 POST               /packages                                     packages.store
