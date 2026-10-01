@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.36.0 — Step 8: MySQL Databases
+### panel-update 0.37.0 — Step 8: Database Wizard
 ```bash
-sudo alphacp-sync get 2dc2f3999cbe10cd99291df90c4704f2cd96449c installer/panel-update.sh /tmp/acp-panel-update-0.36.0.sh 3b9c94e6d3c8bdc1013b78353abe9d5bee07307764d10c1d5d7dbf3e75dc5cb9 && sudo bash /tmp/acp-panel-update-0.36.0.sh
+sudo alphacp-sync get 0b4e24a3fc99e15d5e4bc52135e9d839ee07ecba installer/panel-update.sh /tmp/acp-panel-update-0.37.0.sh b5da89ad917034dda702fb9db1c7130e8d2fef922145338d2046b034d4004299 && sudo bash /tmp/acp-panel-update-0.37.0.sh
 ```
-- sha256: `3b9c94e6d3c8bdc1013b78353abe9d5bee07307764d10c1d5d7dbf3e75dc5cb9`
-- Expected: banner `updater 0.36.0` → agent **0.32.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: MySQL Databases (prefixed names JSON). Hostile name fail closed. No mysql binary.
-- WHM: Create Account / packages / user manager. Customer ko MySQL Databases tile dikhega, WHM me nahi.
+- sha256: `b5da89ad917034dda702fb9db1c7130e8d2fef922145338d2046b034d4004299`
+- Expected: banner `updater 0.37.0` → agent **0.32.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Database Wizard (session confirm, reuses db.set). Hostile name fail closed. No mysql binary.
+- WHM: Create Account / packages / user manager. Customer ko Database Wizard tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **234/0**, provision-sim **63/63**, update-sim **123/123**.
+- Test: panel-tests **240/0**, provision-sim **63/63**, update-sim **124/124**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.36.0 (`2dc2f39…`) → panel 0.36.0 + agent 0.32.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, MySQL Databases |
 | panel-update 0.35.0 (`035aae4…`) → panel 0.35.0 + agent 0.31.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Webmail |
 | panel-update 0.34.0 (`86b31ef…`) → panel 0.34.0 + agent 0.30.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Email Disk Usage |
 | panel-update 0.33.0 (`7ba1223…`) → panel 0.33.0 + agent 0.29.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Calendar |
