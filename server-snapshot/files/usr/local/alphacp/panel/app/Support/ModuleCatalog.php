@@ -63,7 +63,7 @@ final class ModuleCatalog
                     ['name' => 'BoxTrapper',          'step' => 'S7', 'status' => 'live', 'route' => 'boxtrapper.index'],
                     ['name' => 'Calendar',            'step' => 'S7', 'status' => 'live', 'route' => 'calendar.index'],
                     ['name' => 'Email Disk Usage',    'step' => 'S7', 'status' => 'live', 'route' => 'email-disk.index'],
-                    ['name' => 'Webmail',             'step' => 'S7', 'status' => 'step'],
+                    ['name' => 'Webmail',             'step' => 'S7', 'status' => 'live', 'route' => 'webmail.index'],
                 ],
             ],
             'domains' => [

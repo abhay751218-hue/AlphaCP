@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.34.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.34.0   (.env)
-AGENT_VERSION : 0.30.0
+panel code    : 0.35.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.35.0   (.env)
+AGENT_VERSION : 0.31.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -66,9 +66,10 @@ agent-backup-20260930184114
 agent-backup-20260930192045
 agent-backup-20261001090030
 agent-backup-20261001093302
-panel-backup-20260930192045
+agent-backup-20261001100058
 panel-backup-20261001090030
 panel-backup-20261001093302
+panel-backup-20261001100058
 panel-failed-20260928223644
 ```
 
@@ -145,6 +146,7 @@ alphacp:admin-password
   2026_09_29_000025_create_encryption_keys_table   [24] Ran
   2026_09_29_000026_create_boxtrapper_settings_table   [25] Ran
   2026_09_29_000027_create_calendar_items_table   [26] Ran
+  2026_09_29_000028_create_webmail_settings_table   [27] Ran
 ```
 
 ## Routes (web)
@@ -273,6 +275,8 @@ GET|HEAD           /users/create                                 users.create
 PUT                /users/{user}                                 users.update
 GET|HEAD           /users/{user}/edit                            users.edit
 POST               /users/{user}/password                        users.password
+GET|HEAD           /webmail                                      webmail.index
+POST               /webmail                                      webmail.store
 GET|HEAD           /{fallbackPlaceholder}                        
 ```
 

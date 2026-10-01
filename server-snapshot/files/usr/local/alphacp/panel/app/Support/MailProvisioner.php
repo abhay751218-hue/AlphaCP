@@ -13,6 +13,7 @@ use App\Models\MailFilter;
 use App\Models\EmailRoute;
 use App\Models\BoxTrapperSetting;
 use App\Models\CalendarItem;
+use App\Models\WebmailSetting;
 use App\Models\EncryptionKey;
 use App\Models\GlobalFilter;
 use App\Models\MailingList;
@@ -291,5 +292,16 @@ final class MailProvisioner
     public static function calendarLimitReached(Account $account, string $kind): bool
     {
         return $account->calendarItems()->where('kind', $kind)->count() >= 50;
+    }
+
+    public static function enqueueWebmail(Account $account): int
+    {
+        $row = WebmailSetting::query()->where('account_id', $account->id)->first();
+
+        return AccountProvisioner::enqueue($account, 'mail.webmail', [
+            'username' => $account->username,
+            'enabled' => (bool) ($row?->enabled ?? false),
+            'client' => (string) ($row?->client ?? 'roundcube'),
+        ]);
     }
 }

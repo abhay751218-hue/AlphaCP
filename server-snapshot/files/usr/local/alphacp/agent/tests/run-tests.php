@@ -54,6 +54,7 @@ use Alphacp\Agent\Tasks\MailEncrypt;
 use Alphacp\Agent\Tasks\MailBoxtrapper;
 use Alphacp\Agent\Tasks\MailCalendar;
 use Alphacp\Agent\Tasks\MailUsage;
+use Alphacp\Agent\Tasks\MailWebmail;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -202,7 +203,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1307,6 +1308,34 @@ test('mail.usage reports mail sizes, skips symlink, rejects ..', function (): vo
         $threwPipe = str_contains($e->getMessage(), 'path') || str_contains($e->getMessage(), 'segment');
     }
     assert_true($threwPipe, 'pipe path must fail closed');
+    acp_account_cleanup($harness);
+});
+test('mail.webmail writes json and rejects hostile client', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new MailWebmail())->handle([
+        'username' => 'alicehost',
+        'enabled' => true,
+        'client' => 'roundcube',
+    ], $harness['ctx']);
+    assert_true($out['enabled'] === true);
+    assert_true($out['client'] === 'roundcube');
+    $file = $harness['root'] . '/home/alicehost/etc/mail/webmail.json';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, 'roundcube'));
+    assert_true(!str_contains($body, '|'));
+    $threw = false;
+    try {
+        (new MailWebmail())->handle([
+            'username' => 'alicehost',
+            'enabled' => true,
+            'client' => '|/bin/sh',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'client') || str_contains($e->getMessage(), 'pipe');
+    }
+    assert_true($threw, 'hostile client must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {
