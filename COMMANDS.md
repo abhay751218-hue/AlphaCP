@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.35.0 — Step 7: Webmail
+### panel-update 0.36.0 — Step 8: MySQL Databases
 ```bash
-sudo alphacp-sync get 035aae409bab051e0ae0a38597c881b485a3434c installer/panel-update.sh /tmp/acp-panel-update-0.35.0.sh 9bf3974692fc314eaac2e63c2f8dc07d9d065ee86137f224dbd83d31ceede018 && sudo bash /tmp/acp-panel-update-0.35.0.sh
+sudo alphacp-sync get 2dc2f3999cbe10cd99291df90c4704f2cd96449c installer/panel-update.sh /tmp/acp-panel-update-0.36.0.sh 3b9c94e6d3c8bdc1013b78353abe9d5bee07307764d10c1d5d7dbf3e75dc5cb9 && sudo bash /tmp/acp-panel-update-0.36.0.sh
 ```
-- sha256: `9bf3974692fc314eaac2e63c2f8dc07d9d065ee86137f224dbd83d31ceede018`
-- Expected: banner `updater 0.35.0` → agent **0.31.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Webmail (roundcube/horde client JSON). Hostile client fail closed. No Roundcube/Horde install.
-- WHM: Create Account / packages / user manager. Customer ko Webmail tile dikhega, WHM me nahi.
+- sha256: `3b9c94e6d3c8bdc1013b78353abe9d5bee07307764d10c1d5d7dbf3e75dc5cb9`
+- Expected: banner `updater 0.36.0` → agent **0.32.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: MySQL Databases (prefixed names JSON). Hostile name fail closed. No mysql binary.
+- WHM: Create Account / packages / user manager. Customer ko MySQL Databases tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **228/0**, provision-sim **62/62**, update-sim **121/121**.
+- Test: panel-tests **234/0**, provision-sim **63/63**, update-sim **123/123**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.35.0 (`035aae4…`) → panel 0.35.0 + agent 0.31.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Webmail |
 | panel-update 0.34.0 (`86b31ef…`) → panel 0.34.0 + agent 0.30.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Email Disk Usage |
 | panel-update 0.33.0 (`7ba1223…`) → panel 0.33.0 + agent 0.29.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Calendar |
 | panel-update 0.32.0 (`8e19b70…`) → panel 0.32.0 + agent 0.28.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, BoxTrapper |
