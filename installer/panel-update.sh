@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.38.0  ·  default panel bundle 0.38.0  ·  agent 0.33.0  ·  alphacp-sync v1.2
+# updater 0.39.0  ·  default panel bundle 0.39.0  ·  agent 0.34.0  ·  alphacp-sync v1.2
+#
+# 0.39.0: Step 8 — panel 0.39.0 (Remote MySQL) + agent 0.34.0 (db.remote)
 #
 # 0.38.0: Step 8 — panel 0.38.0 (phpMyAdmin) + agent 0.33.0 (db.phpmyadmin)
 #
@@ -93,17 +95,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.38.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.38.0}"
+UPDATER_VERSION="0.39.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.39.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-de07ce04da0230c16bdcf75f9c2a9f3b34cd070f}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-03d4be5a49f75dda863db69669e1c4de5844429e}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-d27120f6b13603a841073f9bab8180589c9928493613b6e0df3b6cec991bac5d}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.33.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-de07ce04da0230c16bdcf75f9c2a9f3b34cd070f}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-926b7e3f3fe165a3a4022096403c63dc42890673dabb03806ae40bb312517c62}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.34.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-03d4be5a49f75dda863db69669e1c4de5844429e}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-a5377407ca1ac8dccdfa735bf7152b7b2c484df7c77d441f187624b6dafdfc6b}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-c46db1e303ecdb66f051adb9d686ff9c9c73a33d923d36f936272cebd6c9bb3e}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
