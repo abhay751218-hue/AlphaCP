@@ -7,7 +7,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 ### Added
 - **Step 8 MySQL Databases (1 Oct)** — prefixed names via `db.set`
   (JSON; no mysql binary; pipe/path fail closed). Panel **0.36.0**, agent **0.32.0**.
-  Tests: panel **234/0**, provision-sim **63/63**, update-sim **121/121** (pin in B).
+  Tests: panel **234/0**, provision-sim **63/63**, update-sim **123/123**.
   Deploy via `panel-update.sh` 0.36.0.
 - **Step 7 Webmail (1 Oct)** — preferred client via `mail.webmail`
   (JSON; no Roundcube/Horde install; hostile client fail closed). Panel **0.35.0**, agent **0.31.0**.
