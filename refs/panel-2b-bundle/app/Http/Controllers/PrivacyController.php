@@ -33,7 +33,7 @@ class PrivacyController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['path' => 'Suspended/terminated account par Directory Privacy nahi.']);
+            return back()->withErrors(['path' => 'Cannot change Directory Privacy on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'path' => ['required', 'string', 'max:240'],
@@ -78,7 +78,7 @@ class PrivacyController extends Controller
         }
         $this->persist($account, $current);
 
-        return redirect()->route('privacy.index')->with('success', 'Directory Privacy queue me hai.');
+        return redirect()->route('privacy.index')->with('success', 'Directory Privacy is queued.');
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -96,7 +96,7 @@ class PrivacyController extends Controller
         }
         $this->persist($account, $keep);
 
-        return redirect()->route('privacy.index')->with('success', 'Protection hataane ke liye queue me hai.');
+        return redirect()->route('privacy.index')->with('success', 'Protection is queued for removal.');
     }
 
     /** @param list<array{path: string, realm: string, users: list<array{name: string, hash: string}>}> $entries */

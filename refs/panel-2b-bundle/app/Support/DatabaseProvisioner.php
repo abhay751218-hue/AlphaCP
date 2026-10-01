@@ -7,6 +7,7 @@ namespace App\Support;
 use App\Models\Account;
 use App\Models\MysqlDatabase;
 use App\Models\PhpmyadminSetting;
+use App\Models\MysqlRemoteHost;
 
 final class DatabaseProvisioner
 {
@@ -40,5 +41,22 @@ final class DatabaseProvisioner
             'username' => $account->username,
             'enabled' => (bool) ($row?->enabled ?? false),
         ]);
+    }
+
+    public static function enqueueRemote(Account $account): int
+    {
+        $rows = $account->remoteHosts()->orderBy('id')->get()->map(static fn (MysqlRemoteHost $row): array => [
+            'host' => $row->host,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'db.remote', [
+            'username' => $account->username,
+            'hosts' => $rows,
+        ]);
+    }
+
+    public static function remoteLimitReached(Account $account): bool
+    {
+        return $account->remoteHosts()->count() >= 50;
     }
 }

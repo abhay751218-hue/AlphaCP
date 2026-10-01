@@ -34,7 +34,7 @@ class ForwardersController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['localpart' => 'Suspended/terminated account par forwarder nahi.']);
+            return back()->withErrors(['localpart' => 'Cannot change forwarders on a suspended/terminated account.']);
         }
         if (MailProvisioner::fwdLimitReached($account)) {
             return back()->withErrors(['localpart' => 'Package MAXFWD limit reached.']);
@@ -49,14 +49,14 @@ class ForwardersController extends Controller
         $dest = Mail::tryDest($data['dest']);
         $allowed = MailProvisioner::domainsFor($account);
         if ($local === null || $domain === null || $dest === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['localpart' => 'Invalid source/dest. Dest email hona chahiye, pipe nahi. Domain is account ka hona chahiye.'])->withInput();
+            return back()->withErrors(['localpart' => 'Invalid source/dest. Dest must be an email, no pipe. Domain must belong to this account.'])->withInput();
         }
         if ($local . '@' . $domain === $dest) {
             return back()->withErrors(['dest' => 'Dest source jaisa nahi ho sakta.'])->withInput();
         }
         $exists = Forwarder::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {
-            return back()->withErrors(['localpart' => 'Is address ka forwarder pehle se hai.'])->withInput();
+            return back()->withErrors(['localpart' => 'Is address ka forwarder already exists.'])->withInput();
         }
         Forwarder::query()->create([
             'account_id' => $account->id,
@@ -68,7 +68,7 @@ class ForwardersController extends Controller
         $account->recordEvent('mail.forward.queued', $local . '@' . $domain);
         Audit::log('mail.forward', 'info', 'account', $account->id, ['source' => $local . '@' . $domain, 'dest' => $dest]);
 
-        return redirect()->route('forwarders.index')->with('success', 'Forwarder queue me hai.');
+        return redirect()->route('forwarders.index')->with('success', 'Forwarder is queued.');
     }
 
     public function destroy(Request $request, Forwarder $forwarder): RedirectResponse
@@ -82,7 +82,7 @@ class ForwardersController extends Controller
         MailProvisioner::enqueueForwards($account);
         Audit::log('mail.forward.remove', 'warning', 'account', $account->id, ['source' => $src]);
 
-        return redirect()->route('forwarders.index')->with('success', 'Forwarder hataane ke liye queue me hai.');
+        return redirect()->route('forwarders.index')->with('success', 'Forwarder is queued for removal.');
     }
 
     private function accountFor(Request $request): ?Account

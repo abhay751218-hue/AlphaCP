@@ -77,10 +77,10 @@ class AccountsController extends Controller
             return back()->withErrors(['username' => 'Ye username reserved hai.'])->withInput();
         }
         if (User::query()->where('username', $username)->exists()) {
-            return back()->withErrors(['username' => 'Panel user is naam se pehle se hai.'])->withInput();
+            return back()->withErrors(['username' => 'Panel user is naam se already exists.'])->withInput();
         }
         if (Account::query()->where('username', $username)->exists()) {
-            return back()->withErrors(['username' => 'Hosting account is naam se pehle se hai.'])->withInput();
+            return back()->withErrors(['username' => 'Hosting account is naam se already exists.'])->withInput();
         }
         if (Account::query()->where('main_domain', $domain)->exists()) {
             return back()->withErrors(['main_domain' => 'Domain pehle se kisi account par hai.'])->withInput();
@@ -142,7 +142,7 @@ class AccountsController extends Controller
             'username' => $username, 'domain' => $domain,
         ]);
 
-        $msg = "Account '{$username}' queue me hai.";
+        $msg = "Account '{$username}' is queued.";
         if ($generated) {
             $msg .= " Panel password (ek baar): {$plain}";
         }
@@ -187,7 +187,7 @@ class AccountsController extends Controller
             'reason' => $account->suspend_reason,
         ]);
 
-        return redirect()->route('accounts.show', $account)->with('success', 'Suspend task queue me hai.');
+        return redirect()->route('accounts.show', $account)->with('success', 'Suspend task is queued.');
     }
 
     public function unsuspend(Account $account): RedirectResponse
@@ -204,7 +204,7 @@ class AccountsController extends Controller
         ]);
         Audit::log('account.unsuspend', 'warning', 'account', $account->id, []);
 
-        return redirect()->route('accounts.show', $account)->with('success', 'Unsuspend task queue me hai.');
+        return redirect()->route('accounts.show', $account)->with('success', 'Unsuspend task is queued.');
     }
 
     public function terminate(Request $request, Account $account): RedirectResponse
@@ -224,7 +224,7 @@ class AccountsController extends Controller
         ]);
         Audit::log('account.terminate', 'critical', 'account', $account->id, ['username' => $live]);
 
-        return redirect()->route('accounts.index')->with('warning', "Account '{$live}' terminate queue me hai.");
+        return redirect()->route('accounts.index')->with('warning', "Account '{$live}' terminate is queued.");
     }
 
     public function upgrade(Request $request, Account $account): RedirectResponse
@@ -275,13 +275,13 @@ class AccountsController extends Controller
         ]);
         Audit::log('account.quota', 'warning', 'account', $account->id, ['quota_mb' => $data['quota_mb']]);
 
-        return redirect()->route('accounts.show', $account)->with('success', 'Quota change queue me hai.');
+        return redirect()->route('accounts.show', $account)->with('success', 'Quota change is queued.');
     }
 
     public function php(Request $request, Account $account): RedirectResponse
     {
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['php_version' => 'Suspended/terminated account par PHP nahi badlega.']);
+            return back()->withErrors(['php_version' => 'Cannot change PHP on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'php_version' => ['required', 'string', 'regex:' . PhpVersions::pattern()],
@@ -298,7 +298,7 @@ class AccountsController extends Controller
         $account->recordEvent('php.setVersion.queued', $php);
         Audit::log('php.setVersion', 'info', 'account', $account->id, ['php_version' => $php]);
 
-        return redirect()->route('accounts.show', $account)->with('success', "PHP {$php} queue me hai.");
+        return redirect()->route('accounts.show', $account)->with('success', "PHP {$php} is queued.");
     }
 
     private function liveUsername(Account $account): string

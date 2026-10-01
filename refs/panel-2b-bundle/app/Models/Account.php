@@ -134,6 +134,11 @@ class Account extends Model
         return $this->hasOne(PhpmyadminSetting::class);
     }
 
+    public function remoteHosts(): HasMany
+    {
+        return $this->hasMany(MysqlRemoteHost::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

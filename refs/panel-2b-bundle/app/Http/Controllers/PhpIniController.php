@@ -33,7 +33,7 @@ class PhpIniController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['ini' => 'Suspended/terminated account par INI nahi.']);
+            return back()->withErrors(['ini' => 'Cannot change PHP INI on a suspended/terminated account.']);
         }
 
         $directives = PhpIni::fromRequest($request->all());
@@ -48,7 +48,7 @@ class PhpIniController extends Controller
         $account->recordEvent('php.setIni.queued', (string) count($directives));
         Audit::log('php.setIni', 'info', 'account', $account->id, ['keys' => array_keys($directives)]);
 
-        return redirect()->route('php.ini')->with('success', 'PHP INI queue me hai.');
+        return redirect()->route('php.ini')->with('success', 'PHP INI is queued.');
     }
 
     private function accountFor(Request $request): ?Account

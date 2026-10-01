@@ -37,7 +37,7 @@ class SshController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['pubkey' => 'Suspended/terminated account par SSH Access nahi.']);
+            return back()->withErrors(['pubkey' => 'Cannot change SSH Access on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'pubkey' => ['required', 'string', 'max:9000'],
@@ -58,7 +58,7 @@ class SshController extends Controller
         }
         $this->persist($account, $keys, $state['shell']);
 
-        return redirect()->route('ssh.index')->with('success', 'SSH key queue me hai.');
+        return redirect()->route('ssh.index')->with('success', 'SSH key is queued.');
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -76,14 +76,14 @@ class SshController extends Controller
         }
         $this->persist($account, $keep, $state['shell']);
 
-        return redirect()->route('ssh.index')->with('success', 'SSH key hataane ke liye queue me hai.');
+        return redirect()->route('ssh.index')->with('success', 'SSH key is queued for removal.');
     }
 
     public function shell(Request $request): RedirectResponse
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['shell' => 'Suspended/terminated account par SSH Access nahi.']);
+            return back()->withErrors(['shell' => 'Cannot change SSH Access on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'shell' => ['required', 'string', 'max:16'],
@@ -99,7 +99,7 @@ class SshController extends Controller
         $state = $this->state($account);
         $this->persist($account, $state['keys'], $shell);
 
-        return redirect()->route('ssh.index')->with('success', 'SSH shell queue me hai.');
+        return redirect()->route('ssh.index')->with('success', 'SSH shell is queued.');
     }
 
     /**

@@ -33,10 +33,10 @@ class GlobalFiltersController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['needle' => 'Suspended/terminated account par global filter nahi.']);
+            return back()->withErrors(['needle' => 'Cannot change global filters on a suspended/terminated account.']);
         }
         if (MailProvisioner::gfilterLimitReached($account)) {
-            return back()->withErrors(['needle' => 'Global filter limit 50 poori.']);
+            return back()->withErrors(['needle' => 'Global filter limit of 50 reached.']);
         }
         $data = $request->validate([
             'domain' => ['required', 'string', 'max:190'],
@@ -55,7 +55,7 @@ class GlobalFiltersController extends Controller
         }
         $allowed = MailProvisioner::domainsFor($account);
         if ($domain === null || $field === null || $needle === null || $action === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['needle' => 'Invalid filter. Pipe/regex/shell nahi. Domain is account ka hona chahiye.'])->withInput();
+            return back()->withErrors(['needle' => 'Invalid filter. No pipe/regex/shell. Domain must belong to this account.'])->withInput();
         }
         if ($action === 'folder' && $folder === '') {
             return back()->withErrors(['folder' => 'Folder action ke liye folder name chahiye.'])->withInput();
@@ -72,7 +72,7 @@ class GlobalFiltersController extends Controller
         $account->recordEvent('mail.gfilter.queued', $domain . ':' . $needle);
         Audit::log('mail.gfilter', 'info', 'account', $account->id, ['domain' => $domain, 'needle' => $needle]);
 
-        return redirect()->route('global-filters.index')->with('success', 'Global filter queue me hai.');
+        return redirect()->route('global-filters.index')->with('success', 'Global filter is queued.');
     }
 
     public function destroy(Request $request, GlobalFilter $global_filter): RedirectResponse
@@ -86,7 +86,7 @@ class GlobalFiltersController extends Controller
         MailProvisioner::enqueueGlobalFilters($account);
         Audit::log('mail.gfilter.remove', 'warning', 'account', $account->id, ['needle' => $needle]);
 
-        return redirect()->route('global-filters.index')->with('success', 'Global filter hataane ke liye queue me hai.');
+        return redirect()->route('global-filters.index')->with('success', 'Global filter is queued for removal.');
     }
 
     private function accountFor(Request $request): ?Account

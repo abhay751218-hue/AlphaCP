@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 8 Remote MySQL (1 Oct)** — access hosts via `db.remote`
+  (`%`/IPv4/FQDN JSON; no mysql GRANT; pipe/path fail closed). Panel **0.39.0**, agent **0.34.0**.
+  Tests: panel **252/0**, provision-sim **65/65**, update-sim **126/126** (pin in B).
+  Deploy via `panel-update.sh` 0.39.0.
 - **Step 8 phpMyAdmin (1 Oct)** — enabled flag via `db.phpmyadmin`
   (JSON; no phpMyAdmin install/SSO; hostile enabled fail closed). Panel **0.38.0**, agent **0.33.0**.
   Tests: panel **246/0**, provision-sim **64/64**, update-sim **126/126**.

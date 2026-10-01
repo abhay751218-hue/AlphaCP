@@ -31,7 +31,7 @@ class CronController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['command' => 'Suspended/terminated account par cron nahi.']);
+            return back()->withErrors(['command' => 'Cannot change cron on a suspended/terminated account.']);
         }
         if (! CronProvisioner::featureAllowed($account->load('package.featureList'))) {
             return back()->withErrors(['command' => 'Is package me cron feature band hai.']);
@@ -67,7 +67,7 @@ class CronController extends Controller
         $account->recordEvent('cron.set.queued', $data['command']);
         Audit::log('cron.add', 'info', 'account', $account->id, ['command' => $data['command']]);
 
-        return redirect()->route('cron.index')->with('success', 'Cron job queue me hai.');
+        return redirect()->route('cron.index')->with('success', 'Cron job is queued.');
     }
 
     public function destroy(Request $request, CronJob $cron): RedirectResponse
@@ -80,7 +80,7 @@ class CronController extends Controller
         CronProvisioner::enqueue($account);
         Audit::log('cron.remove', 'warning', 'account', $account->id, ['cron_id' => $cron->id]);
 
-        return redirect()->route('cron.index')->with('success', 'Cron job hataane ke liye queue me hai.');
+        return redirect()->route('cron.index')->with('success', 'Cron job is queued for removal.');
     }
 
     private function accountFor(Request $request): ?Account

@@ -62,7 +62,7 @@ class SslController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['ssl' => 'Suspended/terminated account par AutoSSL nahi.']);
+            return back()->withErrors(['ssl' => 'Cannot change AutoSSL on a suspended/terminated account.']);
         }
 
         $queued = 0;
@@ -115,19 +115,19 @@ class SslController extends Controller
         ]);
         Audit::log('ssl.remove', 'warning', 'domain', $domain->id, ['domain' => $domain->domain]);
 
-        return redirect()->route('ssl.index')->with('success', "SSL '{$domain->domain}' hataane ke liye queue me hai.");
+        return redirect()->route('ssl.index')->with('success', "SSL '{$domain->domain}' is queued for removal.");
     }
 
     private function queueIssue(Account $account, Domain $domain, string $mode): ?string
     {
         if ($account->isTerminated() || $account->isSuspended()) {
-            return 'Suspended/terminated account par SSL nahi.';
+            return 'Cannot change SSL on a suspended/terminated account.';
         }
         if ($domain->type === 'redirect') {
             return 'Redirect domain par SSL nahi.';
         }
         if (in_array((string) $domain->ssl_status, ['pending', 'removing'], true)) {
-            return 'Is domain ka SSL task pehle se queue me hai.';
+            return 'Is domain ka SSL task pehle se is queued.';
         }
 
         $domain->forceFill([

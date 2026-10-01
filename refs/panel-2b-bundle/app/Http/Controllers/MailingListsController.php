@@ -34,7 +34,7 @@ class MailingListsController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['localpart' => 'Suspended/terminated account par list nahi.']);
+            return back()->withErrors(['localpart' => 'Cannot change lists on a suspended/terminated account.']);
         }
         if (MailProvisioner::listLimitReached($account)) {
             return back()->withErrors(['localpart' => 'Package MAXLST limit reached.']);
@@ -49,7 +49,7 @@ class MailingListsController extends Controller
         $owner = Mail::tryDest($data['owner']);
         $allowed = MailProvisioner::domainsFor($account);
         if ($local === null || $domain === null || $owner === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['localpart' => 'Invalid list/owner. Owner email hona chahiye, pipe nahi. Domain is account ka hona chahiye.'])->withInput();
+            return back()->withErrors(['localpart' => 'Invalid list/owner. Owner email hona chahiye, no pipe. Domain must belong to this account.'])->withInput();
         }
         $exists = MailingList::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {
@@ -65,7 +65,7 @@ class MailingListsController extends Controller
         $account->recordEvent('mail.list.queued', $local . '@' . $domain);
         Audit::log('mail.list', 'info', 'account', $account->id, ['list' => $local . '@' . $domain]);
 
-        return redirect()->route('mailing-lists.index')->with('success', 'Mailing list queue me hai.');
+        return redirect()->route('mailing-lists.index')->with('success', 'Mailing list is queued.');
     }
 
     public function destroy(Request $request, MailingList $mailing_list): RedirectResponse
@@ -79,7 +79,7 @@ class MailingListsController extends Controller
         MailProvisioner::enqueueLists($account);
         Audit::log('mail.list.remove', 'warning', 'account', $account->id, ['list' => $addr]);
 
-        return redirect()->route('mailing-lists.index')->with('success', 'List hataane ke liye queue me hai.');
+        return redirect()->route('mailing-lists.index')->with('success', 'List is queued for removal.');
     }
 
     private function accountFor(Request $request): ?Account

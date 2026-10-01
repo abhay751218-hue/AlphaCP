@@ -36,7 +36,7 @@ class IndexesController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['mode' => 'Suspended/terminated account par indexes nahi.']);
+            return back()->withErrors(['mode' => 'Cannot change indexes on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'mode' => ['required', 'string', 'in:off,simple,fancy'],
@@ -53,7 +53,7 @@ class IndexesController extends Controller
         $account->recordEvent('indexes.set.queued', $mode);
         Audit::log('indexes.set', 'info', 'account', $account->id, ['mode' => $mode]);
 
-        return redirect()->route('indexes.index')->with('success', "Indexes '{$mode}' queue me hai.");
+        return redirect()->route('indexes.index')->with('success', "Indexes '{$mode}' is queued.");
     }
 
     private function accountFor(Request $request): ?Account

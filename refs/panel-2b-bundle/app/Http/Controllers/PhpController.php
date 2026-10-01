@@ -29,7 +29,7 @@ class PhpController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['php_version' => 'Suspended/terminated account par PHP nahi badlega.']);
+            return back()->withErrors(['php_version' => 'Cannot change PHP on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'php_version' => ['required', 'string', 'regex:' . PhpVersions::pattern()],
@@ -48,7 +48,7 @@ class PhpController extends Controller
         $account->recordEvent('php.setVersion.queued', $php);
         Audit::log('php.setVersion', 'info', 'account', $account->id, ['php_version' => $php]);
 
-        return redirect()->route('php.index')->with('success', "PHP {$php} queue me hai.");
+        return redirect()->route('php.index')->with('success', "PHP {$php} is queued.");
     }
 
     private function accountFor(Request $request): ?Account

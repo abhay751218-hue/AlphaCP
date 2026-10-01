@@ -34,7 +34,7 @@ class BoxTrapperController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['dest' => 'Suspended/terminated account par BoxTrapper nahi.']);
+            return back()->withErrors(['dest' => 'Cannot change BoxTrapper on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'enabled' => ['nullable', 'in:0,1'],
@@ -45,12 +45,12 @@ class BoxTrapperController extends Controller
         if (($data['dest'] ?? '') !== '') {
             $dest = Mail::tryDest($data['dest']);
             if ($dest === null) {
-                return back()->withErrors(['dest' => 'Dest email hona chahiye, pipe nahi.'])->withInput();
+                return back()->withErrors(['dest' => 'Dest must be an email, no pipe.'])->withInput();
             }
             $allow[] = $dest;
             $allow = array_values(array_unique($allow));
             if (count($allow) > 50) {
-                return back()->withErrors(['dest' => 'Allowlist 50 poori.']);
+                return back()->withErrors(['dest' => 'Allowlist limit of 50 reached.']);
             }
         }
         $row->enabled = ($data['enabled'] ?? '0') === '1';
@@ -60,7 +60,7 @@ class BoxTrapperController extends Controller
         $account->recordEvent('mail.boxtrapper.queued', $row->enabled ? 'on' : 'off');
         Audit::log('mail.boxtrapper', 'info', 'account', $account->id, ['enabled' => $row->enabled]);
 
-        return redirect()->route('boxtrapper.index')->with('success', 'BoxTrapper queue me hai.');
+        return redirect()->route('boxtrapper.index')->with('success', 'BoxTrapper is queued.');
     }
 
     private function accountFor(Request $request): ?Account

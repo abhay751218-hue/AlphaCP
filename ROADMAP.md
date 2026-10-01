@@ -13,7 +13,7 @@
 | **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | ✅ **through Apache Handlers (0.14.0)** |
 | **S6** | File Manager, disk usage, FTP (+ jailed shell), SSH keys, Git deploys, trash | 🟡 **FM + Privacy + Disk Usage + SSH (0.18.0)** — zip/FTP/jail later |
 | **S7** | Email suite: mailboxes/quotas, forwarders, autoresponders, filters, spam/virus, deliverability (SPF/DKIM/DMARC), lists, webmail | 🟡 **through Webmail (0.35.0)** — virus/ClamAV later |
-| **S8** | Databases: create/manage, users, privileges, size limits, phpMyAdmin SSO, remote access | 🟡 **through phpMyAdmin (0.38.0)** — users/SSO/remote later |
+| **S8** | Databases: create/manage, users, privileges, size limits, phpMyAdmin SSO, remote access | 🟡 **through Remote MySQL (0.39.0)** — users/SSO later |
 | **S9** | DNS: zone editor, templates, nameservers, cluster | ⏳ |
 | **S10** | Backup/restore + schedules + remote destinations + **cPanel backup import** | ⏳ |
 | **S11** | Monitoring: usage sync, bandwidth, resource limits (cgroups), alerts, stats, health checks | ⏳ |

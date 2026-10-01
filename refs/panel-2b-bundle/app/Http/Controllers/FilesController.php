@@ -73,7 +73,7 @@ class FilesController extends Controller
         $this->enqueue($account, 'rename', $from, ['to' => $to]);
 
         return redirect()->route('files.index', ['path' => Files::parent($from)])
-            ->with('success', 'Rename queue me hai.');
+            ->with('success', 'Rename is queued.');
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -92,7 +92,7 @@ class FilesController extends Controller
         $this->enqueue($account, 'delete', $path);
 
         return redirect()->route('files.index', ['path' => Files::parent($path)])
-            ->with('success', 'Delete queue me hai.');
+            ->with('success', 'Delete is queued.');
     }
 
     /** @param array<string, mixed> $rules */
@@ -122,7 +122,7 @@ class FilesController extends Controller
         $this->enqueue($account, $op, $path, $extra);
 
         return redirect()->route('files.index', ['path' => $dir])
-            ->with('success', "File Manager '{$op}' queue me hai.");
+            ->with('success', "File Manager '{$op}' is queued.");
     }
 
     /** @param array<string, mixed> $extra */
@@ -141,7 +141,7 @@ class FilesController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['path' => 'Suspended/terminated account par File Manager nahi.']);
+            return back()->withErrors(['path' => 'Cannot change File Manager on a suspended/terminated account.']);
         }
 
         return $account;

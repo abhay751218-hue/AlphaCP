@@ -34,7 +34,7 @@ class AutorespondersController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['localpart' => 'Suspended/terminated account par autoresponder nahi.']);
+            return back()->withErrors(['localpart' => 'Cannot change autoresponders on a suspended/terminated account.']);
         }
         if (MailProvisioner::respLimitReached($account)) {
             return back()->withErrors(['localpart' => 'Package MAXRESP limit reached.']);
@@ -53,11 +53,11 @@ class AutorespondersController extends Controller
         $interval = (int) ($data['interval_h'] ?? 24);
         $allowed = MailProvisioner::domainsFor($account);
         if ($local === null || $domain === null || $subject === null || $body === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['localpart' => 'Invalid source/subject/body. Pipe/shell nahi. Domain is account ka hona chahiye.'])->withInput();
+            return back()->withErrors(['localpart' => 'Invalid source/subject/body. No pipe/shell. Domain must belong to this account.'])->withInput();
         }
         $exists = Autoresponder::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {
-            return back()->withErrors(['localpart' => 'Is address ka autoresponder pehle se hai.'])->withInput();
+            return back()->withErrors(['localpart' => 'Is address ka autoresponder already exists.'])->withInput();
         }
         Autoresponder::query()->create([
             'account_id' => $account->id,
@@ -71,7 +71,7 @@ class AutorespondersController extends Controller
         $account->recordEvent('mail.autorespond.queued', $local . '@' . $domain);
         Audit::log('mail.autorespond', 'info', 'account', $account->id, ['source' => $local . '@' . $domain]);
 
-        return redirect()->route('autoresponders.index')->with('success', 'Autoresponder queue me hai.');
+        return redirect()->route('autoresponders.index')->with('success', 'Autoresponder is queued.');
     }
 
     public function destroy(Request $request, Autoresponder $autoresponder): RedirectResponse
@@ -85,7 +85,7 @@ class AutorespondersController extends Controller
         MailProvisioner::enqueueResponders($account);
         Audit::log('mail.autorespond.remove', 'warning', 'account', $account->id, ['source' => $src]);
 
-        return redirect()->route('autoresponders.index')->with('success', 'Autoresponder hataane ke liye queue me hai.');
+        return redirect()->route('autoresponders.index')->with('success', 'Autoresponder is queued for removal.');
     }
 
     private function accountFor(Request $request): ?Account

@@ -34,7 +34,7 @@ class EmailRoutingController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['domain' => 'Suspended/terminated account par routing nahi.']);
+            return back()->withErrors(['domain' => 'Cannot change routing on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'domain' => ['required', 'string', 'max:190'],
@@ -44,12 +44,12 @@ class EmailRoutingController extends Controller
         $mode = strtolower(trim($data['mode']));
         $allowed = MailProvisioner::domainsFor($account);
         if ($domain === null || ! in_array($domain, $allowed, true) || ! in_array($mode, ['auto', 'local', 'backup', 'remote'], true)) {
-            return back()->withErrors(['domain' => 'Invalid domain/mode. Domain is account ka hona chahiye. Mode auto/local/backup/remote.'])->withInput();
+            return back()->withErrors(['domain' => 'Invalid domain/mode. Domain must belong to this account. Mode auto/local/backup/remote.'])->withInput();
         }
         $row = EmailRoute::query()->where('account_id', $account->id)->where('domain', $domain)->first();
         if ($row === null) {
             if (MailProvisioner::routingLimitReached($account)) {
-                return back()->withErrors(['domain' => 'Routing limit (50) poori.']);
+                return back()->withErrors(['domain' => 'Routing limit (50) reached.']);
             }
             EmailRoute::query()->create([
                 'account_id' => $account->id,
@@ -63,7 +63,7 @@ class EmailRoutingController extends Controller
         $account->recordEvent('mail.routing.queued', $domain . ':' . $mode);
         Audit::log('mail.routing', 'info', 'account', $account->id, ['domain' => $domain, 'mode' => $mode]);
 
-        return redirect()->route('email-routing.index')->with('success', 'Email routing queue me hai.');
+        return redirect()->route('email-routing.index')->with('success', 'Email routing is queued.');
     }
 
     private function accountFor(Request $request): ?Account

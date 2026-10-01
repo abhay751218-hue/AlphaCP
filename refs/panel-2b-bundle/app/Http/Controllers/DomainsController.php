@@ -46,7 +46,7 @@ class DomainsController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['domain' => 'Suspended/terminated account par domain nahi badlega.']);
+            return back()->withErrors(['domain' => 'Cannot change domains on a suspended/terminated account.']);
         }
         if (! DomainProvisioner::featureAllowed($account)) {
             return back()->withErrors(['domain' => 'Is package me domains feature band hai.']);
@@ -98,7 +98,7 @@ class DomainsController extends Controller
         $account->recordEvent('domain.add.queued', $fqdn);
         Audit::log('domain.add', 'info', 'domain', $domain->id, ['domain' => $fqdn, 'type' => $type]);
 
-        return redirect()->route('domains.index')->with('success', "Domain '{$fqdn}' queue me hai.");
+        return redirect()->route('domains.index')->with('success', "Domain '{$fqdn}' is queued.");
     }
 
     public function destroy(Request $request, Domain $domain): RedirectResponse
@@ -119,7 +119,7 @@ class DomainsController extends Controller
         $account->recordEvent('domain.remove.queued', $domain->domain);
         Audit::log('domain.remove', 'warning', 'domain', $domain->id, ['domain' => $domain->domain]);
 
-        return redirect()->route('domains.index')->with('success', "Domain '{$domain->domain}' hataane ke liye queue me hai.");
+        return redirect()->route('domains.index')->with('success', "Domain '{$domain->domain}' is queued for removal.");
     }
 
     private function accountFor(Request $request): ?Account

@@ -35,7 +35,7 @@ class SpamFiltersController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['dest' => 'Suspended/terminated account par spam filters nahi.']);
+            return back()->withErrors(['dest' => 'Cannot change spam filters on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'required_score' => ['required', 'integer', 'min:1', 'max:10'],
@@ -48,7 +48,7 @@ class SpamFiltersController extends Controller
         if (($data['dest'] ?? '') !== '') {
             $dest = Mail::tryDest($data['dest']);
             if ($dest === null) {
-                return back()->withErrors(['dest' => 'Dest email hona chahiye, pipe nahi.'])->withInput();
+                return back()->withErrors(['dest' => 'Dest must be an email, no pipe.'])->withInput();
             }
             if (($data['list'] ?? 'black') === 'white') {
                 $white[] = $dest;
@@ -66,7 +66,7 @@ class SpamFiltersController extends Controller
         $account->recordEvent('mail.spam.queued', 'score ' . $row->required_score);
         Audit::log('mail.spam', 'info', 'account', $account->id, ['score' => $row->required_score]);
 
-        return redirect()->route('spam-filters.index')->with('success', 'Spam filters queue me hain.');
+        return redirect()->route('spam-filters.index')->with('success', 'Spam filters are queued.');
     }
 
     private function accountFor(Request $request): ?Account

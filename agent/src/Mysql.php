@@ -102,4 +102,63 @@ final class Mysql
 
         return $json . "\n";
     }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{host: string}>
+     */
+    public static function sanitizeRemote(array $raw): array
+    {
+        if (count($raw) > self::MAX) {
+            throw new TaskRejectedException('too many remote hosts (50 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException('remote host row must be an object');
+            }
+            $host = self::normalizeHost((string) ($row['host'] ?? ''));
+            if (isset($seen[$host])) {
+                throw new TaskRejectedException('duplicate remote host');
+            }
+            $seen[$host] = true;
+            $out[] = ['host' => $host];
+        }
+
+        return $out;
+    }
+
+    public static function normalizeHost(string $host): string
+    {
+        $host = strtolower(trim($host));
+        if ($host === '' || str_contains($host, '..') || str_contains($host, '/') || str_contains($host, '|') || str_contains($host, ' ')) {
+            throw new TaskRejectedException('remote host path escape');
+        }
+        if ($host === '%') {
+            return $host;
+        }
+        if (preg_match('/^(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/', $host) === 1) {
+            return $host;
+        }
+        $err = AccountIdentity::domain($host);
+        if ($err !== null) {
+            throw new TaskRejectedException('invalid remote host');
+        }
+
+        return $host;
+    }
+
+    /**
+     * @param  list<array{host: string}> $rows
+     */
+    public static function remoteJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('remote host json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }
