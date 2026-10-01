@@ -71,7 +71,7 @@
 | 26 | BoxTrapper | Challenge-response anti-spam | S7 | ✅ (enabled+allowlist JSON; no daemon) |
 | 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ✅ (calendar+contact names JSON; no CalDAV) |
 | 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ✅ (mail/ walk; symlink skip; purge later) |
-| 29 | Webmail | Roundcube/Horde link | S7 | ⏳ S7 |
+| 29 | Webmail | Roundcube/Horde link | S7 | ✅ (client JSON; no Roundcube/Horde install) |
 
 ### 🌐 Domains
 

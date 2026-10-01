@@ -119,6 +119,11 @@ class Account extends Model
         return $this->hasMany(CalendarItem::class);
     }
 
+    public function webmailSetting(): HasOne
+    {
+        return $this->hasOne(WebmailSetting::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

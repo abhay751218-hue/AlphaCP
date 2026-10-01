@@ -134,6 +134,13 @@ final class Mail
         return $name;
     }
 
+    public static function tryClient(string $client): ?string
+    {
+        $client = strtolower(trim($client));
+
+        return in_array($client, ['roundcube', 'horde'], true) ? $client : null;
+    }
+
     public static function tryFilterAction(string $action): ?string
     {
         $action = strtolower(trim($action));

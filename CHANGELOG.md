@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Webmail (1 Oct)** — preferred client via `mail.webmail`
+  (JSON; no Roundcube/Horde install; hostile client fail closed). Panel **0.35.0**, agent **0.31.0**.
+  Tests: panel **228/0**, provision-sim **62/62**, update-sim **121/121**.
+  Deploy via `panel-update.sh` 0.35.0.
 - **Step 7 Email Disk Usage (1 Oct)** — per-folder sizes via `mail.usage`
   (`~/mail` walk; symlink skip; `..`/pipe fail closed; purge later). Panel **0.34.0**, agent **0.30.0**.
   Tests: panel **222/0**, provision-sim **61/61**, update-sim **119/119**.

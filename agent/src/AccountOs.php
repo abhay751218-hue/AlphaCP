@@ -566,6 +566,31 @@ final class AccountOs
         ];
     }
 
+    /**
+     * @param  array{enabled: bool, client: string} $cfg
+     * @return array{enabled: bool, client: string}
+     */
+    public function setWebmail(string $username, array $cfg): array
+    {
+        $cfg = Mail::sanitizeWebmail($cfg);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mail');
+        if (is_link($dir)) {
+            throw new RuntimeException('mail conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mail/webmail.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mail webmail is a symlink');
+        }
+        $this->fs->write($file, Mail::webmailJson($cfg), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mail webmail ' . ($cfg['enabled'] ? $cfg['client'] : 'off') . " for {$username}");
+
+        return $cfg;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

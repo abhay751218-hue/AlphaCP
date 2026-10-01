@@ -23,6 +23,7 @@ final class Mail
     public const MAX_GPG = 50;
     public const MAX_BOX = 50;
     public const MAX_CAL = 50;
+    public const CLIENTS = ['roundcube', 'horde'];
     public const MODES = ['auto', 'local', 'backup', 'remote'];
     public const TRACK_STATUSES = ['sent', 'deferred', 'bounced', 'rejected'];
     public const SPF = 'v=spf1 a mx ~all';
@@ -806,6 +807,41 @@ final class Mail
         $json = json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if (!is_string($json)) {
             throw new TaskRejectedException('calendar json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  array<string, mixed> $raw
+     * @return array{enabled: bool, client: string}
+     */
+    public static function sanitizeWebmail(array $raw): array
+    {
+        return [
+            'enabled' => self::normalizeEnabled($raw['enabled'] ?? false),
+            'client' => self::normalizeClient((string) ($raw['client'] ?? '')),
+        ];
+    }
+
+    public static function normalizeClient(string $client): string
+    {
+        $client = strtolower(trim($client));
+        if (!in_array($client, self::CLIENTS, true)) {
+            throw new TaskRejectedException('webmail client must be roundcube or horde');
+        }
+
+        return $client;
+    }
+
+    /**
+     * @param  array{enabled: bool, client: string} $cfg
+     */
+    public static function webmailJson(array $cfg): string
+    {
+        $json = json_encode($cfg, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('webmail json encode failed');
         }
 
         return $json . "\n";

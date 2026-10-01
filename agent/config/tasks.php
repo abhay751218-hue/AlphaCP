@@ -443,6 +443,24 @@ return [
         ],
     ],
 
+    'mail.webmail' => [
+        'handler'     => Tasks\MailWebmail::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write webmail enabled + client (JSON; no Roundcube/Horde install).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'enabled', 'client'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'enabled'  => ['type' => 'boolean'],
+                'client'   => ['type' => 'string', 'enum' => ['roundcube', 'horde']],
+            ],
+        ],
+    ],
+
     'mail.usage' => [
         'handler'     => Tasks\MailUsage::class,
         'safety'      => 'readonly',
