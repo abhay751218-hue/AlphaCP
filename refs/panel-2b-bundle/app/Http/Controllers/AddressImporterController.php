@@ -44,7 +44,7 @@ class AddressImporterController extends Controller
         }
         $max = (int) ($account->package?->MAXPOP ?? -1);
         if ($max >= 0 && $account->mailboxes()->count() + count($rows) > $max) {
-            return back()->withErrors(['csv' => 'Package MAXPOP limit poori.']);
+            return back()->withErrors(['csv' => 'Package MAXPOP limit reached.']);
         }
         foreach ($rows as $row) {
             $exists = Mailbox::query()->where('account_id', $account->id)->where('localpart', $row['local'])->where('domain', $row['domain'])->exists();
@@ -86,7 +86,7 @@ class AddressImporterController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
 
         return $account;

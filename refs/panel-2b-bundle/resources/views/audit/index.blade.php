@@ -35,7 +35,7 @@
                     <tr><td></td><td colspan="6" class="muted mono" style="font-size:12px">{{ $event->meta }}</td></tr>
                 @endif
             @empty
-                <tr><td colspan="7" class="empty">Koi audit event nahi mila.</td></tr>
+                <tr><td colspan="7" class="empty">No audit events yet.</td></tr>
             @endforelse
         </table>
     </div>

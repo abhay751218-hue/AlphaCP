@@ -10,11 +10,11 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apni mailing lists yahin banayega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers create mailing lists here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
@@ -33,7 +33,7 @@
                     <td class="mono">{{ $row->owner }}</td>
                     <td class="right">
                         @can('email.manage')
-                            <form method="post" action="{{ route('mailing-lists.destroy', $row) }}" onsubmit="return confirm('List hataayein?')">
+                            <form method="post" action="{{ route('mailing-lists.destroy', $row) }}" onsubmit="return confirm('Remove this list?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn small danger" type="submit">remove</button>
@@ -42,7 +42,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="3" class="empty">Koi mailing list nahi.</td></tr>
+                <tr><td colspan="3" class="empty">No mailing lists yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -60,7 +60,7 @@
             @forelse ($domains as $d)
                 <option value="{{ $d }}" @selected(old('domain') === $d)>{{ $d }}</option>
             @empty
-                <option value="" disabled>Koi domain nahi</option>
+                <option value="" disabled>No domain</option>
             @endforelse
         </select>
         <label for="owner">Owner email</label>

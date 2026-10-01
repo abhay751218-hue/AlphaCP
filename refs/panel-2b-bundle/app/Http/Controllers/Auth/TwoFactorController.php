@@ -41,7 +41,7 @@ class TwoFactorController extends Controller
 
         if ($step === null) {
             Audit::log('auth.2fa_failed', 'warning', 'user', $user->id);
-            return back()->withErrors(['code' => 'Code galat hai ya purana hai. Dobara try karo.']);
+            return back()->withErrors(['code' => 'The code is wrong or expired. Try again.']);
         }
 
         $user->forceFill(['two_factor_last_step' => $step])->save();

@@ -10,19 +10,19 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apni SSH keys yahin manage karega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers manage SSH keys here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
     <h3>SSH Access — {{ $account->username }}</h3>
-    <p class="help">Keys <span class="mono">~/.ssh/authorized_keys</span> me. Private key panel/agent par store nahi hota.
+    <p class="help">Keys go in <span class="mono">~/.ssh/authorized_keys</span>. The private key is never stored on the panel or agent.
         Shell: <span class="mono">{{ $shell }}</span>
         @if (! $hasShell)
-            · package HASSHELL off — bash nahi
+            · package HASSHELL off — no bash
         @endif
     </p>
     <div class="table-wrap mt">
@@ -40,7 +40,7 @@
                     <td class="mono">{{ $row['comment'] }}</td>
                     <td class="right">
                         @can('ssh.manage')
-                            <form method="post" action="{{ route('ssh.destroy') }}" onsubmit="return confirm('Key hataayein?')">
+                            <form method="post" action="{{ route('ssh.destroy') }}" onsubmit="return confirm('Remove this key?')">
                                 @csrf
                                 <input type="hidden" name="key_id" value="{{ $row['id'] }}">
                                 <button class="btn small danger" type="submit">remove</button>
@@ -49,7 +49,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="4" class="empty">Koi authorized key nahi.</td></tr>
+                <tr><td colspan="4" class="empty">No authorized keys yet.</td></tr>
             @endforelse
         </table>
     </div>

@@ -21,16 +21,16 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer AutoSSL (Let's Encrypt) apne domains par chalayega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customer AutoSSL (Let's Encrypt) apne domains par chalayega.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
     <h3>Certificates</h3>
-    <p class="help">{{ $account->username }} · {{ $account->main_domain }} · DNS is server pe point hona chahiye (HTTP-01).</p>
+    <p class="help">{{ $account->username }} · {{ $account->main_domain }} · DNS must point at this server (HTTP-01).</p>
     <div class="table-wrap mt">
         <table>
             <tr>
@@ -81,7 +81,7 @@
                                 @endif
                             @endif
                             @if (($row->ssl_status ?? 'none') === 'active')
-                                <form method="post" action="{{ route('ssl.destroy', $row) }}" style="display:inline" onsubmit="return confirm('SSL vhost hataayein?')">
+                                <form method="post" action="{{ route('ssl.destroy', $row) }}" style="display:inline" onsubmit="return confirm('Remove this SSL vhost?')">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn small danger" type="submit">remove</button>
@@ -91,7 +91,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="empty">Pehle domain add karo.</td></tr>
+                <tr><td colspan="7" class="empty">Add a domain first.</td></tr>
             @endforelse
         </table>
     </div>

@@ -11,12 +11,12 @@
 
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. WHM se account banao, customer apne domains yahan manage karega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. WHM se account banao, customer apne domains yahan manage karega.</p>
     <p class="help mt">Accounts page: <a href="{{ route('accounts.index') }}">List Accounts →</a></p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi. Shared hosting lene ke baad yahan domains dikhenge.</p>
+    <p class="empty">No hosting account is linked to this login. Domains appear here after a hosting account is created.</p>
 </div>
 @else
 <div class="card">
@@ -40,7 +40,7 @@
                     <td class="right">
                         @can('domains.manage')
                             @if (! $row->isMain() && $row->status !== 'removing')
-                                <form method="post" action="{{ route('domains.destroy', $row) }}" onsubmit="return confirm('Domain hataayein? Files delete nahi hongi.')">
+                                <form method="post" action="{{ route('domains.destroy', $row) }}" onsubmit="return confirm('Remove this domain? Files will not be deleted.')">
                                     @csrf
                                     @method('DELETE')
                                     <button class="btn small danger" type="submit">remove</button>
@@ -50,7 +50,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="5" class="empty">Koi domain nahi.</td></tr>
+                <tr><td colspan="5" class="empty">No domains yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -58,7 +58,7 @@
 
 @can('domains.manage')
 <div class="card mt">
-    <h3>Naya domain</h3>
+    <h3>New domain</h3>
     <p class="help">Addon = alag site. Subdomain = blog.{{ $account->main_domain }}. Alias = parked. Redirect = 301/302.</p>
     <form method="post" action="{{ route('domains.store') }}">
         @csrf
@@ -84,7 +84,7 @@
                 </select>
             </div>
         </div>
-        <button class="btn mt" type="submit">Domain add karo</button>
+        <button class="btn mt" type="submit">Add domain</button>
     </form>
 </div>
 @endcan

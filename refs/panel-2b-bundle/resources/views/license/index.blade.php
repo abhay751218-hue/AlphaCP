@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'License & Trial')
-@section('subtitle', 'Panel license status — customer websites aur email kabhi block nahi hote')
+@section('subtitle', 'Panel license status — customer websites and email are never blocked')
 
 @section('content')
 @php
@@ -54,6 +54,6 @@
 
 <div class="card mt">
     <h3>Golden rule</h3>
-    <p class="help">License expiry ya license-server outage se customer websites, email, DNS aur backups stop nahi honge. Sirf panel ke privileged actions degrade honge.</p>
+    <p class="help">License expiry or a license-server outage will not stop customer websites, email, DNS, or backups. Only privileged panel actions degrade.</p>
 </div>
 @endsection

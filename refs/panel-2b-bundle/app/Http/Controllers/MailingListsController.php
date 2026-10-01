@@ -37,7 +37,7 @@ class MailingListsController extends Controller
             return back()->withErrors(['localpart' => 'Suspended/terminated account par list nahi.']);
         }
         if (MailProvisioner::listLimitReached($account)) {
-            return back()->withErrors(['localpart' => 'Package MAXLST limit poori.']);
+            return back()->withErrors(['localpart' => 'Package MAXLST limit reached.']);
         }
         $data = $request->validate([
             'localpart' => ['required', 'string', 'max:32'],
@@ -53,7 +53,7 @@ class MailingListsController extends Controller
         }
         $exists = MailingList::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {
-            return back()->withErrors(['localpart' => 'Ye list pehle se hai.'])->withInput();
+            return back()->withErrors(['localpart' => 'This list already exists.'])->withInput();
         }
         MailingList::query()->create([
             'account_id' => $account->id,
@@ -95,7 +95,7 @@ class MailingListsController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
 
         return $account;

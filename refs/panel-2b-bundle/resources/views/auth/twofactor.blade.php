@@ -21,5 +21,5 @@
         <button class="btn ghost small" type="submit">Cancel & logout</button>
     </form>
 
-    <p class="help mt">Code 30 second me badalta hai. Purana code dobara kaam nahi karega (replay protection).</p>
+    <p class="help mt">The code changes every 30 seconds. Old codes cannot be reused (replay protection).</p>
 @endsection

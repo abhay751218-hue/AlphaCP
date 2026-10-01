@@ -37,7 +37,7 @@ class CronController extends Controller
             return back()->withErrors(['command' => 'Is package me cron feature band hai.']);
         }
         if (CronProvisioner::limitReached($account)) {
-            return back()->withErrors(['command' => 'Package MAXCRON limit poori.']);
+            return back()->withErrors(['command' => 'Package MAXCRON limit reached.']);
         }
 
         $data = $request->validate([
@@ -95,7 +95,7 @@ class CronController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
         return $account;
     }

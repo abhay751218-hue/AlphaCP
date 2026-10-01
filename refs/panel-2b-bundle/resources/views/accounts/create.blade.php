@@ -11,9 +11,9 @@
 @if (! $gate['ok'])
     <div class="flash warning">
         @if ($gate['reason'] === 'cap')
-            License max_accounts limit poori ho gayi. Naya account nahi banega — existing sites chalte rahenge.
+            License max_accounts limit reached. New accounts will not be created — existing sites keep running.
         @else
-            License/trial se naye accounts band hain. Customer websites/email band nahi honge.
+            License/trial blocked new accounts. Customer websites/email will not be disabled.
         @endif
     </div>
 @endif
@@ -28,7 +28,7 @@
             <input id="username" name="username" value="{{ old('username') }}" required
                    pattern="[a-z][a-z0-9]{2,15}" maxlength="16" autocapitalize="none" spellcheck="false"
                    @disabled(! $gate['ok'])>
-            <p class="help">3–16 chars, chhote letters, pehla letter. <span class="mono">root</span>/<span class="mono">admin</span> allowed nahi.</p>
+            <p class="help">3–16 chars, lowercase, must start with a letter. <span class="mono">root</span>/<span class="mono">admin</span> are not allowed.</p>
 
             <label for="main_domain">Primary domain</label>
             <input id="main_domain" name="main_domain" value="{{ old('main_domain') }}" required
@@ -57,7 +57,7 @@
 
             <label for="password">Password (optional)</label>
             <input id="password" name="password" type="password" autocomplete="new-password" @disabled(! $gate['ok'])>
-            <p class="help">Khali chhodo to strong password generate hoga (ek baar flash me dikhega).</p>
+            <p class="help">Leave blank to generate a strong password (shown once in a flash message).</p>
 
             <button class="btn mt" type="submit" @disabled(! $gate['ok'])>Account banao</button>
         </form>

@@ -35,7 +35,7 @@ class MysqlWizardController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['name' => 'Suspended/terminated account par database nahi.']);
+            return back()->withErrors(['name' => 'Cannot change databases on a suspended/terminated account.']);
         }
         if ($request->boolean('cancel')) {
             $request->session()->forget('mysql_wizard_name');
@@ -51,11 +51,11 @@ class MysqlWizardController extends Controller
         ]);
         $name = Mysql::tryName($data['name']);
         if ($name === null) {
-            return back()->withErrors(['name' => 'Invalid database name. Letters/numbers/_ , 1–16 chars, pipe nahi.'])->withInput();
+            return back()->withErrors(['name' => 'Invalid database name. Letters/numbers/_ , 1–16 chars, no pipe.'])->withInput();
         }
         $exists = MysqlDatabase::query()->where('account_id', $account->id)->where('name', $name)->exists();
         if ($exists) {
-            return back()->withErrors(['name' => 'Ye database pehle se hai.'])->withInput();
+            return back()->withErrors(['name' => 'This database already exists.'])->withInput();
         }
         $request->session()->put('mysql_wizard_name', $name);
 
@@ -67,14 +67,14 @@ class MysqlWizardController extends Controller
         $raw = $request->session()->pull('mysql_wizard_name');
         $name = is_string($raw) ? Mysql::tryName($raw) : null;
         if ($name === null) {
-            return back()->withErrors(['name' => 'Wizard step 1 pehle complete karo.']);
+            return back()->withErrors(['name' => 'Complete wizard step 1 first.']);
         }
         if (DatabaseProvisioner::limitReached($account)) {
-            return back()->withErrors(['name' => 'Package MAXSQL limit poori.']);
+            return back()->withErrors(['name' => 'Package MAXSQL limit reached.']);
         }
         $exists = MysqlDatabase::query()->where('account_id', $account->id)->where('name', $name)->exists();
         if ($exists) {
-            return back()->withErrors(['name' => 'Ye database pehle se hai.']);
+            return back()->withErrors(['name' => 'This database already exists.']);
         }
         MysqlDatabase::query()->create([
             'account_id' => $account->id,
@@ -84,7 +84,7 @@ class MysqlWizardController extends Controller
         $account->recordEvent('db.wizard.queued', $account->username . '_' . $name);
         Audit::log('db.wizard', 'info', 'account', $account->id, ['name' => $account->username . '_' . $name]);
 
-        return redirect()->route('mysql-wizard.index')->with('success', 'Database queue me hai (db.set).');
+        return redirect()->route('mysql-wizard.index')->with('success', 'Database is queued (db.set).');
     }
 
     private function accountFor(Request $request): ?Account
@@ -100,7 +100,7 @@ class MysqlWizardController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
 
         return $account;

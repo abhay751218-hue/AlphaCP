@@ -32,9 +32,9 @@
             </table>
         </div>
     @else
-        <p class="empty">Agent se service status nahi aaya.</p>
+        <p class="empty">Service status did not come from the agent.</p>
     @endif
     <p class="help mt">Ye page sirf dekhta hai — start/stop Step 13 (Service Manager) me aayega, aur wo bhi
-        task queue ke through (panel kabhi root kaam khud nahi karta).</p>
+        through the task queue (the panel never performs root work itself).</p>
 </div>
 @endsection

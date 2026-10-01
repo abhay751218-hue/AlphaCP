@@ -2,7 +2,7 @@
 
 @section('title', $panelMode === 'whm' ? 'WHM Dashboard' : 'cPanel')
 @section('subtitle', $panelMode === 'whm'
-    ? 'Server health, accounts, packages — customer sites is page se nahi bante unke cPanel me'
+    ? 'Server health, accounts, packages — customer sites are not created on this page; they use cPanel'
     : 'Files, email, domains, databases — ye aapka hosting control panel hai')
 
 @section('actions')
@@ -33,7 +33,7 @@
                 <span class="unit">used · {{ $system['memory']['used_mb'] }} / {{ $system['memory']['total_mb'] }} MB</span></div>
             <div class="meter {{ $system['memory']['used_pct'] > 85 ? 'amber' : 'green' }}"><span style="width: {{ min(100, $system['memory']['used_pct']) }}%"></span></div>
         @else
-            <p class="empty">Agent se data nahi aaya (paneld chalu hai?)</p>
+            <p class="empty">No data from the agent (is paneld running?)</p>
         @endif
     </div>
 
@@ -89,14 +89,14 @@
                 </table>
             </div>
         @else
-            <p class="empty">Service status agent se nahi aaya.</p>
+            <p class="empty">Service status did not come from the agent.</p>
         @endif
     </div>
 
     <div class="card">
         <h3>📝 Recent activity (audit)</h3>
         @if ($audit->isEmpty())
-            <p class="empty">Abhi koi activity nahi.</p>
+            <p class="empty">No activity yet.</p>
         @else
             <div class="table-wrap">
                 <table>
@@ -123,7 +123,7 @@
             <div class="stat"><span class="num" style="font-size:18px">{{ $account->main_domain }}</span></div>
             <p class="help">user <span class="mono">{{ $account->username }}</span> · {{ $account->status }}</p>
         @else
-            <p class="empty">Hosting account is login se linked nahi. Provider se poocho.</p>
+            <p class="empty">No hosting account is linked to this login. Ask your provider.</p>
         @endif
     </div>
     <div class="card">
@@ -164,10 +164,10 @@
         <span class="unit">tools live · {{ $progress['planned'] }} planned · {{ $progress['addon'] }} optional · total {{ $progress['total'] }}</span>
     </div>
     <div class="meter"><span style="width: {{ max(3, $progress['percent']) }}%"></span></div>
-    <p class="help">Poori checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span> — 208 items,
+    <p class="help">Full checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span> — 208 items,
         har item apne step me live hota jayega.
         @if ($panelMode === 'cpanel')
-            Account create / packages sirf WHM (admin) me hain — aapko nahi dikhte.
+            Account create / packages are WHM (admin) only — they are hidden here.
         @endif
     </p>
 </div>

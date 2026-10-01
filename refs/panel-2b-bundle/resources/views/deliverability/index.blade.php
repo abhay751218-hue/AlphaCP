@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Deliverability')
-@section('subtitle', 'SPF / DMARC copy-paste — DNS write nahi')
+@section('subtitle', 'SPF / DMARC copy-paste — no DNS write')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
@@ -10,11 +10,11 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apne SPF/DMARC records yahin dekhega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers view SPF/DMARC records here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
@@ -36,7 +36,7 @@
                     <td class="mono">{{ $row['dkim_selector'] }}._domainkey</td>
                 </tr>
             @empty
-                <tr><td colspan="4" class="empty">Koi domain nahi.</td></tr>
+                <tr><td colspan="4" class="empty">No domains yet.</td></tr>
             @endforelse
         </table>
     </div>

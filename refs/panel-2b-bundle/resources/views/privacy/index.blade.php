@@ -10,16 +10,16 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apne folders yahin se lock karega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers protect folders here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
     <h3>Directory Privacy — {{ $account->username }}</h3>
-    <p class="help"><span class="mono">AuthUserFile</span> <span class="mono">~/etc/privacy/</span> me. Path home ke andar, <span class="mono">..</span> nahi.</p>
+    <p class="help"><span class="mono">AuthUserFile</span> under <span class="mono">~/etc/privacy/</span>. Path must stay inside home, no <span class="mono">..</span>.</p>
     <div class="table-wrap mt">
         <table>
             <tr>
@@ -35,7 +35,7 @@
                     <td class="mono">{{ implode(', ', array_column($row['users'], 'name')) }}</td>
                     <td class="right">
                         @can('privacy.manage')
-                            <form method="post" action="{{ route('privacy.destroy') }}" onsubmit="return confirm('Protection hataayein?')">
+                            <form method="post" action="{{ route('privacy.destroy') }}" onsubmit="return confirm('Remove this protection?')">
                                 @csrf
                                 <input type="hidden" name="path" value="{{ $row['path'] }}">
                                 <button class="btn small danger" type="submit">remove</button>
@@ -44,7 +44,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="4" class="empty">Koi protected folder nahi.</td></tr>
+                <tr><td colspan="4" class="empty">No protected folders yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -52,8 +52,8 @@
 
 @can('privacy.manage')
 <div class="card mt">
-    <h3>Folder protect karo</h3>
-    <p class="help">Example path: <span class="mono">public_html/secret</span>. Password panel bcrypt hash karke agent ko bhejta hai — plaintext nahi.</p>
+    <h3>Protect folder</h3>
+    <p class="help">Example path: <span class="mono">public_html/secret</span>. The panel bcrypt-hashes the password before sending it to the agent — no plaintext.</p>
     <form method="post" action="{{ route('privacy.store') }}">
         @csrf
         <label for="path">Folder (relative)</label>

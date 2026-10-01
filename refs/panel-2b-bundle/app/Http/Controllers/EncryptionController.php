@@ -94,7 +94,7 @@ class EncryptionController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
 
         return $account;

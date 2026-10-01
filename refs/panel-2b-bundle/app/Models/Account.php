@@ -129,6 +129,11 @@ class Account extends Model
         return $this->hasMany(MysqlDatabase::class);
     }
 
+    public function phpmyadminSetting(): HasOne
+    {
+        return $this->hasOne(PhpmyadminSetting::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

@@ -22,11 +22,11 @@
                 @csrf
                 <label for="password">Confirm karne ke liye apna password daalo</label>
                 <input id="password" name="password" type="password" required>
-                <button class="btn danger mt" type="submit">2FA band karo</button>
+                <button class="btn danger mt" type="submit">Turn 2FA off</button>
             </form>
 
         @elseif ($pending)
-            <p class="help">Authenticator app (Google Authenticator / Authy / 1Password) me ye secret add karo:</p>
+            <p class="help">Add this secret to an authenticator app (Google Authenticator / Authy / 1Password):</p>
             <div class="card" style="background:#0d1628; margin-top:10px">
                 <div class="mono" style="font-size:16px; letter-spacing:1px">{{ $pretty }}</div>
                 <p class="help">Ya ye link kholo: <span class="mono" style="word-break:break-all">{{ $otpauth }}</span></p>
@@ -43,7 +43,7 @@
             <p class="help">2FA abhi off hai. Panel ke login ko 2-step banao — recommended.</p>
             <form method="post" action="{{ route('security.2fa.start') }}" class="mt">
                 @csrf
-                <button class="btn" type="submit">2FA enable karo</button>
+                <button class="btn" type="submit">Enable 2FA</button>
             </form>
         @endif
     </div>

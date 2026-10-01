@@ -91,7 +91,7 @@
 |---|---|---|---|---|
 | 37 | MySQL® Databases | DB + users + privileges | S8 | ✅ (prefixed names JSON; no mysql binary; users later) |
 | 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ✅ (session confirm; reuses db.set; users later) |
-| 39 | phpMyAdmin | DB GUI (SSO login) | S8 | ⏳ S8 |
+| 39 | phpMyAdmin | DB GUI (SSO login) | S8 | ✅ (enabled JSON; no phpMyAdmin install; SSO later) |
 | 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
 | 42 | PostgreSQL Wizard | 🔵 optional module | post-v1 | 🔵 |

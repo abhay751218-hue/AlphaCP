@@ -615,6 +615,31 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  array{enabled: bool} $cfg
+     * @return array{enabled: bool}
+     */
+    public function setPhpmyadmin(string $username, array $cfg): array
+    {
+        $cfg = Mysql::sanitizePma($cfg);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/mysql');
+        if (is_link($dir)) {
+            throw new RuntimeException('mysql conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/mysql/phpmyadmin.json');
+        if (is_link($file)) {
+            throw new RuntimeException('mysql phpmyadmin is a symlink');
+        }
+        $this->fs->write($file, Mysql::pmaJson($cfg), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('mysql phpmyadmin ' . ($cfg['enabled'] ? 'on' : 'off') . " for {$username}");
+
+        return $cfg;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

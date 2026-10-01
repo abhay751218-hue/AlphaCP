@@ -94,9 +94,9 @@
             @if (! $account->isTerminated())
                 <form method="post" action="{{ route('accounts.terminate', $account) }}">
                     @csrf
-                    <label for="confirm_username">Terminate — username type karo</label>
+                    <label for="confirm_username">Terminate — type the username</label>
                     <input id="confirm_username" name="confirm_username" required autocapitalize="none" spellcheck="false">
-                    <p class="help">Ye undo nahi hota: Linux user, home, vhost, pool hatt jaayenge.</p>
+                    <p class="help">This cannot be undone: Linux user, home, vhost, and pool will be removed.</p>
                     <button class="btn small danger mt" type="submit">Terminate account</button>
                 </form>
             @endif
@@ -116,7 +116,7 @@
                     <td>{{ $event->message }}</td>
                 </tr>
             @empty
-                <tr><td colspan="3" class="empty">Koi event nahi.</td></tr>
+                <tr><td colspan="3" class="empty">No events yet.</td></tr>
             @endforelse
         </table>
     </div>

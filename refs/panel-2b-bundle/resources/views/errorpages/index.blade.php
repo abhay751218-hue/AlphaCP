@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Error Pages')
-@section('subtitle', 'Custom 400/401/403/404/500/503 HTML — PHP/SSI allowed nahi')
+@section('subtitle', 'Custom 400/401/403/404/500/503 HTML — PHP/SSI not allowed')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
@@ -10,11 +10,11 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apni error pages yahin se set karega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers set error pages here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">

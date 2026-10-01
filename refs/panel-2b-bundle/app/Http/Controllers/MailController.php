@@ -34,10 +34,10 @@ class MailController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['localpart' => 'Suspended/terminated account par email nahi.']);
+            return back()->withErrors(['localpart' => 'Cannot change email on a suspended/terminated account.']);
         }
         if (MailProvisioner::limitReached($account)) {
-            return back()->withErrors(['localpart' => 'Package MAXPOP limit poori.']);
+            return back()->withErrors(['localpart' => 'Package MAXPOP limit reached.']);
         }
         $data = $request->validate([
             'localpart' => ['required', 'string', 'max:32'],
@@ -54,7 +54,7 @@ class MailController extends Controller
         }
         $exists = Mailbox::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {
-            return back()->withErrors(['localpart' => 'Ye mailbox pehle se hai.'])->withInput();
+            return back()->withErrors(['localpart' => 'This mailbox already exists.'])->withInput();
         }
         Mailbox::query()->create([
             'account_id' => $account->id,
@@ -68,7 +68,7 @@ class MailController extends Controller
         $account->recordEvent('mail.set.queued', $local . '@' . $domain);
         Audit::log('mail.add', 'info', 'account', $account->id, ['address' => $local . '@' . $domain]);
 
-        return redirect()->route('email.index')->with('success', 'Mailbox queue me hai.');
+        return redirect()->route('email.index')->with('success', 'Mailbox is queued.');
     }
 
     public function destroy(Request $request, Mailbox $mailbox): RedirectResponse
@@ -82,7 +82,7 @@ class MailController extends Controller
         MailProvisioner::enqueue($account);
         Audit::log('mail.remove', 'warning', 'account', $account->id, ['address' => $addr]);
 
-        return redirect()->route('email.index')->with('success', 'Mailbox hataane ke liye queue me hai.');
+        return redirect()->route('email.index')->with('success', 'Mailbox is queued for removal.');
     }
 
     private function accountFor(Request $request): ?Account
@@ -98,7 +98,7 @@ class MailController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
 
         return $account;

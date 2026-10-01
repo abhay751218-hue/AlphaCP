@@ -10,11 +10,11 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apne databases yahin banayega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers create databases here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
@@ -31,7 +31,7 @@
                     <td class="mono">{{ $account->username }}_{{ $row->name }}</td>
                     <td class="right">
                         @can('databases.manage')
-                            <form method="post" action="{{ route('mysql.destroy', $row) }}" onsubmit="return confirm('Database hataayein?')">
+                            <form method="post" action="{{ route('mysql.destroy', $row) }}" onsubmit="return confirm('Remove this database?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn small danger" type="submit">remove</button>
@@ -40,7 +40,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="2" class="empty">Koi database nahi.</td></tr>
+                <tr><td colspan="2" class="empty">No databases yet.</td></tr>
             @endforelse
         </table>
     </div>

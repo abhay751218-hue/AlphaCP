@@ -10,16 +10,16 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apne domain ka mail routing yahin set karega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers set per-domain mail routing here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
     <h3>Email Routing — {{ $account->username }}</h3>
-    <p class="help">JSON <span class="mono">~/etc/mail/routing.json</span>. Exim localdomains later. Mode enum only — koi host/pipe nahi.</p>
+    <p class="help">JSON <span class="mono">~/etc/mail/routing.json</span>. Exim localdomains later. Mode enum only — no host/pipe.</p>
     <div class="table-wrap mt">
         <table>
             <tr>
@@ -32,7 +32,7 @@
                     <td class="mono">{{ $row->mode }}</td>
                 </tr>
             @empty
-                <tr><td colspan="2" class="empty">Koi routing row nahi — default auto.</td></tr>
+                <tr><td colspan="2" class="empty">No routing rows yet — default is auto.</td></tr>
             @endforelse
         </table>
     </div>
@@ -48,7 +48,7 @@
             @forelse ($domains as $d)
                 <option value="{{ $d }}" @selected(old('domain') === $d)>{{ $d }}</option>
             @empty
-                <option value="" disabled>Koi domain nahi</option>
+                <option value="" disabled>No domain</option>
             @endforelse
         </select>
         <label for="mode">Mode</label>

@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'MultiPHP Manager')
-@section('subtitle', 'Is account ka PHP version — Apache vhost same socket, naya FPM pool')
+@section('subtitle', 'PHP version for this account — same Apache vhost socket, new FPM pool')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
@@ -10,11 +10,11 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. WHM se account page par PHP badlo.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. WHM se account page par PHP badlo.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">

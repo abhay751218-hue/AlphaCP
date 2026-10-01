@@ -131,6 +131,6 @@ class UsersController extends Controller
 
         Audit::log('user.password_reset', 'critical', 'user', $user->id, ['by_admin' => $request->user()->username]);
 
-        return redirect()->route('users.edit', $user)->with('success', 'Naya temporary password set ho gaya (2FA bhi reset ho gaya).');
+        return redirect()->route('users.edit', $user)->with('success', 'New temporary password set ho gaya (2FA bhi reset ho gaya).');
     }
 }

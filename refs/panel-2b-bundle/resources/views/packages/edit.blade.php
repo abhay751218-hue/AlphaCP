@@ -3,7 +3,7 @@
 @endphp
 @extends('layouts.panel')
 
-@section('title', $isNew ? 'Naya package' : 'Edit '.$package->name)
+@section('title', $isNew ? 'New package' : 'Edit '.$package->name)
 @section('subtitle', 'Limits: -1 = unlimited')
 
 @section('actions')
@@ -46,7 +46,7 @@
                 <label><input type="checkbox" name="DEDICATEDIP" value="1" @checked(old('DEDICATEDIP', $package->DEDICATEDIP))> Dedicated IP</label>
             </div>
             <div>
-                <p class="help">cPanel-compatible keys. Naya account inhi limits se banta hai.</p>
+                <p class="help">cPanel-compatible keys. New accounts are created with these limits.</p>
                 @foreach (\App\Support\PackageLimits::LABELS as $key => $label)
                     <label for="{{ $key }}">{{ $label }} <span class="mono">({{ $key }})</span></label>
                     <input id="{{ $key }}" name="{{ $key }}" type="number" required min="-1"
