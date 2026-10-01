@@ -7,7 +7,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 ### Added
 - **Step 8 phpMyAdmin (1 Oct)** — enabled flag via `db.phpmyadmin`
   (JSON; no phpMyAdmin install/SSO; hostile enabled fail closed). Panel **0.38.0**, agent **0.33.0**.
-  Tests: panel **246/0**, provision-sim **64/64**, update-sim **124/124** (pin in B).
+  Tests: panel **246/0**, provision-sim **64/64**, update-sim **126/126**.
   Deploy via `panel-update.sh` 0.38.0.
   UI: login/accounts/cPanel blades English; remaining flash strings later.
 - **Step 8 Database Wizard (1 Oct)** — step-by-step name via existing `db.set`
