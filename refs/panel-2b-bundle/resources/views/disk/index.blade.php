@@ -64,7 +64,7 @@
                     <td class="mono">{{ number_format(((int) ($row['bytes'] ?? 0)) / 1024, 1) }} KiB</td>
                 </tr>
             @empty
-                <tr><td colspan="3" class="empty">Usage paneld se aati hai. Live server par folder sizes yahan dikhenge.</td></tr>
+                <tr><td colspan="3" class="empty">Usage comes from paneld. Folder sizes show here on a live server.</td></tr>
             @endforelse
         </table>
     </div>

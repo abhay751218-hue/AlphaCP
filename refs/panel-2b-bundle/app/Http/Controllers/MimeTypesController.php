@@ -48,7 +48,7 @@ class MimeTypesController extends Controller
             }
         }
         if ($mime === null || $cleanExts === []) {
-            return back()->withErrors(['mime' => 'Invalid MIME type ya blocked extension (php/cgi/ssi nahi).'])->withInput();
+            return back()->withErrors(['mime' => 'Invalid MIME type or blocked extension (no php/cgi/ssi).'])->withInput();
         }
 
         $current = MimeTypes::sanitize(is_array($account->meta['mime_types'] ?? null) ? $account->meta['mime_types'] : []);

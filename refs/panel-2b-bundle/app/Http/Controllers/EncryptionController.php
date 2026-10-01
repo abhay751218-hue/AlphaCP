@@ -48,7 +48,7 @@ class EncryptionController extends Controller
         $comment = Mail::tryNeedle($data['comment']);
         $allowed = MailProvisioner::domainsFor($account);
         if ($local === null || $domain === null || $comment === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['localpart' => 'Invalid key. Comment me pipe/shell nahi. Domain must belong to this account.'])->withInput();
+            return back()->withErrors(['localpart' => 'Invalid key. Comment cannot include pipe/shell. Domain must belong to this account.'])->withInput();
         }
         $exists = EncryptionKey::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {

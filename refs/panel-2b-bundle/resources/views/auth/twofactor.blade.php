@@ -4,7 +4,7 @@
 
 @section('content')
     <h1>2-Step Verification</h1>
-    <p class="sub">Authenticator app me dikh raha 6-digit code daalo</p>
+    <p class="sub">Enter the 6-digit code from your authenticator app</p>
 
     <form method="post" action="{{ route('twofactor.verify') }}">
         @csrf

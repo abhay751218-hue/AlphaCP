@@ -58,7 +58,7 @@ class DeliverabilityController extends Controller
         $account->recordEvent('mail.deliverability.queued', implode(',', $want));
         Audit::log('mail.deliverability', 'info', 'account', $account->id, ['domains' => $want]);
 
-        return redirect()->route('deliverability.index')->with('success', 'Deliverability records are queued. DNS Zone Editor S9 me likhega.');
+        return redirect()->route('deliverability.index')->with('success', 'Deliverability records are queued. Zone Editor writes DNS later.');
     }
 
     private function accountFor(Request $request): ?Account

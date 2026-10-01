@@ -39,7 +39,7 @@ class PackagesController extends Controller
         $this->ensureSingleDefault($package);
         Audit::log('package.create', 'warning', 'package', $package->id, ['name' => $package->name]);
 
-        return redirect()->route('packages.index')->with('success', "Package '{$package->name}' ban gaya.");
+        return redirect()->route('packages.index')->with('success', "Package '{$package->name}' created.");
     }
 
     public function edit(Package $package): View
@@ -57,21 +57,21 @@ class PackagesController extends Controller
         $this->ensureSingleDefault($package);
         Audit::log('package.update', 'warning', 'package', $package->id, ['name' => $package->name]);
 
-        return redirect()->route('packages.index')->with('success', "Package '{$package->name}' update ho gaya.");
+        return redirect()->route('packages.index')->with('success', "Package '{$package->name}' updated.");
     }
 
     public function archive(Package $package): RedirectResponse
     {
         if ($package->is_default) {
-            return back()->withErrors(['status' => 'Default package archive nahi hota.']);
+            return back()->withErrors(['status' => 'The default package cannot be archived.']);
         }
         if ($package->accounts()->whereNotIn('status', ['terminated'])->exists()) {
-            return back()->withErrors(['status' => 'Is package par live accounts hain — pehle unhe upgrade karo.']);
+            return back()->withErrors(['status' => 'This package has live accounts — upgrade them first.']);
         }
         $package->update(['status' => 'archived']);
         Audit::log('package.archive', 'warning', 'package', $package->id, ['name' => $package->name]);
 
-        return redirect()->route('packages.index')->with('success', "Package '{$package->name}' archive ho gaya.");
+        return redirect()->route('packages.index')->with('success', "Package '{$package->name}' archived.");
     }
 
     /** @return array<string, mixed> */

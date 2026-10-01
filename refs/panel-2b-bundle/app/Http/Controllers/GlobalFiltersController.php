@@ -58,7 +58,7 @@ class GlobalFiltersController extends Controller
             return back()->withErrors(['needle' => 'Invalid filter. No pipe/regex/shell. Domain must belong to this account.'])->withInput();
         }
         if ($action === 'folder' && $folder === '') {
-            return back()->withErrors(['folder' => 'Folder action ke liye folder name chahiye.'])->withInput();
+            return back()->withErrors(['folder' => 'Folder action needs a folder name.'])->withInput();
         }
         GlobalFilter::query()->create([
             'account_id' => $account->id,

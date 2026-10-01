@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Audit Log')
-@section('subtitle', 'Har state change yahan aata hai — immutable (append-only)')
+@section('subtitle', 'Every state change lands here — immutable (append-only)')
 
 @section('actions')
     <form method="get" class="row">

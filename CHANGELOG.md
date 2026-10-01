@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Track DNS (1 Oct)** — FQDN search via `dns.track`
+  (zone/dynamic JSON; no dig/BIND; pipe/path fail closed). Panel **0.42.0**, agent **0.37.0**.
+  Tests: panel **270/0**, provision-sim **68/68**, update-sim **132/132** (pin in B).
+  Deploy via `panel-update.sh` 0.42.0.
 - **Step 9 Dynamic DNS (1 Oct)** — hosts + tokens via `dns.dynamic`
   (JSON; no BIND rewrite; no public updater; pipe/path fail closed). Panel **0.41.0**, agent **0.36.0**.
   Tests: panel **264/0**, provision-sim **67/67**, update-sim **130/130** (pin in B).

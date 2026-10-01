@@ -28,4 +28,13 @@ final class DnsProvisioner
     {
         return $account->dnsRecords()->count() >= 50;
     }
+
+    public static function enqueueTrack(Account $account, string $query, string $type): int
+    {
+        return AccountProvisioner::enqueue($account, 'dns.track', [
+            'username' => $account->username,
+            'query' => $query,
+            'type' => $type,
+        ]);
+    }
 }

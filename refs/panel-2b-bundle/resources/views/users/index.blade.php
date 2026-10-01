@@ -39,7 +39,7 @@
     <h3>🎭 Roles (RBAC)</h3>
     <div class="table-wrap">
         <table>
-            <tr><th>Role</th><th>Level</th><th>Kis ke liye</th><th>Users</th></tr>
+            <tr><th>Role</th><th>Level</th><th>Audience</th><th>Users</th></tr>
             @foreach ($roles as $role)
                 <tr>
                     <td class="mono">{{ $role->name }}</td>

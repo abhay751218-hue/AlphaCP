@@ -39,7 +39,7 @@
 
 <div class="card mt">
     <h3>Activate a paid license</h3>
-    <p class="help">License server configure na ho to local trial active rahega. Key ko chat, logs ya screenshots me share na karein.</p>
+    <p class="help">If the license server is not configured, local trial stays active. Do not share the key in chat, logs, or screenshots.</p>
     <form method="post" action="{{ route('license.activate') }}" class="row mt" style="align-items:end; gap:12px">
         @csrf
         <label style="flex:1">License key

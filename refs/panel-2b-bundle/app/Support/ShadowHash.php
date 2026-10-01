@@ -14,7 +14,7 @@ final class ShadowHash
         $salt = bin2hex(random_bytes(8));
         $hash = crypt($password, '$6$rounds=5000$' . $salt . '$');
         if (! is_string($hash) || strlen($hash) < 20 || ! str_starts_with($hash, '$6$')) {
-            throw new RuntimeException('crypt() SHA-512 hash nahi bana.');
+            throw new RuntimeException('crypt() could not make a SHA-512 hash.');
         }
         return $hash;
     }

@@ -31,6 +31,7 @@ use App\Http\Controllers\PhpmyadminController;
 use App\Http\Controllers\RemoteMysqlController;
 use App\Http\Controllers\ZoneEditorController;
 use App\Http\Controllers\DynamicDnsController;
+use App\Http\Controllers\TrackDnsController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -283,6 +284,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:dns.manage')->name('dynamic-dns.store');
     Route::delete('/dynamic-dns/{dns_dynamic_host}', [DynamicDnsController::class, 'destroy'])
         ->middleware('perm:dns.manage')->name('dynamic-dns.destroy');
+
+    Route::get('/track-dns', [TrackDnsController::class, 'index'])
+        ->middleware('perm:dns.view')->name('track-dns.index');
+    Route::post('/track-dns', [TrackDnsController::class, 'store'])
+        ->middleware('perm:dns.view')->name('track-dns.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

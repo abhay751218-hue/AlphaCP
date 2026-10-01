@@ -149,7 +149,7 @@
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
 | 76 | Cron Jobs | Scheduled tasks | S5 | ✅ |
-| 77 | Track DNS | DNS trace/debug | S9 | ⏳ S9 |
+| 77 | Track DNS | DNS trace/debug | S9 | ✅ (zone/dynamic JSON search; no dig/BIND) |
 | 78 | Indexes | Directory listing control | S5 | ✅ (account-level off/simple/fancy) |
 | 79 | Error Pages | Custom 404/500 etc. | S5 | ✅ (account-level 4xx/5xx HTML) |
 | 80 | MIME Types | Custom MIME | S5 | ✅ (account-level AddType; PHP/CGI/SSI blocked) |

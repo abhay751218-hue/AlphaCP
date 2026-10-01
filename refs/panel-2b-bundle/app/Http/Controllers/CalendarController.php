@@ -46,7 +46,7 @@ class CalendarController extends Controller
         }
         $name = Mail::tryCalName($data['name']);
         if ($name === null) {
-            return back()->withErrors(['name' => 'Naam me pipe/shell nahi. Letters, numbers, space, ._+- only.'])->withInput();
+            return back()->withErrors(['name' => 'Name cannot include pipe/shell. Letters, numbers, space, ._+- only.'])->withInput();
         }
         $exists = CalendarItem::query()
             ->where('account_id', $account->id)
@@ -80,7 +80,7 @@ class CalendarController extends Controller
         MailProvisioner::enqueueCalendar($account);
         Audit::log('mail.calendar.remove', 'warning', 'account', $account->id, ['kind' => $kind, 'name' => $name]);
 
-        return redirect()->route('calendar.index')->with('success', 'Hatane ke liye is queued.');
+        return redirect()->route('calendar.index')->with('success', 'Removal is queued.');
     }
 
     private function accountFor(Request $request): ?Account

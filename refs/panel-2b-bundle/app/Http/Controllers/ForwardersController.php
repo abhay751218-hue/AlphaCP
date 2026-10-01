@@ -52,7 +52,7 @@ class ForwardersController extends Controller
             return back()->withErrors(['localpart' => 'Invalid source/dest. Dest must be an email, no pipe. Domain must belong to this account.'])->withInput();
         }
         if ($local . '@' . $domain === $dest) {
-            return back()->withErrors(['dest' => 'Dest source jaisa nahi ho sakta.'])->withInput();
+            return back()->withErrors(['dest' => 'Destination cannot match the source.'])->withInput();
         }
         $exists = Forwarder::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {

@@ -34,7 +34,7 @@ class CronController extends Controller
             return back()->withErrors(['command' => 'Cannot change cron on a suspended/terminated account.']);
         }
         if (! CronProvisioner::featureAllowed($account->load('package.featureList'))) {
-            return back()->withErrors(['command' => 'Is package me cron feature band hai.']);
+            return back()->withErrors(['command' => 'Cron is disabled on this package.']);
         }
         if (CronProvisioner::limitReached($account)) {
             return back()->withErrors(['command' => 'Package MAXCRON limit reached.']);
@@ -49,7 +49,7 @@ class CronController extends Controller
             'command' => ['required', 'string', 'max:500'],
         ]);
         if (strpbrk($data['command'], "\r\n") !== false) {
-            return back()->withErrors(['command' => 'Command me newline allowed nahi.'])->withInput();
+            return back()->withErrors(['command' => 'Newlines are not allowed in the command.'])->withInput();
         }
 
         CronJob::query()->create([

@@ -19,7 +19,7 @@
 
 @can('system.manage')
 <div class="card mb">
-    <h3>▶️ Read-only task chalao (test)</h3>
+    <h3>▶️ Run a read-only task (test)</h3>
     <form method="post" action="{{ route('system.tasks.run') }}" class="row">
         @csrf
         <select name="type" style="max-width:280px">
@@ -30,7 +30,7 @@
             @endforeach
         </select>
         <button class="btn" type="submit">Enqueue</button>
-        <span class="help">Safety: sirf <span class="mono">readonly</span> tasks yahan se chal sakte hain.</span>
+        <span class="help">Safety: only <span class="mono">readonly</span> tasks can run from here.</span>
     </form>
 </div>
 @endcan

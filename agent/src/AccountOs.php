@@ -712,6 +712,25 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @return list<array{source: string, domain: string, name: string, type: string, value: string}>
+     */
+    public function trackDns(string $username, string $query, string $type): array
+    {
+        $home = $this->paths->home($username);
+        $zoneFile = Files::resolve($home, 'etc/dns/zone.json');
+        $dynFile = Files::resolve($home, 'etc/dns/dynamic.json');
+        if (is_link($zoneFile) || is_link($dynFile)) {
+            throw new RuntimeException('dns track is a symlink');
+        }
+        $zoneJson = $this->fs->exists($zoneFile) ? $this->fs->read($zoneFile) : '[]';
+        $dynJson = $this->fs->exists($dynFile) ? $this->fs->read($dynFile) : '[]';
+        $hits = Dns::filterTrack($query, $type, $zoneJson, $dynJson);
+        $this->log->info('dns track ' . count($hits) . " for {$username}");
+
+        return $hits;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

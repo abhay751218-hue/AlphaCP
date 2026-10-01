@@ -68,7 +68,7 @@ class FilesController extends Controller
         $from = Files::tryRel($data['path']);
         $to = Files::tryRel($data['to']);
         if ($from === null || $from === '' || $to === null || $to === '') {
-            return back()->withErrors(['path' => 'Invalid path (.. nahi).'])->withInput();
+            return back()->withErrors(['path' => 'Invalid path (no ..).'])->withInput();
         }
         $this->enqueue($account, 'rename', $from, ['to' => $to]);
 
@@ -87,7 +87,7 @@ class FilesController extends Controller
         ]);
         $path = Files::tryRel($data['path']);
         if ($path === null || $path === '') {
-            return back()->withErrors(['path' => 'Invalid path (.. nahi).']);
+            return back()->withErrors(['path' => 'Invalid path (no ..).']);
         }
         $this->enqueue($account, 'delete', $path);
 
@@ -108,14 +108,14 @@ class FilesController extends Controller
         $dir = Files::tryRel((string) ($data['dir'] ?? 'public_html'));
         $name = Files::tryRel((string) $data['name']);
         if ($dir === null || $name === null || $name === '' || str_contains($name, '/')) {
-            return back()->withErrors(['name' => 'Invalid name (.. / slash nahi).'])->withInput();
+            return back()->withErrors(['name' => 'Invalid name (no .. or slash).'])->withInput();
         }
         $path = $dir === '' ? $name : $dir . '/' . $name;
         $extra = [];
         if ($op === 'write') {
             $content = (string) ($data['content'] ?? '');
             if (str_contains($content, "\0") || strlen($content) > Files::MAX_WRITE) {
-                return back()->withErrors(['content' => 'Content 256 KiB max, null byte nahi.'])->withInput();
+                return back()->withErrors(['content' => 'Content 256 KiB max, no null byte.'])->withInput();
             }
             $extra['content'] = $content;
         }
