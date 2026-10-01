@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 7 Email Disk Usage (1 Oct)** — per-folder sizes via `mail.usage`
+  (`~/mail` walk; symlink skip; `..`/pipe fail closed; purge later). Panel **0.34.0**, agent **0.30.0**.
+  Tests: panel **222/0**, provision-sim **61/61**, update-sim **119/119**.
+  Deploy via `panel-update.sh` 0.34.0.
 - **Step 7 Calendar (1 Oct)** — calendar + contact names via `mail.calendar`
   (JSON; no CalDAV/CardDAV daemon; pipe name fail closed). Panel **0.33.0**, agent **0.29.0**.
   Tests: panel **216/0**, provision-sim **60/60**, update-sim **117/117**.

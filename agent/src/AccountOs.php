@@ -526,6 +526,46 @@ final class AccountOs
         return $cfg;
     }
 
+    /**
+     * Folder-wise usage under ~/mail only. Symlinks skipped. Missing mail/ = empty.
+     *
+     * @return array{bytes:int, truncated:bool, entries:list<array{name:string,type:string,bytes:int}>}
+     */
+    public function mailUsage(string $username, string $rel): array
+    {
+        $home = $this->paths->home($username);
+        $mailRoot = Files::resolve($home, 'mail');
+        $mailRel = $rel === '' ? 'mail' : 'mail/' . $rel;
+        $root = Files::resolve($home, $mailRel);
+        $canonical = PathGuard::canonicalize($root);
+        $mailCanon = PathGuard::canonicalize($mailRoot);
+        if ($canonical !== $mailCanon && !str_starts_with($canonical, $mailCanon . '/')) {
+            throw new RuntimeException('path outside mail');
+        }
+        if (is_link($root)) {
+            throw new RuntimeException('mail path is a symlink');
+        }
+        if (!is_dir($root)) {
+            return ['bytes' => 0, 'truncated' => false, 'entries' => []];
+        }
+        $this->fs->assert($root);
+
+        $nodes = 0;
+        $truncated = false;
+        $entries = [];
+        $bytes = $this->walkUsage($root, $nodes, $truncated, $entries, true);
+        usort(
+            $entries,
+            static fn (array $a, array $b): int => ($b['bytes'] <=> $a['bytes']) ?: strcmp($a['name'], $b['name'])
+        );
+
+        return [
+            'bytes' => $bytes,
+            'truncated' => $truncated,
+            'entries' => $entries,
+        ];
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

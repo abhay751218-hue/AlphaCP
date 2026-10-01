@@ -443,6 +443,23 @@ return [
         ],
     ],
 
+    'mail.usage' => [
+        'handler'     => Tasks\MailUsage::class,
+        'safety'      => 'readonly',
+        'timeout'     => 20,
+        'description' => 'Folder-wise size under ~/mail (relative path, no purge, no symlink).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'path'     => ['type' => 'string', 'maxLength' => 240],
+            ],
+        ],
+    ],
+
     'mail.calendar' => [
         'handler'     => Tasks\MailCalendar::class,
         'safety'      => 'mutating',
