@@ -83,7 +83,7 @@
 | 33 | Aliases (Parked) | Domain aliases | S5 | ✅ |
 | 34 | Redirects | 301/302 redirect | S5 | ✅ |
 | 35 | Zone Editor | A/CNAME/MX/TXT/… records | S9 | ✅ (JSON records; no BIND rewrite; NS later) |
-| 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 |
+| 36 | Dynamic DNS | Dynamic IP clients | S9 | ✅ (hosts+tokens JSON; no BIND rewrite; public updater later) |
 
 ### 🗄️ Databases
 

@@ -688,6 +688,30 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  list<array{domain: string, name: string, token: string, ip: string}> $rows
+     * @return list<array{domain: string, name: string, token: string, ip: string}>
+     */
+    public function setDynamic(string $username, array $rows): array
+    {
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/dns');
+        if (is_link($dir)) {
+            throw new RuntimeException('dns conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/dns/dynamic.json');
+        if (is_link($file)) {
+            throw new RuntimeException('dns dynamic is a symlink');
+        }
+        $this->fs->write($file, Dns::dynamicJson($rows), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('dns dynamic ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {

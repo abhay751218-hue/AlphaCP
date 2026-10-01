@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Dynamic DNS (1 Oct)** — hosts + tokens via `dns.dynamic`
+  (JSON; no BIND rewrite; no public updater; pipe/path fail closed). Panel **0.41.0**, agent **0.36.0**.
+  Tests: panel **264/0**, provision-sim **67/67**, update-sim **130/130** (pin in B).
+  Deploy via `panel-update.sh` 0.41.0.
 - **Step 9 Zone Editor (1 Oct)** — A/CNAME/MX/TXT via `dns.zone`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.40.0**, agent **0.35.0**.
   Tests: panel **258/0**, provision-sim **66/66**, update-sim **128/128** (pin in B).
