@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.33.0 — Step 7: Calendar
+### panel-update 0.34.0 — Step 7: Email Disk Usage
 ```bash
-sudo alphacp-sync get 7ba12236ad0898160fa60368e8fdd3562f1de517 installer/panel-update.sh /tmp/acp-panel-update-0.33.0.sh b347e42c1e842131393c6e8dc61981e8e81abce1a085ff3a8008023157eba460 && sudo bash /tmp/acp-panel-update-0.33.0.sh
+sudo alphacp-sync get 86b31efdb1e44791b5b1def18773decfff4bb33b installer/panel-update.sh /tmp/acp-panel-update-0.34.0.sh ce7fe4635cbf62eb0044a27b5db4e571b66ba95fc3c7caefa75d324e14c9f217 && sudo bash /tmp/acp-panel-update-0.34.0.sh
 ```
-- sha256: `b347e42c1e842131393c6e8dc61981e8e81abce1a085ff3a8008023157eba460`
-- Expected: banner `updater 0.33.0` → agent **0.29.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Calendar (calendar + contact names JSON). Pipe name fail closed. No CalDAV/CardDAV.
-- WHM: Create Account / packages / user manager. Customer ko Calendar tile dikhega, WHM me nahi.
+- sha256: `ce7fe4635cbf62eb0044a27b5db4e571b66ba95fc3c7caefa75d324e14c9f217`
+- Expected: banner `updater 0.34.0` → agent **0.30.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Email Disk Usage (`~/mail` walk). Symlink skip. Path `..`/pipe fail closed. Purge later.
+- WHM: Create Account / packages / user manager. Customer ko Email Disk Usage tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **216/0**, provision-sim **60/60**, update-sim **117/117**.
+- Test: panel-tests **222/0**, provision-sim **61/61**, update-sim **119/119**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.33.0 (`7ba1223…`) → panel 0.33.0 + agent 0.29.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Calendar |
 | panel-update 0.32.0 (`8e19b70…`) → panel 0.32.0 + agent 0.28.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, BoxTrapper |
 | panel-update 0.31.0 (`8617eab…`) → panel 0.31.0 + agent 0.27.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Encryption |
 | panel-update 0.30.0 (`5fc5fb7…`) → panel 0.30.0 + agent 0.26.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Address Importer |
