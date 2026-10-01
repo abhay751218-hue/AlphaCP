@@ -6,6 +6,7 @@ namespace App\Support;
 
 use App\Models\Account;
 use App\Models\MysqlDatabase;
+use App\Models\PhpmyadminSetting;
 
 final class DatabaseProvisioner
 {
@@ -29,5 +30,15 @@ final class DatabaseProvisioner
         }
 
         return $account->mysqlDatabases()->count() >= $max;
+    }
+
+    public static function enqueuePhpmyadmin(Account $account): int
+    {
+        $row = PhpmyadminSetting::query()->where('account_id', $account->id)->first();
+
+        return AccountProvisioner::enqueue($account, 'db.phpmyadmin', [
+            'username' => $account->username,
+            'enabled' => (bool) ($row?->enabled ?? false),
+        ]);
     }
 }

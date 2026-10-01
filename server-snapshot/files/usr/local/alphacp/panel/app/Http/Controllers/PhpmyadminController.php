@@ -5,23 +5,25 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\PhpmyadminSetting;
 use App\Support\Audit;
-use App\Support\Mail;
-use App\Support\MailProvisioner;
+use App\Support\DatabaseProvisioner;
 use App\Support\ModuleCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** cPanel Track Delivery — search jailed track.json via paneld. No Exim log. */
-class TrackDeliveryController extends Controller
+/** cPanel phpMyAdmin — enabled JSON via paneld db.phpmyadmin. No phpMyAdmin install, no SSO. */
+class PhpmyadminController extends Controller
 {
     public function index(Request $request): View
     {
         $account = $this->accountFor($request);
+        $row = $account?->phpmyadminSetting;
 
-        return view('track-delivery.index', [
+        return view('phpmyadmin.index', [
             'account' => $account,
+            'enabled' => (bool) ($row?->enabled ?? false),
             'panelMode' => ModuleCatalog::modeFor($request->user()),
         ]);
     }
@@ -30,20 +32,19 @@ class TrackDeliveryController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['query' => 'Suspended/terminated account par track nahi.']);
+            return back()->withErrors(['enabled' => 'Cannot change phpMyAdmin on a suspended/terminated account.']);
         }
         $data = $request->validate([
-            'query' => ['required', 'string', 'max:190'],
+            'enabled' => ['required', 'in:0,1'],
         ]);
-        $query = Mail::tryDest($data['query']);
-        if ($query === null) {
-            return back()->withErrors(['query' => 'Query email hona chahiye, pipe/shell nahi.'])->withInput();
-        }
-        MailProvisioner::enqueueTrack($account, $query);
-        $account->recordEvent('mail.track.queued', $query);
-        Audit::log('mail.track', 'info', 'account', $account->id, ['query' => $query]);
+        $row = PhpmyadminSetting::query()->firstOrNew(['account_id' => $account->id]);
+        $row->enabled = $data['enabled'] === '1';
+        $row->save();
+        DatabaseProvisioner::enqueuePhpmyadmin($account);
+        $account->recordEvent('db.phpmyadmin.queued', $row->enabled ? 'on' : 'off');
+        Audit::log('db.phpmyadmin', 'info', 'account', $account->id, ['enabled' => $row->enabled]);
 
-        return redirect()->route('track-delivery.index')->with('success', 'Track search queue me hai. Exim mainlog later.');
+        return redirect()->route('phpmyadmin.index')->with('success', 'phpMyAdmin preference is queued.');
     }
 
     private function accountFor(Request $request): ?Account
@@ -52,7 +53,7 @@ class TrackDeliveryController extends Controller
             return null;
         }
 
-        return $request->user()->hostingAccount?->load(['package', 'domains']);
+        return $request->user()->hostingAccount?->load(['package', 'phpmyadminSetting']);
     }
 
     private function requireAccount(Request $request): Account

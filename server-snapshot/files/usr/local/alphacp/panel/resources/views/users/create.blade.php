@@ -1,6 +1,6 @@
 @extends('layouts.panel')
 
-@section('title', 'Naya Panel User')
+@section('title', 'New Panel User')
 @section('subtitle', 'Login banega — hosting account Step 3 me')
 
 @section('actions')

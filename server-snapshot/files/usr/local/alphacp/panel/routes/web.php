@@ -27,6 +27,7 @@ use App\Http\Controllers\EmailDiskUsageController;
 use App\Http\Controllers\WebmailController;
 use App\Http\Controllers\MysqlDatabasesController;
 use App\Http\Controllers\MysqlWizardController;
+use App\Http\Controllers\PhpmyadminController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -253,6 +254,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:databases.view')->name('mysql-wizard.index');
     Route::post('/mysql-wizard', [MysqlWizardController::class, 'store'])
         ->middleware('perm:databases.manage')->name('mysql-wizard.store');
+
+    Route::get('/phpmyadmin', [PhpmyadminController::class, 'index'])
+        ->middleware('perm:databases.view')->name('phpmyadmin.index');
+    Route::post('/phpmyadmin', [PhpmyadminController::class, 'store'])
+        ->middleware('perm:databases.manage')->name('phpmyadmin.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

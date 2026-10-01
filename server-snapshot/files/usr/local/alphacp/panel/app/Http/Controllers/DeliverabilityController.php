@@ -52,7 +52,7 @@ class DeliverabilityController extends Controller
             $want = $allowed;
         }
         if ($want === []) {
-            return back()->withErrors(['domain' => 'Koi domain nahi.']);
+            return back()->withErrors(['domain' => 'No domains yet.']);
         }
         MailProvisioner::enqueueDeliverability($account, $want);
         $account->recordEvent('mail.deliverability.queued', implode(',', $want));
@@ -74,7 +74,7 @@ class DeliverabilityController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
 
         return $account;

@@ -10,11 +10,11 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apne autoresponders yahin banayega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers create autoresponders here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
@@ -35,7 +35,7 @@
                     <td>{{ $row->interval_h }}h</td>
                     <td class="right">
                         @can('email.manage')
-                            <form method="post" action="{{ route('autoresponders.destroy', $row) }}" onsubmit="return confirm('Autoresponder hataayein?')">
+                            <form method="post" action="{{ route('autoresponders.destroy', $row) }}" onsubmit="return confirm('Remove this autoresponder?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn small danger" type="submit">remove</button>
@@ -44,7 +44,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="4" class="empty">Koi autoresponder nahi.</td></tr>
+                <tr><td colspan="4" class="empty">No autoresponders yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -52,7 +52,7 @@
 
 @can('email.manage')
 <div class="card mt">
-    <h3>Naya autoresponder</h3>
+    <h3>New autoresponder</h3>
     <form method="post" action="{{ route('autoresponders.store') }}">
         @csrf
         <label for="localpart">Local part</label>
@@ -62,7 +62,7 @@
             @forelse ($domains as $d)
                 <option value="{{ $d }}" @selected(old('domain') === $d)>{{ $d }}</option>
             @empty
-                <option value="" disabled>Koi domain nahi</option>
+                <option value="" disabled>No domain</option>
             @endforelse
         </select>
         <label for="subject">Subject</label>

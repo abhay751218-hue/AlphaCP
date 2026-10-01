@@ -10,16 +10,16 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apne mailboxes yahin banayega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers create mailboxes here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
     <h3>Email Accounts — {{ $account->username }}</h3>
-    <p class="help">Maildir <span class="mono">~/mail/domain/local</span> · Dovecot passwd-file bcrypt. MAXPOP {{ $maxPop }}. Plaintext password agent tak nahi jata.</p>
+    <p class="help">Maildir <span class="mono">~/mail/domain/local</span> · Dovecot passwd-file bcrypt. MAXPOP {{ $maxPop }}. The plaintext password never reaches the agent.</p>
     <div class="table-wrap mt">
         <table>
             <tr>
@@ -33,7 +33,7 @@
                     <td>{{ $box->quota_mb < 0 ? 'unlimited' : $box->quota_mb . ' MB' }}</td>
                     <td class="right">
                         @can('email.manage')
-                            <form method="post" action="{{ route('email.destroy', $box) }}" onsubmit="return confirm('Mailbox hataayein?')">
+                            <form method="post" action="{{ route('email.destroy', $box) }}" onsubmit="return confirm('Remove this mailbox?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn small danger" type="submit">remove</button>
@@ -42,7 +42,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="3" class="empty">Koi mailbox nahi.</td></tr>
+                <tr><td colspan="3" class="empty">No mailboxes yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -50,7 +50,7 @@
 
 @can('email.manage')
 <div class="card mt">
-    <h3>Naya mailbox</h3>
+    <h3>New mailbox</h3>
     <form method="post" action="{{ route('email.store') }}">
         @csrf
         <label for="localpart">Local part</label>
@@ -60,7 +60,7 @@
             @forelse ($domains as $d)
                 <option value="{{ $d }}" @selected(old('domain') === $d)>{{ $d }}</option>
             @empty
-                <option value="" disabled>Koi domain nahi</option>
+                <option value="" disabled>No domain</option>
             @endforelse
         </select>
         <label for="password">Password</label>

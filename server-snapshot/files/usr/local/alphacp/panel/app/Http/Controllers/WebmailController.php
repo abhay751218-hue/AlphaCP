@@ -34,7 +34,7 @@ class WebmailController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['client' => 'Suspended/terminated account par Webmail nahi.']);
+            return back()->withErrors(['client' => 'Cannot change Webmail on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'enabled' => ['nullable', 'in:0,1'],
@@ -42,7 +42,7 @@ class WebmailController extends Controller
         ]);
         $client = Mail::tryClient($data['client']);
         if ($client === null) {
-            return back()->withErrors(['client' => 'Client roundcube ya horde hona chahiye, pipe nahi.'])->withInput();
+            return back()->withErrors(['client' => 'Client must be roundcube or horde, no pipe.'])->withInput();
         }
         $row = WebmailSetting::query()->firstOrNew(['account_id' => $account->id]);
         $row->enabled = ($data['enabled'] ?? '0') === '1';
@@ -52,7 +52,7 @@ class WebmailController extends Controller
         $account->recordEvent('mail.webmail.queued', $row->enabled ? $client : 'off');
         Audit::log('mail.webmail', 'info', 'account', $account->id, ['enabled' => $row->enabled, 'client' => $client]);
 
-        return redirect()->route('webmail.index')->with('success', 'Webmail queue me hai.');
+        return redirect()->route('webmail.index')->with('success', 'Webmail is queued.');
     }
 
     private function accountFor(Request $request): ?Account
@@ -68,7 +68,7 @@ class WebmailController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
 
         return $account;

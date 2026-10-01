@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.37.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.37.0   (.env)
-AGENT_VERSION : 0.32.0
+panel code    : 0.38.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.38.0   (.env)
+AGENT_VERSION : 0.33.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -69,9 +69,10 @@ agent-backup-20261001093302
 agent-backup-20261001100058
 agent-backup-20261001152446
 agent-backup-20261001154551
-panel-backup-20261001100058
+agent-backup-20261001162037
 panel-backup-20261001152446
 panel-backup-20261001154551
+panel-backup-20261001162037
 panel-failed-20260928223644
 ```
 
@@ -150,6 +151,7 @@ alphacp:admin-password
   2026_09_29_000027_create_calendar_items_table   [26] Ran
   2026_09_29_000028_create_webmail_settings_table   [27] Ran
   2026_09_29_000029_create_mysql_databases_table   [28] Ran
+  2026_09_29_000030_create_phpmyadmin_settings_table   [29] Ran
 ```
 
 ## Routes (web)
@@ -244,6 +246,8 @@ GET|HEAD           /php                                          php.index
 POST               /php                                          php.update
 GET|HEAD           /php/ini                                      php.ini
 POST               /php/ini                                      php.ini.update
+GET|HEAD           /phpmyadmin                                   phpmyadmin.index
+POST               /phpmyadmin                                   phpmyadmin.store
 GET|HEAD           /privacy                                      privacy.index
 POST               /privacy                                      privacy.store
 POST               /privacy/delete                               privacy.destroy

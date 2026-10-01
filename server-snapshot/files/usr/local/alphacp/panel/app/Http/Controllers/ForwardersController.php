@@ -37,7 +37,7 @@ class ForwardersController extends Controller
             return back()->withErrors(['localpart' => 'Suspended/terminated account par forwarder nahi.']);
         }
         if (MailProvisioner::fwdLimitReached($account)) {
-            return back()->withErrors(['localpart' => 'Package MAXFWD limit poori.']);
+            return back()->withErrors(['localpart' => 'Package MAXFWD limit reached.']);
         }
         $data = $request->validate([
             'localpart' => ['required', 'string', 'max:32'],
@@ -98,7 +98,7 @@ class ForwardersController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
 
         return $account;

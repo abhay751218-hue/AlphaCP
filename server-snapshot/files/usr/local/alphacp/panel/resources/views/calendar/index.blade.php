@@ -10,11 +10,11 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apne calendars/contacts yahin banayega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers manage calendars and contacts here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
@@ -31,7 +31,7 @@
                     <td class="mono">{{ $row->name }}</td>
                     <td class="right">
                         @can('email.manage')
-                            <form method="post" action="{{ route('calendar.destroy', $row) }}" onsubmit="return confirm('Calendar hataayein?')">
+                            <form method="post" action="{{ route('calendar.destroy', $row) }}" onsubmit="return confirm('Remove this calendar?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn small danger" type="submit">remove</button>
@@ -40,7 +40,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="2" class="empty">Koi calendar nahi.</td></tr>
+                <tr><td colspan="2" class="empty">No calendars yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -55,7 +55,7 @@
                     <td class="mono">{{ $row->name }}</td>
                     <td class="right">
                         @can('email.manage')
-                            <form method="post" action="{{ route('calendar.destroy', $row) }}" onsubmit="return confirm('Contact hataayein?')">
+                            <form method="post" action="{{ route('calendar.destroy', $row) }}" onsubmit="return confirm('Remove this contact?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn small danger" type="submit">remove</button>
@@ -64,7 +64,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="2" class="empty">Koi contact nahi.</td></tr>
+                <tr><td colspan="2" class="empty">No contacts yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -72,7 +72,7 @@
 
 @can('email.manage')
 <div class="card mt">
-    <h3>Naya calendar / contact</h3>
+    <h3>New calendar / contact</h3>
     <form method="post" action="{{ route('calendar.store') }}">
         @csrf
         <label for="kind">Kind</label>

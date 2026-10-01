@@ -65,4 +65,41 @@ final class Mysql
 
         return $json . "\n";
     }
+
+    /**
+     * @param  array<string, mixed> $raw
+     * @return array{enabled: bool}
+     */
+    public static function sanitizePma(array $raw): array
+    {
+        return ['enabled' => self::normalizeEnabled($raw['enabled'] ?? false)];
+    }
+
+    public static function normalizeEnabled(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if ($value === 1 || $value === '1' || $value === 'true') {
+            return true;
+        }
+        if ($value === 0 || $value === '0' || $value === 'false' || $value === '') {
+            return false;
+        }
+
+        throw new TaskRejectedException('invalid phpmyadmin enabled');
+    }
+
+    /**
+     * @param  array{enabled: bool} $cfg
+     */
+    public static function pmaJson(array $cfg): string
+    {
+        $json = json_encode($cfg, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('phpmyadmin json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }

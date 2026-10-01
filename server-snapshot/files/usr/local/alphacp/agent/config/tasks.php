@@ -489,6 +489,23 @@ return [
         ],
     ],
 
+    'db.phpmyadmin' => [
+        'handler'     => Tasks\PhpmyadminSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write phpMyAdmin enabled flag (JSON; no phpMyAdmin install).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'enabled'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'enabled'  => ['type' => 'boolean'],
+            ],
+        ],
+    ],
+
     'mail.usage' => [
         'handler'     => Tasks\MailUsage::class,
         'safety'      => 'readonly',

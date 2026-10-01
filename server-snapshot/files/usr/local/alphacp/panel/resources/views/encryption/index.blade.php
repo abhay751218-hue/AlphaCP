@@ -10,16 +10,16 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apni encryption keys yahin banayega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers create encryption keys here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
     <h3>Encryption — {{ $account->username }}</h3>
-    <p class="help">JSON <span class="mono">~/etc/mail/encrypt.json</span>. GnuPG daemon later. Private key nahi. Pipe/shell fail closed.</p>
+    <p class="help">JSON <span class="mono">~/etc/mail/encrypt.json</span>. GnuPG daemon later. No private key. Pipe/shell fail closed.</p>
     <div class="table-wrap mt">
         <table>
             <tr>
@@ -33,7 +33,7 @@
                     <td>{{ $row->comment }}</td>
                     <td class="right">
                         @can('email.manage')
-                            <form method="post" action="{{ route('encryption.destroy', $row) }}" onsubmit="return confirm('Key hataayein?')">
+                            <form method="post" action="{{ route('encryption.destroy', $row) }}" onsubmit="return confirm('Remove this key?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn small danger" type="submit">remove</button>
@@ -42,7 +42,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="3" class="empty">Koi encryption key nahi.</td></tr>
+                <tr><td colspan="3" class="empty">No encryption keys yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -60,7 +60,7 @@
             @forelse ($domains as $d)
                 <option value="{{ $d }}" @selected(old('domain') === $d)>{{ $d }}</option>
             @empty
-                <option value="" disabled>Koi domain nahi</option>
+                <option value="" disabled>No domain</option>
             @endforelse
         </select>
         <label for="comment">Comment</label>

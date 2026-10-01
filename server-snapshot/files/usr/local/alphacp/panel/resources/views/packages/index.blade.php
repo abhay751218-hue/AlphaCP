@@ -6,7 +6,7 @@
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
     @can('packages.manage')
-        <a class="btn small" href="{{ route('packages.create') }}">+ Naya package</a>
+        <a class="btn small" href="{{ route('packages.create') }}">+ New package</a>
     @endcan
 @endsection
 
@@ -43,7 +43,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="8" class="empty">Koi package nahi.</td></tr>
+                <tr><td colspan="8" class="empty">No packages yet.</td></tr>
             @endforelse
         </table>
     </div>

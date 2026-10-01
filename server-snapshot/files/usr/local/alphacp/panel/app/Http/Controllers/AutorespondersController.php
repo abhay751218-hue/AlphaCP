@@ -37,7 +37,7 @@ class AutorespondersController extends Controller
             return back()->withErrors(['localpart' => 'Suspended/terminated account par autoresponder nahi.']);
         }
         if (MailProvisioner::respLimitReached($account)) {
-            return back()->withErrors(['localpart' => 'Package MAXRESP limit poori.']);
+            return back()->withErrors(['localpart' => 'Package MAXRESP limit reached.']);
         }
         $data = $request->validate([
             'localpart' => ['required', 'string', 'max:32'],
@@ -101,7 +101,7 @@ class AutorespondersController extends Controller
     {
         $account = $this->accountFor($request);
         if ($account === null) {
-            abort(403, 'Is login ka hosting account nahi hai.');
+            abort(403, 'This login has no hosting account.');
         }
 
         return $account;

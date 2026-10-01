@@ -10,11 +10,11 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai. Customer apni files yahin se manage karega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Customers manage files here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
@@ -55,7 +55,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="4" class="empty">Listing paneld se aati hai. Naya folder/file neeche se add karo.</td></tr>
+                <tr><td colspan="4" class="empty">The listing comes from paneld. Add a new folder/file below.</td></tr>
             @endforelse
         </table>
     </div>
@@ -63,7 +63,7 @@
 
 @can('files.manage')
 <div class="card mt">
-    <h3>Naya folder</h3>
+    <h3>New folder</h3>
     <form method="post" action="{{ route('files.mkdir') }}">
         @csrf
         <input type="hidden" name="dir" value="{{ $path }}">
@@ -81,7 +81,7 @@
         <input id="file-name" name="name" required maxlength="80" placeholder="hello.txt">
         <label for="file-content">Content</label>
         <textarea id="file-content" name="content" rows="8" maxlength="262144"></textarea>
-        <button class="btn mt" type="submit">File save karo</button>
+        <button class="btn mt" type="submit">Save file</button>
     </form>
 </div>
 <div class="card mt">

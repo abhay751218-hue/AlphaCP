@@ -10,11 +10,11 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>Ye tool <strong>customer cPanel</strong> ka hai.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>.</p>
 </div>
 @elseif (! $account)
 <div class="card">
-    <p class="empty">Is login se koi hosting account linked nahi.</p>
+    <p class="empty">No hosting account is linked to this login.</p>
 </div>
 @else
 <div class="card">
@@ -33,7 +33,7 @@
                     <td class="mono">{{ $job->command }}</td>
                     <td class="right">
                         @can('cron.manage')
-                            <form method="post" action="{{ route('cron.destroy', $job) }}" onsubmit="return confirm('Cron hataayein?')">
+                            <form method="post" action="{{ route('cron.destroy', $job) }}" onsubmit="return confirm('Remove this cron job?')">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn small danger" type="submit">remove</button>
@@ -42,7 +42,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="3" class="empty">Koi cron job nahi.</td></tr>
+                <tr><td colspan="3" class="empty">No cron jobs yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -50,8 +50,8 @@
 
 @can('cron.manage')
 <div class="card mt">
-    <h3>Naya cron job</h3>
-    <p class="help">Standard 5 fields. Command me newline allowed nahi.</p>
+    <h3>New cron job</h3>
+    <p class="help">Standard 5 fields. Newlines are not allowed in the command.</p>
     <form method="post" action="{{ route('cron.store') }}">
         @csrf
         <div class="grid cols-2">
@@ -72,7 +72,7 @@
                 <input id="command" name="command" required maxlength="500" placeholder="/home/{{ $account->username }}/bin/job.sh">
             </div>
         </div>
-        <button class="btn mt" type="submit">Cron add karo</button>
+        <button class="btn mt" type="submit">Add cron</button>
     </form>
 </div>
 @endcan
