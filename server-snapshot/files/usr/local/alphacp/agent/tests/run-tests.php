@@ -59,6 +59,7 @@ use Alphacp\Agent\Tasks\MysqlSet;
 use Alphacp\Agent\Tasks\PhpmyadminSet;
 use Alphacp\Agent\Tasks\RemoteMysqlSet;
 use Alphacp\Agent\Tasks\ZoneSet;
+use Alphacp\Agent\Tasks\DynamicSet;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -207,7 +208,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1451,6 +1452,41 @@ test('dns.zone writes json and rejects hostile name', function (): void {
         $threw = str_contains($e->getMessage(), 'name') || str_contains($e->getMessage(), 'invalid') || str_contains($e->getMessage(), 'escape');
     }
     assert_true($threw, 'hostile dns name must fail closed');
+    acp_account_cleanup($harness);
+});
+test('dns.dynamic writes json and rejects hostile name', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new DynamicSet())->handle([
+        'username' => 'alicehost',
+        'hosts' => [[
+            'domain' => 'alicehost.test',
+            'name' => 'home',
+            'token' => 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+            'ip' => '203.0.113.10',
+        ]],
+    ], $harness['ctx']);
+    assert_true($out['hosts'] === 1);
+    $file = $harness['root'] . '/home/alicehost/etc/dns/dynamic.json';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, '203.0.113.10'));
+    assert_true(!str_contains($body, '|'));
+    $threw = false;
+    try {
+        (new DynamicSet())->handle([
+            'username' => 'alicehost',
+            'hosts' => [[
+                'domain' => 'alicehost.test',
+                'name' => '|/bin/sh',
+                'token' => 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+                'ip' => '203.0.113.10',
+            ]],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'name') || str_contains($e->getMessage(), 'invalid') || str_contains($e->getMessage(), 'escape');
+    }
+    assert_true($threw, 'hostile dynamic dns name must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

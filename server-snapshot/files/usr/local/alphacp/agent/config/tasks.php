@@ -1016,6 +1016,37 @@ return [
         ],
     ],
 
+    'dns.dynamic' => [
+        'handler'     => Tasks\DynamicSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write Dynamic DNS hosts (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'hosts'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'hosts'    => [
+                    'type'     => 'array',
+                    'maxItems' => 20,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'name', 'token', 'ip'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'name'   => ['type' => 'string', 'maxLength' => 63],
+                            'token'  => ['type' => 'string', 'pattern' => '^[a-f0-9]{32}$', 'maxLength' => 32],
+                            'ip'     => ['type' => 'string', 'maxLength' => 15],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

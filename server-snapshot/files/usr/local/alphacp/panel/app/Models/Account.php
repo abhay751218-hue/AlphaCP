@@ -144,6 +144,11 @@ class Account extends Model
         return $this->hasMany(DnsRecord::class);
     }
 
+    public function dynamicDnsHosts(): HasMany
+    {
+        return $this->hasMany(DnsDynamicHost::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

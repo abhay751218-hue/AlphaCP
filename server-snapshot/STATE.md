@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.40.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.40.0   (.env)
-AGENT_VERSION : 0.35.0
+panel code    : 0.41.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.41.0   (.env)
+AGENT_VERSION : 0.36.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -72,15 +72,16 @@ agent-backup-20261001154551
 agent-backup-20261001162037
 agent-backup-20261001164344
 agent-backup-20261001170804
-panel-backup-20261001162037
+agent-backup-20261001173623
 panel-backup-20261001164344
 panel-backup-20261001170804
+panel-backup-20261001173623
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -156,6 +157,7 @@ alphacp:admin-password
   2026_09_29_000030_create_phpmyadmin_settings_table   [29] Ran
   2026_09_29_000031_create_mysql_remote_hosts_table   [30] Ran
   2026_09_29_000032_create_dns_records_table   [31] Ran
+  2026_09_29_000033_create_dns_dynamic_hosts_table   [32] Ran
 ```
 
 ## Routes (web)
@@ -195,6 +197,9 @@ GET|HEAD           /disk                                         disk.index
 GET|HEAD           /domains                                      domains.index
 POST               /domains                                      domains.store
 DELETE             /domains/{domain}                             domains.destroy
+GET|HEAD           /dynamic-dns                                  dynamic-dns.index
+POST               /dynamic-dns                                  dynamic-dns.store
+DELETE             /dynamic-dns/{dns_dynamic_host}               dynamic-dns.destroy
 GET|HEAD           /email                                        email.index
 POST               /email                                        email.store
 GET|HEAD           /email-disk                                   email-disk.index

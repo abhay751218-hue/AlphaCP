@@ -195,6 +195,24 @@ CREATE TABLE `cron_jobs` (
   KEY `cron_jobs_account_id_index` (`account_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `dns_dynamic_hosts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `dns_dynamic_hosts` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `account_id` bigint(20) unsigned NOT NULL,
+  `domain` varchar(190) NOT NULL,
+  `name` varchar(63) NOT NULL,
+  `token` varchar(32) NOT NULL,
+  `ip` varchar(15) NOT NULL DEFAULT '',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `dns_dynamic_hosts_account_id_domain_name_unique` (`account_id`,`domain`,`name`),
+  UNIQUE KEY `dns_dynamic_hosts_token_unique` (`token`),
+  KEY `dns_dynamic_hosts_account_id_index` (`account_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `dns_records`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;

@@ -77,6 +77,7 @@ final class ModuleCatalog
                     ['name' => 'Aliases',        'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
                     ['name' => 'Redirects',      'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
                     ['name' => 'Zone Editor',    'step' => 'S9', 'status' => 'live', 'route' => 'zone-editor.index'],
+                    ['name' => 'Dynamic DNS',    'step' => 'S9', 'status' => 'live', 'route' => 'dynamic-dns.index'],
                 ],
             ],
             'databases' => [
