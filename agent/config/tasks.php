@@ -461,6 +461,34 @@ return [
         ],
     ],
 
+    'db.set' => [
+        'handler'     => Tasks\MysqlSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write prefixed MySQL database names (JSON; no mysql binary).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'databases'],
+            'properties'           => [
+                'username'  => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'databases' => [
+                    'type'  => 'array',
+                    'maxItems' => 50,
+                    'items' => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['name'],
+                        'properties'           => [
+                            'name' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.usage' => [
         'handler'     => Tasks\MailUsage::class,
         'safety'      => 'readonly',

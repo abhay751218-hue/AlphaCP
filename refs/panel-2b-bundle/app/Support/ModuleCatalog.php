@@ -84,7 +84,7 @@ final class ModuleCatalog
                 'icon'  => 'database',
                 'audience' => 'cpanel',
                 'items' => [
-                    ['name' => 'MySQL Databases',  'step' => 'S8', 'status' => 'step'],
+                    ['name' => 'MySQL Databases',  'step' => 'S8', 'status' => 'live', 'route' => 'mysql.index'],
                     ['name' => 'Database Wizard',  'step' => 'S8', 'status' => 'step'],
                     ['name' => 'phpMyAdmin',       'step' => 'S8', 'status' => 'step'],
                     ['name' => 'Remote MySQL',     'step' => 'S8', 'status' => 'step'],
