@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.36.0  ·  default panel bundle 0.36.0  ·  agent 0.32.0  ·  alphacp-sync v1.2
+# updater 0.37.0  ·  default panel bundle 0.37.0  ·  agent 0.32.0  ·  alphacp-sync v1.2
+#
+# 0.37.0: Step 8 — panel 0.37.0 (Database Wizard) + agent 0.32.0 (db.set reuse)
 #
 # 0.36.0: Step 8 — panel 0.36.0 (MySQL Databases) + agent 0.32.0 (db.set)
 #
@@ -89,13 +91,13 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.36.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.36.0}"
+UPDATER_VERSION="0.37.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.37.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-62e5345a6cd4d548fe3db10b88489971cd2decf5}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-20f1243a20ef3623a0a7ac10f5843605088d7f24}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-3b95d7dbde0380fbe0fdb73a4d4340e16214c8998f4c560bad283b1f6482b884}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-a9e3c8dd10081122e35c27caf67866674b1ee385343a31f95235acb5ea89c4e8}"
 AGENT_VERSION="${ACP_AGENT_VERSION:-0.32.0}"
 AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-62e5345a6cd4d548fe3db10b88489971cd2decf5}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
