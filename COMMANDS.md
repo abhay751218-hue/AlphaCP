@@ -14,20 +14,22 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.37.0 — Step 8: Database Wizard
+### panel-update 0.38.0 — Step 8: phpMyAdmin
 ```bash
-sudo alphacp-sync get 0b4e24a3fc99e15d5e4bc52135e9d839ee07ecba installer/panel-update.sh /tmp/acp-panel-update-0.37.0.sh b5da89ad917034dda702fb9db1c7130e8d2fef922145338d2046b034d4004299 && sudo bash /tmp/acp-panel-update-0.37.0.sh
+sudo alphacp-sync get 67e6e74fee23d6584740203ce47d5bb0d0936ca5 installer/panel-update.sh /tmp/acp-panel-update-0.38.0.sh 271007ded4911240d36c3d160d2146ee658bf5819fd0945543e247bdc0b6eb84 && sudo bash /tmp/acp-panel-update-0.38.0.sh
 ```
-- sha256: `b5da89ad917034dda702fb9db1c7130e8d2fef922145338d2046b034d4004299`
-- Expected: banner `updater 0.37.0` → agent **0.32.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Database Wizard (session confirm, reuses db.set). Hostile name fail closed. No mysql binary.
-- WHM: Create Account / packages / user manager. Customer ko Database Wizard tile dikhega, WHM me nahi.
-- Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **240/0**, provision-sim **63/63**, update-sim **124/124**.
+- sha256: `271007ded4911240d36c3d160d2146ee658bf5819fd0945543e247bdc0b6eb84`
+- Expected: banner `updater 0.38.0` → agent **0.33.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: phpMyAdmin (enabled JSON). Hostile enabled fail closed. No phpMyAdmin install/SSO.
+- Login/Accounts pages: English copy (your two screenshot lines). Remaining flash strings later.
+- WHM: Create Account / packages / user manager. Customer sees phpMyAdmin tile; WHM does not.
+- Trial/password/APP_KEY unchanged.
+- Test: panel-tests **246/0**, provision-sim **64/64**, update-sim **126/126**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.37.0 (`0b4e24a…`) → panel 0.37.0 + agent 0.32.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Database Wizard |
 | panel-update 0.36.0 (`2dc2f39…`) → panel 0.36.0 + agent 0.32.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, MySQL Databases |
 | panel-update 0.35.0 (`035aae4…`) → panel 0.35.0 + agent 0.31.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Webmail |
 | panel-update 0.34.0 (`86b31ef…`) → panel 0.34.0 + agent 0.30.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Email Disk Usage |
