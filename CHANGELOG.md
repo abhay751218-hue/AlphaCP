@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 8 Database Wizard (1 Oct)** — step-by-step name via existing `db.set`
+  (session confirm; no mysql binary; pipe/path fail closed). Panel **0.37.0**, agent **0.32.0**.
+  Tests: panel **240/0**, provision-sim **63/63**, update-sim **123/123** (pin in B).
+  Deploy via `panel-update.sh` 0.37.0.
 - **Step 8 MySQL Databases (1 Oct)** — prefixed names via `db.set`
   (JSON; no mysql binary; pipe/path fail closed). Panel **0.36.0**, agent **0.32.0**.
   Tests: panel **234/0**, provision-sim **63/63**, update-sim **123/123**.

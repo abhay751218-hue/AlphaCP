@@ -90,7 +90,7 @@
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
 | 37 | MySQL® Databases | DB + users + privileges | S8 | ✅ (prefixed names JSON; no mysql binary; users later) |
-| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 |
+| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ✅ (session confirm; reuses db.set; users later) |
 | 39 | phpMyAdmin | DB GUI (SSO login) | S8 | ⏳ S8 |
 | 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
