@@ -32,6 +32,7 @@ use App\Http\Controllers\RemoteMysqlController;
 use App\Http\Controllers\ZoneEditorController;
 use App\Http\Controllers\DynamicDnsController;
 use App\Http\Controllers\TrackDnsController;
+use App\Http\Controllers\DnsZonesController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -289,6 +290,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:dns.view')->name('track-dns.index');
     Route::post('/track-dns', [TrackDnsController::class, 'store'])
         ->middleware('perm:dns.view')->name('track-dns.store');
+
+    Route::get('/dns-zones', [DnsZonesController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('dns-zones.index');
+    Route::post('/dns-zones/{account}/sync', [DnsZonesController::class, 'sync'])
+        ->middleware('perm:accounts.view')->name('dns-zones.sync');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

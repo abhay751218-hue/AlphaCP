@@ -224,7 +224,7 @@
 ### DNS Functions
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 128 | DNS Zone Manager | S9 | ⏳ S9 |
+| 128 | DNS Zone Manager | S9 | ✅ (WHM list + dns.zone sync; no BIND rewrite) |
 | 129 | Add / Delete a DNS Zone | S9 | ⏳ S9 |
 | 130 | Add an A Entry for Your Hostname | S9 | ⏳ S9 |
 | 131 | Edit Zone Templates | S9 | ⏳ S9 |
