@@ -53,6 +53,7 @@ use Alphacp\Agent\Tasks\MailGfilter;
 use Alphacp\Agent\Tasks\MailEncrypt;
 use Alphacp\Agent\Tasks\MailBoxtrapper;
 use Alphacp\Agent\Tasks\MailCalendar;
+use Alphacp\Agent\Tasks\MailUsage;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -201,7 +202,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1261,6 +1262,51 @@ test('mail.calendar writes json and rejects pipe name', function (): void {
         $threwPipe = str_contains($e->getMessage(), 'pipe') || str_contains($e->getMessage(), 'name');
     }
     assert_true($threwPipe, 'pipe name must fail closed');
+    acp_account_cleanup($harness);
+});
+test('mail.usage reports mail sizes, skips symlink, rejects ..', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $hash = '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi';
+    (new MailSet())->handle([
+        'username' => 'alicehost',
+        'mailboxes' => [[
+            'local' => 'bob',
+            'domain' => 'shop.example.com',
+            'hash' => $hash,
+            'quota_mb' => 512,
+        ]],
+    ], $harness['ctx']);
+    (new FilesSet())->handle([
+        'username' => 'alicehost',
+        'op' => 'write',
+        'path' => 'mail/shop.example.com/bob/cur/hello.txt',
+        'content' => 'namaste',
+    ], $harness['ctx']);
+    $out = (new MailUsage())->handle(['username' => 'alicehost', 'path' => ''], $harness['ctx']);
+    assert_true($out['status'] === 'ok');
+    assert_true($out['bytes'] >= 7, 'mail bytes should include hello.txt');
+    $names = array_column($out['entries'], 'name');
+    assert_true(in_array('shop.example.com', $names, true), 'domain dir should appear');
+    $link = $harness['root'] . '/home/alicehost/mail/escape';
+    symlink('/etc', $link);
+    $out2 = (new MailUsage())->handle(['username' => 'alicehost', 'path' => ''], $harness['ctx']);
+    $names2 = array_column($out2['entries'], 'name');
+    assert_true(!in_array('escape', $names2, true), 'symlink must be skipped');
+    $threw = false;
+    try {
+        (new MailUsage())->handle(['username' => 'alicehost', 'path' => '../etc'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), '..') || str_contains($e->getMessage(), 'escape');
+    }
+    assert_true($threw, 'path escape must fail closed');
+    $threwPipe = false;
+    try {
+        (new MailUsage())->handle(['username' => 'alicehost', 'path' => '|/bin/sh'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPipe = str_contains($e->getMessage(), 'path') || str_contains($e->getMessage(), 'segment');
+    }
+    assert_true($threwPipe, 'pipe path must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

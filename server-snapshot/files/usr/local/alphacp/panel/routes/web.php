@@ -23,6 +23,7 @@ use App\Http\Controllers\AddressImporterController;
 use App\Http\Controllers\EncryptionController;
 use App\Http\Controllers\BoxTrapperController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\EmailDiskUsageController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -229,6 +230,9 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('calendar.store');
     Route::delete('/calendar/{calendar_item}', [CalendarController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('calendar.destroy');
+
+    Route::get('/email-disk', [EmailDiskUsageController::class, 'index'])
+        ->middleware('perm:email.view')->name('email-disk.index');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');
