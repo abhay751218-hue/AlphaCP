@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.41.0 — Step 9: Dynamic DNS
+### panel-update 0.42.0 — Step 9: Track DNS
 ```bash
-sudo alphacp-sync get 8fba292dd15373df1e4c0bfaf84cae8cebc20a79 installer/panel-update.sh /tmp/acp-panel-update-0.41.0.sh af06cb9196ff5acff9815bdfc81e5688d1f757117a7f25cc2551451dcbbae814 && sudo bash /tmp/acp-panel-update-0.41.0.sh
+sudo alphacp-sync get 50279743a172ad5b3d886b8a27a4957f05e413d5 installer/panel-update.sh /tmp/acp-panel-update-0.42.0.sh 8a3bee16cff39f3cf0b2226ad350f4aec0cd8e0c8fd4bd93b160476325cc7ce8 && sudo bash /tmp/acp-panel-update-0.42.0.sh
 ```
-- sha256: `af06cb9196ff5acff9815bdfc81e5688d1f757117a7f25cc2551451dcbbae814`
-- Expected: banner `updater 0.41.0` → agent **0.36.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Dynamic DNS (hosts + tokens JSON). Hostile name fail closed. No BIND rewrite. No public updater.
-- WHM: Create Account / packages / user manager. Customer sees Dynamic DNS tile; WHM does not.
+- sha256: `8a3bee16cff39f3cf0b2226ad350f4aec0cd8e0c8fd4bd93b160476325cc7ce8`
+- Expected: banner `updater 0.42.0` → agent **0.37.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Track DNS (FQDN search of zone/dynamic JSON). Hostile query fail closed. No dig/BIND.
+- WHM: Create Account / packages / user manager. Customer sees Track DNS tile; WHM does not.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **264/0**, provision-sim **67/67**, update-sim **132/132**.
+- Test: panel-tests **270/0**, provision-sim **68/68**, update-sim **134/134**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.41.0 (`8fba292…`) → panel 0.41.0 + agent 0.36.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Dynamic DNS |
 | panel-update 0.40.0 (`c93bd5c…`) → panel 0.40.0 + agent 0.35.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Zone Editor |
 | panel-update 0.39.0 (`32a37c8…`) → panel 0.39.0 + agent 0.34.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Remote MySQL |
 | panel-update 0.38.0 (`67e6e74…`) → panel 0.38.0 + agent 0.33.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, phpMyAdmin |
