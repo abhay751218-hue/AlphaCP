@@ -11,7 +11,7 @@
 
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>This tool is part of the <strong>customer cPanel</strong>. WHM se account banao, customer apne domains yahan manage karega.</p>
+    <p>This tool is part of the <strong>customer cPanel</strong>. Create the account in WHM; the customer manages domains here.</p>
     <p class="help mt">Accounts page: <a href="{{ route('accounts.index') }}">List Accounts →</a></p>
 </div>
 @elseif (! $account)

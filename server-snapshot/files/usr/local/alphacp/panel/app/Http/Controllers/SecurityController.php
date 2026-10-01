@@ -54,14 +54,14 @@ class SecurityController extends Controller
         $secret = $request->session()->get('2fa_pending');
 
         if (! $secret) {
-            return redirect()->route('security.index')->withErrors(['code' => 'Pehle "Enable 2FA" dabao.']);
+            return redirect()->route('security.index')->withErrors(['code' => 'Click Enable 2FA first.']);
         }
 
         $data = $request->validate(['code' => ['required', 'string', 'max:10']]);
         $step = Totp::verify($secret, $data['code']);
 
         if ($step === null) {
-            return back()->withErrors(['code' => 'Code match nahi hua — app ka time theek hai? Dobara try karo.']);
+            return back()->withErrors(['code' => 'Code did not match — is the app clock correct? Try again.']);
         }
 
         $user->forceFill([
@@ -74,7 +74,7 @@ class SecurityController extends Controller
         $request->session()->forget('2fa_pending');
         Audit::log('security.2fa_enabled', 'warning', 'user', $user->id);
 
-        return redirect()->route('security.index')->with('success', '2FA ON ho gaya. Ab har login par code maangega.');
+        return redirect()->route('security.index')->with('success', '2FA is on. Every login will ask for a code.');
     }
 
     public function disableTwoFactor(Request $request): RedirectResponse
@@ -96,7 +96,7 @@ class SecurityController extends Controller
 
         Audit::log('security.2fa_disabled', 'critical', 'user', $user->id);
 
-        return redirect()->route('security.index')->with('warning', '2FA OFF ho gaya.');
+        return redirect()->route('security.index')->with('warning', '2FA is off.');
     }
 
     public function password(Request $request): View
@@ -125,7 +125,7 @@ class SecurityController extends Controller
 
         Audit::log('security.password_changed', 'warning', 'user', $user->id);
 
-        return redirect()->route('dashboard')->with('success', 'Password badal gaya. 👍');
+        return redirect()->route('dashboard')->with('success', 'Password changed.');
     }
 
     public function sessions(Request $request): View
@@ -146,7 +146,7 @@ class SecurityController extends Controller
             Audit::log('security.session_revoked', 'warning', 'user', $user->id, ['session' => substr($id, 0, 8) . '…']);
         }
 
-        return redirect()->route('security.sessions')->with('success', 'Session band kar di.');
+        return redirect()->route('security.sessions')->with('success', 'Session ended.');
     }
 
     /** @return \Illuminate\Support\Collection<int, object> */

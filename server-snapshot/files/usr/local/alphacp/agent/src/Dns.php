@@ -206,6 +206,91 @@ final class Dns
         return $json . "\n";
     }
 
+    public const TRACK_TYPES = ['A', 'CNAME', 'MX', 'NS', 'TXT', 'ALL'];
+
+    public static function normalizeTrackType(string $type): string
+    {
+        $type = strtoupper(trim($type));
+        if (!in_array($type, self::TRACK_TYPES, true)) {
+            throw new TaskRejectedException('invalid dns track type');
+        }
+
+        return $type;
+    }
+
+    /**
+     * @return list<array{source: string, domain: string, name: string, type: string, value: string}>
+     */
+    public static function filterTrack(string $query, string $type, string $zoneJson, string $dynamicJson): array
+    {
+        $query = self::normalizeDomain($query);
+        $type = self::normalizeTrackType($type);
+        $out = [];
+        $zone = json_decode($zoneJson, true);
+        if (is_array($zone)) {
+            foreach ($zone as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $hit = self::matchTrackRow('zone', $query, $type, $row);
+                if ($hit !== null) {
+                    $out[] = $hit;
+                }
+            }
+        }
+        $dyn = json_decode($dynamicJson, true);
+        if (is_array($dyn)) {
+            foreach ($dyn as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $mapped = [
+                    'domain' => (string) ($row['domain'] ?? ''),
+                    'name' => (string) ($row['name'] ?? ''),
+                    'type' => 'A',
+                    'value' => (string) ($row['ip'] ?? ''),
+                ];
+                $hit = self::matchTrackRow('dynamic', $query, $type, $mapped);
+                if ($hit !== null) {
+                    $out[] = $hit;
+                }
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  array<mixed> $row
+     * @return array{source: string, domain: string, name: string, type: string, value: string}|null
+     */
+    private static function matchTrackRow(string $source, string $query, string $wantType, array $row): ?array
+    {
+        try {
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $name = self::normalizeName((string) ($row['name'] ?? ''));
+            $type = self::normalizeType((string) ($row['type'] ?? 'A'));
+            $value = self::normalizeValue($type, (string) ($row['value'] ?? ''));
+        } catch (TaskRejectedException $e) {
+            return null;
+        }
+        if ($wantType !== 'ALL' && $type !== $wantType) {
+            return null;
+        }
+        $fqdn = $name === '@' ? $domain : $name . '.' . $domain;
+        if ($query !== $domain && $query !== $fqdn) {
+            return null;
+        }
+
+        return [
+            'source' => $source,
+            'domain' => $domain,
+            'name' => $name,
+            'type' => $type,
+            'value' => $value,
+        ];
+    }
+
     /**
      * @param  list<array{domain: string, name: string, type: string, value: string}> $rows
      */

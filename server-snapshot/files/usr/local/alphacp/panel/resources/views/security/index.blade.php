@@ -20,7 +20,7 @@
             <p class="help">2FA on hai — har login par authenticator app ka 6-digit code lagega.</p>
             <form method="post" action="{{ route('security.2fa.disable') }}" class="mt">
                 @csrf
-                <label for="password">Confirm karne ke liye apna password daalo</label>
+                <label for="password">Enter your password to confirm</label>
                 <input id="password" name="password" type="password" required>
                 <button class="btn danger mt" type="submit">Turn 2FA off</button>
             </form>

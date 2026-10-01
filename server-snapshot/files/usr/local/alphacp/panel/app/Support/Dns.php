@@ -8,6 +8,7 @@ namespace App\Support;
 final class Dns
 {
     public const TYPES = ['A', 'CNAME', 'MX', 'TXT'];
+    public const TRACK_TYPES = ['A', 'CNAME', 'MX', 'NS', 'TXT', 'ALL'];
 
     public static function tryDomain(string $domain): ?string
     {
@@ -69,5 +70,15 @@ final class Dns
         }
 
         return $value;
+    }
+
+    public static function tryTrackType(string $type): ?string
+    {
+        $type = strtoupper(trim($type));
+        if (! in_array($type, self::TRACK_TYPES, true)) {
+            return null;
+        }
+
+        return $type;
     }
 }

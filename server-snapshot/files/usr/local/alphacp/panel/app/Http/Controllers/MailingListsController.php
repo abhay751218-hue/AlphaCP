@@ -49,7 +49,7 @@ class MailingListsController extends Controller
         $owner = Mail::tryDest($data['owner']);
         $allowed = MailProvisioner::domainsFor($account);
         if ($local === null || $domain === null || $owner === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['localpart' => 'Invalid list/owner. Owner email hona chahiye, no pipe. Domain must belong to this account.'])->withInput();
+            return back()->withErrors(['localpart' => 'Invalid list/owner. Owner must be an email, no pipe. Domain must belong to this account.'])->withInput();
         }
         $exists = MailingList::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {

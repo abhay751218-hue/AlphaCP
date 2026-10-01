@@ -49,7 +49,7 @@ class DomainsController extends Controller
             return back()->withErrors(['domain' => 'Cannot change domains on a suspended/terminated account.']);
         }
         if (! DomainProvisioner::featureAllowed($account)) {
-            return back()->withErrors(['domain' => 'Is package me domains feature band hai.']);
+            return back()->withErrors(['domain' => 'Domains are disabled on this package.']);
         }
 
         $data = $request->validate([
@@ -62,10 +62,10 @@ class DomainsController extends Controller
         $type = $data['type'];
 
         if ($type === 'sub' && ! str_ends_with($fqdn, '.' . strtolower($account->main_domain))) {
-            return back()->withErrors(['domain' => 'Subdomain parent domain ke under hona chahiye (blog.' . $account->main_domain . ').'])->withInput();
+            return back()->withErrors(['domain' => 'Subdomain must be under the parent domain (blog.' . $account->main_domain . ').'])->withInput();
         }
         if (Domain::query()->where('domain', $fqdn)->exists() || Account::query()->where('main_domain', $fqdn)->exists()) {
-            return back()->withErrors(['domain' => 'Ye domain pehle se kisi account par hai.'])->withInput();
+            return back()->withErrors(['domain' => 'This domain is already on an account.'])->withInput();
         }
         if (DomainProvisioner::limitReached($account, $type)) {
             $key = DomainProvisioner::LIMIT_KEY[$type];
@@ -108,7 +108,7 @@ class DomainsController extends Controller
             abort(403);
         }
         if ($domain->isMain()) {
-            return back()->withErrors(['domain' => 'Main domain delete nahi hota.']);
+            return back()->withErrors(['domain' => 'The main domain cannot be deleted.']);
         }
 
         $domain->forceFill(['status' => 'removing'])->save();

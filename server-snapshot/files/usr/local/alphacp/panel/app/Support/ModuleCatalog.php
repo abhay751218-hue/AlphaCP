@@ -141,7 +141,7 @@ final class ModuleCatalog
                 'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'Cron Jobs',      'step' => 'S5',  'status' => 'live', 'route' => 'cron.index'],
-                    ['name' => 'Track DNS',      'step' => 'S9',  'status' => 'step'],
+                    ['name' => 'Track DNS',      'step' => 'S9',  'status' => 'live', 'route' => 'track-dns.index'],
                     ['name' => 'Indexes',        'step' => 'S5',  'status' => 'live', 'route' => 'indexes.index'],
                     ['name' => 'Error Pages',    'step' => 'S5',  'status' => 'live', 'route' => 'errorpages.index'],
                     ['name' => 'MIME Types',     'step' => 'S5',  'status' => 'live', 'route' => 'mime.index'],

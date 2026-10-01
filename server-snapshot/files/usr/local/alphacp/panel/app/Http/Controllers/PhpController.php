@@ -36,7 +36,7 @@ class PhpController extends Controller
         ]);
         $php = $data['php_version'];
         if (! in_array($php, PhpVersions::all(), true)) {
-            return back()->withErrors(['php_version' => 'Ye PHP version is server par nahi hai.']);
+            return back()->withErrors(['php_version' => 'This PHP version is not on this server.']);
         }
 
         $account->forceFill(['php_version' => $php])->save();

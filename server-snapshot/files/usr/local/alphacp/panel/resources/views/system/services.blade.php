@@ -24,7 +24,7 @@
                             @if (in_array($name, ['nginx', 'exim4', 'dovecot', 'pure-ftpd'], true))
                                 apne step ke saath activate hoga
                             @elseif ($state['active'] === 'active')
-                                theek chal raha hai
+                                is running
                             @endif
                         </td>
                     </tr>

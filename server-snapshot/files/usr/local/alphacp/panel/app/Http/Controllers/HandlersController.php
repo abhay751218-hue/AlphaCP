@@ -49,7 +49,7 @@ class HandlersController extends Controller
             }
         }
         if ($handler === null || $cleanExts === []) {
-            return back()->withErrors(['handler' => 'Invalid handler ya blocked extension (php/proxy nahi).'])->withInput();
+            return back()->withErrors(['handler' => 'Invalid handler or blocked extension (no php/proxy).'])->withInput();
         }
 
         $current = Handlers::sanitize(is_array($account->meta['handlers'] ?? null) ? $account->meta['handlers'] : []);

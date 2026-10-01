@@ -44,7 +44,7 @@ class SshController extends Controller
         ]);
         $parsed = Ssh::tryLine($data['pubkey']);
         if ($parsed === null) {
-            return back()->withErrors(['pubkey' => 'Public key chahiye (ssh-ed25519 / ssh-rsa). Private key ya options nahi.'])->withInput();
+            return back()->withErrors(['pubkey' => 'A public key is required (ssh-ed25519 / ssh-rsa). No private key or options.'])->withInput();
         }
         $state = $this->state($account);
         $byId = [];

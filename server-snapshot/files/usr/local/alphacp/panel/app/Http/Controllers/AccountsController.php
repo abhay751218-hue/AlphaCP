@@ -57,7 +57,7 @@ class AccountsController extends Controller
         if (! $gate['ok']) {
             $message = $gate['reason'] === 'cap'
                 ? 'License account limit poori ho gayi (max_accounts).'
-                : 'License/trial se naye accounts band hain — customer sites nahi ruke.';
+                : 'License/trial has new accounts paused — customer sites stay up.';
             return back()->withErrors(['username' => $message])->withInput();
         }
 
@@ -83,7 +83,7 @@ class AccountsController extends Controller
             return back()->withErrors(['username' => 'Hosting account is naam se already exists.'])->withInput();
         }
         if (Account::query()->where('main_domain', $domain)->exists()) {
-            return back()->withErrors(['main_domain' => 'Domain pehle se kisi account par hai.'])->withInput();
+            return back()->withErrors(['main_domain' => 'This domain is already on an account.'])->withInput();
         }
 
         $package = Package::query()->findOrFail($data['package_id']);
@@ -168,7 +168,7 @@ class AccountsController extends Controller
             'reason' => ['nullable', 'string', 'max:255'],
         ]);
         if ($account->isTerminated()) {
-            return back()->withErrors(['reason' => 'Terminated account suspend nahi hota.']);
+            return back()->withErrors(['reason' => 'A terminated account cannot be suspended.']);
         }
 
         $account->forceFill([
@@ -193,7 +193,7 @@ class AccountsController extends Controller
     public function unsuspend(Account $account): RedirectResponse
     {
         if ($account->isTerminated()) {
-            return back()->withErrors(['reason' => 'Terminated account unsuspend nahi hota.']);
+            return back()->withErrors(['reason' => 'A terminated account cannot be unsuspended.']);
         }
 
         $account->forceFill(['status' => 'pending'])->save();
@@ -214,7 +214,7 @@ class AccountsController extends Controller
         ]);
         $live = $this->liveUsername($account);
         if (! hash_equals($live, strtolower($data['confirm_username']))) {
-            return back()->withErrors(['confirm_username' => 'Confirm ke liye username theek se type karo.']);
+            return back()->withErrors(['confirm_username' => 'Type the username exactly to confirm.']);
         }
 
         $account->recordEvent('account.terminate.queued', 'Terminate queued');
@@ -230,14 +230,14 @@ class AccountsController extends Controller
     public function upgrade(Request $request, Account $account): RedirectResponse
     {
         if ($account->isTerminated()) {
-            return back()->withErrors(['package_id' => 'Terminated account upgrade nahi hota.']);
+            return back()->withErrors(['package_id' => 'A terminated account cannot be upgraded.']);
         }
         $data = $request->validate([
             'package_id' => ['required', 'integer', Rule::exists('packages', 'id')],
         ]);
         $package = Package::query()->findOrFail($data['package_id']);
         if ($package->status !== 'active') {
-            return back()->withErrors(['package_id' => 'Archived package assign nahi hota.']);
+            return back()->withErrors(['package_id' => 'An archived package cannot be assigned.']);
         }
 
         $before = $account->package?->name;
@@ -256,13 +256,13 @@ class AccountsController extends Controller
         ]);
 
         return redirect()->route('accounts.show', $account)
-            ->with('success', "Package '{$package->name}' queue me apply ho raha hai (quota {$package->quotaMb()} MB).");
+            ->with('success', "Package '{$package->name}' is queued (quota {$package->quotaMb()} MB).");
     }
 
     public function quota(Request $request, Account $account): RedirectResponse
     {
         if ($account->isTerminated()) {
-            return back()->withErrors(['quota_mb' => 'Terminated account quota nahi badalti.']);
+            return back()->withErrors(['quota_mb' => 'A terminated account quota cannot change.']);
         }
         $data = $request->validate([
             'quota_mb' => ['required', 'integer', 'min:-1', 'max:10485760'],
@@ -288,7 +288,7 @@ class AccountsController extends Controller
         ]);
         $php = $data['php_version'];
         if (! in_array($php, PhpVersions::all(), true)) {
-            return back()->withErrors(['php_version' => 'Ye PHP version is server par nahi hai.']);
+            return back()->withErrors(['php_version' => 'This PHP version is not on this server.']);
         }
         $account->forceFill(['php_version' => $php])->save();
         AccountProvisioner::enqueue($account, 'php.setVersion', [

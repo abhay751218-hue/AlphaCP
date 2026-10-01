@@ -1047,6 +1047,24 @@ return [
         ],
     ],
 
+    'dns.track' => [
+        'handler'     => Tasks\DnsTrack::class,
+        'safety'      => 'readonly',
+        'timeout'     => 20,
+        'description' => 'Search jailed zone/dynamic JSON by FQDN (no dig, no BIND).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'query', 'type'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'query'    => ['type' => 'string', 'maxLength' => 190],
+                'type'     => ['type' => 'string', 'enum' => ['A', 'CNAME', 'MX', 'NS', 'TXT', 'ALL']],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

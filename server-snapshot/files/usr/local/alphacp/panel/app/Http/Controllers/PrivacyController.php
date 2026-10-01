@@ -46,7 +46,7 @@ class PrivacyController extends Controller
         $name = Privacy::tryUser($data['name']);
         $hash = Privacy::hashPassword($data['password']);
         if ($path === null || $path === '' || $realm === null || $name === null || $hash === null) {
-            return back()->withErrors(['path' => 'Invalid path/user (.. nahi) ya password 5–72 chars.'])->withInput();
+            return back()->withErrors(['path' => 'Invalid path/user (no ..) or password 5–72 chars.'])->withInput();
         }
 
         $current = Privacy::sanitize(is_array($account->meta['privacy'] ?? null) ? $account->meta['privacy'] : []);

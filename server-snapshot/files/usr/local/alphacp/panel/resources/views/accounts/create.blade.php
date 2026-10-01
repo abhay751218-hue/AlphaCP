@@ -70,7 +70,7 @@
             <li>Home: <span class="mono">/home/&lt;user&gt;/public_html</span></li>
             <li>Apache vhost port 80 + PHP-FPM pool (socket)</li>
             <li>Disk quota package se</li>
-            <li>Panel login (role: user) — pehle login par password change</li>
+            <li>Panel login (role: user) — must change password on first login</li>
             <li>Fail par paneld khud rollback karta hai (user/vhost/pool)</li>
         </ul>
         <p class="help mt">SSL, addon domains, email Step 5/7 me. Packages UI Step 4 me.</p>

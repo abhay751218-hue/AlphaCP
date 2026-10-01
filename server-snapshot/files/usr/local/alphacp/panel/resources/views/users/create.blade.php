@@ -22,7 +22,7 @@
             <label for="full_name">Poora naam (optional)</label>
             <input id="full_name" name="full_name" value="{{ old('full_name') }}">
 
-            <label for="email">Email (optional — alerts ke liye)</label>
+            <label for="email">Email (optional — for alerts)</label>
             <input id="email" name="email" type="email" value="{{ old('email') }}">
 
             <label for="role_id">Role</label>
@@ -37,7 +37,7 @@
 
             <label for="password">Temporary password</label>
             <input id="password" name="password" type="password" required>
-            <p class="help">User ko pehle login par ye badalna padega (force password change).</p>
+            <p class="help">The user must change this on first login (force password change).</p>
 
             <button class="btn mt" type="submit">User banao</button>
         </form>

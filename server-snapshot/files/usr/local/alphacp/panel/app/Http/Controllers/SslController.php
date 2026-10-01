@@ -55,7 +55,7 @@ class SslController extends Controller
 
         $label = $mode === 'letsencrypt' ? "Let's Encrypt" : 'self-signed';
 
-        return redirect()->route('ssl.index')->with('success', "SSL '{$domain->domain}' queue me hai ({$label}).");
+        return redirect()->route('ssl.index')->with('success', "SSL '{$domain->domain}' is queued ({$label}).");
     }
 
     public function autossl(Request $request): RedirectResponse
@@ -78,10 +78,10 @@ class SslController extends Controller
         Audit::log('ssl.autossl', 'info', 'account', $account->id, ['queued' => $queued]);
 
         if ($queued === 0) {
-            return redirect()->route('ssl.index')->with('success', 'AutoSSL: koi domain queue me nahi (include/redirect check).');
+            return redirect()->route('ssl.index')->with('success', 'AutoSSL: no domain queued (include/redirect check).');
         }
 
-        return redirect()->route('ssl.index')->with('success', "AutoSSL {$queued} domain(s) queue me.");
+        return redirect()->route('ssl.index')->with('success', "AutoSSL queued {$queued} domain(s).");
     }
 
     public function toggle(Request $request, Domain $domain): RedirectResponse
@@ -124,10 +124,10 @@ class SslController extends Controller
             return 'Cannot change SSL on a suspended/terminated account.';
         }
         if ($domain->type === 'redirect') {
-            return 'Redirect domain par SSL nahi.';
+            return 'SSL is not available on a redirect domain.';
         }
         if (in_array((string) $domain->ssl_status, ['pending', 'removing'], true)) {
-            return 'Is domain ka SSL task pehle se is queued.';
+            return 'An SSL task for this domain is already queued.';
         }
 
         $domain->forceFill([
