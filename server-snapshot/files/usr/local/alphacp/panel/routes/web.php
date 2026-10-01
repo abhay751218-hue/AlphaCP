@@ -28,6 +28,7 @@ use App\Http\Controllers\WebmailController;
 use App\Http\Controllers\MysqlDatabasesController;
 use App\Http\Controllers\MysqlWizardController;
 use App\Http\Controllers\PhpmyadminController;
+use App\Http\Controllers\RemoteMysqlController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -259,6 +260,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:databases.view')->name('phpmyadmin.index');
     Route::post('/phpmyadmin', [PhpmyadminController::class, 'store'])
         ->middleware('perm:databases.manage')->name('phpmyadmin.store');
+
+    Route::get('/remote-mysql', [RemoteMysqlController::class, 'index'])
+        ->middleware('perm:databases.view')->name('remote-mysql.index');
+    Route::post('/remote-mysql', [RemoteMysqlController::class, 'store'])
+        ->middleware('perm:databases.manage')->name('remote-mysql.store');
+    Route::delete('/remote-mysql/{mysql_remote_host}', [RemoteMysqlController::class, 'destroy'])
+        ->middleware('perm:databases.manage')->name('remote-mysql.destroy');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

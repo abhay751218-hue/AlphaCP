@@ -50,7 +50,7 @@ class MailController extends Controller
         $hash = Mail::hashPassword($data['password']);
         $allowed = MailProvisioner::domainsFor($account);
         if ($local === null || $domain === null || $hash === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['localpart' => 'Invalid mailbox (local/domain) ya password 8–72 chars. Domain is account ka hona chahiye.'])->withInput();
+            return back()->withErrors(['localpart' => 'Invalid mailbox (local/domain) ya password 8–72 chars. Domain must belong to this account.'])->withInput();
         }
         $exists = Mailbox::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {

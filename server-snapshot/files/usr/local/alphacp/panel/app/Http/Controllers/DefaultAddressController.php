@@ -33,7 +33,7 @@ class DefaultAddressController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['domain' => 'Suspended/terminated account par default address nahi.']);
+            return back()->withErrors(['domain' => 'Cannot change default address on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'domain' => ['required', 'string', 'max:190'],
@@ -43,7 +43,7 @@ class DefaultAddressController extends Controller
         $dest = Mail::tryDest($data['dest']);
         $allowed = MailProvisioner::domainsFor($account);
         if ($domain === null || $dest === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['dest' => 'Invalid domain/dest. Dest email hona chahiye, pipe nahi. Domain is account ka hona chahiye.'])->withInput();
+            return back()->withErrors(['dest' => 'Invalid domain/dest. Dest must be an email, no pipe. Domain must belong to this account.'])->withInput();
         }
         Catchall::query()->updateOrCreate(
             ['account_id' => $account->id, 'domain' => $domain],
@@ -53,7 +53,7 @@ class DefaultAddressController extends Controller
         $account->recordEvent('mail.catchall.queued', '*@' . $domain);
         Audit::log('mail.catchall', 'info', 'account', $account->id, ['domain' => $domain, 'dest' => $dest]);
 
-        return redirect()->route('default-address.index')->with('success', 'Default address queue me hai.');
+        return redirect()->route('default-address.index')->with('success', 'Default address is queued.');
     }
 
     public function destroy(Request $request, Catchall $catchall): RedirectResponse
@@ -67,7 +67,7 @@ class DefaultAddressController extends Controller
         MailProvisioner::enqueueCatchalls($account);
         Audit::log('mail.catchall.remove', 'warning', 'account', $account->id, ['source' => $src]);
 
-        return redirect()->route('default-address.index')->with('success', 'Default address hataane ke liye queue me hai.');
+        return redirect()->route('default-address.index')->with('success', 'Default address is queued for removal.');
     }
 
     private function accountFor(Request $request): ?Account

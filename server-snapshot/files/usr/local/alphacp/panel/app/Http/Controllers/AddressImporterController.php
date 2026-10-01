@@ -32,7 +32,7 @@ class AddressImporterController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['csv' => 'Suspended/terminated account par import nahi.']);
+            return back()->withErrors(['csv' => 'Cannot import on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'csv' => ['required', 'string', 'max:32000'],
@@ -70,7 +70,7 @@ class AddressImporterController extends Controller
         $account->recordEvent('mail.import.queued', (string) count($rows));
         Audit::log('mail.import', 'info', 'account', $account->id, ['count' => count($rows)]);
 
-        return redirect()->route('address-importer.index')->with('success', 'Import queue me hai (mail.set).');
+        return redirect()->route('address-importer.index')->with('success', 'Import is queued (mail.set).');
     }
 
     private function accountFor(Request $request): ?Account

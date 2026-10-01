@@ -87,7 +87,7 @@ final class ModuleCatalog
                     ['name' => 'MySQL Databases',  'step' => 'S8', 'status' => 'live', 'route' => 'mysql.index'],
                     ['name' => 'Database Wizard',  'step' => 'S8', 'status' => 'live', 'route' => 'mysql-wizard.index'],
                     ['name' => 'phpMyAdmin',       'step' => 'S8', 'status' => 'live', 'route' => 'phpmyadmin.index'],
-                    ['name' => 'Remote MySQL',     'step' => 'S8', 'status' => 'step'],
+                    ['name' => 'Remote MySQL',     'step' => 'S8', 'status' => 'live', 'route' => 'remote-mysql.index'],
                     ['name' => 'PostgreSQL',       'step' => 'post-v1', 'status' => 'addon'],
                 ],
             ],

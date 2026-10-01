@@ -506,6 +506,34 @@ return [
         ],
     ],
 
+    'db.remote' => [
+        'handler'     => Tasks\RemoteMysqlSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write Remote MySQL access hosts (JSON; no mysql GRANT).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'hosts'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'hosts'    => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['host'],
+                        'properties'           => [
+                            'host' => ['type' => 'string', 'maxLength' => 190],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.usage' => [
         'handler'     => Tasks\MailUsage::class,
         'safety'      => 'readonly',

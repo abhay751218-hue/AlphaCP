@@ -34,7 +34,7 @@ class CalendarController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['name' => 'Suspended/terminated account par Calendar nahi.']);
+            return back()->withErrors(['name' => 'Cannot change Calendar on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'kind' => ['required', 'in:calendar,contact'],
@@ -42,7 +42,7 @@ class CalendarController extends Controller
         ]);
         $kind = $data['kind'];
         if (MailProvisioner::calendarLimitReached($account, $kind)) {
-            return back()->withErrors(['name' => 'Calendar/contact limit 50 poori.']);
+            return back()->withErrors(['name' => 'Calendar/contact limit of 50 reached.']);
         }
         $name = Mail::tryCalName($data['name']);
         if ($name === null) {
@@ -54,7 +54,7 @@ class CalendarController extends Controller
             ->where('name', $name)
             ->exists();
         if ($exists) {
-            return back()->withErrors(['name' => 'Ye naam pehle se hai.'])->withInput();
+            return back()->withErrors(['name' => 'Ye naam already exists.'])->withInput();
         }
         CalendarItem::query()->create([
             'account_id' => $account->id,
@@ -65,7 +65,7 @@ class CalendarController extends Controller
         $account->recordEvent('mail.calendar.queued', $kind . ':' . $name);
         Audit::log('mail.calendar', 'info', 'account', $account->id, ['kind' => $kind, 'name' => $name]);
 
-        return redirect()->route('calendar.index')->with('success', 'Calendar queue me hai.');
+        return redirect()->route('calendar.index')->with('success', 'Calendar is queued.');
     }
 
     public function destroy(Request $request, CalendarItem $calendar_item): RedirectResponse
@@ -80,7 +80,7 @@ class CalendarController extends Controller
         MailProvisioner::enqueueCalendar($account);
         Audit::log('mail.calendar.remove', 'warning', 'account', $account->id, ['kind' => $kind, 'name' => $name]);
 
-        return redirect()->route('calendar.index')->with('success', 'Hatane ke liye queue me hai.');
+        return redirect()->route('calendar.index')->with('success', 'Hatane ke liye is queued.');
     }
 
     private function accountFor(Request $request): ?Account

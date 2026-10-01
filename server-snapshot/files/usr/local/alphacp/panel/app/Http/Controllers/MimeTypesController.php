@@ -32,7 +32,7 @@ class MimeTypesController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['mime' => 'Suspended/terminated account par MIME types nahi.']);
+            return back()->withErrors(['mime' => 'Cannot change MIME types on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'mime' => ['required', 'string', 'max:80'],
@@ -62,7 +62,7 @@ class MimeTypesController extends Controller
 
         $this->persist($account, $current);
 
-        return redirect()->route('mime.index')->with('success', 'MIME type queue me hai.');
+        return redirect()->route('mime.index')->with('success', 'MIME type is queued.');
     }
 
     public function destroy(Request $request, string $ext): RedirectResponse
@@ -77,7 +77,7 @@ class MimeTypesController extends Controller
         }
         $this->persist($account, $keep);
 
-        return redirect()->route('mime.index')->with('success', 'MIME type hataane ke liye queue me hai.');
+        return redirect()->route('mime.index')->with('success', 'MIME type is queued for removal.');
     }
 
     /** @param list<array{mime: string, ext: string}> $mappings */

@@ -37,7 +37,7 @@ class SecurityController extends Controller
     public function startTwoFactor(Request $request): RedirectResponse
     {
         $user = $request->user();
-        abort_if($user->two_factor_enabled, 400, '2FA pehle se on hai.');
+        abort_if($user->two_factor_enabled, 400, '2FA is already on.');
 
         $secret = Totp::generateSecret();
         $request->session()->put('2fa_pending', $secret);
@@ -84,7 +84,7 @@ class SecurityController extends Controller
 
         if (! Hash::check($data['password'], $user->password_hash)) {
             Audit::log('security.2fa_disable_failed', 'warning', 'user', $user->id);
-            return back()->withErrors(['password' => 'Password galat hai.']);
+            return back()->withErrors(['password' => 'Password is incorrect.']);
         }
 
         $user->forceFill([
@@ -115,7 +115,7 @@ class SecurityController extends Controller
 
         if (! Hash::check($data['current_password'], $user->password_hash)) {
             Audit::log('security.password_change_failed', 'warning', 'user', $user->id);
-            return back()->withErrors(['current_password' => 'Current password galat hai.']);
+            return back()->withErrors(['current_password' => 'Current password is incorrect.']);
         }
 
         $user->forceFill([

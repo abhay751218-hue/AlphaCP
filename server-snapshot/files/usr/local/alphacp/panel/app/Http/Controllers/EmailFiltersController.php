@@ -33,10 +33,10 @@ class EmailFiltersController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['localpart' => 'Suspended/terminated account par filter nahi.']);
+            return back()->withErrors(['localpart' => 'Cannot change filters on a suspended/terminated account.']);
         }
         if (MailProvisioner::filterLimitReached($account)) {
-            return back()->withErrors(['localpart' => 'Filter limit 50 poori.']);
+            return back()->withErrors(['localpart' => 'Filter limit of 50 reached.']);
         }
         $data = $request->validate([
             'localpart' => ['required', 'string', 'max:32'],
@@ -57,7 +57,7 @@ class EmailFiltersController extends Controller
         }
         $allowed = MailProvisioner::domainsFor($account);
         if ($local === null || $domain === null || $field === null || $needle === null || $action === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['localpart' => 'Invalid filter. Pipe/regex/shell nahi. Domain is account ka hona chahiye.'])->withInput();
+            return back()->withErrors(['localpart' => 'Invalid filter. No pipe/regex/shell. Domain must belong to this account.'])->withInput();
         }
         if ($action === 'folder' && $folder === '') {
             return back()->withErrors(['folder' => 'Folder action ke liye folder name chahiye.'])->withInput();
@@ -75,7 +75,7 @@ class EmailFiltersController extends Controller
         $account->recordEvent('mail.filter.queued', $local . '@' . $domain);
         Audit::log('mail.filter', 'info', 'account', $account->id, ['source' => $local . '@' . $domain, 'needle' => $needle]);
 
-        return redirect()->route('email-filters.index')->with('success', 'Filter queue me hai.');
+        return redirect()->route('email-filters.index')->with('success', 'Filter is queued.');
     }
 
     public function destroy(Request $request, MailFilter $filter): RedirectResponse
@@ -89,7 +89,7 @@ class EmailFiltersController extends Controller
         MailProvisioner::enqueueFilters($account);
         Audit::log('mail.filter.remove', 'warning', 'account', $account->id, ['source' => $src]);
 
-        return redirect()->route('email-filters.index')->with('success', 'Filter hataane ke liye queue me hai.');
+        return redirect()->route('email-filters.index')->with('success', 'Filter is queued for removal.');
     }
 
     private function accountFor(Request $request): ?Account

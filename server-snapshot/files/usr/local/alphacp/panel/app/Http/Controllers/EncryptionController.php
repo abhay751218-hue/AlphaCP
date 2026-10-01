@@ -33,10 +33,10 @@ class EncryptionController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['localpart' => 'Suspended/terminated account par encryption nahi.']);
+            return back()->withErrors(['localpart' => 'Cannot change encryption on a suspended/terminated account.']);
         }
         if (MailProvisioner::encryptLimitReached($account)) {
-            return back()->withErrors(['localpart' => 'Encryption limit 50 poori.']);
+            return back()->withErrors(['localpart' => 'Encryption limit of 50 reached.']);
         }
         $data = $request->validate([
             'localpart' => ['required', 'string', 'max:32'],
@@ -48,11 +48,11 @@ class EncryptionController extends Controller
         $comment = Mail::tryNeedle($data['comment']);
         $allowed = MailProvisioner::domainsFor($account);
         if ($local === null || $domain === null || $comment === null || ! in_array($domain, $allowed, true)) {
-            return back()->withErrors(['localpart' => 'Invalid key. Comment me pipe/shell nahi. Domain is account ka hona chahiye.'])->withInput();
+            return back()->withErrors(['localpart' => 'Invalid key. Comment me pipe/shell nahi. Domain must belong to this account.'])->withInput();
         }
         $exists = EncryptionKey::query()->where('account_id', $account->id)->where('localpart', $local)->where('domain', $domain)->exists();
         if ($exists) {
-            return back()->withErrors(['localpart' => 'Ye key pehle se hai.'])->withInput();
+            return back()->withErrors(['localpart' => 'Ye key already exists.'])->withInput();
         }
         EncryptionKey::query()->create([
             'account_id' => $account->id,
@@ -64,7 +64,7 @@ class EncryptionController extends Controller
         $account->recordEvent('mail.encrypt.queued', $local . '@' . $domain);
         Audit::log('mail.encrypt', 'info', 'account', $account->id, ['address' => $local . '@' . $domain]);
 
-        return redirect()->route('encryption.index')->with('success', 'Encryption key queue me hai.');
+        return redirect()->route('encryption.index')->with('success', 'Encryption key is queued.');
     }
 
     public function destroy(Request $request, EncryptionKey $encryption_key): RedirectResponse
@@ -78,7 +78,7 @@ class EncryptionController extends Controller
         MailProvisioner::enqueueEncrypt($account);
         Audit::log('mail.encrypt.remove', 'warning', 'account', $account->id, ['address' => $addr]);
 
-        return redirect()->route('encryption.index')->with('success', 'Key hataane ke liye queue me hai.');
+        return redirect()->route('encryption.index')->with('success', 'Key is queued for removal.');
     }
 
     private function accountFor(Request $request): ?Account

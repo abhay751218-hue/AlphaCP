@@ -33,7 +33,7 @@ class HandlersController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['handler' => 'Suspended/terminated account par handlers nahi.']);
+            return back()->withErrors(['handler' => 'Cannot change handlers on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'handler' => ['required', 'string', 'max:64'],
@@ -63,7 +63,7 @@ class HandlersController extends Controller
 
         $this->persist($account, $current);
 
-        return redirect()->route('handlers.index')->with('success', 'Apache handler queue me hai.');
+        return redirect()->route('handlers.index')->with('success', 'Apache handler is queued.');
     }
 
     public function destroy(Request $request, string $ext): RedirectResponse
@@ -78,7 +78,7 @@ class HandlersController extends Controller
         }
         $this->persist($account, $keep);
 
-        return redirect()->route('handlers.index')->with('success', 'Handler hataane ke liye queue me hai.');
+        return redirect()->route('handlers.index')->with('success', 'Handler is queued for removal.');
     }
 
     /** @param list<array{handler: string, ext: string}> $mappings */

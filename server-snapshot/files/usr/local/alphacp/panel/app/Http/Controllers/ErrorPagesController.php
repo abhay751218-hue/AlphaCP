@@ -33,7 +33,7 @@ class ErrorPagesController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['pages' => 'Suspended/terminated account par error pages nahi.']);
+            return back()->withErrors(['pages' => 'Cannot change error pages on a suspended/terminated account.']);
         }
 
         $pages = ErrorPages::fromRequest($request->all());
@@ -48,7 +48,7 @@ class ErrorPagesController extends Controller
         $account->recordEvent('errorpages.set.queued', (string) count($pages));
         Audit::log('errorpages.set', 'info', 'account', $account->id, ['codes' => array_keys($pages)]);
 
-        return redirect()->route('errorpages.index')->with('success', 'Error pages queue me hain.');
+        return redirect()->route('errorpages.index')->with('success', 'Error pages are queued.');
     }
 
     private function accountFor(Request $request): ?Account

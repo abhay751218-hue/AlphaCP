@@ -35,7 +35,7 @@ class DeliverabilityController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['domain' => 'Suspended/terminated account par deliverability nahi.']);
+            return back()->withErrors(['domain' => 'Cannot change deliverability on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'domain' => ['nullable', 'string', 'max:190'],
@@ -45,7 +45,7 @@ class DeliverabilityController extends Controller
         if (isset($data['domain']) && $data['domain'] !== '') {
             $domain = Mail::tryDomain($data['domain']);
             if ($domain === null || ! in_array($domain, $allowed, true)) {
-                return back()->withErrors(['domain' => 'Domain is account ka hona chahiye.'])->withInput();
+                return back()->withErrors(['domain' => 'Domain must belong to this account.'])->withInput();
             }
             $want = [$domain];
         } else {
@@ -58,7 +58,7 @@ class DeliverabilityController extends Controller
         $account->recordEvent('mail.deliverability.queued', implode(',', $want));
         Audit::log('mail.deliverability', 'info', 'account', $account->id, ['domains' => $want]);
 
-        return redirect()->route('deliverability.index')->with('success', 'Deliverability records queue me hain. DNS Zone Editor S9 me likhega.');
+        return redirect()->route('deliverability.index')->with('success', 'Deliverability records are queued. DNS Zone Editor S9 me likhega.');
     }
 
     private function accountFor(Request $request): ?Account

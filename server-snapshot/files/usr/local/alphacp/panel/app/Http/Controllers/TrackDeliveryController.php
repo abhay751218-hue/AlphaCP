@@ -30,20 +30,20 @@ class TrackDeliveryController extends Controller
     {
         $account = $this->requireAccount($request);
         if ($account->isTerminated() || $account->isSuspended()) {
-            return back()->withErrors(['query' => 'Suspended/terminated account par track nahi.']);
+            return back()->withErrors(['query' => 'Cannot change tracking on a suspended/terminated account.']);
         }
         $data = $request->validate([
             'query' => ['required', 'string', 'max:190'],
         ]);
         $query = Mail::tryDest($data['query']);
         if ($query === null) {
-            return back()->withErrors(['query' => 'Query email hona chahiye, pipe/shell nahi.'])->withInput();
+            return back()->withErrors(['query' => 'Query must be an email, no pipe/shell.'])->withInput();
         }
         MailProvisioner::enqueueTrack($account, $query);
         $account->recordEvent('mail.track.queued', $query);
         Audit::log('mail.track', 'info', 'account', $account->id, ['query' => $query]);
 
-        return redirect()->route('track-delivery.index')->with('success', 'Track search queue me hai. Exim mainlog later.');
+        return redirect()->route('track-delivery.index')->with('success', 'Track search is queued. Exim mainlog later.');
     }
 
     private function accountFor(Request $request): ?Account
