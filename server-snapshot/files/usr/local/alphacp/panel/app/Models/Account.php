@@ -124,6 +124,11 @@ class Account extends Model
         return $this->hasOne(WebmailSetting::class);
     }
 
+    public function mysqlDatabases(): HasMany
+    {
+        return $this->hasMany(MysqlDatabase::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

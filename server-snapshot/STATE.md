@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.35.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.35.0   (.env)
-AGENT_VERSION : 0.31.0
+panel code    : 0.36.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.36.0   (.env)
+AGENT_VERSION : 0.32.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -67,15 +67,16 @@ agent-backup-20260930192045
 agent-backup-20261001090030
 agent-backup-20261001093302
 agent-backup-20261001100058
-panel-backup-20261001090030
+agent-backup-20261001152446
 panel-backup-20261001093302
 panel-backup-20261001100058
+panel-backup-20261001152446
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -147,6 +148,7 @@ alphacp:admin-password
   2026_09_29_000026_create_boxtrapper_settings_table   [25] Ran
   2026_09_29_000027_create_calendar_items_table   [26] Ran
   2026_09_29_000028_create_webmail_settings_table   [27] Ran
+  2026_09_29_000029_create_mysql_databases_table   [28] Ran
 ```
 
 ## Routes (web)
@@ -226,6 +228,9 @@ DELETE             /mailing-lists/{mailing_list}                 mailing-lists.d
 GET|HEAD           /mime                                         mime.index
 POST               /mime                                         mime.store
 DELETE             /mime/{ext}                                   mime.destroy
+GET|HEAD           /mysql                                        mysql.index
+POST               /mysql                                        mysql.store
+DELETE             /mysql/{mysql_database}                       mysql.destroy
 GET|HEAD           /packages                                     packages.index
 POST               /packages                                     packages.store
 GET|HEAD           /packages/create                              packages.create

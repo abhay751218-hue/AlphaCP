@@ -25,6 +25,7 @@ use App\Http\Controllers\BoxTrapperController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\EmailDiskUsageController;
 use App\Http\Controllers\WebmailController;
+use App\Http\Controllers\MysqlDatabasesController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -239,6 +240,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.view')->name('webmail.index');
     Route::post('/webmail', [WebmailController::class, 'store'])
         ->middleware('perm:email.manage')->name('webmail.store');
+
+    Route::get('/mysql', [MysqlDatabasesController::class, 'index'])
+        ->middleware('perm:databases.view')->name('mysql.index');
+    Route::post('/mysql', [MysqlDatabasesController::class, 'store'])
+        ->middleware('perm:databases.manage')->name('mysql.store');
+    Route::delete('/mysql/{mysql_database}', [MysqlDatabasesController::class, 'destroy'])
+        ->middleware('perm:databases.manage')->name('mysql.destroy');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');
