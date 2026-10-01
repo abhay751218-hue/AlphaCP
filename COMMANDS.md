@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.34.0 — Step 7: Email Disk Usage
+### panel-update 0.35.0 — Step 7: Webmail
 ```bash
-sudo alphacp-sync get 86b31efdb1e44791b5b1def18773decfff4bb33b installer/panel-update.sh /tmp/acp-panel-update-0.34.0.sh ce7fe4635cbf62eb0044a27b5db4e571b66ba95fc3c7caefa75d324e14c9f217 && sudo bash /tmp/acp-panel-update-0.34.0.sh
+sudo alphacp-sync get 035aae409bab051e0ae0a38597c881b485a3434c installer/panel-update.sh /tmp/acp-panel-update-0.35.0.sh 9bf3974692fc314eaac2e63c2f8dc07d9d065ee86137f224dbd83d31ceede018 && sudo bash /tmp/acp-panel-update-0.35.0.sh
 ```
-- sha256: `ce7fe4635cbf62eb0044a27b5db4e571b66ba95fc3c7caefa75d324e14c9f217`
-- Expected: banner `updater 0.34.0` → agent **0.30.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Email Disk Usage (`~/mail` walk). Symlink skip. Path `..`/pipe fail closed. Purge later.
-- WHM: Create Account / packages / user manager. Customer ko Email Disk Usage tile dikhega, WHM me nahi.
+- sha256: `9bf3974692fc314eaac2e63c2f8dc07d9d065ee86137f224dbd83d31ceede018`
+- Expected: banner `updater 0.35.0` → agent **0.31.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Webmail (roundcube/horde client JSON). Hostile client fail closed. No Roundcube/Horde install.
+- WHM: Create Account / packages / user manager. Customer ko Webmail tile dikhega, WHM me nahi.
 - Trial/password/APP_KEY nahi badalte.
-- Test: panel-tests **222/0**, provision-sim **61/61**, update-sim **119/119**.
+- Test: panel-tests **228/0**, provision-sim **62/62**, update-sim **121/121**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.34.0 (`86b31ef…`) → panel 0.34.0 + agent 0.30.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Email Disk Usage |
 | panel-update 0.33.0 (`7ba1223…`) → panel 0.33.0 + agent 0.29.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Calendar |
 | panel-update 0.32.0 (`8e19b70…`) → panel 0.32.0 + agent 0.28.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, BoxTrapper |
 | panel-update 0.31.0 (`8617eab…`) → panel 0.31.0 + agent 0.27.0 | 30 Sep | ✅ UPDATE COMPLETE, HTTP 200, Encryption |
