@@ -29,6 +29,7 @@ use App\Http\Controllers\MysqlDatabasesController;
 use App\Http\Controllers\MysqlWizardController;
 use App\Http\Controllers\PhpmyadminController;
 use App\Http\Controllers\RemoteMysqlController;
+use App\Http\Controllers\ZoneEditorController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -267,6 +268,13 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:databases.manage')->name('remote-mysql.store');
     Route::delete('/remote-mysql/{mysql_remote_host}', [RemoteMysqlController::class, 'destroy'])
         ->middleware('perm:databases.manage')->name('remote-mysql.destroy');
+
+    Route::get('/zone-editor', [ZoneEditorController::class, 'index'])
+        ->middleware('perm:dns.view')->name('zone-editor.index');
+    Route::post('/zone-editor', [ZoneEditorController::class, 'store'])
+        ->middleware('perm:dns.manage')->name('zone-editor.store');
+    Route::delete('/zone-editor/{dns_record}', [ZoneEditorController::class, 'destroy'])
+        ->middleware('perm:dns.manage')->name('zone-editor.destroy');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Zone Editor (1 Oct)** — A/CNAME/MX/TXT via `dns.zone`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.40.0**, agent **0.35.0**.
+  Tests: panel **258/0**, provision-sim **66/66**, update-sim **128/128** (pin in B).
+  Deploy via `panel-update.sh` 0.40.0.
 - **Step 8 Remote MySQL (1 Oct)** — access hosts via `db.remote`
   (`%`/IPv4/FQDN JSON; no mysql GRANT; pipe/path fail closed). Panel **0.39.0**, agent **0.34.0**.
   Tests: panel **252/0**, provision-sim **65/65**, update-sim **128/128**.

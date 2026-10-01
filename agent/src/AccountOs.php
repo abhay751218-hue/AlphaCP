@@ -664,6 +664,30 @@ final class AccountOs
         return $rows;
     }
 
+    /**
+     * @param  list<array{domain: string, name: string, type: string, value: string}> $rows
+     * @return list<array{domain: string, name: string, type: string, value: string}>
+     */
+    public function setZone(string $username, array $rows): array
+    {
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/dns');
+        if (is_link($dir)) {
+            throw new RuntimeException('dns conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/dns/zone.json');
+        if (is_link($file)) {
+            throw new RuntimeException('dns zone is a symlink');
+        }
+        $this->fs->write($file, Dns::zoneJson($rows), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('dns zone ' . count($rows) . " for {$username}");
+
+        return $rows;
+    }
+
     /** @return array{0:int,1:int} */
     private function passwdIds(string $username): array
     {
