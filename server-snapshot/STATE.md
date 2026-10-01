@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.39.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.39.0   (.env)
-AGENT_VERSION : 0.34.0
+panel code    : 0.40.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.40.0   (.env)
+AGENT_VERSION : 0.35.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -71,9 +71,10 @@ agent-backup-20261001152446
 agent-backup-20261001154551
 agent-backup-20261001162037
 agent-backup-20261001164344
-panel-backup-20261001154551
+agent-backup-20261001170804
 panel-backup-20261001162037
 panel-backup-20261001164344
+panel-backup-20261001170804
 panel-failed-20260928223644
 ```
 
@@ -154,6 +155,7 @@ alphacp:admin-password
   2026_09_29_000029_create_mysql_databases_table   [28] Ran
   2026_09_29_000030_create_phpmyadmin_settings_table   [29] Ran
   2026_09_29_000031_create_mysql_remote_hosts_table   [30] Ran
+  2026_09_29_000032_create_dns_records_table   [31] Ran
 ```
 
 ## Routes (web)
@@ -294,6 +296,9 @@ GET|HEAD           /users/{user}/edit                            users.edit
 POST               /users/{user}/password                        users.password
 GET|HEAD           /webmail                                      webmail.index
 POST               /webmail                                      webmail.store
+GET|HEAD           /zone-editor                                  zone-editor.index
+POST               /zone-editor                                  zone-editor.store
+DELETE             /zone-editor/{dns_record}                     zone-editor.destroy
 GET|HEAD           /{fallbackPlaceholder}                        
 ```
 

@@ -76,7 +76,7 @@ final class ModuleCatalog
                     ['name' => 'Addon Domains',  'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
                     ['name' => 'Aliases',        'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
                     ['name' => 'Redirects',      'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
-                    ['name' => 'Zone Editor',    'step' => 'S9', 'status' => 'step'],
+                    ['name' => 'Zone Editor',    'step' => 'S9', 'status' => 'live', 'route' => 'zone-editor.index'],
                 ],
             ],
             'databases' => [

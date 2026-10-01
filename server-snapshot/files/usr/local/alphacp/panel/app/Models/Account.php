@@ -139,6 +139,11 @@ class Account extends Model
         return $this->hasMany(MysqlRemoteHost::class);
     }
 
+    public function dnsRecords(): HasMany
+    {
+        return $this->hasMany(DnsRecord::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

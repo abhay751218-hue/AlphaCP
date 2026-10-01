@@ -534,6 +534,37 @@ return [
         ],
     ],
 
+    'dns.zone' => [
+        'handler'     => Tasks\ZoneSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write A/CNAME/MX/TXT records (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'records'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'records'  => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'name', 'type', 'value'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'name'   => ['type' => 'string', 'maxLength' => 63],
+                            'type'   => ['type' => 'string', 'enum' => ['A', 'CNAME', 'MX', 'TXT']],
+                            'value'  => ['type' => 'string', 'maxLength' => 255],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'mail.usage' => [
         'handler'     => Tasks\MailUsage::class,
         'safety'      => 'readonly',
