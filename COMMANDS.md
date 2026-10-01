@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.39.0 — Step 8: Remote MySQL
+### panel-update 0.40.0 — Step 9: Zone Editor
 ```bash
-sudo alphacp-sync get 32a37c83dd371c5794d09eb1f57a2d4243862686 installer/panel-update.sh /tmp/acp-panel-update-0.39.0.sh c2ec960b9953fa92f27a6490adaba28693bd022e597c45932ca57c5cf33d2f71 && sudo bash /tmp/acp-panel-update-0.39.0.sh
+sudo alphacp-sync get c93bd5cc1b4a7e369d4f66589d6883f240496eca installer/panel-update.sh /tmp/acp-panel-update-0.40.0.sh 876b2641223677159fcbe9feb6d566a5704a2a01bac207803fa51db865a4f178 && sudo bash /tmp/acp-panel-update-0.40.0.sh
 ```
-- sha256: `c2ec960b9953fa92f27a6490adaba28693bd022e597c45932ca57c5cf33d2f71`
-- Expected: banner `updater 0.39.0` → agent **0.34.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Remote MySQL (`%` / IPv4 / FQDN JSON). Hostile host fail closed. No mysql GRANT.
-- WHM: Create Account / packages / user manager. Customer sees Remote MySQL tile; WHM does not.
+- sha256: `876b2641223677159fcbe9feb6d566a5704a2a01bac207803fa51db865a4f178`
+- Expected: banner `updater 0.40.0` → agent **0.35.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Zone Editor (A/CNAME/MX/TXT JSON). Hostile name/value fail closed. No BIND rewrite.
+- WHM: Create Account / packages / user manager. Customer sees Zone Editor tile; WHM does not.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **252/0**, provision-sim **65/65**, update-sim **128/128**.
+- Test: panel-tests **258/0**, provision-sim **66/66**, update-sim **130/130**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.39.0 (`32a37c8…`) → panel 0.39.0 + agent 0.34.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Remote MySQL |
 | panel-update 0.38.0 (`67e6e74…`) → panel 0.38.0 + agent 0.33.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, phpMyAdmin |
 | panel-update 0.37.0 (`0b4e24a…`) → panel 0.37.0 + agent 0.32.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Database Wizard |
 | panel-update 0.36.0 (`2dc2f39…`) → panel 0.36.0 + agent 0.32.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, MySQL Databases |
