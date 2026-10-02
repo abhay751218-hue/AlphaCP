@@ -166,6 +166,7 @@ final class ModuleCatalog
                     ['name' => 'DNS Zone Manager',    'step' => 'S9',  'status' => 'live', 'route' => 'dns-zones.index'],
                     ['name' => 'Add / Delete a DNS Zone', 'step' => 'S9',  'status' => 'live', 'route' => 'dns-zones.index'],
                     ['name' => 'Add an A Entry for Your Hostname', 'step' => 'S9',  'status' => 'live', 'route' => 'hostname-a.index'],
+                    ['name' => 'Edit Zone Templates', 'step' => 'S9',  'status' => 'live', 'route' => 'zone-templates.index'],
                     ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'step'],
                     ['name' => 'Backup Config',       'step' => 'S10', 'status' => 'step'],
                     ['name' => 'Security Center',     'step' => 'S13', 'status' => 'step'],

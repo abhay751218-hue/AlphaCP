@@ -81,4 +81,34 @@ final class Dns
 
         return $type;
     }
+
+    public static function tryTemplateName(string $name): ?string
+    {
+        $name = strtolower(trim($name));
+        if (preg_match('/^[a-z][a-z0-9-]{0,31}$/', $name) !== 1) {
+            return null;
+        }
+        if (str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '|')) {
+            return null;
+        }
+
+        return $name;
+    }
+
+    public static function tryTemplateBody(string $body): ?string
+    {
+        $body = str_replace(["\r\n", "\r"], "\n", $body);
+        $body = trim($body);
+        if ($body === '' || strlen($body) > 2000) {
+            return null;
+        }
+        if (str_contains($body, '|') || str_contains($body, '..') || str_contains($body, '/')) {
+            return null;
+        }
+        if (preg_match('/^[A-Za-z0-9 %._:@\n\t-]+$/', $body) !== 1) {
+            return null;
+        }
+
+        return $body;
+    }
 }

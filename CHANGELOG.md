@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Zone Templates (1 Oct)** — WHM templates via `dns.templates`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.46.0**, agent **0.39.0**.
+  Tests: panel **291/0**, provision-sim **70/70**, update-sim **138/138** (pin in B).
+  Deploy via `panel-update.sh` 0.46.0.
 - **Step 9 Hostname A (1 Oct)** — WHM hostname A via `dns.hostname`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.45.0**, agent **0.38.0**.
   Tests: panel **285/0**, provision-sim **69/69**, update-sim **136/136** (pin in B).

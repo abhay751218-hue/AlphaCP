@@ -1082,6 +1082,34 @@ return [
         ],
     ],
 
+    'dns.templates' => [
+        'handler'     => Tasks\TemplatesSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write DNS zone templates (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['templates'],
+            'properties'           => [
+                'templates' => [
+                    'type'     => 'array',
+                    'maxItems' => 10,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['name', 'body'],
+                        'properties'           => [
+                            'name' => ['type' => 'string', 'maxLength' => 32],
+                            'body' => ['type' => 'string', 'maxLength' => 2000],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

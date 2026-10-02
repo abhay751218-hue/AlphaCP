@@ -6,6 +6,7 @@ namespace App\Support;
 
 use App\Models\Account;
 use App\Models\DnsRecord;
+use App\Models\DnsTemplate;
 
 final class DnsProvisioner
 {
@@ -43,6 +44,18 @@ final class DnsProvisioner
         return Paneld::enqueue('dns.hostname', [
             'hostname' => $hostname,
             'ip' => $ip,
+        ]);
+    }
+
+    public static function enqueueTemplates(): int
+    {
+        $rows = DnsTemplate::query()->orderBy('id')->get()->map(static fn (DnsTemplate $row): array => [
+            'name' => $row->name,
+            'body' => $row->body,
+        ])->values()->all();
+
+        return Paneld::enqueue('dns.templates', [
+            'templates' => $rows,
         ]);
     }
 }
