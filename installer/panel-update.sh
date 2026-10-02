@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.47.0  ·  default panel bundle 0.47.0  ·  agent 0.40.0  ·  alphacp-sync v1.2
+# updater 0.48.0  ·  default panel bundle 0.48.0  ·  agent 0.41.0  ·  alphacp-sync v1.2
+#
+# 0.48.0: Step 9 — panel 0.48.0 (NS Record Report) + agent 0.41.0 (dns.nsreport)
 #
 # 0.47.0: Step 9 — panel 0.47.0 (Global Email Routing) + agent 0.40.0 (mail.globalrouting)
 #
@@ -111,17 +113,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.47.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.47.0}"
+UPDATER_VERSION="0.48.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.48.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-74f2d5f766169cbb17cfcf6698bc66d085ea565e}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-041b2877d15465318be94ae724cf1b679af025c8}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-0bdfbc08dc937d9dd446eccfab968b30df5d41f41c76a6f220040c4c4dd92d03}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.40.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-74f2d5f766169cbb17cfcf6698bc66d085ea565e}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-88262c76561c8bc3a1db375edd7b0b66f01cecee9a91f1738b760080b5e84d16}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.41.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-041b2877d15465318be94ae724cf1b679af025c8}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-b1ed1538f8766072a14fefcf240ea923ac190b9111d19af15b0c76fce85d0e8c}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-0a1cc2bc5b0f700b6bbe4f97e641e7e1bd9ed111777cdf048fab6333ec4ae419}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
