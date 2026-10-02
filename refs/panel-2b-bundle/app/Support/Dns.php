@@ -126,4 +126,34 @@ final class Dns
 
         return $n;
     }
+
+    public static function tryForwardUrl(string $url): ?string
+    {
+        $url = trim($url);
+        if ($url === '' || strlen($url) > 255) {
+            return null;
+        }
+        if (str_contains($url, '|') || str_contains($url, '..') || str_contains($url, '\\') || str_contains($url, '@')) {
+            return null;
+        }
+        if (preg_match('#^https?://[a-z0-9](?:[a-z0-9.-]{0,189})(?:/[A-Za-z0-9._/-]{0,64})?$#', $url) !== 1) {
+            return null;
+        }
+
+        return $url;
+    }
+
+    public static function tryForwardCode(string $code): ?int
+    {
+        $code = trim($code);
+        if ($code === '' || ! ctype_digit($code)) {
+            return null;
+        }
+        $n = (int) $code;
+        if (! in_array($n, [301, 302], true)) {
+            return null;
+        }
+
+        return $n;
+    }
 }

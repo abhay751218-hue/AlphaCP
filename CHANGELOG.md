@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Domain Forwarding (2 Oct)** — WHM forward via `dns.forward`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.52.0**, agent **0.45.0**.
+  Tests: panel **327/0**, provision-sim **76/76**, update-sim **150/150** (pin in B).
+  Deploy via `panel-update.sh` 0.52.0.
 - **Step 9 Set Zone TTL (2 Oct)** — WHM TTL via `dns.ttl`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.51.0**, agent **0.44.0**.
   Tests: panel **321/0**, provision-sim **75/75**, update-sim **148/148** (pin in B).

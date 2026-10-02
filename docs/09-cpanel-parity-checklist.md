@@ -234,7 +234,7 @@
 | 135 | Park a Domain | S9 | ✅ (WHM park JSON; no BIND rewrite) |
 | 136 | Perform a DNS Cleanup | S9 | ✅ (WHM cleanup JSON; no BIND rewrite) |
 | 137 | Set Zone TTL | S9 | ✅ (WHM zone TTL JSON; no BIND rewrite) |
-| 138 | Setup/Edit Domain Forwarding | S9 | ⏳ S9 |
+| 138 | Setup/Edit Domain Forwarding | S9 | ✅ (WHM forward JSON; no BIND rewrite) |
 | 139 | Synchronize DNS Records | S9 | ⏳ S9 |
 | 140 | DNS Cluster | S15 | ⏳ S15 |
 

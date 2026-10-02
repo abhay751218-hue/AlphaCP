@@ -563,6 +563,82 @@ final class Dns
         return $json . "\n";
     }
 
+    public const MAX_FORWARD = 50;
+    public const FORWARD_CODES = [301, 302];
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{domain: string, url: string, code: int}>
+     */
+    public static function sanitizeForward(array $raw): array
+    {
+        if (count($raw) > self::MAX_FORWARD) {
+            throw new TaskRejectedException('too many domain forwards (50 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException('forward row must be an object');
+            }
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $url = self::normalizeForwardUrl((string) ($row['url'] ?? ''));
+            $code = self::normalizeForwardCode($row['code'] ?? null);
+            if (isset($seen[$domain])) {
+                throw new TaskRejectedException('duplicate domain forward');
+            }
+            $seen[$domain] = true;
+            $out[] = ['domain' => $domain, 'url' => $url, 'code' => $code];
+        }
+
+        return $out;
+    }
+
+    public static function normalizeForwardUrl(string $url): string
+    {
+        $url = trim($url);
+        if ($url === '' || strlen($url) > 255) {
+            throw new TaskRejectedException('invalid forward url');
+        }
+        if (str_contains($url, '|') || str_contains($url, '..') || str_contains($url, '\\') || str_contains($url, '@')) {
+            throw new TaskRejectedException('forward url path escape');
+        }
+        if (preg_match('#^https?://[a-z0-9](?:[a-z0-9.-]{0,189})(?:/[A-Za-z0-9._/-]{0,64})?$#', $url) !== 1) {
+            throw new TaskRejectedException('invalid forward url');
+        }
+
+        return $url;
+    }
+
+    public static function normalizeForwardCode(mixed $code): int
+    {
+        if (is_int($code)) {
+            $n = $code;
+        } elseif (is_string($code) && ctype_digit($code)) {
+            $n = (int) $code;
+        } else {
+            throw new TaskRejectedException('invalid forward code');
+        }
+        if (!in_array($n, self::FORWARD_CODES, true)) {
+            throw new TaskRejectedException('invalid forward code');
+        }
+
+        return $n;
+    }
+
+    /**
+     * @param  list<array{domain: string, url: string, code: int}> $rows
+     */
+    public static function forwardJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('dns json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
     /**
      * @param  list<array{domain: string, name: string, type: string, value: string}> $rows
      */
