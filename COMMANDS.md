@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.49.0 — Step 9: Park a Domain
+### panel-update 0.50.0 — Step 9: Perform a DNS Cleanup
 ```bash
-sudo alphacp-sync get a41d41a0116c4477e8db4157f2cc3d212164f918 installer/panel-update.sh /tmp/acp-panel-update-0.49.0.sh aae64aca503ef6d24e51600d01bc295c8d1bf32973df31b33afd1f43b049610b && sudo bash /tmp/acp-panel-update-0.49.0.sh
+sudo alphacp-sync get 4154c832424ae8ade5f17fa61c66e5e4b930ea67 installer/panel-update.sh /tmp/acp-panel-update-0.50.0.sh abc9eb41a43e6e280096bc855a45f75d9dfc1a7cc93f415698ffa3f62180171e && sudo bash /tmp/acp-panel-update-0.50.0.sh
 ```
-- sha256: `aae64aca503ef6d24e51600d01bc295c8d1bf32973df31b33afd1f43b049610b`
-- Expected: banner `updater 0.49.0` → agent **0.42.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Park a Domain (domain + target JSON). Hostile domain/target fail closed. No BIND rewrite.
+- sha256: `abc9eb41a43e6e280096bc855a45f75d9dfc1a7cc93f415698ffa3f62180171e`
+- Expected: banner `updater 0.50.0` → agent **0.43.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Perform a DNS Cleanup (domain JSON). Hostile domain fail closed. No BIND rewrite.
 - Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **309/0**, provision-sim **73/73**, update-sim **146/146**.
+- Test: panel-tests **315/0**, provision-sim **74/74**, update-sim **148/148**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.49.0 (`a41d41a…`) → panel 0.49.0 + agent 0.42.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Park a Domain |
 | panel-update 0.48.0 (`c3512a3…`) → panel 0.48.0 + agent 0.41.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Nameserver Record Report |
 | panel-update 0.47.0 (`f9ebf5c…`) → panel 0.47.0 + agent 0.40.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Email Routing Configuration |
 | panel-update 0.46.0 (`571bfe6…`) → panel 0.46.0 + agent 0.39.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Edit Zone Templates |
