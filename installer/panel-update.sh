@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.51.0  ·  default panel bundle 0.51.0  ·  agent 0.44.0  ·  alphacp-sync v1.2
+# updater 0.52.0  ·  default panel bundle 0.52.0  ·  agent 0.45.0  ·  alphacp-sync v1.2
+#
+# 0.52.0: Step 9 — panel 0.52.0 (Domain Forwarding) + agent 0.45.0 (dns.forward)
 #
 # 0.51.0: Step 9 — panel 0.51.0 (Set Zone TTL) + agent 0.44.0 (dns.ttl)
 #
@@ -119,17 +121,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.51.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.51.0}"
+UPDATER_VERSION="0.52.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.52.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-94ebe3ebfe51b36e7859d23423f9337889d389f7}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-84ce2ee51bcb340e901e5aa34481b61f162dd5d8}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-630f9f0ec7bda406139a531ddd4ddcb2c4efe152d2e780db821614f458ba3c81}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.44.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-94ebe3ebfe51b36e7859d23423f9337889d389f7}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-6631d1ea445410de31753c42fc329db4598cf4a50665d1f738a809f8ffb62552}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.45.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-84ce2ee51bcb340e901e5aa34481b61f162dd5d8}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-a0c977bc7fe8384517afb283d9c16e2425048a54dc9c41b203ec4a9c2d693a23}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-cdd7fe038d85ed25943a97b1f5bb56e5283b05c2edc91db8b8915a0338315ef1}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
