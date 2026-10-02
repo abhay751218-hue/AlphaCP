@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.47.0 — Step 9: Email Routing Configuration (global)
+### panel-update 0.48.0 — Step 9: Nameserver Record Report
 ```bash
-sudo alphacp-sync get f9ebf5c33fef1d04ba245402bd0cd448e8f8a8d6 installer/panel-update.sh /tmp/acp-panel-update-0.47.0.sh b650d8d0ddb01659ef078fa57ab4220b6254b5ca99e96af288e8ba08769ec85c && sudo bash /tmp/acp-panel-update-0.47.0.sh
+sudo alphacp-sync get c3512a35dcd7d549130c922df33b9c08cc5c210b installer/panel-update.sh /tmp/acp-panel-update-0.48.0.sh fa45172aca76a011270ad13bc4db4c26695fe5b61912ce84bbdb6a11cb0c339e && sudo bash /tmp/acp-panel-update-0.48.0.sh
 ```
-- sha256: `b650d8d0ddb01659ef078fa57ab4220b6254b5ca99e96af288e8ba08769ec85c`
-- Expected: banner `updater 0.47.0` → agent **0.40.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Email Routing Configuration (domain + mode JSON). Hostile domain/mode fail closed. No Exim rewrite.
+- sha256: `fa45172aca76a011270ad13bc4db4c26695fe5b61912ce84bbdb6a11cb0c339e`
+- Expected: banner `updater 0.48.0` → agent **0.41.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Nameserver Record Report (domain + nameserver JSON). Hostile domain/nameserver fail closed. No BIND rewrite.
 - Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **297/0**, provision-sim **71/71**, update-sim **142/142**.
+- Test: panel-tests **303/0**, provision-sim **72/72**, update-sim **144/144**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.47.0 (`f9ebf5c…`) → panel 0.47.0 + agent 0.40.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Email Routing Configuration |
 | panel-update 0.46.0 (`571bfe6…`) → panel 0.46.0 + agent 0.39.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Edit Zone Templates |
 | panel-update 0.45.0 (`b90627a…`) → panel 0.45.0 + agent 0.38.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Hostname A |
 | panel-update 0.44.0 (`45d19bf…`) → panel 0.44.0 + agent 0.37.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Add/Delete DNS Zone |
