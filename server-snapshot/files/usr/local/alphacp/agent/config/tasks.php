@@ -1166,6 +1166,34 @@ return [
         ],
     ],
 
+    'dns.park' => [
+        'handler'     => Tasks\ParkSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write parked domain map (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['parks'],
+            'properties'           => [
+                'parks' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'target'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'target' => ['type' => 'string', 'maxLength' => 190],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

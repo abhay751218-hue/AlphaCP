@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.48.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.48.0   (.env)
-AGENT_VERSION : 0.41.0
+panel code    : 0.49.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.49.0   (.env)
+AGENT_VERSION : 0.42.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -80,9 +80,10 @@ agent-backup-20261002022431
 agent-backup-20261002125039
 agent-backup-20261002141418
 agent-backup-20261002143910
-panel-backup-20261002125039
+agent-backup-20261002150351
 panel-backup-20261002141418
 panel-backup-20261002143910
+panel-backup-20261002150351
 panel-failed-20260928223644
 ```
 
@@ -169,6 +170,7 @@ alphacp:admin-password
   2026_09_29_000035_create_dns_templates_table   [34] Ran
   2026_09_29_000036_create_global_email_routes_table   [35] Ran
   2026_09_29_000037_create_ns_records_table   [36] Ran
+  2026_09_29_000038_create_parked_domains_table   [37] Ran
 ```
 
 ## Routes (web)
@@ -272,6 +274,8 @@ GET|HEAD           /packages/create                              packages.create
 PUT                /packages/{package}                           packages.update
 POST               /packages/{package}/archive                   packages.archive
 GET|HEAD           /packages/{package}/edit                      packages.edit
+GET|HEAD           /park-domain                                  park-domain.index
+POST               /park-domain                                  park-domain.store
 GET|HEAD           /php                                          php.index
 POST               /php                                          php.update
 GET|HEAD           /php/ini                                      php.ini
