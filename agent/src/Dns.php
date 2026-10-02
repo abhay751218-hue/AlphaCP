@@ -291,6 +291,18 @@ final class Dns
         ];
     }
 
+    public static function hostnameJson(string $hostname, string $ip): string
+    {
+        $hostname = self::normalizeDomain($hostname);
+        $ip = self::normalizeValue('A', $ip);
+        $json = json_encode(['hostname' => $hostname, 'ip' => $ip], JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('dns json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
     /**
      * @param  list<array{domain: string, name: string, type: string, value: string}> $rows
      */

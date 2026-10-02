@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Hostname A (1 Oct)** — WHM hostname A via `dns.hostname`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.45.0**, agent **0.38.0**.
+  Tests: panel **285/0**, provision-sim **69/69**, update-sim **136/136** (pin in B).
+  Deploy via `panel-update.sh` 0.45.0.
 - **Step 9 Add/Delete DNS Zone (1 Oct)** — WHM parked zone add/delete
   (reuses domain.add/remove + dns.zone; no BIND rewrite; pipe fail closed). Panel **0.44.0**, agent **0.37.0** (reuse).
   Tests: panel **279/0**, provision-sim **68/68**, update-sim **135/135** (pin in B).

@@ -1065,6 +1065,23 @@ return [
         ],
     ],
 
+    'dns.hostname' => [
+        'handler'     => Tasks\HostnameASet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write hostname A record (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['hostname', 'ip'],
+            'properties'           => [
+                'hostname' => ['type' => 'string', 'maxLength' => 190],
+                'ip'       => ['type' => 'string', 'maxLength' => 15],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

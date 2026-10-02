@@ -226,7 +226,7 @@
 |---|---|---|---|
 | 128 | DNS Zone Manager | S9 | ✅ (WHM list + dns.zone sync; no BIND rewrite) |
 | 129 | Add / Delete a DNS Zone | S9 | ✅ (WHM parked add/delete; domain.add/remove + dns.zone; no BIND) |
-| 130 | Add an A Entry for Your Hostname | S9 | ⏳ S9 |
+| 130 | Add an A Entry for Your Hostname | S9 | ✅ (WHM hostname A JSON; no BIND rewrite) |
 | 131 | Edit Zone Templates | S9 | ⏳ S9 |
 | 132 | Email Routing Configuration (global) | S9 | ⏳ S9 |
 | 133 | Enable DKIM/SPF Globally | S7 | ⏳ S7 |
