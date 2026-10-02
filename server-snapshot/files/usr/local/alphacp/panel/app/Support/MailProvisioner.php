@@ -11,6 +11,7 @@ use App\Models\Forwarder;
 use App\Models\Mailbox;
 use App\Models\MailFilter;
 use App\Models\EmailRoute;
+use App\Models\GlobalEmailRoute;
 use App\Models\BoxTrapperSetting;
 use App\Models\CalendarItem;
 use App\Models\WebmailSetting;
@@ -302,6 +303,18 @@ final class MailProvisioner
             'username' => $account->username,
             'enabled' => (bool) ($row?->enabled ?? false),
             'client' => (string) ($row?->client ?? 'roundcube'),
+        ]);
+    }
+
+    public static function enqueueGlobalRouting(): int
+    {
+        $rows = GlobalEmailRoute::query()->orderBy('id')->get()->map(static fn (GlobalEmailRoute $row): array => [
+            'domain' => $row->domain,
+            'mode' => $row->mode,
+        ])->values()->all();
+
+        return Paneld::enqueue('mail.globalrouting', [
+            'routes' => $rows,
         ]);
     }
 }

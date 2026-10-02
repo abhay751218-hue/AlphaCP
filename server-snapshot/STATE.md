@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.46.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.46.0   (.env)
-AGENT_VERSION : 0.39.0
+panel code    : 0.47.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.47.0   (.env)
+AGENT_VERSION : 0.40.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -78,15 +78,16 @@ agent-backup-20261002012915
 agent-backup-20261002020037
 agent-backup-20261002022431
 agent-backup-20261002125039
-panel-backup-20261002020037
+agent-backup-20261002141418
 panel-backup-20261002022431
 panel-backup-20261002125039
+panel-backup-20261002141418
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -165,6 +166,7 @@ alphacp:admin-password
   2026_09_29_000033_create_dns_dynamic_hosts_table   [32] Ran
   2026_09_29_000034_create_hostname_a_entries_table   [33] Ran
   2026_09_29_000035_create_dns_templates_table   [34] Ran
+  2026_09_29_000036_create_global_email_routes_table   [35] Ran
 ```
 
 ## Routes (web)
@@ -233,6 +235,8 @@ POST               /files/write                                  files.write
 GET|HEAD           /forwarders                                   forwarders.index
 POST               /forwarders                                   forwarders.store
 DELETE             /forwarders/{forwarder}                       forwarders.destroy
+GET|HEAD           /global-email-routing                         global-email-routing.index
+POST               /global-email-routing                         global-email-routing.store
 GET|HEAD           /global-filters                               global-filters.index
 POST               /global-filters                               global-filters.store
 DELETE             /global-filters/{global_filter}               global-filters.destroy

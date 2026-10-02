@@ -35,6 +35,7 @@ use App\Http\Controllers\TrackDnsController;
 use App\Http\Controllers\DnsZonesController;
 use App\Http\Controllers\HostnameAController;
 use App\Http\Controllers\ZoneTemplatesController;
+use App\Http\Controllers\GlobalEmailRoutingController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -313,6 +314,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('zone-templates.store');
     Route::delete('/zone-templates/{dns_template}', [ZoneTemplatesController::class, 'destroy'])
         ->middleware('perm:accounts.view')->name('zone-templates.destroy');
+
+    Route::get('/global-email-routing', [GlobalEmailRoutingController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('global-email-routing.index');
+    Route::post('/global-email-routing', [GlobalEmailRoutingController::class, 'store'])
+        ->middleware('perm:accounts.view')->name('global-email-routing.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');
