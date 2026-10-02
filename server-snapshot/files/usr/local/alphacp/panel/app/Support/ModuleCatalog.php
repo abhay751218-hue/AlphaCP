@@ -163,6 +163,7 @@ final class ModuleCatalog
                     ['name' => 'Packages',            'step' => 'S4',  'status' => 'live', 'route' => 'packages.index'],
                     ['name' => 'Create Account',      'step' => 'S3',  'status' => 'live', 'route' => 'accounts.create'],
                     ['name' => 'List Accounts',       'step' => 'S3',  'status' => 'live', 'route' => 'accounts.index'],
+                    ['name' => 'DNS Zone Manager',    'step' => 'S9',  'status' => 'live', 'route' => 'dns-zones.index'],
                     ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'step'],
                     ['name' => 'Backup Config',       'step' => 'S10', 'status' => 'step'],
                     ['name' => 'Security Center',     'step' => 'S13', 'status' => 'step'],

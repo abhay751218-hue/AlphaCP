@@ -69,7 +69,7 @@ class DomainsController extends Controller
         }
         if (DomainProvisioner::limitReached($account, $type)) {
             $key = DomainProvisioner::LIMIT_KEY[$type];
-            return back()->withErrors(['domain' => "Package limit poori ({$key})."])->withInput();
+            return back()->withErrors(['domain' => "Package limit reached ({$key})."])->withInput();
         }
 
         $docroot = DomainProvisioner::docrootFor($account, $type, $fqdn);

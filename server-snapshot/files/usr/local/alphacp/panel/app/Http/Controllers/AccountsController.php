@@ -56,7 +56,7 @@ class AccountsController extends Controller
         $gate = AccountProvisioner::licenseGate($license);
         if (! $gate['ok']) {
             $message = $gate['reason'] === 'cap'
-                ? 'License account limit poori ho gayi (max_accounts).'
+                ? 'License account limit reached (max_accounts).'
                 : 'License/trial has new accounts paused — customer sites stay up.';
             return back()->withErrors(['username' => $message])->withInput();
         }
@@ -74,13 +74,13 @@ class AccountsController extends Controller
         $domain = strtolower($data['main_domain']);
 
         if (AccountIdentity::isReserved($username)) {
-            return back()->withErrors(['username' => 'Ye username reserved hai.'])->withInput();
+            return back()->withErrors(['username' => 'This username is reserved.'])->withInput();
         }
         if (User::query()->where('username', $username)->exists()) {
-            return back()->withErrors(['username' => 'Panel user is naam se already exists.'])->withInput();
+            return back()->withErrors(['username' => 'A panel user with this name already exists.'])->withInput();
         }
         if (Account::query()->where('username', $username)->exists()) {
-            return back()->withErrors(['username' => 'Hosting account is naam se already exists.'])->withInput();
+            return back()->withErrors(['username' => 'A hosting account with this name already exists.'])->withInput();
         }
         if (Account::query()->where('main_domain', $domain)->exists()) {
             return back()->withErrors(['main_domain' => 'This domain is already on an account.'])->withInput();

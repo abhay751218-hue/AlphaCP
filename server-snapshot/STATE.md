@@ -17,8 +17,8 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.42.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.42.0   (.env)
+panel code    : 0.43.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.43.0   (.env)
 AGENT_VERSION : 0.37.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
@@ -74,15 +74,16 @@ agent-backup-20261001164344
 agent-backup-20261001170804
 agent-backup-20261001173623
 agent-backup-20261001180257
-panel-backup-20261001170804
+agent-backup-20261002012915
 panel-backup-20261001173623
 panel-backup-20261001180257
+panel-backup-20261002012915
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -195,6 +196,8 @@ DELETE             /default-address/{catchall}                   default-address
 GET|HEAD           /deliverability                               deliverability.index
 POST               /deliverability                               deliverability.store
 GET|HEAD           /disk                                         disk.index
+GET|HEAD           /dns-zones                                    dns-zones.index
+POST               /dns-zones/{account}/sync                     dns-zones.sync
 GET|HEAD           /domains                                      domains.index
 POST               /domains                                      domains.store
 DELETE             /domains/{domain}                             domains.destroy
