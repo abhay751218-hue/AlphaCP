@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.45.0 — Step 9: Add an A Entry for Your Hostname
+### panel-update 0.46.0 — Step 9: Edit Zone Templates
 ```bash
-sudo alphacp-sync get b90627ade87151d7ec1e0f0b62c37afc8fcbfed3 installer/panel-update.sh /tmp/acp-panel-update-0.45.0.sh fab93ee095e2b7f9a1d9c98a8c34340d03b8dd9a7111a1be765c59b6a4e489c1 && sudo bash /tmp/acp-panel-update-0.45.0.sh
+sudo alphacp-sync get 571bfe673333013c3c51c07b82c5ff7bc35d004c installer/panel-update.sh /tmp/acp-panel-update-0.46.0.sh 3fd852dac696013618ed9f381f3e1776960213e2c37ec64672170e11a950fb14 && sudo bash /tmp/acp-panel-update-0.46.0.sh
 ```
-- sha256: `fab93ee095e2b7f9a1d9c98a8c34340d03b8dd9a7111a1be765c59b6a4e489c1`
-- Expected: banner `updater 0.45.0` → agent **0.38.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Hostname A (FQDN + IPv4 JSON). Hostile hostname/IP fail closed. No BIND rewrite.
+- sha256: `3fd852dac696013618ed9f381f3e1776960213e2c37ec64672170e11a950fb14`
+- Expected: banner `updater 0.46.0` → agent **0.39.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Edit Zone Templates (name + body JSON). Hostile name/body fail closed. No BIND rewrite.
 - Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **285/0**, provision-sim **69/69**, update-sim **138/138**.
+- Test: panel-tests **291/0**, provision-sim **70/70**, update-sim **140/140**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.45.0 (`b90627a…`) → panel 0.45.0 + agent 0.38.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Hostname A |
 | panel-update 0.44.0 (`45d19bf…`) → panel 0.44.0 + agent 0.37.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Add/Delete DNS Zone |
 | panel-update 0.43.0 (`976fee2…`) → panel 0.43.0 + agent 0.37.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, DNS Zone Manager |
 | panel-update 0.42.0 (`5027974…`) → panel 0.42.0 + agent 0.37.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Track DNS |
