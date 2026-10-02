@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.44.0 — Step 9: Add / Delete a DNS Zone
+### panel-update 0.45.0 — Step 9: Add an A Entry for Your Hostname
 ```bash
-sudo alphacp-sync get 45d19bf7bf9dee691f341dd97d668c3e3d53948f installer/panel-update.sh /tmp/acp-panel-update-0.44.0.sh b19296a216713a265f90f1b19732146ca5fd56d7563fe3eb0797282b0252d502 && sudo bash /tmp/acp-panel-update-0.44.0.sh
+sudo alphacp-sync get b90627ade87151d7ec1e0f0b62c37afc8fcbfed3 installer/panel-update.sh /tmp/acp-panel-update-0.45.0.sh fab93ee095e2b7f9a1d9c98a8c34340d03b8dd9a7111a1be765c59b6a4e489c1 && sudo bash /tmp/acp-panel-update-0.45.0.sh
 ```
-- sha256: `b19296a216713a265f90f1b19732146ca5fd56d7563fe3eb0797282b0252d502`
-- Expected: banner `updater 0.44.0` → agent **0.37.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Add/Delete DNS Zone (parked add + domain.remove; dns.zone). Hostile FQDN fail closed. No BIND rewrite. Main zone cannot be deleted.
+- sha256: `fab93ee095e2b7f9a1d9c98a8c34340d03b8dd9a7111a1be765c59b6a4e489c1`
+- Expected: banner `updater 0.45.0` → agent **0.38.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Hostname A (FQDN + IPv4 JSON). Hostile hostname/IP fail closed. No BIND rewrite.
 - Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **279/0**, provision-sim **68/68**, update-sim **136/136**.
+- Test: panel-tests **285/0**, provision-sim **69/69**, update-sim **138/138**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.44.0 (`45d19bf…`) → panel 0.44.0 + agent 0.37.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Add/Delete DNS Zone |
 | panel-update 0.43.0 (`976fee2…`) → panel 0.43.0 + agent 0.37.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, DNS Zone Manager |
 | panel-update 0.42.0 (`5027974…`) → panel 0.42.0 + agent 0.37.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Track DNS |
 | panel-update 0.41.0 (`8fba292…`) → panel 0.41.0 + agent 0.36.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Dynamic DNS |
