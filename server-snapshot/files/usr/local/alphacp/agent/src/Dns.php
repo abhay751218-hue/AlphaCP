@@ -463,6 +463,47 @@ final class Dns
         return $json . "\n";
     }
 
+    public const MAX_CLEANUP = 50;
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<string>
+     */
+    public static function sanitizeCleanup(array $raw): array
+    {
+        if (count($raw) > self::MAX_CLEANUP) {
+            throw new TaskRejectedException('too many cleanup domains (50 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $item) {
+            if (is_array($item)) {
+                $item = (string) ($item['domain'] ?? '');
+            }
+            $domain = self::normalizeDomain((string) $item);
+            if (isset($seen[$domain])) {
+                throw new TaskRejectedException('duplicate cleanup domain');
+            }
+            $seen[$domain] = true;
+            $out[] = $domain;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  list<string> $rows
+     */
+    public static function cleanupJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('dns json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
     /**
      * @param  list<array{domain: string, name: string, type: string, value: string}> $rows
      */

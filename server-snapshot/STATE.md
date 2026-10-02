@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.49.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.49.0   (.env)
-AGENT_VERSION : 0.42.0
+panel code    : 0.50.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.50.0   (.env)
+AGENT_VERSION : 0.43.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -81,15 +81,16 @@ agent-backup-20261002125039
 agent-backup-20261002141418
 agent-backup-20261002143910
 agent-backup-20261002150351
-panel-backup-20261002141418
+agent-backup-20261002152927
 panel-backup-20261002143910
 panel-backup-20261002150351
+panel-backup-20261002152927
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -171,6 +172,7 @@ alphacp:admin-password
   2026_09_29_000036_create_global_email_routes_table   [35] Ran
   2026_09_29_000037_create_ns_records_table   [36] Ran
   2026_09_29_000038_create_parked_domains_table   [37] Ran
+  2026_09_29_000039_create_dns_cleanups_table   [38] Ran
 ```
 
 ## Routes (web)
@@ -207,6 +209,8 @@ DELETE             /default-address/{catchall}                   default-address
 GET|HEAD           /deliverability                               deliverability.index
 POST               /deliverability                               deliverability.store
 GET|HEAD           /disk                                         disk.index
+GET|HEAD           /dns-cleanup                                  dns-cleanup.index
+POST               /dns-cleanup                                  dns-cleanup.store
 GET|HEAD           /dns-zones                                    dns-zones.index
 POST               /dns-zones                                    dns-zones.store
 DELETE             /dns-zones                                    dns-zones.destroy

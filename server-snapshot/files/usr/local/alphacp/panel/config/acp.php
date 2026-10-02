@@ -10,8 +10,8 @@ declare(strict_types=1);
  */
 return [
     // Panel + agent versions (shown in the UI footer and system page)
-    'version'       => env('ACP_VERSION', '0.49.0'),
-    'agent_version' => env('ACP_AGENT_VERSION', '0.42.0'),
+    'version'       => env('ACP_VERSION', '0.50.0'),
+    'agent_version' => env('ACP_AGENT_VERSION', '0.43.0'),
 
     // AlphaCP install root (agent, etc/, logs/, panel/)
     'home'          => rtrim((string) env('ACP_HOME', '/usr/local/alphacp'), '/'),
