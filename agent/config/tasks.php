@@ -1110,6 +1110,34 @@ return [
         ],
     ],
 
+    'mail.globalrouting' => [
+        'handler'     => Tasks\GlobalRoutingSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write WHM global email routing (JSON; no Exim rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['routes'],
+            'properties'           => [
+                'routes' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'mode'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'mode'   => ['type' => 'string', 'maxLength' => 16],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

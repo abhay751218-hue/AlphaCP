@@ -264,4 +264,14 @@ final class Mail
             'quota_mb' => $quota,
         ];
     }
+
+    public static function tryRoutingMode(string $mode): ?string
+    {
+        $mode = strtolower(trim($mode));
+        if (! in_array($mode, ['auto', 'local', 'backup', 'remote'], true)) {
+            return null;
+        }
+
+        return $mode;
+    }
 }

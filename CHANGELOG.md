@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Global Email Routing (2 Oct)** — WHM routing via `mail.globalrouting`
+  (JSON; no Exim rewrite; pipe/path fail closed). Panel **0.47.0**, agent **0.40.0**.
+  Tests: panel **297/0**, provision-sim **71/71**, update-sim **140/140** (pin in B).
+  Deploy via `panel-update.sh` 0.47.0.
 - **Step 9 Zone Templates (1 Oct)** — WHM templates via `dns.templates`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.46.0**, agent **0.39.0**.
   Tests: panel **291/0**, provision-sim **70/70**, update-sim **138/138** (pin in B).

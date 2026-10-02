@@ -228,7 +228,7 @@
 | 129 | Add / Delete a DNS Zone | S9 | ✅ (WHM parked add/delete; domain.add/remove + dns.zone; no BIND) |
 | 130 | Add an A Entry for Your Hostname | S9 | ✅ (WHM hostname A JSON; no BIND rewrite) |
 | 131 | Edit Zone Templates | S9 | ✅ (WHM templates JSON; no BIND rewrite) |
-| 132 | Email Routing Configuration (global) | S9 | ⏳ S9 |
+| 132 | Email Routing Configuration (global) | S9 | ✅ (WHM global MX JSON; no Exim rewrite) |
 | 133 | Enable DKIM/SPF Globally | S7 | ⏳ S7 |
 | 134 | Nameserver Record Report | S9 | ⏳ S9 |
 | 135 | Park a Domain | S9 | ⏳ S9 |
