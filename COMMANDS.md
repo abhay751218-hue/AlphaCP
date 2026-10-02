@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.51.0 — Step 9: Set Zone TTL
+### panel-update 0.52.0 — Step 9: Setup/Edit Domain Forwarding
 ```bash
-sudo alphacp-sync get 60bdca4f6cbefcd8f40d8e47f8bfe59462753f5a installer/panel-update.sh /tmp/acp-panel-update-0.51.0.sh 384f9eb0fd7876a2b5e7ab740e6ecd487e8773ba9ba94a41b25534723afbb9ef && sudo bash /tmp/acp-panel-update-0.51.0.sh
+sudo alphacp-sync get 2ba0e827026236b90b39e08f633ef46d4082d6c7 installer/panel-update.sh /tmp/acp-panel-update-0.52.0.sh 0c3494b5ba99b8ec81f2ec473cfffdd8d1d4ed18fd245bce23c725844fcaf7e3 && sudo bash /tmp/acp-panel-update-0.52.0.sh
 ```
-- sha256: `384f9eb0fd7876a2b5e7ab740e6ecd487e8773ba9ba94a41b25534723afbb9ef`
-- Expected: banner `updater 0.51.0` → agent **0.44.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Set Zone TTL (domain + TTL JSON). Hostile domain/TTL fail closed. No BIND rewrite.
+- sha256: `0c3494b5ba99b8ec81f2ec473cfffdd8d1d4ed18fd245bce23c725844fcaf7e3`
+- Expected: banner `updater 0.52.0` → agent **0.45.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Setup/Edit Domain Forwarding (domain + URL + 301/302 JSON). Hostile domain/URL fail closed. No BIND rewrite.
 - Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **321/0**, provision-sim **75/75**, update-sim **150/150**.
+- Test: panel-tests **327/0**, provision-sim **76/76**, update-sim **152/152**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.51.0 (`60bdca4…`) → panel 0.51.0 + agent 0.44.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Set Zone TTL |
 | panel-update 0.50.0 (`4154c83…`) → panel 0.50.0 + agent 0.43.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Perform a DNS Cleanup |
 | panel-update 0.49.0 (`a41d41a…`) → panel 0.49.0 + agent 0.42.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Park a Domain |
 | panel-update 0.48.0 (`c3512a3…`) → panel 0.48.0 + agent 0.41.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Nameserver Record Report |
