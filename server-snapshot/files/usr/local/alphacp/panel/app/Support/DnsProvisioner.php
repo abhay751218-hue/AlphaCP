@@ -10,6 +10,7 @@ use App\Models\DnsTemplate;
 use App\Models\NsRecord;
 use App\Models\ParkedDomain;
 use App\Models\DnsCleanup;
+use App\Models\ZoneTtl;
 
 final class DnsProvisioner
 {
@@ -92,6 +93,18 @@ final class DnsProvisioner
 
         return Paneld::enqueue('dns.cleanup', [
             'domains' => $rows,
+        ]);
+    }
+
+    public static function enqueueTtl(): int
+    {
+        $rows = ZoneTtl::query()->orderBy('id')->get()->map(static fn (ZoneTtl $row): array => [
+            'domain' => $row->domain,
+            'ttl' => (int) $row->ttl,
+        ])->values()->all();
+
+        return Paneld::enqueue('dns.ttl', [
+            'zones' => $rows,
         ]);
     }
 }

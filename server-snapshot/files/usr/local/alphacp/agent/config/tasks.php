@@ -1214,6 +1214,34 @@ return [
         ],
     ],
 
+    'dns.ttl' => [
+        'handler'     => Tasks\TtlSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write zone TTL map (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['zones'],
+            'properties'           => [
+                'zones' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'ttl'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'ttl'    => ['type' => 'integer', 'minimum' => 60, 'maximum' => 86400],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

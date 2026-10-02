@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.50.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.50.0   (.env)
-AGENT_VERSION : 0.43.0
+panel code    : 0.51.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.51.0   (.env)
+AGENT_VERSION : 0.44.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -82,15 +82,16 @@ agent-backup-20261002141418
 agent-backup-20261002143910
 agent-backup-20261002150351
 agent-backup-20261002152927
-panel-backup-20261002143910
+agent-backup-20261002174752
 panel-backup-20261002150351
 panel-backup-20261002152927
+panel-backup-20261002174752
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -173,6 +174,7 @@ alphacp:admin-password
   2026_09_29_000037_create_ns_records_table   [36] Ran
   2026_09_29_000038_create_parked_domains_table   [37] Ran
   2026_09_29_000039_create_dns_cleanups_table   [38] Ran
+  2026_09_29_000040_create_zone_ttls_table   [39] Ran
 ```
 
 ## Routes (web)
@@ -338,6 +340,8 @@ DELETE             /zone-editor/{dns_record}                     zone-editor.des
 GET|HEAD           /zone-templates                               zone-templates.index
 POST               /zone-templates                               zone-templates.store
 DELETE             /zone-templates/{dns_template}                zone-templates.destroy
+GET|HEAD           /zone-ttl                                     zone-ttl.index
+POST               /zone-ttl                                     zone-ttl.store
 GET|HEAD           /{fallbackPlaceholder}                        
 ```
 

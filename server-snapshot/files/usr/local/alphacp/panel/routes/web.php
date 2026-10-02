@@ -39,6 +39,7 @@ use App\Http\Controllers\GlobalEmailRoutingController;
 use App\Http\Controllers\NsReportController;
 use App\Http\Controllers\ParkDomainController;
 use App\Http\Controllers\DnsCleanupController;
+use App\Http\Controllers\ZoneTtlController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -337,6 +338,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('dns-cleanup.index');
     Route::post('/dns-cleanup', [DnsCleanupController::class, 'store'])
         ->middleware('perm:accounts.view')->name('dns-cleanup.store');
+
+    Route::get('/zone-ttl', [ZoneTtlController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('zone-ttl.index');
+    Route::post('/zone-ttl', [ZoneTtlController::class, 'store'])
+        ->middleware('perm:accounts.view')->name('zone-ttl.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

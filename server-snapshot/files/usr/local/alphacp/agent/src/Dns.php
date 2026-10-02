@@ -504,6 +504,65 @@ final class Dns
         return $json . "\n";
     }
 
+    public const MAX_TTL = 50;
+    public const TTLS = [60, 300, 3600, 14400, 86400];
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{domain: string, ttl: int}>
+     */
+    public static function sanitizeTtl(array $raw): array
+    {
+        if (count($raw) > self::MAX_TTL) {
+            throw new TaskRejectedException('too many zone ttl rows (50 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException('ttl row must be an object');
+            }
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $ttl = self::normalizeTtl($row['ttl'] ?? null);
+            if (isset($seen[$domain])) {
+                throw new TaskRejectedException('duplicate zone ttl');
+            }
+            $seen[$domain] = true;
+            $out[] = ['domain' => $domain, 'ttl' => $ttl];
+        }
+
+        return $out;
+    }
+
+    public static function normalizeTtl(mixed $ttl): int
+    {
+        if (is_int($ttl)) {
+            $n = $ttl;
+        } elseif (is_string($ttl) && ctype_digit($ttl)) {
+            $n = (int) $ttl;
+        } else {
+            throw new TaskRejectedException('invalid zone ttl');
+        }
+        if (!in_array($n, self::TTLS, true)) {
+            throw new TaskRejectedException('invalid zone ttl');
+        }
+
+        return $n;
+    }
+
+    /**
+     * @param  list<array{domain: string, ttl: int}> $rows
+     */
+    public static function ttlJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('dns json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
     /**
      * @param  list<array{domain: string, name: string, type: string, value: string}> $rows
      */
