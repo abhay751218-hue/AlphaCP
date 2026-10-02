@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.50.0 — Step 9: Perform a DNS Cleanup
+### panel-update 0.51.0 — Step 9: Set Zone TTL
 ```bash
-sudo alphacp-sync get 4154c832424ae8ade5f17fa61c66e5e4b930ea67 installer/panel-update.sh /tmp/acp-panel-update-0.50.0.sh abc9eb41a43e6e280096bc855a45f75d9dfc1a7cc93f415698ffa3f62180171e && sudo bash /tmp/acp-panel-update-0.50.0.sh
+sudo alphacp-sync get 60bdca4f6cbefcd8f40d8e47f8bfe59462753f5a installer/panel-update.sh /tmp/acp-panel-update-0.51.0.sh 384f9eb0fd7876a2b5e7ab740e6ecd487e8773ba9ba94a41b25534723afbb9ef && sudo bash /tmp/acp-panel-update-0.51.0.sh
 ```
-- sha256: `abc9eb41a43e6e280096bc855a45f75d9dfc1a7cc93f415698ffa3f62180171e`
-- Expected: banner `updater 0.50.0` → agent **0.43.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Perform a DNS Cleanup (domain JSON). Hostile domain fail closed. No BIND rewrite.
+- sha256: `384f9eb0fd7876a2b5e7ab740e6ecd487e8773ba9ba94a41b25534723afbb9ef`
+- Expected: banner `updater 0.51.0` → agent **0.44.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Set Zone TTL (domain + TTL JSON). Hostile domain/TTL fail closed. No BIND rewrite.
 - Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **315/0**, provision-sim **74/74**, update-sim **148/148**.
+- Test: panel-tests **321/0**, provision-sim **75/75**, update-sim **150/150**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.50.0 (`4154c83…`) → panel 0.50.0 + agent 0.43.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Perform a DNS Cleanup |
 | panel-update 0.49.0 (`a41d41a…`) → panel 0.49.0 + agent 0.42.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Park a Domain |
 | panel-update 0.48.0 (`c3512a3…`) → panel 0.48.0 + agent 0.41.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Nameserver Record Report |
 | panel-update 0.47.0 (`f9ebf5c…`) → panel 0.47.0 + agent 0.40.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Email Routing Configuration |
