@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.43.0 — Step 9: DNS Zone Manager
+### panel-update 0.44.0 — Step 9: Add / Delete a DNS Zone
 ```bash
-sudo alphacp-sync get 976fee27e0aab256bff6628d05fd26a9dc6c681a installer/panel-update.sh /tmp/acp-panel-update-0.43.0.sh 05f39920080f66ca7ca91f1c62dcbd33a92bfcecaac29efe0531780c452529f0 && sudo bash /tmp/acp-panel-update-0.43.0.sh
+sudo alphacp-sync get 45d19bf7bf9dee691f341dd97d668c3e3d53948f installer/panel-update.sh /tmp/acp-panel-update-0.44.0.sh b19296a216713a265f90f1b19732146ca5fd56d7563fe3eb0797282b0252d502 && sudo bash /tmp/acp-panel-update-0.44.0.sh
 ```
-- sha256: `05f39920080f66ca7ca91f1c62dcbd33a92bfcecaac29efe0531780c452529f0`
-- Expected: banner `updater 0.43.0` → agent **0.37.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: DNS Zone Manager (account zone list + dns.zone sync). Hostile filter fail closed. No BIND rewrite.
-- Customer cPanel: Track DNS / Zone Editor / Dynamic DNS. Customer does not see DNS Zone Manager.
+- sha256: `b19296a216713a265f90f1b19732146ca5fd56d7563fe3eb0797282b0252d502`
+- Expected: banner `updater 0.44.0` → agent **0.37.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Add/Delete DNS Zone (parked add + domain.remove; dns.zone). Hostile FQDN fail closed. No BIND rewrite. Main zone cannot be deleted.
+- Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **276/0**, provision-sim **68/68**, update-sim **135/135**.
+- Test: panel-tests **279/0**, provision-sim **68/68**, update-sim **136/136**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.43.0 (`976fee2…`) → panel 0.43.0 + agent 0.37.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, DNS Zone Manager |
 | panel-update 0.42.0 (`5027974…`) → panel 0.42.0 + agent 0.37.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Track DNS |
 | panel-update 0.41.0 (`8fba292…`) → panel 0.41.0 + agent 0.36.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Dynamic DNS |
 | panel-update 0.40.0 (`c93bd5c…`) → panel 0.40.0 + agent 0.35.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Zone Editor |
