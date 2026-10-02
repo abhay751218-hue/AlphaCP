@@ -7,6 +7,7 @@ namespace App\Support;
 use App\Models\Account;
 use App\Models\DnsRecord;
 use App\Models\DnsTemplate;
+use App\Models\NsRecord;
 
 final class DnsProvisioner
 {
@@ -56,6 +57,18 @@ final class DnsProvisioner
 
         return Paneld::enqueue('dns.templates', [
             'templates' => $rows,
+        ]);
+    }
+
+    public static function enqueueNsReport(): int
+    {
+        $rows = NsRecord::query()->orderBy('id')->get()->map(static fn (NsRecord $row): array => [
+            'domain' => $row->domain,
+            'nameserver' => $row->nameserver,
+        ])->values()->all();
+
+        return Paneld::enqueue('dns.nsreport', [
+            'records' => $rows,
         ]);
     }
 }

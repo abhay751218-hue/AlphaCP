@@ -1138,6 +1138,34 @@ return [
         ],
     ],
 
+    'dns.nsreport' => [
+        'handler'     => Tasks\NsReportSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write nameserver record report (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['records'],
+            'properties'           => [
+                'records' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'nameserver'],
+                        'properties'           => [
+                            'domain'     => ['type' => 'string', 'maxLength' => 190],
+                            'nameserver' => ['type' => 'string', 'maxLength' => 190],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

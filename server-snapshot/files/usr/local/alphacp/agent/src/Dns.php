@@ -375,6 +375,49 @@ final class Dns
         return $json . "\n";
     }
 
+    public const MAX_NS_REPORT = 50;
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{domain: string, nameserver: string}>
+     */
+    public static function sanitizeNsReport(array $raw): array
+    {
+        if (count($raw) > self::MAX_NS_REPORT) {
+            throw new TaskRejectedException('too many ns report rows (50 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException('ns report row must be an object');
+            }
+            $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
+            $nameserver = self::normalizeDomain((string) ($row['nameserver'] ?? ''));
+            $key = $domain . '|' . $nameserver;
+            if (isset($seen[$key])) {
+                throw new TaskRejectedException('duplicate ns report row');
+            }
+            $seen[$key] = true;
+            $out[] = ['domain' => $domain, 'nameserver' => $nameserver];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  list<array{domain: string, nameserver: string}> $rows
+     */
+    public static function nsReportJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('dns json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
     /**
      * @param  list<array{domain: string, name: string, type: string, value: string}> $rows
      */

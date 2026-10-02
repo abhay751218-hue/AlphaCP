@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.47.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.47.0   (.env)
-AGENT_VERSION : 0.40.0
+panel code    : 0.48.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.48.0   (.env)
+AGENT_VERSION : 0.41.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -79,9 +79,10 @@ agent-backup-20261002020037
 agent-backup-20261002022431
 agent-backup-20261002125039
 agent-backup-20261002141418
-panel-backup-20261002022431
+agent-backup-20261002143910
 panel-backup-20261002125039
 panel-backup-20261002141418
+panel-backup-20261002143910
 panel-failed-20260928223644
 ```
 
@@ -167,6 +168,7 @@ alphacp:admin-password
   2026_09_29_000034_create_hostname_a_entries_table   [33] Ran
   2026_09_29_000035_create_dns_templates_table   [34] Ran
   2026_09_29_000036_create_global_email_routes_table   [35] Ran
+  2026_09_29_000037_create_ns_records_table   [36] Ran
 ```
 
 ## Routes (web)
@@ -262,6 +264,8 @@ POST               /mysql                                        mysql.store
 GET|HEAD           /mysql-wizard                                 mysql-wizard.index
 POST               /mysql-wizard                                 mysql-wizard.store
 DELETE             /mysql/{mysql_database}                       mysql.destroy
+GET|HEAD           /ns-report                                    ns-report.index
+POST               /ns-report                                    ns-report.store
 GET|HEAD           /packages                                     packages.index
 POST               /packages                                     packages.store
 GET|HEAD           /packages/create                              packages.create
