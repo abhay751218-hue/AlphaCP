@@ -303,6 +303,78 @@ final class Dns
         return $json . "\n";
     }
 
+    public const MAX_TEMPLATES = 10;
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{name: string, body: string}>
+     */
+    public static function sanitizeTemplates(array $raw): array
+    {
+        if (count($raw) > self::MAX_TEMPLATES) {
+            throw new TaskRejectedException('too many zone templates (10 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException('template row must be an object');
+            }
+            $name = self::normalizeTemplateName((string) ($row['name'] ?? ''));
+            $body = self::normalizeTemplateBody((string) ($row['body'] ?? ''));
+            if (isset($seen[$name])) {
+                throw new TaskRejectedException('duplicate zone template');
+            }
+            $seen[$name] = true;
+            $out[] = ['name' => $name, 'body' => $body];
+        }
+
+        return $out;
+    }
+
+    public static function normalizeTemplateName(string $name): string
+    {
+        $name = strtolower(trim($name));
+        if (preg_match('/^[a-z][a-z0-9-]{0,31}$/', $name) !== 1) {
+            throw new TaskRejectedException('invalid zone template name');
+        }
+        if (str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '|')) {
+            throw new TaskRejectedException('zone template name path escape');
+        }
+
+        return $name;
+    }
+
+    public static function normalizeTemplateBody(string $body): string
+    {
+        $body = str_replace(["\r\n", "\r"], "\n", $body);
+        $body = trim($body);
+        if ($body === '' || strlen($body) > 2000) {
+            throw new TaskRejectedException('invalid zone template body');
+        }
+        if (str_contains($body, '|') || str_contains($body, '..') || str_contains($body, '/')) {
+            throw new TaskRejectedException('zone template body path escape');
+        }
+        if (preg_match('/^[A-Za-z0-9 %._:@\\n\\t-]+$/', $body) !== 1) {
+            throw new TaskRejectedException('invalid zone template body');
+        }
+
+        return $body;
+    }
+
+    /**
+     * @param  list<array{name: string, body: string}> $rows
+     */
+    public static function templatesJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('dns json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
     /**
      * @param  list<array{domain: string, name: string, type: string, value: string}> $rows
      */
