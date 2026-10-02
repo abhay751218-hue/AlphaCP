@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.44.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.44.0   (.env)
-AGENT_VERSION : 0.37.0
+panel code    : 0.45.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.45.0   (.env)
+AGENT_VERSION : 0.38.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -76,9 +76,10 @@ agent-backup-20261001173623
 agent-backup-20261001180257
 agent-backup-20261002012915
 agent-backup-20261002020037
-panel-backup-20261001180257
+agent-backup-20261002022431
 panel-backup-20261002012915
 panel-backup-20261002020037
+panel-backup-20261002022431
 panel-failed-20260928223644
 ```
 
@@ -161,6 +162,7 @@ alphacp:admin-password
   2026_09_29_000031_create_mysql_remote_hosts_table   [30] Ran
   2026_09_29_000032_create_dns_records_table   [31] Ran
   2026_09_29_000033_create_dns_dynamic_hosts_table   [32] Ran
+  2026_09_29_000034_create_hostname_a_entries_table   [33] Ran
 ```
 
 ## Routes (web)
@@ -235,6 +237,8 @@ DELETE             /global-filters/{global_filter}               global-filters.
 GET|HEAD           /handlers                                     handlers.index
 POST               /handlers                                     handlers.store
 DELETE             /handlers/{ext}                               handlers.destroy
+GET|HEAD           /hostname-a                                   hostname-a.index
+POST               /hostname-a                                   hostname-a.store
 GET|HEAD           /indexes                                      indexes.index
 POST               /indexes                                      indexes.update
 GET|HEAD           /license                                      license.index

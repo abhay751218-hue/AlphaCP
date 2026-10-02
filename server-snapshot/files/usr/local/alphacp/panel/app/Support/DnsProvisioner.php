@@ -37,4 +37,12 @@ final class DnsProvisioner
             'type' => $type,
         ]);
     }
+
+    public static function enqueueHostname(string $hostname, string $ip): int
+    {
+        return Paneld::enqueue('dns.hostname', [
+            'hostname' => $hostname,
+            'ip' => $ip,
+        ]);
+    }
 }
