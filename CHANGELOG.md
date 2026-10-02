@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 NS Record Report (2 Oct)** — WHM nameserver report via `dns.nsreport`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.48.0**, agent **0.41.0**.
+  Tests: panel **303/0**, provision-sim **72/72**, update-sim **142/142** (pin in B).
+  Deploy via `panel-update.sh` 0.48.0.
 - **Step 9 Global Email Routing (2 Oct)** — WHM routing via `mail.globalrouting`
   (JSON; no Exim rewrite; pipe/path fail closed). Panel **0.47.0**, agent **0.40.0**.
   Tests: panel **297/0**, provision-sim **71/71**, update-sim **140/140** (pin in B).

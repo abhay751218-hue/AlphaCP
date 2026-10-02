@@ -36,6 +36,7 @@ use App\Http\Controllers\DnsZonesController;
 use App\Http\Controllers\HostnameAController;
 use App\Http\Controllers\ZoneTemplatesController;
 use App\Http\Controllers\GlobalEmailRoutingController;
+use App\Http\Controllers\NsReportController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -319,6 +320,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('global-email-routing.index');
     Route::post('/global-email-routing', [GlobalEmailRoutingController::class, 'store'])
         ->middleware('perm:accounts.view')->name('global-email-routing.store');
+
+    Route::get('/ns-report', [NsReportController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('ns-report.index');
+    Route::post('/ns-report', [NsReportController::class, 'store'])
+        ->middleware('perm:accounts.view')->name('ns-report.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');
