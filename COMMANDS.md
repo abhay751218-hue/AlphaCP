@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.48.0 — Step 9: Nameserver Record Report
+### panel-update 0.49.0 — Step 9: Park a Domain
 ```bash
-sudo alphacp-sync get c3512a35dcd7d549130c922df33b9c08cc5c210b installer/panel-update.sh /tmp/acp-panel-update-0.48.0.sh fa45172aca76a011270ad13bc4db4c26695fe5b61912ce84bbdb6a11cb0c339e && sudo bash /tmp/acp-panel-update-0.48.0.sh
+sudo alphacp-sync get a41d41a0116c4477e8db4157f2cc3d212164f918 installer/panel-update.sh /tmp/acp-panel-update-0.49.0.sh aae64aca503ef6d24e51600d01bc295c8d1bf32973df31b33afd1f43b049610b && sudo bash /tmp/acp-panel-update-0.49.0.sh
 ```
-- sha256: `fa45172aca76a011270ad13bc4db4c26695fe5b61912ce84bbdb6a11cb0c339e`
-- Expected: banner `updater 0.48.0` → agent **0.41.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Nameserver Record Report (domain + nameserver JSON). Hostile domain/nameserver fail closed. No BIND rewrite.
+- sha256: `aae64aca503ef6d24e51600d01bc295c8d1bf32973df31b33afd1f43b049610b`
+- Expected: banner `updater 0.49.0` → agent **0.42.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Park a Domain (domain + target JSON). Hostile domain/target fail closed. No BIND rewrite.
 - Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **303/0**, provision-sim **72/72**, update-sim **144/144**.
+- Test: panel-tests **309/0**, provision-sim **73/73**, update-sim **146/146**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.48.0 (`c3512a3…`) → panel 0.48.0 + agent 0.41.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Nameserver Record Report |
 | panel-update 0.47.0 (`f9ebf5c…`) → panel 0.47.0 + agent 0.40.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Email Routing Configuration |
 | panel-update 0.46.0 (`571bfe6…`) → panel 0.46.0 + agent 0.39.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Edit Zone Templates |
 | panel-update 0.45.0 (`b90627a…`) → panel 0.45.0 + agent 0.38.0 | 1 Oct | ✅ UPDATE COMPLETE, HTTP 200, Hostname A |
