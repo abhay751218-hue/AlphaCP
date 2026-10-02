@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.43.0  ·  default panel bundle 0.43.0  ·  agent 0.37.0  ·  alphacp-sync v1.2
+# updater 0.44.0  ·  default panel bundle 0.44.0  ·  agent 0.37.0  ·  alphacp-sync v1.2
+#
+# 0.44.0: Step 9 — panel 0.44.0 (Add/Delete DNS Zone) + agent 0.37.0 (domain.add/remove + dns.zone)
 #
 # 0.43.0: Step 9 — panel 0.43.0 (DNS Zone Manager) + agent 0.37.0 (dns.zone reuse)
 #
@@ -103,13 +105,13 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.43.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.43.0}"
+UPDATER_VERSION="0.44.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.44.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-6ee2d4c06e1992e06740093fd2d70746be297006}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-bb7087ce4e303250d9ccc0063cef67e3cd373161}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-a8b907a491a21838a76c05c1c4517097932c8b7980aa3993eb1d26d16434a1ab}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-cf219f71545d5ee8430fe4fc248a13fb6ae0ad0a4436c87cb973e53ab7259e05}"
 AGENT_VERSION="${ACP_AGENT_VERSION:-0.37.0}"
 AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-87d3d649bcdafcb039d14ded1e22e61563cf41d8}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
