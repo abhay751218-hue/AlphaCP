@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Add/Delete DNS Zone (1 Oct)** — WHM parked zone add/delete
+  (reuses domain.add/remove + dns.zone; no BIND rewrite; pipe fail closed). Panel **0.44.0**, agent **0.37.0** (reuse).
+  Tests: panel **279/0**, provision-sim **68/68**, update-sim **135/135** (pin in B).
+  Deploy via `panel-update.sh` 0.44.0.
 - **Step 9 DNS Zone Manager (1 Oct)** — WHM zone list; sync reuses `dns.zone`
   (no BIND rewrite; hostile filter fail closed). Panel **0.43.0**, agent **0.37.0** (reuse).
   Tests: panel **276/0**, provision-sim **68/68**, update-sim **134/134** (pin in B).

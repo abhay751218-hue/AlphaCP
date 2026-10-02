@@ -225,7 +225,7 @@
 | # | WHM tool | Step | Status |
 |---|---|---|---|
 | 128 | DNS Zone Manager | S9 | ✅ (WHM list + dns.zone sync; no BIND rewrite) |
-| 129 | Add / Delete a DNS Zone | S9 | ⏳ S9 |
+| 129 | Add / Delete a DNS Zone | S9 | ✅ (WHM parked add/delete; domain.add/remove + dns.zone; no BIND) |
 | 130 | Add an A Entry for Your Hostname | S9 | ⏳ S9 |
 | 131 | Edit Zone Templates | S9 | ⏳ S9 |
 | 132 | Email Routing Configuration (global) | S9 | ⏳ S9 |

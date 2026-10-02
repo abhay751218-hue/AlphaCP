@@ -79,7 +79,7 @@ class DnsZonesTest extends TestCase
         $this->asPanelUser($root)->get('/dns-zones?q=' . urlencode('|/bin/sh'))
             ->assertOk()
             ->assertSee('Invalid domain')
-            ->assertDontSee('custhost');
+            ->assertSee('No DNS zones match');
         $this->assertNull(DB::table('tasks')->where('type', 'dns.zone')->first());
     }
 
@@ -118,5 +118,63 @@ class DnsZonesTest extends TestCase
         $mail = $this->userWithRole('mail');
         $this->asPanelUser($customer)->get('/dns-zones')->assertForbidden();
         $this->asPanelUser($mail)->get('/dns-zones')->assertForbidden();
+    }
+
+    public function test_root_can_add_dns_zone(): void
+    {
+        $root = $this->userWithRole('root');
+        [, $account] = $this->customerWithAccount();
+        $this->asPanelUser($root)->get('/dns-zones')
+            ->assertOk()
+            ->assertSee('Add DNS zone');
+
+        $this->asPanelUser($root)->post('/dns-zones', [
+            'account_id' => $account->id,
+            'domain' => 'extra.example.com',
+        ])->assertRedirect(route('dns-zones.index'));
+
+        $this->assertSame('extra.example.com', $account->fresh()->domains()->where('domain', 'extra.example.com')->value('domain'));
+        $add = DB::table('tasks')->where('account_id', $account->id)->where('type', 'domain.add')->first();
+        $this->assertNotNull($add);
+        $this->assertStringNotContainsString('|', (string) $add->payload);
+        $zone = DB::table('tasks')->where('account_id', $account->id)->where('type', 'dns.zone')->first();
+        $this->assertNotNull($zone);
+    }
+
+    public function test_pipe_add_is_rejected(): void
+    {
+        $root = $this->userWithRole('root');
+        [, $account] = $this->customerWithAccount();
+        $this->asPanelUser($root)->post('/dns-zones', [
+            'account_id' => $account->id,
+            'domain' => '|/bin/sh',
+        ])->assertRedirect();
+        $this->assertSame(0, $account->fresh()->domains()->count());
+        $this->assertNull(DB::table('tasks')->where('type', 'domain.add')->first());
+        $this->assertNull(DB::table('tasks')->where('type', 'dns.zone')->first());
+    }
+
+    public function test_root_can_delete_extra_zone_not_main(): void
+    {
+        $root = $this->userWithRole('root');
+        [, $account] = $this->customerWithAccount();
+        $this->asPanelUser($root)->post('/dns-zones', [
+            'account_id' => $account->id,
+            'domain' => 'extra.example.com',
+        ])->assertRedirect(route('dns-zones.index'));
+
+        $this->asPanelUser($root)->delete('/dns-zones', [
+            'account_id' => $account->id,
+            'domain' => 'shop.example.com',
+        ])->assertRedirect();
+        $this->assertNull(DB::table('tasks')->where('type', 'domain.remove')->first());
+
+        $this->asPanelUser($root)->delete('/dns-zones', [
+            'account_id' => $account->id,
+            'domain' => 'extra.example.com',
+        ])->assertRedirect(route('dns-zones.index'));
+        $remove = DB::table('tasks')->where('account_id', $account->id)->where('type', 'domain.remove')->first();
+        $this->assertNotNull($remove);
+        $this->assertStringNotContainsString('|', (string) $remove->payload);
     }
 }

@@ -293,6 +293,10 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
 
     Route::get('/dns-zones', [DnsZonesController::class, 'index'])
         ->middleware('perm:accounts.view')->name('dns-zones.index');
+    Route::post('/dns-zones', [DnsZonesController::class, 'store'])
+        ->middleware('perm:accounts.view')->name('dns-zones.store');
+    Route::delete('/dns-zones', [DnsZonesController::class, 'destroy'])
+        ->middleware('perm:accounts.view')->name('dns-zones.destroy');
     Route::post('/dns-zones/{account}/sync', [DnsZonesController::class, 'sync'])
         ->middleware('perm:accounts.view')->name('dns-zones.sync');
 
