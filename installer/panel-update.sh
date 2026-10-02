@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.44.0  ·  default panel bundle 0.44.0  ·  agent 0.37.0  ·  alphacp-sync v1.2
+# updater 0.45.0  ·  default panel bundle 0.45.0  ·  agent 0.38.0  ·  alphacp-sync v1.2
+#
+# 0.45.0: Step 9 — panel 0.45.0 (Hostname A) + agent 0.38.0 (dns.hostname)
 #
 # 0.44.0: Step 9 — panel 0.44.0 (Add/Delete DNS Zone) + agent 0.37.0 (domain.add/remove + dns.zone)
 #
@@ -105,17 +107,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.44.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.44.0}"
+UPDATER_VERSION="0.45.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.45.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-bb7087ce4e303250d9ccc0063cef67e3cd373161}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-6aedab230bc786c87cd7f56176a12d00b422a9fe}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-cf219f71545d5ee8430fe4fc248a13fb6ae0ad0a4436c87cb973e53ab7259e05}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.37.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-87d3d649bcdafcb039d14ded1e22e61563cf41d8}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-951ce9d31b840774eaeb8f3bf798a3dba1cd2c82b8c07a5a62b4655e3085491c}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.38.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-6aedab230bc786c87cd7f56176a12d00b422a9fe}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-48f6c70c35843c9efa300361991f49c551f23bbdc5c3c1c4e41303bc4758d601}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-9dae91dc99fb9ce13dcaba40a10a0d17478d58b7a269d7975f7fa0a8a25ad04a}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
