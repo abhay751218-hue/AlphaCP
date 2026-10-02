@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 DNS Cleanup (2 Oct)** — WHM cleanup via `dns.cleanup`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.50.0**, agent **0.43.0**.
+  Tests: panel **315/0**, provision-sim **74/74**, update-sim **146/146** (pin in B).
+  Deploy via `panel-update.sh` 0.50.0.
 - **Step 9 Park a Domain (2 Oct)** — WHM park via `dns.park`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.49.0**, agent **0.42.0**.
   Tests: panel **309/0**, provision-sim **73/73**, update-sim **144/144** (pin in B).

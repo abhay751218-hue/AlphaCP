@@ -232,7 +232,7 @@
 | 133 | Enable DKIM/SPF Globally | S7 | ⏳ S7 |
 | 134 | Nameserver Record Report | S9 | ✅ (WHM NS report JSON; no BIND rewrite) |
 | 135 | Park a Domain | S9 | ✅ (WHM park JSON; no BIND rewrite) |
-| 136 | Perform a DNS Cleanup | S9 | ⏳ S9 |
+| 136 | Perform a DNS Cleanup | S9 | ✅ (WHM cleanup JSON; no BIND rewrite) |
 | 137 | Set Zone TTL | S9 | ⏳ S9 |
 | 138 | Setup/Edit Domain Forwarding | S9 | ⏳ S9 |
 | 139 | Synchronize DNS Records | S9 | ⏳ S9 |

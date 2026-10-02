@@ -9,6 +9,7 @@ use App\Models\DnsRecord;
 use App\Models\DnsTemplate;
 use App\Models\NsRecord;
 use App\Models\ParkedDomain;
+use App\Models\DnsCleanup;
 
 final class DnsProvisioner
 {
@@ -82,6 +83,15 @@ final class DnsProvisioner
 
         return Paneld::enqueue('dns.park', [
             'parks' => $rows,
+        ]);
+    }
+
+    public static function enqueueCleanup(): int
+    {
+        $rows = DnsCleanup::query()->orderBy('id')->pluck('domain')->values()->all();
+
+        return Paneld::enqueue('dns.cleanup', [
+            'domains' => $rows,
         ]);
     }
 }
