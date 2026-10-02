@@ -9,6 +9,7 @@ final class Dns
 {
     public const TYPES = ['A', 'CNAME', 'MX', 'TXT'];
     public const TRACK_TYPES = ['A', 'CNAME', 'MX', 'NS', 'TXT', 'ALL'];
+    public const TTLS = [60, 300, 3600, 14400, 86400];
 
     public static function tryDomain(string $domain): ?string
     {
@@ -110,5 +111,19 @@ final class Dns
         }
 
         return $body;
+    }
+
+    public static function tryTtl(string $ttl): ?int
+    {
+        $ttl = trim($ttl);
+        if ($ttl === '' || ! ctype_digit($ttl)) {
+            return null;
+        }
+        $n = (int) $ttl;
+        if (! in_array($n, self::TTLS, true)) {
+            return null;
+        }
+
+        return $n;
     }
 }

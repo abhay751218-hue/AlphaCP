@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Set Zone TTL (2 Oct)** — WHM TTL via `dns.ttl`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.51.0**, agent **0.44.0**.
+  Tests: panel **321/0**, provision-sim **75/75**, update-sim **148/148** (pin in B).
+  Deploy via `panel-update.sh` 0.51.0.
 - **Step 9 DNS Cleanup (2 Oct)** — WHM cleanup via `dns.cleanup`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.50.0**, agent **0.43.0**.
   Tests: panel **315/0**, provision-sim **74/74**, update-sim **146/146** (pin in B).

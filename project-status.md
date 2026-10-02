@@ -35,7 +35,7 @@
 | Step 6 | File Manager + FTP + Git + SSH | 🟡 **FM + Privacy + Disk Usage + SSH live** |
 | Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **through Webmail live; virus/ClamAV later** |
 | Step 8 | Databases (MySQL management) | 🟡 **through Remote MySQL live; users/SSO later** |
-| Step 9 | DNS management + nameservers | 🟡 **through Park a Domain live; DNS Cleanup 0.50.0 pending deploy** |
+| Step 9 | DNS management + nameservers | 🟡 **through DNS Cleanup live; Set Zone TTL 0.51.0 pending deploy** |
 | Step 10 | Backup / Restore / Migration | ⏳ |
 | Step 11 | Monitoring, stats, resource limits | ⏳ |
 | Step 12 | 💳 Billing API layer (WHM API 1 + native REST) | ⏳ |
