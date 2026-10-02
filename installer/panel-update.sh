@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.50.0  ·  default panel bundle 0.50.0  ·  agent 0.43.0  ·  alphacp-sync v1.2
+# updater 0.51.0  ·  default panel bundle 0.51.0  ·  agent 0.44.0  ·  alphacp-sync v1.2
+#
+# 0.51.0: Step 9 — panel 0.51.0 (Set Zone TTL) + agent 0.44.0 (dns.ttl)
 #
 # 0.50.0: Step 9 — panel 0.50.0 (DNS Cleanup) + agent 0.43.0 (dns.cleanup)
 #
@@ -117,17 +119,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.50.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.50.0}"
+UPDATER_VERSION="0.51.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.51.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-d42df4ae8fb9c60e9c60c46745273956dd7f9a3c}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-94ebe3ebfe51b36e7859d23423f9337889d389f7}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-d051c27a905852e0cc7eaecfef9d9daa400d24a79446fb8af8dd31a60314c3a3}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.43.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-d42df4ae8fb9c60e9c60c46745273956dd7f9a3c}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-630f9f0ec7bda406139a531ddd4ddcb2c4efe152d2e780db821614f458ba3c81}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.44.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-94ebe3ebfe51b36e7859d23423f9337889d389f7}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-80bbd7bee571bd3d2b13588a53faa65187386390ad7e2453a41711fa10b50d55}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-a0c977bc7fe8384517afb283d9c16e2425048a54dc9c41b203ec4a9c2d693a23}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
