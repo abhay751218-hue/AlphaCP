@@ -65,6 +65,7 @@ use Alphacp\Agent\Tasks\HostnameASet;
 use Alphacp\Agent\Tasks\TemplatesSet;
 use Alphacp\Agent\Tasks\GlobalRoutingSet;
 use Alphacp\Agent\Tasks\NsReportSet;
+use Alphacp\Agent\Tasks\ParkSet;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -213,7 +214,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1632,6 +1633,34 @@ test('dns.nsreport writes json and rejects hostile domain', function (): void {
         $threw = str_contains($e->getMessage(), 'domain') || str_contains($e->getMessage(), 'invalid') || str_contains($e->getMessage(), 'escape');
     }
     assert_true($threw, 'hostile ns report domain must fail closed');
+    acp_account_cleanup($harness);
+});
+test('dns.park writes json and rejects hostile domain', function (): void {
+    $harness = acp_account_harness();
+    $out = (new ParkSet())->handle([
+        'parks' => [[
+            'domain' => 'alias.example.com',
+            'target' => 'example.com',
+        ]],
+    ], $harness['ctx']);
+    assert_true($out['parks'] === 1);
+    $file = $harness['root'] . '/alphacp/etc/dns/parked.json';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, 'alias.example.com'));
+    assert_true(!str_contains($body, '|'));
+    $threw = false;
+    try {
+        (new ParkSet())->handle([
+            'parks' => [[
+                'domain' => '|/bin/sh',
+                'target' => 'example.com',
+            ]],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'domain') || str_contains($e->getMessage(), 'invalid') || str_contains($e->getMessage(), 'escape');
+    }
+    assert_true($threw, 'hostile parked domain must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

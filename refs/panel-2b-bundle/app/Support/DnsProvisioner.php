@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\DnsRecord;
 use App\Models\DnsTemplate;
 use App\Models\NsRecord;
+use App\Models\ParkedDomain;
 
 final class DnsProvisioner
 {
@@ -69,6 +70,18 @@ final class DnsProvisioner
 
         return Paneld::enqueue('dns.nsreport', [
             'records' => $rows,
+        ]);
+    }
+
+    public static function enqueuePark(): int
+    {
+        $rows = ParkedDomain::query()->orderBy('id')->get()->map(static fn (ParkedDomain $row): array => [
+            'domain' => $row->domain,
+            'target' => $row->target,
+        ])->values()->all();
+
+        return Paneld::enqueue('dns.park', [
+            'parks' => $rows,
         ]);
     }
 }

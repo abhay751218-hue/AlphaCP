@@ -169,6 +169,7 @@ final class ModuleCatalog
                     ['name' => 'Edit Zone Templates', 'step' => 'S9',  'status' => 'live', 'route' => 'zone-templates.index'],
                     ['name' => 'Email Routing Configuration', 'step' => 'S9',  'status' => 'live', 'route' => 'global-email-routing.index'],
                     ['name' => 'Nameserver Record Report', 'step' => 'S9',  'status' => 'live', 'route' => 'ns-report.index'],
+                    ['name' => 'Park a Domain', 'step' => 'S9',  'status' => 'live', 'route' => 'park-domain.index'],
                     ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'step'],
                     ['name' => 'Backup Config',       'step' => 'S10', 'status' => 'step'],
                     ['name' => 'Security Center',     'step' => 'S13', 'status' => 'step'],

@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Park a Domain (2 Oct)** — WHM park via `dns.park`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.49.0**, agent **0.42.0**.
+  Tests: panel **309/0**, provision-sim **73/73**, update-sim **144/144** (pin in B).
+  Deploy via `panel-update.sh` 0.49.0.
 - **Step 9 NS Record Report (2 Oct)** — WHM nameserver report via `dns.nsreport`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.48.0**, agent **0.41.0**.
   Tests: panel **303/0**, provision-sim **72/72**, update-sim **142/142** (pin in B).

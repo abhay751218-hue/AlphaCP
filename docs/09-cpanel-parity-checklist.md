@@ -231,7 +231,7 @@
 | 132 | Email Routing Configuration (global) | S9 | ✅ (WHM global MX JSON; no Exim rewrite) |
 | 133 | Enable DKIM/SPF Globally | S7 | ⏳ S7 |
 | 134 | Nameserver Record Report | S9 | ✅ (WHM NS report JSON; no BIND rewrite) |
-| 135 | Park a Domain | S9 | ⏳ S9 |
+| 135 | Park a Domain | S9 | ✅ (WHM park JSON; no BIND rewrite) |
 | 136 | Perform a DNS Cleanup | S9 | ⏳ S9 |
 | 137 | Set Zone TTL | S9 | ⏳ S9 |
 | 138 | Setup/Edit Domain Forwarding | S9 | ⏳ S9 |
