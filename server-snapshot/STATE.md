@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.51.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.51.0   (.env)
-AGENT_VERSION : 0.44.0
+panel code    : 0.52.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.52.0   (.env)
+AGENT_VERSION : 0.45.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -83,15 +83,16 @@ agent-backup-20261002143910
 agent-backup-20261002150351
 agent-backup-20261002152927
 agent-backup-20261002174752
-panel-backup-20261002150351
+agent-backup-20261002222409
 panel-backup-20261002152927
 panel-backup-20261002174752
+panel-backup-20261002222409
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -175,6 +176,7 @@ alphacp:admin-password
   2026_09_29_000038_create_parked_domains_table   [37] Ran
   2026_09_29_000039_create_dns_cleanups_table   [38] Ran
   2026_09_29_000040_create_zone_ttls_table   [39] Ran
+  2026_09_29_000041_create_domain_forwards_table   [40] Ran
 ```
 
 ## Routes (web)
@@ -217,6 +219,8 @@ GET|HEAD           /dns-zones                                    dns-zones.index
 POST               /dns-zones                                    dns-zones.store
 DELETE             /dns-zones                                    dns-zones.destroy
 POST               /dns-zones/{account}/sync                     dns-zones.sync
+GET|HEAD           /domain-forward                               domain-forward.index
+POST               /domain-forward                               domain-forward.store
 GET|HEAD           /domains                                      domains.index
 POST               /domains                                      domains.store
 DELETE             /domains/{domain}                             domains.destroy

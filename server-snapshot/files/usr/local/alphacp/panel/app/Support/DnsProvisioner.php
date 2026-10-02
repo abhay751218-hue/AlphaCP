@@ -11,6 +11,7 @@ use App\Models\NsRecord;
 use App\Models\ParkedDomain;
 use App\Models\DnsCleanup;
 use App\Models\ZoneTtl;
+use App\Models\DomainForward;
 
 final class DnsProvisioner
 {
@@ -105,6 +106,19 @@ final class DnsProvisioner
 
         return Paneld::enqueue('dns.ttl', [
             'zones' => $rows,
+        ]);
+    }
+
+    public static function enqueueForward(): int
+    {
+        $rows = DomainForward::query()->orderBy('id')->get()->map(static fn (DomainForward $row): array => [
+            'domain' => $row->domain,
+            'url' => $row->url,
+            'code' => (int) $row->code,
+        ])->values()->all();
+
+        return Paneld::enqueue('dns.forward', [
+            'forwards' => $rows,
         ]);
     }
 }

@@ -1242,6 +1242,35 @@ return [
         ],
     ],
 
+    'dns.forward' => [
+        'handler'     => Tasks\ForwardSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write domain forwarding map (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['forwards'],
+            'properties'           => [
+                'forwards' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'url', 'code'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'url'    => ['type' => 'string', 'maxLength' => 255],
+                            'code'   => ['type' => 'integer', 'minimum' => 301, 'maximum' => 302],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',
