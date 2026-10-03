@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.56.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.56.0   (.env)
-AGENT_VERSION : 0.49.0
+panel code    : 0.57.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.57.0   (.env)
+AGENT_VERSION : 0.50.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -88,15 +88,16 @@ agent-backup-20261003011458
 agent-backup-20261003041343
 agent-backup-20261003062629
 agent-backup-20261003081849
-panel-backup-20261003041343
+agent-backup-20261003085649
 panel-backup-20261003062629
 panel-backup-20261003081849
+panel-backup-20261003085649
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -185,6 +186,7 @@ alphacp:admin-password
   2026_09_29_000043_create_nameserver_selections_table   [42] Ran
   2026_09_29_000044_create_backup_jobs_table   [43] Ran
   2026_09_29_000045_create_backup_wizards_table   [44] Ran
+  2026_09_29_000046_create_backup_restores_table   [45] Ran
 ```
 
 ## Routes (web)
@@ -255,6 +257,8 @@ POST               /encryption                                   encryption.stor
 DELETE             /encryption/{encryption_key}                  encryption.destroy
 GET|HEAD           /errorpages                                   errorpages.index
 POST               /errorpages                                   errorpages.update
+GET|HEAD           /file-restoration                             file-restoration.index
+POST               /file-restoration                             file-restoration.store
 GET|HEAD           /files                                        files.index
 POST               /files/delete                                 files.destroy
 POST               /files/mkdir                                  files.mkdir

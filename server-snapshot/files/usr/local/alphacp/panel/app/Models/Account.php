@@ -159,6 +159,11 @@ class Account extends Model
         return $this->hasOne(BackupWizard::class);
     }
 
+    public function backupRestores(): HasMany
+    {
+        return $this->hasMany(BackupRestore::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

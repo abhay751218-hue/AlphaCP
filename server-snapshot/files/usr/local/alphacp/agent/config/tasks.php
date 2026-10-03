@@ -1356,6 +1356,34 @@ return [
         ],
     ],
 
+    'backup.restore' => [
+        'handler'     => Tasks\BackupRestore::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write account file restore path list (JSON; no tar/shell).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'paths'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'paths'    => [
+                    'type'     => 'array',
+                    'maxItems' => 10,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['path'],
+                        'properties'           => [
+                            'path' => ['type' => 'string', 'maxLength' => 240],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',
