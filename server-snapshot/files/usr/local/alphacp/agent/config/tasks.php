@@ -1291,6 +1291,24 @@ return [
         ],
     ],
 
+    'dns.nameserver' => [
+        'handler'     => Tasks\NameserverSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write nameserver selection (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['software', 'ns1', 'ns2'],
+            'properties'           => [
+                'software' => ['type' => 'string', 'maxLength' => 16],
+                'ns1'      => ['type' => 'string', 'maxLength' => 190],
+                'ns2'      => ['type' => 'string', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

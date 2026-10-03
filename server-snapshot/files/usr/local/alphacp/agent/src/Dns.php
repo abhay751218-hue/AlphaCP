@@ -680,6 +680,38 @@ final class Dns
         return $json . "\n";
     }
 
+    public const NAMESERVER_SOFTWARE = ['bind', 'nsd', 'powerdns', 'disabled'];
+
+    public static function normalizeNameserverSoftware(string $software): string
+    {
+        $software = strtolower(trim($software));
+        if (!in_array($software, self::NAMESERVER_SOFTWARE, true)) {
+            throw new TaskRejectedException('invalid nameserver software');
+        }
+
+        return $software;
+    }
+
+    public static function nameserverJson(string $software, string $ns1, string $ns2): string
+    {
+        $software = self::normalizeNameserverSoftware($software);
+        $ns1 = self::normalizeDomain($ns1);
+        $ns2 = self::normalizeDomain($ns2);
+        if ($ns1 === $ns2) {
+            throw new TaskRejectedException('ns1 and ns2 must differ');
+        }
+        $json = json_encode([
+            'software' => $software,
+            'ns1' => $ns1,
+            'ns2' => $ns2,
+        ], JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('dns json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
     /**
      * @param  list<array{domain: string, name: string, type: string, value: string}> $rows
      */

@@ -131,4 +131,13 @@ final class DnsProvisioner
             'domains' => $rows,
         ]);
     }
+
+    public static function enqueueNameserver(string $software, string $ns1, string $ns2): int
+    {
+        return Paneld::enqueue('dns.nameserver', [
+            'software' => $software,
+            'ns1' => $ns1,
+            'ns2' => $ns2,
+        ]);
+    }
 }

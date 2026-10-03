@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.53.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.53.0   (.env)
-AGENT_VERSION : 0.46.0
+panel code    : 0.54.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.54.0   (.env)
+AGENT_VERSION : 0.47.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -85,15 +85,16 @@ agent-backup-20261002152927
 agent-backup-20261002174752
 agent-backup-20261002222409
 agent-backup-20261003011458
-panel-backup-20261002174752
+agent-backup-20261003041343
 panel-backup-20261002222409
 panel-backup-20261003011458
+panel-backup-20261003041343
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -179,6 +180,7 @@ alphacp:admin-password
   2026_09_29_000040_create_zone_ttls_table   [39] Ran
   2026_09_29_000041_create_domain_forwards_table   [40] Ran
   2026_09_29_000042_create_dns_syncs_table   [41] Ran
+  2026_09_29_000043_create_nameserver_selections_table   [42] Ran
 ```
 
 ## Routes (web)
@@ -280,6 +282,8 @@ POST               /mysql                                        mysql.store
 GET|HEAD           /mysql-wizard                                 mysql-wizard.index
 POST               /mysql-wizard                                 mysql-wizard.store
 DELETE             /mysql/{mysql_database}                       mysql.destroy
+GET|HEAD           /nameserver-selection                         nameserver-selection.index
+POST               /nameserver-selection                         nameserver-selection.store
 GET|HEAD           /ns-report                                    ns-report.index
 POST               /ns-report                                    ns-report.store
 GET|HEAD           /packages                                     packages.index

@@ -42,6 +42,7 @@ use App\Http\Controllers\DnsCleanupController;
 use App\Http\Controllers\ZoneTtlController;
 use App\Http\Controllers\DomainForwardController;
 use App\Http\Controllers\DnsSyncController;
+use App\Http\Controllers\NameserverSelectionController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -355,6 +356,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('dns-sync.index');
     Route::post('/dns-sync', [DnsSyncController::class, 'store'])
         ->middleware('perm:accounts.view')->name('dns-sync.store');
+
+    Route::get('/nameserver-selection', [NameserverSelectionController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('nameserver-selection.index');
+    Route::post('/nameserver-selection', [NameserverSelectionController::class, 'store'])
+        ->middleware('perm:accounts.view')->name('nameserver-selection.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

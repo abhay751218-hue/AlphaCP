@@ -10,6 +10,7 @@ final class Dns
     public const TYPES = ['A', 'CNAME', 'MX', 'TXT'];
     public const TRACK_TYPES = ['A', 'CNAME', 'MX', 'NS', 'TXT', 'ALL'];
     public const TTLS = [60, 300, 3600, 14400, 86400];
+    public const NAMESERVER_SOFTWARE = ['bind', 'nsd', 'powerdns', 'disabled'];
 
     public static function tryDomain(string $domain): ?string
     {
@@ -155,5 +156,15 @@ final class Dns
         }
 
         return $n;
+    }
+
+    public static function tryNameserverSoftware(string $software): ?string
+    {
+        $software = strtolower(trim($software));
+        if (! in_array($software, self::NAMESERVER_SOFTWARE, true)) {
+            return null;
+        }
+
+        return $software;
     }
 }
