@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.63.0 — Step 10: Transfer or Restore a cPanel Account
+### panel-update 0.64.0 — Step 10: Review Transfers and Restores
 ```bash
-sudo alphacp-sync get 4c1195b392be676119c2d2c04ea54c3d25c344a6 installer/panel-update.sh /tmp/acp-panel-update-0.63.0.sh d71abd2955c9d23ba545ed61c57d92771f77301c76432a0c2d5ce59573406432 && sudo bash /tmp/acp-panel-update-0.63.0.sh
+sudo alphacp-sync get 4e04d297a96e22e7e54e7d9d5f214b47b84fb7aa installer/panel-update.sh /tmp/acp-panel-update-0.64.0.sh 7cae9e54a0b38338f10e0127591291176f0e2d8f91473232eb89fff6bdafbb3c && sudo bash /tmp/acp-panel-update-0.64.0.sh
 ```
-- sha256: `d71abd2955c9d23ba545ed61c57d92771f77301c76432a0c2d5ce59573406432`
-- Expected: banner `updater 0.63.0` → agent **0.56.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Root WHM: Transfer or Restore a cPanel Account (username+action transfer/restore JSON). Hostile action/username fail closed. No tar/rsync/shell.
+- sha256: `7cae9e54a0b38338f10e0127591291176f0e2d8f91473232eb89fff6bdafbb3c`
+- Expected: banner `updater 0.64.0` → agent **0.57.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Root WHM: Review Transfers and Restores (username+status pending/ok/failed JSON). Hostile status/username fail closed. No tar/rsync/shell.
 - Customer cPanel does not see this tile (has File Restoration).
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **393/0**, provision-sim **87/87**, update-sim **174/174**.
+- Test: panel-tests **399/0**, provision-sim **88/88**, update-sim **176/176**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.63.0 (`4c1195b…`) → panel 0.63.0 + agent 0.56.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer or Restore a cPanel Account |
 | panel-update 0.62.0 (`16f2c24…`) → panel 0.62.0 + agent 0.55.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer Tool |
 | panel-update 0.61.0 (`0b4919d…`) → panel 0.61.0 + agent 0.54.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, File and Directory Restoration |
 | panel-update 0.60.0 (`65eb642…`) → panel 0.60.0 + agent 0.53.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup User Selection |
