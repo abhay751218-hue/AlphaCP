@@ -76,6 +76,7 @@ use Alphacp\Agent\Tasks\BackupWizard;
 use Alphacp\Agent\Tasks\BackupRestore;
 use Alphacp\Agent\Tasks\BackupConfig;
 use Alphacp\Agent\Tasks\BackupRestoration;
+use Alphacp\Agent\Tasks\BackupUsers;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -224,7 +225,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1999,6 +2000,37 @@ test('backup.restoration writes json and rejects hostile mode/username', functio
         $threwUser = str_contains($e->getMessage(), 'username') || str_contains($e->getMessage(), 'invalid');
     }
     assert_true($threwUser, 'hostile backup restoration username must fail closed');
+    acp_account_cleanup($harness);
+});
+test('backup.users writes json and rejects hostile username', function (): void {
+    $harness = acp_account_harness();
+    $out = (new BackupUsers())->handle([
+        'users' => [['username' => 'alicehost']],
+    ], $harness['ctx']);
+    assert_true($out['users'][0]['username'] === 'alicehost');
+    $file = $harness['root'] . '/alphacp/etc/backup/users.json';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, 'alicehost'));
+    assert_true(!str_contains($body, '|'));
+    $threwPipe = false;
+    try {
+        (new BackupUsers())->handle([
+            'users' => [['username' => '|/bin/sh']],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPipe = str_contains($e->getMessage(), 'username') || str_contains($e->getMessage(), 'invalid');
+    }
+    assert_true($threwPipe, 'hostile backup user must fail closed');
+    $threwPath = false;
+    try {
+        (new BackupUsers())->handle([
+            'users' => [['username' => '../etc']],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPath = str_contains($e->getMessage(), 'username') || str_contains($e->getMessage(), 'invalid');
+    }
+    assert_true($threwPath, 'hostile backup user path must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {
