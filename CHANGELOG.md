@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 10 Backup Restoration (3 Oct)** — WHM full/partial/per-account via `backup.restoration`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.59.0**, agent **0.52.0**.
+  Tests: panel **369/0**, provision-sim **83/83**, update-sim **166/166** (pin in B).
+  Deploy via `panel-update.sh` 0.59.0.
 - **Step 10 Backup Config (3 Oct)** — WHM schedule/retention via `backup.config`
   (JSON; no tar/shell; pipe/path fail closed). Panel **0.58.0**, agent **0.51.0**.
   Tests: panel **363/0**, provision-sim **82/82**, update-sim **164/164** (pin in B).

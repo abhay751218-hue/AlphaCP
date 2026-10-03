@@ -68,4 +68,12 @@ final class BackupProvisioner
             'retention' => $retention,
         ]);
     }
+
+    public static function enqueueRestoration(string $mode, string $username): int
+    {
+        return Paneld::enqueue('backup.restoration', [
+            'mode' => $mode,
+            'username' => $username,
+        ]);
+    }
 }

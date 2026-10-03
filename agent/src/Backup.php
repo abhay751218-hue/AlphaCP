@@ -198,4 +198,42 @@ final class Backup
 
         return $json . "\n";
     }
+
+    public const MODES = ['full', 'partial', 'account'];
+
+    public static function normalizeMode(string $mode): string
+    {
+        $mode = strtolower(trim($mode));
+        if (!in_array($mode, self::MODES, true)) {
+            throw new TaskRejectedException('invalid backup restoration mode');
+        }
+
+        return $mode;
+    }
+
+    public static function normalizeRestoreUsername(string $username): string
+    {
+        $username = strtolower(trim($username));
+        $err = AccountIdentity::username($username);
+        if ($err !== null) {
+            throw new TaskRejectedException('invalid backup restoration username');
+        }
+
+        return $username;
+    }
+
+    public static function restorationJson(string $mode, string $username): string
+    {
+        $mode = self::normalizeMode($mode);
+        $username = self::normalizeRestoreUsername($username);
+        $json = json_encode([
+            'mode' => $mode,
+            'username' => $username,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('backup restoration json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }

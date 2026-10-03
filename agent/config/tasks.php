@@ -1401,6 +1401,23 @@ return [
         ],
     ],
 
+    'backup.restoration' => [
+        'handler'     => Tasks\BackupRestoration::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write WHM backup restoration full/partial/per-account (JSON; no tar/shell).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['mode', 'username'],
+            'properties'           => [
+                'mode'     => ['type' => 'string', 'maxLength' => 16],
+                'username' => ['type' => 'string', 'maxLength' => 16],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

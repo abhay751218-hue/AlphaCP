@@ -21,6 +21,9 @@ final class Backup
     /** @var list<string> */
     public const SCHEDULES = ['daily', 'weekly', 'monthly', 'disabled'];
 
+    /** @var list<string> */
+    public const MODES = ['full', 'partial', 'account'];
+
     public static function tryKind(string $kind): ?string
     {
         $kind = strtolower(trim($kind));
@@ -73,5 +76,28 @@ final class Backup
         }
 
         return $n;
+    }
+
+    public static function tryMode(string $mode): ?string
+    {
+        $mode = strtolower(trim($mode));
+        if (! in_array($mode, self::MODES, true)) {
+            return null;
+        }
+
+        return $mode;
+    }
+
+    public static function tryUsername(string $raw): ?string
+    {
+        $raw = strtolower(trim($raw));
+        if (preg_match(AccountIdentity::USERNAME_PATTERN, $raw) !== 1) {
+            return null;
+        }
+        if (AccountIdentity::isReserved($raw)) {
+            return null;
+        }
+
+        return $raw;
     }
 }
