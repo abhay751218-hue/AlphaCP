@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.59.0 — Step 10: Backup Restoration
+### panel-update 0.60.0 — Step 10: Backup User Selection
 ```bash
-sudo alphacp-sync get 56d98f5148f5c830b0b1b29c5865f7b8efb90e21 installer/panel-update.sh /tmp/acp-panel-update-0.59.0.sh 5a01dd04a695b64874da958980e441cf6932fa06540bab94f5c985bef4bc599d && sudo bash /tmp/acp-panel-update-0.59.0.sh
+sudo alphacp-sync get 65eb6426e28e7db765e290097e634ad8580cba0a installer/panel-update.sh /tmp/acp-panel-update-0.60.0.sh 7b188977b9520a2dbeec9443c59277d1785fec3282d74de61e262977174d61f5 && sudo bash /tmp/acp-panel-update-0.60.0.sh
 ```
-- sha256: `5a01dd04a695b64874da958980e441cf6932fa06540bab94f5c985bef4bc599d`
-- Expected: banner `updater 0.59.0` → agent **0.52.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Root WHM: Backup Restoration (full/partial/account JSON). Hostile mode/username fail closed. No tar/shell.
+- sha256: `7b188977b9520a2dbeec9443c59277d1785fec3282d74de61e262977174d61f5`
+- Expected: banner `updater 0.60.0` → agent **0.53.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Root WHM: Backup User Selection (username list JSON). Hostile username fail closed. No tar/shell.
 - Customer cPanel does not see this tile (has File Restoration).
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **369/0**, provision-sim **83/83**, update-sim **166/166**.
+- Test: panel-tests **375/0**, provision-sim **84/84**, update-sim **168/168**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.59.0 (`56d98f5…`) → panel 0.59.0 + agent 0.52.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup Restoration |
 | panel-update 0.58.0 (`98da0f4…`) → panel 0.58.0 + agent 0.51.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup Config |
 | panel-update 0.57.0 (`1c769fe…`) → panel 0.57.0 + agent 0.50.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, File Restoration |
 | panel-update 0.56.0 (`90314bf…`) → panel 0.56.0 + agent 0.49.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup Wizard |
