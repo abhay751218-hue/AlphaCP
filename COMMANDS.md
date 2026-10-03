@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.60.0 — Step 10: Backup User Selection
+### panel-update 0.61.0 — Step 10: File and Directory Restoration
 ```bash
-sudo alphacp-sync get 65eb6426e28e7db765e290097e634ad8580cba0a installer/panel-update.sh /tmp/acp-panel-update-0.60.0.sh 7b188977b9520a2dbeec9443c59277d1785fec3282d74de61e262977174d61f5 && sudo bash /tmp/acp-panel-update-0.60.0.sh
+sudo alphacp-sync get 0b4919de4dc575ca9e0147c26e1b60b7af04b236 installer/panel-update.sh /tmp/acp-panel-update-0.61.0.sh 5e164a250cbb597da18c099b41245be7128e0d25f76533321611e677d87e4e9c && sudo bash /tmp/acp-panel-update-0.61.0.sh
 ```
-- sha256: `7b188977b9520a2dbeec9443c59277d1785fec3282d74de61e262977174d61f5`
-- Expected: banner `updater 0.60.0` → agent **0.53.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Root WHM: Backup User Selection (username list JSON). Hostile username fail closed. No tar/shell.
+- sha256: `5e164a250cbb597da18c099b41245be7128e0d25f76533321611e677d87e4e9c`
+- Expected: banner `updater 0.61.0` → agent **0.54.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Root WHM: File and Directory Restoration (username+path JSON). Hostile path fail closed. No tar/shell.
 - Customer cPanel does not see this tile (has File Restoration).
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **375/0**, provision-sim **84/84**, update-sim **168/168**.
+- Test: panel-tests **381/0**, provision-sim **85/85**, update-sim **170/170**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.60.0 (`65eb642…`) → panel 0.60.0 + agent 0.53.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup User Selection |
 | panel-update 0.59.0 (`56d98f5…`) → panel 0.59.0 + agent 0.52.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup Restoration |
 | panel-update 0.58.0 (`98da0f4…`) → panel 0.58.0 + agent 0.51.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup Config |
 | panel-update 0.57.0 (`1c769fe…`) → panel 0.57.0 + agent 0.50.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, File Restoration |
