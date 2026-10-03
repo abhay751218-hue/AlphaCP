@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.66.0  ·  default panel bundle 0.66.0  ·  agent 0.59.0  ·  alphacp-sync v1.2
+# updater 0.67.0  ·  default panel bundle 0.67.0  ·  agent 0.60.0  ·  alphacp-sync v1.2
 #
+# 0.67.0: S10 — safe home restore (whole home or one subtree, pre-restore copy); panel 0.67.0 + agent 0.60.0
 # 0.66.0: Security — symlink root-write escape fix (agent files.set/list/usage); panel 0.66.0 + agent 0.59.0
 # 0.65.0: S10 — real, verified home tar.gz archive + account-scoped download; backup storage open_basedir
 # 0.64.0: Step 10 — panel 0.64.0 (Review Transfers and Restores) + agent 0.57.0 (backup.review)
@@ -147,17 +148,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.66.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.66.0}"
+UPDATER_VERSION="0.67.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.67.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-1561570ebbd99d6525e8b78c3d1d8510a45d10d5}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-3b1bd72847a6465facdc04e71b1f27efff844c72}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-a3e8b1abdbe5e5fa01d53c8968bd0ae96ecd617afbdb8a4a4f5fc0839220a99d}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.59.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-1561570ebbd99d6525e8b78c3d1d8510a45d10d5}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-f8b6c73daab11863087e0bc26eb385c3a679c1eff2e18cd11bd6153ce0bf100f}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.60.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-3b1bd72847a6465facdc04e71b1f27efff844c72}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-394096bf61c693185618c6cb873350c1065895ccaa7f7a447443d4b40a8b3be7}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-9c0d4302f81b73217dd6929e8f67b7e6456094bbfca1ee1774c343ae5864ae4e}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
