@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.65.0  ·  default panel bundle 0.65.0  ·  agent 0.58.0  ·  alphacp-sync v1.2
+# updater 0.66.0  ·  default panel bundle 0.66.0  ·  agent 0.59.0  ·  alphacp-sync v1.2
 #
+# 0.66.0: Security — symlink root-write escape fix (agent files.set/list/usage); panel 0.66.0 + agent 0.59.0
 # 0.65.0: S10 — real, verified home tar.gz archive + account-scoped download; backup storage open_basedir
 # 0.64.0: Step 10 — panel 0.64.0 (Review Transfers and Restores) + agent 0.57.0 (backup.review)
 #
@@ -146,17 +147,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.65.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.65.0}"
+UPDATER_VERSION="0.66.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.66.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-8b1ca1e3ac735dcd5ff103d7f07b8344489ca3b7}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-1561570ebbd99d6525e8b78c3d1d8510a45d10d5}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-2e0310c4eb946353401bbb992ed39e987a4f10e8986ec5621f6b828f699cbf0e}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.58.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-8b1ca1e3ac735dcd5ff103d7f07b8344489ca3b7}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-a3e8b1abdbe5e5fa01d53c8968bd0ae96ecd617afbdb8a4a4f5fc0839220a99d}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.59.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-1561570ebbd99d6525e8b78c3d1d8510a45d10d5}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-b30f340806b1eed18ed0e58a50bc1ff0f39b612f6762851f772f350e916b1083}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-394096bf61c693185618c6cb873350c1065895ccaa7f7a447443d4b40a8b3be7}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"

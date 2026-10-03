@@ -112,7 +112,7 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.65.0'" grep -q "updater 0.65.0" "${U}/update-U1.out"
+chk "banner 'updater 0.66.0'" grep -q "updater 0.66.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -191,7 +191,8 @@ chk "TransferToolController present (0.62.0)" test -f "${PANEL}/app/Http/Control
 chk "TransferRestoreController present (0.63.0)" test -f "${PANEL}/app/Http/Controllers/TransferRestoreController.php"
 chk "TransferReviewController present (0.64.0)" test -f "${PANEL}/app/Http/Controllers/TransferReviewController.php"
 chk "BackupController has archive download endpoint (0.65.0)" grep -q "function download" "${PANEL}/app/Http/Controllers/BackupController.php"
-chk "agent 0.58.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.58.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
+chk "agent 0.59.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.59.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
+chk "symlink guard shipped (0.66.0)" grep -q "assertNoSymlink" "${ACP_HOME}/agent/src/PathGuard.php"
 chk "real backup archive handler installed" test -f "${ACP_HOME}/agent/src/BackupArchiveStore.php"
 chk "account.create in paneld allowlist" grep -q "account.create" "${ACP_HOME}/agent/config/tasks.php"
 chk "domain.add in paneld allowlist" grep -q "domain.add" "${ACP_HOME}/agent/config/tasks.php"
@@ -253,7 +254,7 @@ chk "backup.archive in paneld allowlist" grep -q "backup.archive" "${ACP_HOME}/a
 chk "tar binary allowlisted" grep -q "'/usr/bin/tar'" "${ACP_HOME}/agent/src/CommandRunner.php"
 chk "issueLetsEncrypt in agent" grep -q "issueLetsEncrypt" "${ACP_HOME}/agent/src/AccountOs.php"
 chk "suspended page installed" test -f "${ACP_HOME}/share/suspended/index.html"
-chk ".env ACP_AGENT_VERSION=0.58.0" grep -q "^ACP_AGENT_VERSION=0.58.0$" "${PANEL}/.env"
+chk ".env ACP_AGENT_VERSION=0.59.0" grep -q "^ACP_AGENT_VERSION=0.59.0$" "${PANEL}/.env"
 FPM_POOL="/etc/php/8.4/fpm/pool.d/alphacp.conf"
 chk "PHP-FPM open_basedir includes the dedicated backup subtree" grep -Fq "${ACP_HOME}/backups" "${FPM_POOL}"
 chk "PHP-FPM open_basedir does not expose the ACP_HOME root" bash -c "! grep -Fq '${ACP_HOME}:' '${FPM_POOL}'"
