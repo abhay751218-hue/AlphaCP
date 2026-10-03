@@ -301,7 +301,7 @@
 | 183 | Daily Process Log | S11 | ⏳ S11 |
 | 184 | **Task Queue Monitor** (hamara paneld queue) | S2B |S2B|🟡 2B-1| # | WHM tool | Step | Status |
 |---|---|---|---|
-| 185 | Transfer Tool (cPanel→AlphaCP migration) | S10 | ⏳ S10 |
+| 185 | Transfer Tool (cPanel→AlphaCP migration) | S10 | ✅ (JSON username+source FQDN; copy later) |
 | 186 | Transfer or Restore a cPanel Account | S10 | ⏳ S10 |
 | 187 | Convert Addon Domain to Account | S15 | ⏳ S15 |
 | 188 | Review Transfers and Restores | S10 | ⏳ S10 |

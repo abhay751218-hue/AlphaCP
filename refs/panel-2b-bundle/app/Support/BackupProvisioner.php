@@ -101,4 +101,12 @@ final class BackupProvisioner
             'path' => $path,
         ]);
     }
+
+    public static function enqueueTransfer(string $username, string $source): int
+    {
+        return Paneld::enqueue('backup.transfer', [
+            'username' => $username,
+            'source' => $source,
+        ]);
+    }
 }

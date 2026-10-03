@@ -180,6 +180,7 @@ final class ModuleCatalog
                     ['name' => 'Backup Restoration',  'step' => 'S10', 'status' => 'live', 'route' => 'backup-restoration.index'],
                     ['name' => 'Backup User Selection', 'step' => 'S10', 'status' => 'live', 'route' => 'backup-user-selection.index'],
                     ['name' => 'File and Directory Restoration', 'step' => 'S10', 'status' => 'live', 'route' => 'file-directory-restoration.index'],
+                    ['name' => 'Transfer Tool',       'step' => 'S10', 'status' => 'live', 'route' => 'transfer-tool.index'],
                     ['name' => 'Security Center',     'step' => 'S13', 'status' => 'step'],
                     ['name' => 'API Tokens',          'step' => 'S12', 'status' => 'step'],
                     ['name' => 'License & Trial',      'step' => 'S2C', 'status' => 'live', 'route' => 'license.index'],

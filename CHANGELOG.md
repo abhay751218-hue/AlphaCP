@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 10 Transfer Tool (3 Oct)** — WHM cPanel→AlphaCP via `backup.transfer`
+  (JSON; no tar/rsync/shell; pipe/path fail closed). Panel **0.62.0**, agent **0.55.0**.
+  Tests: panel **387/0**, provision-sim **86/86**, update-sim **172/172** (pin in B).
+  Deploy via `panel-update.sh` 0.62.0.
 - **Step 10 File and Directory Restoration (3 Oct)** — WHM username+path via `backup.filedir`
   (JSON; no tar/shell; pipe/path fail closed). Panel **0.61.0**, agent **0.54.0**.
   Tests: panel **381/0**, provision-sim **85/85**, update-sim **170/170** (pin in B).
