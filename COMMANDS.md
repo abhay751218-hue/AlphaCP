@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.52.0 — Step 9: Setup/Edit Domain Forwarding
+### panel-update 0.53.0 — Step 9: Synchronize DNS Records
 ```bash
-sudo alphacp-sync get 2ba0e827026236b90b39e08f633ef46d4082d6c7 installer/panel-update.sh /tmp/acp-panel-update-0.52.0.sh 0c3494b5ba99b8ec81f2ec473cfffdd8d1d4ed18fd245bce23c725844fcaf7e3 && sudo bash /tmp/acp-panel-update-0.52.0.sh
+sudo alphacp-sync get 439efc466b6d77391b94c2ef8f4b1f1816238357 installer/panel-update.sh /tmp/acp-panel-update-0.53.0.sh 7fac1fa931f72e7d755874c5393bb905d05106ad6675d864060cd08c3ff0061c && sudo bash /tmp/acp-panel-update-0.53.0.sh
 ```
-- sha256: `0c3494b5ba99b8ec81f2ec473cfffdd8d1d4ed18fd245bce23c725844fcaf7e3`
-- Expected: banner `updater 0.52.0` → agent **0.45.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Setup/Edit Domain Forwarding (domain + URL + 301/302 JSON). Hostile domain/URL fail closed. No BIND rewrite.
+- sha256: `7fac1fa931f72e7d755874c5393bb905d05106ad6675d864060cd08c3ff0061c`
+- Expected: banner `updater 0.53.0` → agent **0.46.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Synchronize DNS Records (domain JSON). Hostile domain fail closed. No BIND rewrite.
 - Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **327/0**, provision-sim **76/76**, update-sim **152/152**.
+- Test: panel-tests **333/0**, provision-sim **77/77**, update-sim **154/154**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.52.0 (`2ba0e82…`) → panel 0.52.0 + agent 0.45.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Setup/Edit Domain Forwarding |
 | panel-update 0.51.0 (`60bdca4…`) → panel 0.51.0 + agent 0.44.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Set Zone TTL |
 | panel-update 0.50.0 (`4154c83…`) → panel 0.50.0 + agent 0.43.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Perform a DNS Cleanup |
 | panel-update 0.49.0 (`a41d41a…`) → panel 0.49.0 + agent 0.42.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Park a Domain |
