@@ -82,6 +82,71 @@ class BackupTest extends TestCase
         $this->assertStringNotContainsString('|', (string) $task->payload);
     }
 
+    public function test_customer_can_queue_a_real_home_archive(): void
+    {
+        [$customer, $account] = $this->customerWithAccount();
+        $this->asPanelUser($customer)->get('/backup')
+            ->assertOk()
+            ->assertSee('Create home archive')
+            ->assertSee('home files only');
+
+        $this->asPanelUser($customer)->post('/backup/archive')->assertRedirect(route('backup.index'));
+        $task = DB::table('tasks')->where('account_id', $account->id)->where('type', 'backup.archive')->first();
+        $this->assertNotNull($task);
+        $this->assertSame('queued', $task->status);
+        $payload = json_decode((string) $task->payload, true);
+        $this->assertSame('custhost', $payload['username']);
+        $this->assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $payload['archive_id']);
+    }
+
+    public function test_customer_can_download_only_a_checksum_verified_own_archive(): void
+    {
+        [$customer, $account] = $this->customerWithAccount();
+        $archiveId = str_repeat('c', 32);
+        $archiveDir = rtrim((string) config('acp.home'), '/') . '/backups/accounts/custhost';
+        if (!is_dir($archiveDir)) {
+            mkdir($archiveDir, 0750, true);
+        }
+        $archivePath = $archiveDir . '/' . $archiveId . '.tar.gz';
+        $content = "verified fake archive bytes\n";
+        file_put_contents($archivePath, $content);
+        $taskId = DB::table('tasks')->insertGetId([
+            'server_id' => 1,
+            'type' => 'backup.archive',
+            'safety' => 'mutating',
+            'payload' => json_encode(['username' => 'custhost', 'archive_id' => $archiveId]),
+            'result' => json_encode([
+                'archive_id' => $archiveId,
+                'username' => 'custhost',
+                'scope' => 'home',
+                'filename' => $archiveId . '.tar.gz',
+                'size_bytes' => strlen($content),
+                'sha256' => hash('sha256', $content),
+                'created_at' => now()->toISOString(),
+                'status' => 'ready',
+            ]),
+            'status' => 'success',
+            'account_id' => $account->id,
+            'requested_src' => 'test',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->asPanelUser($customer)->get(route('backup.archive-download', ['archiveId' => $archiveId]))
+            ->assertOk()
+            ->assertDownload('alphacp-custhost-home-' . $archiveId . '.tar.gz');
+
+        file_put_contents($archivePath, 'tampered bytes');
+        $this->asPanelUser($customer)->get(route('backup.archive-download', ['archiveId' => $archiveId]))
+            ->assertNotFound();
+        file_put_contents($archivePath, $content);
+        DB::table('tasks')->where('id', $taskId)->update(['account_id' => $account->id + 100000]);
+        $this->asPanelUser($customer)->get(route('backup.archive-download', ['archiveId' => $archiveId]))
+            ->assertNotFound();
+        @unlink($archivePath);
+        @unlink($archiveDir . '/' . $archiveId . '.json');
+    }
+
     public function test_pipe_kind_is_rejected(): void
     {
         [$customer] = $this->customerWithAccount();

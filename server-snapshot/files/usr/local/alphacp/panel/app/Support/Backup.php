@@ -27,6 +27,9 @@ final class Backup
     /** @var list<string> */
     public const CPANEL_ACTIONS = ['transfer', 'restore'];
 
+    /** @var list<string> */
+    public const REVIEW_STATUSES = ['pending', 'ok', 'failed'];
+
     public static function tryKind(string $kind): ?string
     {
         $kind = strtolower(trim($kind));
@@ -112,5 +115,15 @@ final class Backup
         }
 
         return $action;
+    }
+
+    public static function tryReviewStatus(string $status): ?string
+    {
+        $status = strtolower(trim($status));
+        if (! in_array($status, self::REVIEW_STATUSES, true)) {
+            return null;
+        }
+
+        return $status;
     }
 }

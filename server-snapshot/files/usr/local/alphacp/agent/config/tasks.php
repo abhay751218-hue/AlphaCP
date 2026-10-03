@@ -1338,6 +1338,23 @@ return [
         ],
     ],
 
+    'backup.archive' => [
+        'handler'     => Tasks\BackupArchiveCreate::class,
+        'safety'      => 'mutating',
+        'timeout'     => 3600,
+        'description' => 'Create an immutable, SHA-256-verified home .tar.gz backup.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'archive_id'],
+            'properties'           => [
+                'username'   => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'archive_id' => ['type' => 'string', 'pattern' => '^[a-f0-9]{32}$', 'maxLength' => 32],
+            ],
+        ],
+    ],
+
     'backup.wizard' => [
         'handler'     => Tasks\BackupWizard::class,
         'safety'      => 'mutating',
@@ -1492,6 +1509,23 @@ return [
             'properties'           => [
                 'username' => ['type' => 'string', 'maxLength' => 16],
                 'action'   => ['type' => 'string', 'maxLength' => 16],
+            ],
+        ],
+    ],
+
+    'backup.review' => [
+        'handler'     => Tasks\BackupReview::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write WHM review transfers and restores (JSON; no tar/rsync/shell).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'status'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'maxLength' => 16],
+                'status'   => ['type' => 'string', 'maxLength' => 16],
             ],
         ],
     ],
