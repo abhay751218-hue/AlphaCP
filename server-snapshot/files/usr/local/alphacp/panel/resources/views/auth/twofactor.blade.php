@@ -4,7 +4,7 @@
 
 @section('content')
     <h1>2-Step Verification</h1>
-    <p class="sub">Enter the 6-digit code from your authenticator app</p>
+    <p class="sub">Authenticator app me dikh raha 6-digit code daalo</p>
 
     <form method="post" action="{{ route('twofactor.verify') }}">
         @csrf
@@ -21,5 +21,5 @@
         <button class="btn ghost small" type="submit">Cancel & logout</button>
     </form>
 
-    <p class="help mt">The code changes every 30 seconds. Old codes cannot be reused (replay protection).</p>
+    <p class="help mt">Code 30 second me badalta hai. Purana code dobara kaam nahi karega (replay protection).</p>
 @endsection

@@ -1,30 +1,18 @@
 @extends('layouts.panel')
 
-@section('title', $panelMode === 'whm' ? 'WHM Dashboard' : 'cPanel')
-@section('subtitle', $panelMode === 'whm'
-    ? 'Server health, accounts, packages — customer sites are not created on this page; they use cPanel'
-    : 'Files, email, domains, databases — ye aapka hosting control panel hai')
+@section('title', 'Dashboard')
+@section('subtitle', 'Server health, agent queue aur cPanel-parity progress ek nazar me')
 
 @section('actions')
-    @if ($panelMode === 'whm')
-        <a class="btn small secondary" href="{{ route('system.index', ['refresh' => 1]) }}">Refresh stats</a>
-        @can('accounts.view')
-            <a class="btn small secondary" href="{{ route('accounts.index') }}">Accounts</a>
-        @endcan
-        @can('system.tasks')
-            <a class="btn small secondary" href="{{ route('system.tasks') }}">Task queue</a>
-        @endcan
-    @else
-        @can('domains.view')
-            <a class="btn small secondary" href="{{ route('domains.index') }}">Domains</a>
-        @endcan
-        <a class="btn small secondary" href="{{ route('security.index') }}">Security</a>
-    @endif
+    <a class="btn small secondary" href="{{ route('system.index', ['refresh' => 1]) }}">Refresh stats</a>
+    @can('system.tasks')
+        <a class="btn small secondary" href="{{ route('system.tasks') }}">Task queue</a>
+    @endcan
 @endsection
 
 @section('content')
 
-@if ($panelMode === 'whm')
+{{-- ---------------------------------------------------------------- stats --}}
 <div class="grid cols-4">
     <div class="card">
         <h3>🧠 Memory</h3>
@@ -33,7 +21,7 @@
                 <span class="unit">used · {{ $system['memory']['used_mb'] }} / {{ $system['memory']['total_mb'] }} MB</span></div>
             <div class="meter {{ $system['memory']['used_pct'] > 85 ? 'amber' : 'green' }}"><span style="width: {{ min(100, $system['memory']['used_pct']) }}%"></span></div>
         @else
-            <p class="empty">No data from the agent (is paneld running?)</p>
+            <p class="empty">Agent se data nahi aaya (paneld chalu hai?)</p>
         @endif
     </div>
 
@@ -68,6 +56,7 @@
     </div>
 </div>
 
+{{-- ------------------------------------------------------------ services --}}
 <div class="grid cols-2 mt">
     <div class="card">
         <h3>🧩 Services</h3>
@@ -89,14 +78,14 @@
                 </table>
             </div>
         @else
-            <p class="empty">Service status did not come from the agent.</p>
+            <p class="empty">Service status agent se nahi aaya.</p>
         @endif
     </div>
 
     <div class="card">
         <h3>📝 Recent activity (audit)</h3>
         @if ($audit->isEmpty())
-            <p class="empty">No activity yet.</p>
+            <p class="empty">Abhi koi activity nahi.</p>
         @else
             <div class="table-wrap">
                 <table>
@@ -115,48 +104,8 @@
         @endif
     </div>
 </div>
-@else
-<div class="grid cols-4">
-    <div class="card">
-        <h3>🌐 Primary domain</h3>
-        @if ($account)
-            <div class="stat"><span class="num" style="font-size:18px">{{ $account->main_domain }}</span></div>
-            <p class="help">user <span class="mono">{{ $account->username }}</span> · {{ $account->status }}</p>
-        @else
-            <p class="empty">No hosting account is linked to this login. Ask your provider.</p>
-        @endif
-    </div>
-    <div class="card">
-        <h3>💾 Disk quota</h3>
-        @if ($account)
-            <div class="stat"><span class="num">{{ $account->disk_used_mb }}</span>
-                <span class="unit">MB used · {{ $account->quota_mb < 0 ? 'unlimited' : $account->quota_mb . ' MB' }}</span></div>
-        @else
-            <p class="empty">—</p>
-        @endif
-    </div>
-    <div class="card">
-        <h3>📦 Package</h3>
-        @if ($account)
-            <div class="stat"><span class="num" style="font-size:18px">{{ $account->package?->name ?? '—' }}</span></div>
-            <p class="help">PHP {{ $account->php_version }}</p>
-        @else
-            <p class="empty">—</p>
-        @endif
-    </div>
-    <div class="card">
-        <h3>🌍 Domains</h3>
-        @if ($account)
-            <div class="stat"><span class="num">{{ $account->domains->count() }}</span>
-                <span class="unit">on this account</span></div>
-            <p class="help"><a href="{{ route('domains.index') }}">Manage domains →</a></p>
-        @else
-            <p class="empty">—</p>
-        @endif
-    </div>
-</div>
-@endif
 
+{{-- ------------------------------------------------------------- parity --}}
 <div class="card mt">
     <h3>🎯 cPanel parity progress</h3>
     <div class="stat">
@@ -164,14 +113,11 @@
         <span class="unit">tools live · {{ $progress['planned'] }} planned · {{ $progress['addon'] }} optional · total {{ $progress['total'] }}</span>
     </div>
     <div class="meter"><span style="width: {{ max(3, $progress['percent']) }}%"></span></div>
-    <p class="help">Full checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span> — 208 items,
-        har item apne step me live hota jayega.
-        @if ($panelMode === 'cpanel')
-            Account create / packages are WHM (admin) only — they are hidden here.
-        @endif
-    </p>
+    <p class="help">Poori checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span> — 208 items,
+        har item apne step me live hota jayega.</p>
 </div>
 
+{{-- ------------------------------------------------------------- tiles --}}
 @foreach ($sections as $key => $section)
     @php
         $liveCount = collect($section['items'])->where('status', 'live')->count();

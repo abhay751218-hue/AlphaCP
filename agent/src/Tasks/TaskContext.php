@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Alphacp\Agent\Tasks;
 
-use Alphacp\Agent\CommandRunner;
+use Alphacp\Agent\CommandExecutor;
 use Alphacp\Agent\PathGuard;
 use Alphacp\Agent\TaskLogger;
 
@@ -16,7 +16,7 @@ final readonly class TaskContext
 {
     public function __construct(
         public TaskLogger $log,
-        public CommandRunner $cmd,
+        public CommandExecutor $cmd,
         public ?PathGuard $paths = null,
         public ?int $taskId = null,
         public ?array $taskRow = null,

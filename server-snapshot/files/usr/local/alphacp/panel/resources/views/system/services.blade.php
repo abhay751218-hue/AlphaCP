@@ -24,7 +24,7 @@
                             @if (in_array($name, ['nginx', 'exim4', 'dovecot', 'pure-ftpd'], true))
                                 apne step ke saath activate hoga
                             @elseif ($state['active'] === 'active')
-                                is running
+                                theek chal raha hai
                             @endif
                         </td>
                     </tr>
@@ -32,9 +32,9 @@
             </table>
         </div>
     @else
-        <p class="empty">Service status did not come from the agent.</p>
+        <p class="empty">Agent se service status nahi aaya.</p>
     @endif
     <p class="help mt">Ye page sirf dekhta hai — start/stop Step 13 (Service Manager) me aayega, aur wo bhi
-        through the task queue (the panel never performs root work itself).</p>
+        task queue ke through (panel kabhi root kaam khud nahi karta).</p>
 </div>
 @endsection

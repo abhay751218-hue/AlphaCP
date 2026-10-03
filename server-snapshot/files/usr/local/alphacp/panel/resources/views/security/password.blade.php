@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Change Password')
-@section('subtitle', 'The new password must match the policy')
+@section('subtitle', 'Naya password policy ke hisaab se hona chahiye')
 
 @section('content')
 <div class="grid cols-2">
@@ -12,10 +12,10 @@
             <label for="current_password">Current password</label>
             <input id="current_password" name="current_password" type="password" required autocomplete="current-password">
 
-            <label for="password">New password</label>
+            <label for="password">Naya password</label>
             <input id="password" name="password" type="password" required autocomplete="new-password">
 
-            <label for="password_confirmation">Confirm new password</label>
+            <label for="password_confirmation">Naya password dobara</label>
             <input id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password">
 
             <button class="btn mt" type="submit">Password badlo</button>
@@ -29,7 +29,7 @@
             <li>Bade + chhote letters dono</li>
             <li>Kam se kam 1 number</li>
             <li>Leaked passwords blocked (HIBP check)</li>
-            <li>Must differ from the current password</li>
+            <li>Purane password se alag hona chahiye</li>
         </ul>
         <p class="help mt">Yahi policy hosting accounts par bhi lagegi (Step 3+) — cPanel ki password strength
             settings ka equivalent, aur Step 13 me WHM-style se tune hoti hai.</p>

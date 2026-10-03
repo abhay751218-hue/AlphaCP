@@ -6,7 +6,7 @@
 
 @if ($errors->any())
     <div class="flash error">
-        <strong>Please fix the following:</strong>
+        <strong>Ruk jao — ye theek karo:</strong>
         <ul style="margin:6px 0 0 18px">
             @foreach ($errors->all() as $error)
                 <li>{{ $error }}</li>

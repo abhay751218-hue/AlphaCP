@@ -19,5 +19,5 @@
         <button class="btn mt" type="submit" style="width:100%; justify-content:center">Login</button>
     </form>
 
-    <p class="help mt">Too many failed passwords lock the account for a short time (brute-force protection).</p>
+    <p class="help mt">Galat password se account thodi der ke liye lock ho jata hai (brute-force protection).</p>
 @endsection

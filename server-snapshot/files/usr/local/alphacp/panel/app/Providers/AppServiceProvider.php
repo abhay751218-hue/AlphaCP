@@ -71,9 +71,7 @@ class AppServiceProvider extends ServiceProvider
         // row here prevents pages such as User Manager/Audit from showing
         // `server: unknown` merely because their controller is not a dashboard.
         View::composer('layouts.panel', static function ($view): void {
-            $user = auth()->user();
             $view->with('server', \App\Support\Panel::server());
-            $view->with('panelMode', $user ? \App\Support\ModuleCatalog::modeFor($user) : 'cpanel');
         });
 
         // ---- Blade helpers ---------------------------------------------------

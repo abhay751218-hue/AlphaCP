@@ -38,16 +38,16 @@
 
 | # | cPanel tool | Kya karta hai | Humara step | Status |
 |---|---|---|---|---|
-| 1 | File Manager | Upload/edit/delete/zip/permissions | S6 | ⏳ S6 |
+| 1 | File Manager | Upload/edit/delete/zip/permissions | S6 | ✅ (browse/mkdir/edit/delete/rename; zip/chmod later) |
 | 2 | Images | Resize/convert images | S6 | ⏳ S6 |
-| 3 | Directory Privacy | Password-protected folders | S6 | ⏳ S6 |
-| 4 | Disk Usage | Folder-wise space | S6 | ⏳ S6 |
+| 3 | Directory Privacy | Password-protected folders | S6 | ✅ (Apache Basic Auth; bcrypt htpasswd; path-jailed) |
+| 4 | Disk Usage | Folder-wise space | S6 | ✅ (home-jailed walk; symlink skip; 2000-node cap) |
 | 5 | Web Disk | WebDAV drive | S6 | ⏳ S6 |
 | 6 | FTP Accounts | FTP users | S6 | ⏳ S6 |
 | 7 | FTP Connections | FTP session logs | S6 | ⏳ S6 |
-| 8 | Backup | Manual backup download | S10 | ⏳ S10 |
-| 9 | Backup Wizard | Step-by-step backup/restore | S10 | ⏳ S10 |
-| 10 | File & Directory Restoration | Deleted file wapas | S10 | ⏳ S10 |
+| 8 | Backup | Manual backup download | S10 | ✅ (JSON jobs home/mail/mysql; tar later) |
+| 9 | Backup Wizard | Step-by-step backup/restore | S10 | ✅ (JSON action/scope; tar later) |
+| 10 | File & Directory Restoration | Deleted file wapas | S10 | ✅ (JSON paths; copy later) |
 | 11 | Git™ Version Control | Git deploy/repo | S6 | ⏳ S6 |
 | 12 | Trash | File Manager trash bin | S6 | ⏳ S6 |
 
@@ -55,44 +55,44 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 13 | Email Accounts | Mailboxes + quota | S7 | ⏳ S7 |
-| 14 | Forwarders | Email forward | S7 | ⏳ S7 |
-| 15 | Email Routing | MX/local routing per domain | S7 | ⏳ S7 |
-| 16 | Autoresponders | Vacation/auto reply | S7 | ⏳ S7 |
-| 17 | Default Address | Catch-all | S7 | ⏳ S7 |
-| 18 | Mailing Lists | Mailman lists | S7 | ⏳ S7 |
-| 19 | Track Delivery | Delivery trace | S7 | ⏳ S7 |
-| 20 | Global Email Filters | Server-side filters | S7 | ⏳ S7 |
-| 21 | Email Filters | Per-mailbox filters | S7 | ⏳ S7 |
-| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ⏳ S7 |
-| 23 | Address Importer | Bulk CSV import | S7 | ⏳ S7 |
-| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ⏳ S7 |
-| 25 | Encryption | PGP/GnuPG email keys | S7 | ⏳ S7 |
-| 26 | BoxTrapper | Challenge-response anti-spam | S7 | ⏳ S7 |
-| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ⏳ S7 |
-| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ⏳ S7 |
-| 29 | Webmail | Roundcube/Horde link | S7 | ⏳ S7 |
+| 13 | Email Accounts | Mailboxes + quota | S7 | ✅ (virtual Maildir; bcrypt passwd-file; MAXPOP) |
+| 14 | Forwarders | Email forward | S7 | ✅ (address→address aliases; no pipe/shell) |
+| 15 | Email Routing | MX/local routing per domain | S7 | ✅ (auto/local/backup/remote JSON; no Exim rewrite) |
+| 16 | Autoresponders | Vacation/auto reply | S7 | ✅ (JSON vacation file; no pipe/shell) |
+| 17 | Default Address | Catch-all | S7 | ✅ (`*@domain` → email; no pipe/shell) |
+| 18 | Mailing Lists | Mailman lists | S7 | ✅ (list+owner JSON; no mailman daemon) |
+| 19 | Track Delivery | Delivery trace | S7 | ✅ (jailed track.json search; no Exim log) |
+| 20 | Global Email Filters | Server-side filters | S7 | ✅ (account-wide contains-match JSON; no pipe) |
+| 21 | Email Filters | Per-mailbox filters | S7 | ✅ (contains-match JSON; discard/folder; no pipe) |
+| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF/DMARC copy records; DNS/DKIM keys later) |
+| 23 | Address Importer | Bulk CSV import | S7 | ✅ (CSV local,domain,password → mail.set; no pipe) |
+| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (score 1–10 + lists JSON; no daemon) |
+| 25 | Encryption | PGP/GnuPG email keys | S7 | ✅ (identity JSON; no gpg/private key) |
+| 26 | BoxTrapper | Challenge-response anti-spam | S7 | ✅ (enabled+allowlist JSON; no daemon) |
+| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ✅ (calendar+contact names JSON; no CalDAV) |
+| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ✅ (mail/ walk; symlink skip; purge later) |
+| 29 | Webmail | Roundcube/Horde link | S7 | ✅ (client JSON; no Roundcube/Horde install) |
 
 ### 🌐 Domains
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 30 | Domains | Overview + actions | S5 | ⏳ S5 |
-| 31 | Subdomains | sub.domain.com | S5 | ⏳ S5 |
-| 32 | Addon Domains | Extra domain, alag site | S5 | ⏳ S5 |
-| 33 | Aliases (Parked) | Domain aliases | S5 | ⏳ S5 |
-| 34 | Redirects | 301/302 redirect | S5 | ⏳ S5 |
-| 35 | Zone Editor | A/CNAME/MX/TXT/… records | S9 | ⏳ S9 |
-| 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 |
+| 30 | Domains | Overview + actions | S5 | ✅ (cPanel tool; WHM alag) |
+| 31 | Subdomains | sub.domain.com | S5 | ✅ |
+| 32 | Addon Domains | Extra domain, alag site | S5 | ✅ |
+| 33 | Aliases (Parked) | Domain aliases | S5 | ✅ |
+| 34 | Redirects | 301/302 redirect | S5 | ✅ |
+| 35 | Zone Editor | A/CNAME/MX/TXT/… records | S9 | ✅ (JSON records; no BIND rewrite; NS later) |
+| 36 | Dynamic DNS | Dynamic IP clients | S9 | ✅ (hosts+tokens JSON; no BIND rewrite; public updater later) |
 
 ### 🗄️ Databases
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 37 | MySQL® Databases | DB + users + privileges | S8 | ⏳ S8 |
-| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 |
-| 39 | phpMyAdmin | DB GUI (SSO login) | S8 | ⏳ S8 |
-| 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 |
+| 37 | MySQL® Databases | DB + users + privileges | S8 | ✅ (prefixed names JSON; no mysql binary; users later) |
+| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ✅ (session confirm; reuses db.set; users later) |
+| 39 | phpMyAdmin | DB GUI (SSO login) | S8 | ✅ (enabled JSON; no phpMyAdmin install; SSO later) |
+| 40 | Remote MySQL | Remote access hosts | S8 | ✅ (%/IPv4/FQDN JSON; no mysql GRANT) |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
 | 42 | PostgreSQL Wizard | 🔵 optional module | post-v1 | 🔵 |
 
@@ -116,10 +116,10 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 54 | SSH Access | Keys + shell access control | S6 | ⏳ S6 |
+| 54 | SSH Access | Keys + shell access control | S6 | ✅ (authorized_keys; nologin/bash if HASSHELL; no virtfs) |
 | 55 | IP Blocker | IP/range block | S13 | ⏳ S13 |
-| 56 | SSL/TLS | CSR, cert install, keys | S5 | ⏳ S5 |
-| 57 | SSL/TLS Status | Sab domains ka SSL ek table | S5 | ⏳ S5 |
+| 56 | SSL/TLS | CSR, cert install, keys | S5 | ✅ (Let's Encrypt AutoSSL + self-signed) |
+| 57 | SSL/TLS Status | Sab domains ka SSL ek table | S5 | ✅ |
 | 58 | Two-Factor Authentication | TOTP 2FA |S2B-2|✅|
 | 59 | Password & Security | Password change + strength |S2B|✅|
 | 60 | Leech Protection | Password vs hotlink abusers | S13 | ⏳ S13 |
@@ -135,8 +135,8 @@
 | 65 | WP Guardian-style security | Malware scan + vuln patch | S14 | ⏳ S14 |
 | 66 | Node.js® Selector | Node apps + npm | S14 | ⏳ S14 |
 | 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 |
-| 68 | MultiPHP Manager | Per-domain PHP version | S5 | ⏳ S5 |
-| 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ⏳ S5 |
+| 68 | MultiPHP Manager | Per-domain PHP version | S5 | ✅ (account-level; per-domain later) |
+| 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ✅ (account-level FPM php_admin_value; per-dir later) |
 | 70 | PHP Composer | Composer in panel | S14 | ⏳ S14 |
 | 71 | PHP PEAR Packages | 🔵 legacy | post-v1 | 🔵 |
 | 72 | Ruby Gems | 🔵 legacy | post-v1 | 🔵 |
@@ -148,12 +148,12 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 76 | Cron Jobs | Scheduled tasks | S5 | ⏳ S5 |
-| 77 | Track DNS | DNS trace/debug | S9 | ⏳ S9 |
-| 78 | Indexes | Directory listing control | S5 | ⏳ S5 |
-| 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 |
-| 80 | MIME Types | Custom MIME | S5 | ⏳ S5 |
-| 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 |
+| 76 | Cron Jobs | Scheduled tasks | S5 | ✅ |
+| 77 | Track DNS | DNS trace/debug | S9 | ✅ (zone/dynamic JSON search; no dig/BIND) |
+| 78 | Indexes | Directory listing control | S5 | ✅ (account-level off/simple/fancy) |
+| 79 | Error Pages | Custom 404/500 etc. | S5 | ✅ (account-level 4xx/5xx HTML) |
+| 80 | MIME Types | Custom MIME | S5 | ✅ (account-level AddType; PHP/CGI/SSI blocked) |
+| 81 | Apache Handlers | Custom handlers | S5 | ✅ (account-level AddHandler; PHP/proxy blocked) |
 | 82 | Network Tools | Ping/traceroute/lookup | S11 | ⏳ S11 |
 | 83 | Terminal | Browser SSH (jailed) | S6 | ⏳ S6 |
 | 84 | Hotlink Protection | Image hotlink block | S13 | ⏳ S13 |
@@ -192,14 +192,14 @@
 ### Account Functions / Information
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 104 | Create a New Account | S3 | ⏳ S3 |
-| 105 | List Accounts | S3 | ⏳ S3 |
-| 106 | Modify an Account | S3 | ⏳ S3 |
-| 107 | Suspend / Unsuspend (Manage Account Suspension) | S3 | ⏳ S3 |
-| 108 | Terminate Accounts | S3 | ⏳ S3 |
-| 109 | Upgrade / Downgrade an Account | S4 | ⏳ S4 |
-| 110 | Quota Modification | S4 | ⏳ S4 |
-| 111 | Password Modification + Force Password Change | S3 | ⏳ S3 |
+| 104 | Create a New Account | S3 | ✅ |
+| 105 | List Accounts | S3 | ✅ |
+| 106 | Modify an Account | S3 | 🟡 S4 (package/quota; IP/password later) |
+| 107 | Suspend / Unsuspend (Manage Account Suspension) | S3 | ✅ |
+| 108 | Terminate Accounts | S3 | ✅ |
+| 109 | Upgrade / Downgrade an Account | S4 | ✅ |
+| 110 | Quota Modification | S4 | ✅ |
+| 111 | Password Modification + Force Password Change | S3 | 🟡 S3 (create generates + force-change; dedicated reset S4) |
 | 112 | Change Site's IP Address | S3 | ⏳ S3 |
 | 113 | Rearrange an Account | S15 | ⏳ S15 |
 | 114 | Limit/Reset Bandwidth Usage + Unsuspend Bandwidth Exceeders | S11 | ⏳ S11 |
@@ -208,7 +208,7 @@
 | 117 | Email All Users | S11 | ⏳ S11 |
 | 118 | Web Template Editor | S5 | ⏳ S5 |
 | 119 | List Parked Domains / List Subdomains | S5 | ⏳ S5 |
-| 120 | List Suspended Accounts / Show Accounts Over Quota | S3 | ⏳ S3 |
+| 120 | List Suspended Accounts / Show Accounts Over Quota | S3 | 🟡 S3 (status on list; over-quota S11) |
 | 121 | View Bandwidth Usage | S11 | ⏳ S11 |
 | 122 | Manage Demo Mode | S15 | ⏳ S15 |
 
@@ -224,18 +224,18 @@
 ### DNS Functions
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 128 | DNS Zone Manager | S9 | ⏳ S9 |
-| 129 | Add / Delete a DNS Zone | S9 | ⏳ S9 |
-| 130 | Add an A Entry for Your Hostname | S9 | ⏳ S9 |
-| 131 | Edit Zone Templates | S9 | ⏳ S9 |
-| 132 | Email Routing Configuration (global) | S9 | ⏳ S9 |
+| 128 | DNS Zone Manager | S9 | ✅ (WHM list + dns.zone sync; no BIND rewrite) |
+| 129 | Add / Delete a DNS Zone | S9 | ✅ (WHM parked add/delete; domain.add/remove + dns.zone; no BIND) |
+| 130 | Add an A Entry for Your Hostname | S9 | ✅ (WHM hostname A JSON; no BIND rewrite) |
+| 131 | Edit Zone Templates | S9 | ✅ (WHM templates JSON; no BIND rewrite) |
+| 132 | Email Routing Configuration (global) | S9 | ✅ (WHM global MX JSON; no Exim rewrite) |
 | 133 | Enable DKIM/SPF Globally | S7 | ⏳ S7 |
-| 134 | Nameserver Record Report | S9 | ⏳ S9 |
-| 135 | Park a Domain | S9 | ⏳ S9 |
-| 136 | Perform a DNS Cleanup | S9 | ⏳ S9 |
-| 137 | Set Zone TTL | S9 | ⏳ S9 |
-| 138 | Setup/Edit Domain Forwarding | S9 | ⏳ S9 |
-| 139 | Synchronize DNS Records | S9 | ⏳ S9 |
+| 134 | Nameserver Record Report | S9 | ✅ (WHM NS report JSON; no BIND rewrite) |
+| 135 | Park a Domain | S9 | ✅ (WHM park JSON; no BIND rewrite) |
+| 136 | Perform a DNS Cleanup | S9 | ✅ (WHM cleanup JSON; no BIND rewrite) |
+| 137 | Set Zone TTL | S9 | ✅ (WHM zone TTL JSON; no BIND rewrite) |
+| 138 | Setup/Edit Domain Forwarding | S9 | ✅ (WHM forward JSON; no BIND rewrite) |
+| 139 | Synchronize DNS Records | S9 | ✅ (WHM sync JSON; no BIND rewrite) |
 | 140 | DNS Cluster | S15 | ⏳ S15 |
 
 ### Email (server-wide)
@@ -284,25 +284,25 @@
 | # | WHM tool | Step | Status |
 |---|---|---|---|
 | 171 | Service Manager (start/stop/enable) | S2B |S2B|🟡 2B-2| 172 | Restart: DNS / HTTP / IMAP / Mail / SQL / SSH / PHP-FPM / Mailing List | S2B | 🟡 2B |
-| 173 | Exim / FTP Server Selection / Mailserver / Nameserver Selection | S7·S9 | ⏳ |
+| 173 | Exim / FTP Server Selection / Mailserver / Nameserver Selection | S7·S9 | 🟡 (WHM nameserver JSON; Exim/FTP/mailserver later) |
 | 174 | Manage Service SSL Certificates | S5 | ⏳ S5 |
 | 175 | cPanel Web Disk & Web Services Configuration | S6 | ⏳ S6 |
 
 ### Backup / Clusters / Reboot / Status
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 176 | Backup Configuration (schedule, remote, retention) | S10 | ⏳ S10 |
-| 177 | Backup Restoration (full/partial/per-account) | S10 | ⏳ S10 |
-| 178 | Backup User Selection | S10 | ⏳ S10 |
-| 179 | File and Directory Restoration | S10 | ⏳ S10 |
+| 176 | Backup Configuration (schedule, remote, retention) | S10 | ✅ (JSON schedule/retention; remote later) |
+| 177 | Backup Restoration (full/partial/per-account) | S10 | ✅ (JSON full/partial/account; tar later) |
+| 178 | Backup User Selection | S10 | ✅ (JSON usernames; tar later) |
+| 179 | File and Directory Restoration | S10 | ✅ (JSON username+path; tar later) |
 | 180 | Configuration Cluster / DNS Cluster | S15 | ⏳ S15 |
 | 181 | Graceful / Forceful Server Reboot | S2B | 🟡 2B |
 | 182 | Server Information / Service Status / Apache Status | S11 | ⏳ S11 |
 | 183 | Daily Process Log | S11 | ⏳ S11 |
 | 184 | **Task Queue Monitor** (hamara paneld queue) | S2B |S2B|🟡 2B-1| # | WHM tool | Step | Status |
 |---|---|---|---|
-| 185 | Transfer Tool (cPanel→AlphaCP migration) | S10 | ⏳ S10 |
-| 186 | Transfer or Restore a cPanel Account | S10 | ⏳ S10 |
+| 185 | Transfer Tool (cPanel→AlphaCP migration) | S10 | ✅ (JSON username+source FQDN; copy later) |
+| 186 | Transfer or Restore a cPanel Account | S10 | ✅ (JSON username+action transfer/restore; copy later) |
 | 187 | Convert Addon Domain to Account | S15 | ⏳ S15 |
 | 188 | Review Transfers and Restores | S10 | ⏳ S10 |
 | 189 | IP Functions (assign/show IPs) | S15 | ⏳ S15 |

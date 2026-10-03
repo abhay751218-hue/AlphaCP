@@ -5,44 +5,27 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Support\Audit;
-use App\Support\DomainProvisioner;
 use App\Support\ModuleCatalog;
 use App\Support\Panel;
 use App\Support\Paneld;
-use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** WHM dashboard for root/reseller; cPanel dashboard for hosting customers. */
+/** cPanel-style dashboard: quick stats + section/tile grid. */
 class DashboardController extends Controller
 {
-    public function index(Request $request): View
+    public function index(): View
     {
-        $user = $request->user();
-        $mode = ModuleCatalog::modeFor($user);
-        $account = $mode === 'cpanel' ? $user->hostingAccount : null;
-        if ($account !== null) {
-            DomainProvisioner::seedMain($account);
-        }
-
-        $system = $services = null;
-        $queue = ['queued' => 0, 'running' => 0, 'success' => 0, 'failed' => 0];
-        $audit = collect();
-        if ($mode === 'whm') {
-            $system = Paneld::run('system.info', [], 8);
-            $services = Paneld::run('service.status', [], 10);
-            $queue = Panel::queueStats();
-            $audit = Audit::recent(6);
-        }
+        $system   = Paneld::run('system.info', [], 8);   // real data via the root agent
+        $services = Paneld::run('service.status', [], 10);
 
         return view('dashboard', [
-            'panelMode' => $mode,
-            'account'   => $account?->load(['package', 'domains']),
             'system'    => $system,
             'services'  => $services['services'] ?? [],
-            'queue'     => $queue,
-            'sections'  => ModuleCatalog::sectionsFor($user),
+            'queue'     => Panel::queueStats(),
+            'tasks'     => Paneld::recentTasks(6),
+            'sections'  => ModuleCatalog::sections(),
             'progress'  => ModuleCatalog::progress(),
-            'audit'     => $audit,
+            'audit'     => Audit::recent(6),
             'server'    => Panel::server(),
             'versions'  => Panel::versions(),
         ]);

@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Active Sessions')
-@section('subtitle', 'Which devices have the panel open — log any device out')
+@section('subtitle', 'Kaunse device se panel khula hua hai — kisi bhi device ko logout karo')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('security.index') }}">← Security</a>

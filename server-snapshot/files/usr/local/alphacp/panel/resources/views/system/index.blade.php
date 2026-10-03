@@ -25,7 +25,7 @@
                 <dt>Collected</dt><dd class="muted">{{ $system['collected_at'] }} (UTC)</dd>
             </dl>
         @else
-            <p class="empty">No agent response — check <span class="mono">systemctl status paneld</span>.</p>
+            <p class="empty">Agent response nahi aaya — <span class="mono">systemctl status paneld</span> check karo.</p>
         @endif
     </div>
 
@@ -57,7 +57,7 @@
                 <dt>Registered</dt><dd class="muted">{{ $server['created_at'] }}</dd>
             </dl>
         @else
-            <p class="empty">Server row not found.</p>
+            <p class="empty">Server row nahi mila.</p>
         @endif
     </div>
 

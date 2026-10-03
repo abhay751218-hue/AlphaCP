@@ -51,14 +51,6 @@ final class PermissionCatalog
                 ['files.view', 'Browse files'],
                 ['files.manage', 'Upload/edit/delete files'],
             ],
-            'privacy' => [
-                ['privacy.view', 'View directory privacy'],
-                ['privacy.manage', 'Protect folders with Basic Auth'],
-            ],
-            'ssh' => [
-                ['ssh.view', 'View SSH keys'],
-                ['ssh.manage', 'Manage SSH keys and shell'],
-            ],
             'email' => [
                 ['email.view', 'View email accounts'],
                 ['email.manage', 'Create/manage email'],
@@ -66,30 +58,6 @@ final class PermissionCatalog
             'domains' => [
                 ['domains.view', 'View domains'],
                 ['domains.manage', 'Add/remove domains'],
-            ],
-            'software' => [
-                ['software.view', 'View MultiPHP / software'],
-                ['software.manage', 'Change PHP version'],
-            ],
-            'cron' => [
-                ['cron.view', 'View cron jobs'],
-                ['cron.manage', 'Create/delete cron jobs'],
-            ],
-            'errorpages' => [
-                ['errorpages.view', 'View error pages'],
-                ['errorpages.manage', 'Edit custom error pages'],
-            ],
-            'indexes' => [
-                ['indexes.view', 'View indexes setting'],
-                ['indexes.manage', 'Change directory listing'],
-            ],
-            'mime' => [
-                ['mime.view', 'View MIME types'],
-                ['mime.manage', 'Add/remove MIME types'],
-            ],
-            'handlers' => [
-                ['handlers.view', 'View Apache handlers'],
-                ['handlers.manage', 'Add/remove Apache handlers'],
             ],
             'databases' => [
                 ['databases.view', 'View databases'],
@@ -105,10 +73,6 @@ final class PermissionCatalog
             ],
             'monitoring' => [
                 ['metrics.view', 'View stats & metrics'],
-            ],
-            'ssl' => [
-                ['ssl.view', 'View SSL status'],
-                ['ssl.manage', 'Issue/remove SSL certificates'],
             ],
             'security' => [
                 ['security.view', 'View security center'],
@@ -150,24 +114,14 @@ final class PermissionCatalog
                 'accounts.view', 'accounts.create', 'accounts.suspend',
                 'accounts.modify', 'packages.view', 'files.view', 'files.manage',
                 'email.view', 'email.manage', 'domains.view', 'domains.manage',
-                'databases.view', 'databases.manage', 'dns.view', 'dns.manage', 'backup.view',
+                'databases.view', 'databases.manage', 'dns.view', 'backup.view',
                 'metrics.view', 'security.view', 'audit.view', 'system.view',
-                'software.view', 'software.manage', 'cron.view', 'cron.manage',
-                'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
-                'indexes.view', 'indexes.manage', 'mime.view', 'mime.manage',
-                'handlers.view', 'handlers.manage', 'privacy.view', 'privacy.manage',
-                'ssh.view', 'ssh.manage',
             ],
 
             'user' => [
                 'core.access', 'core.self', 'files.view', 'files.manage',
-                'email.view', 'email.manage', 'domains.view', 'domains.manage',
-                'databases.view', 'databases.manage', 'dns.view', 'dns.manage', 'backup.view', 'metrics.view',
-                'software.view', 'software.manage', 'cron.view', 'cron.manage',
-                'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
-                'indexes.view', 'indexes.manage', 'mime.view', 'mime.manage',
-                'handlers.view', 'handlers.manage', 'privacy.view', 'privacy.manage',
-                'ssh.view', 'ssh.manage',
+                'email.view', 'email.manage', 'domains.view', 'databases.view',
+                'dns.view', 'backup.view', 'metrics.view',
             ],
 
             'mail' => [

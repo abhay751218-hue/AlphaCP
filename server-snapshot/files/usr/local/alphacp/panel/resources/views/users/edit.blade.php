@@ -46,17 +46,17 @@
 
     <div class="card">
         <h3>🔑 Password reset</h3>
-        <p class="help">Set a new temporary password. The user must change it on next login; 2FA will also reset.</p>
+        <p class="help">Naya temporary password set karo. User ko next login par badalna padega; 2FA bhi reset ho jayega.</p>
         <form method="post" action="{{ route('users.password', $user) }}">
             @csrf
-            <label for="password">New temporary password</label>
+            <label for="password">Naya temporary password</label>
             <input id="password" name="password" type="password" required>
             <button class="btn danger mt" type="submit">Reset password</button>
         </form>
 
         <h3 class="mt">📋 Info</h3>
         <dl class="kv">
-            <dt>Last login</dt><dd>{{ $user->last_login_at?->toDateTimeString() ?? 'never' }}</dd>
+            <dt>Last login</dt><dd>{{ $user->last_login_at?->toDateTimeString() ?? 'kabhi nahi' }}</dd>
             <dt>Last IP</dt><dd class="mono">{{ $user->last_login_ip ?? '—' }}</dd>
             <dt>2FA</dt><dd>{{ $user->two_factor_enabled ? 'ON' : 'OFF' }}</dd>
             <dt>Created</dt><dd>{{ $user->created_at?->toDateTimeString() }}</dd>

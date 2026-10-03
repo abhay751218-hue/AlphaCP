@@ -19,7 +19,7 @@
 
 @can('system.manage')
 <div class="card mb">
-    <h3>▶️ Run a read-only task (test)</h3>
+    <h3>▶️ Read-only task chalao (test)</h3>
     <form method="post" action="{{ route('system.tasks.run') }}" class="row">
         @csrf
         <select name="type" style="max-width:280px">
@@ -29,8 +29,8 @@
                 @endif
             @endforeach
         </select>
-        <button class="btn" type="submit">Enqueue</button>
-        <span class="help">Safety: only <span class="mono">readonly</span> tasks can run from here.</span>
+        <button class="btn" type="submit">Queue me daalo</button>
+        <span class="help">Safety: sirf <span class="mono">readonly</span> tasks yahan se chal sakte hain.</span>
     </form>
 </div>
 @endcan
@@ -53,7 +53,7 @@
                     <td class="right"><a class="btn small ghost" href="{{ route('system.tasks', ['task' => $row->id]) }}">logs</a></td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="empty">No tasks yet. Enqueue a readonly task above.</td></tr>
+                <tr><td colspan="7" class="empty">Koi task nahi. Upar se ek readonly task chala kar dekho.</td></tr>
             @endforelse
         </table>
     </div>
@@ -72,12 +72,12 @@
 
         <h3 class="mt">Agent logs</h3>
         @if ($logs->isEmpty())
-            <p class="empty">No logs yet (the task may still be queued).</p>
+            <p class="empty">Logs nahi hain (task abhi queue me ho sakta hai).</p>
         @else
             <pre class="mono" style="white-space:pre-wrap; background:#0d1628; border:1px solid var(--line); border-radius:10px; padding:12px">@foreach ($logs as $log)[{{ $log->level }}] {{ $log->line }}
 @endforeach</pre>
         @endif
-        <p class="help mt">Reload in 3 seconds for a refresh — live streaming comes in Step 11.</p>
+        <p class="help mt">Auto-refresh ke liye 3 second baad page reload karo — live streaming Step 11 me aayega.</p>
     </div>
 @endif
 

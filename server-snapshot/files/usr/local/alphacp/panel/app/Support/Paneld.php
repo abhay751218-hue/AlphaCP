@@ -40,7 +40,7 @@ final class Paneld
     }
 
     /** @param array<string, mixed> $payload */
-    public static function enqueue(string $type, array $payload = [], string $source = 'panel', ?int $accountId = null): int
+    public static function enqueue(string $type, array $payload = [], string $source = 'panel'): int
     {
         $registry = self::registry();
         if (!isset($registry[$type])) {
@@ -55,7 +55,6 @@ final class Paneld
             'safety'        => $safety,
             'payload'       => json_encode($payload, JSON_UNESCAPED_SLASHES),
             'status'        => 'queued',
-            'account_id'    => $accountId,
             'requested_by'  => auth()->id(),
             'requested_src' => $source,
             'created_at'    => now(),

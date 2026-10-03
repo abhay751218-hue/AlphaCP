@@ -37,7 +37,7 @@ class SecurityController extends Controller
     public function startTwoFactor(Request $request): RedirectResponse
     {
         $user = $request->user();
-        abort_if($user->two_factor_enabled, 400, '2FA is already on.');
+        abort_if($user->two_factor_enabled, 400, '2FA pehle se on hai.');
 
         $secret = Totp::generateSecret();
         $request->session()->put('2fa_pending', $secret);
@@ -54,14 +54,14 @@ class SecurityController extends Controller
         $secret = $request->session()->get('2fa_pending');
 
         if (! $secret) {
-            return redirect()->route('security.index')->withErrors(['code' => 'Click Enable 2FA first.']);
+            return redirect()->route('security.index')->withErrors(['code' => 'Pehle "Enable 2FA" dabao.']);
         }
 
         $data = $request->validate(['code' => ['required', 'string', 'max:10']]);
         $step = Totp::verify($secret, $data['code']);
 
         if ($step === null) {
-            return back()->withErrors(['code' => 'Code did not match — is the app clock correct? Try again.']);
+            return back()->withErrors(['code' => 'Code match nahi hua — app ka time theek hai? Dobara try karo.']);
         }
 
         $user->forceFill([
@@ -74,7 +74,7 @@ class SecurityController extends Controller
         $request->session()->forget('2fa_pending');
         Audit::log('security.2fa_enabled', 'warning', 'user', $user->id);
 
-        return redirect()->route('security.index')->with('success', '2FA is on. Every login will ask for a code.');
+        return redirect()->route('security.index')->with('success', '2FA ON ho gaya. Ab har login par code maangega.');
     }
 
     public function disableTwoFactor(Request $request): RedirectResponse
@@ -84,7 +84,7 @@ class SecurityController extends Controller
 
         if (! Hash::check($data['password'], $user->password_hash)) {
             Audit::log('security.2fa_disable_failed', 'warning', 'user', $user->id);
-            return back()->withErrors(['password' => 'Password is incorrect.']);
+            return back()->withErrors(['password' => 'Password galat hai.']);
         }
 
         $user->forceFill([
@@ -96,7 +96,7 @@ class SecurityController extends Controller
 
         Audit::log('security.2fa_disabled', 'critical', 'user', $user->id);
 
-        return redirect()->route('security.index')->with('warning', '2FA is off.');
+        return redirect()->route('security.index')->with('warning', '2FA OFF ho gaya.');
     }
 
     public function password(Request $request): View
@@ -115,7 +115,7 @@ class SecurityController extends Controller
 
         if (! Hash::check($data['current_password'], $user->password_hash)) {
             Audit::log('security.password_change_failed', 'warning', 'user', $user->id);
-            return back()->withErrors(['current_password' => 'Current password is incorrect.']);
+            return back()->withErrors(['current_password' => 'Current password galat hai.']);
         }
 
         $user->forceFill([
@@ -125,7 +125,7 @@ class SecurityController extends Controller
 
         Audit::log('security.password_changed', 'warning', 'user', $user->id);
 
-        return redirect()->route('dashboard')->with('success', 'Password changed.');
+        return redirect()->route('dashboard')->with('success', 'Password badal gaya. 👍');
     }
 
     public function sessions(Request $request): View
@@ -146,7 +146,7 @@ class SecurityController extends Controller
             Audit::log('security.session_revoked', 'warning', 'user', $user->id, ['session' => substr($id, 0, 8) . '…']);
         }
 
-        return redirect()->route('security.sessions')->with('success', 'Session ended.');
+        return redirect()->route('security.sessions')->with('success', 'Session band kar di.');
     }
 
     /** @return \Illuminate\Support\Collection<int, object> */

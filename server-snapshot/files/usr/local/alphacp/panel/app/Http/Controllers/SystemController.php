@@ -63,6 +63,6 @@ class SystemController extends Controller
         $id = Paneld::enqueue($data['type']);
 
         return redirect()->route('system.tasks', ['task' => $id])
-            ->with('success', "Task #{$id} is queued — the agent will run it and the result shows here.");
+            ->with('success', "Task #{$id} queue me daala gaya — agent uthayega aur result yahin dikhega.");
     }
 }
