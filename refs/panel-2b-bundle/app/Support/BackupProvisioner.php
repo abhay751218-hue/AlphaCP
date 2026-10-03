@@ -37,6 +37,23 @@ final class BackupProvisioner
         ], 'panel', $account->id);
     }
 
+    /**
+     * Queue a REAL restore of a checksum-verified home archive (agent task
+     * `backup.recover`, destructive + `_confirm` gated).
+     */
+    public static function enqueueRecover(Account $account, string $archiveId): int
+    {
+        if (preg_match('/^[a-f0-9]{32}$/', $archiveId) !== 1) {
+            throw new \InvalidArgumentException('Invalid backup archive id.');
+        }
+
+        return Paneld::enqueue('backup.recover', [
+            'username' => $account->username,
+            'archive_id' => $archiveId,
+            '_confirm' => 'backup.recover',
+        ], 'panel', $account->id);
+    }
+
     public static function limitReached(Account $account): bool
     {
         return $account->backupJobs()->count() >= Backup::MAX;

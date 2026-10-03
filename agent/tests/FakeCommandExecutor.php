@@ -27,6 +27,14 @@ final class FakeCommandExecutor implements CommandExecutor
 
     public ?string $failWhenContains = null;
 
+    /**
+     * Members the fake tar materialises for `--extract` (restore tests).
+     * Each row: ['type' => 'dir'|'file'|'symlink', 'path' => 'user/...', 'content' => ..., 'target' => ...]
+     *
+     * @var list<array{type:string,path:string,content?:string,target?:string}>
+     */
+    public array $tarExtractMembers = [];
+
     public function run(array $argv, ?int $timeout = null, ?string $stdin = null): CommandResult
     {
         $this->calls[] = $argv;
@@ -127,6 +135,54 @@ final class FakeCommandExecutor implements CommandExecutor
         }
         if (in_array('--list', $argv, true) && is_file($path)) {
             return new CommandResult($argv, 0, "alicehost/\nalicehost/public_html/index.php\n", '', 1);
+        }
+        if (in_array('--extract', $argv, true)) {
+            if (!is_file($path)) {
+                return new CommandResult($argv, 2, '', 'tar: archive missing', 1);
+            }
+            $dirIndex = array_search('--directory', $argv, true);
+            $target = is_int($dirIndex) ? (string) ($argv[$dirIndex + 1] ?? '') : '';
+            if ($target === '' || !is_dir($target)) {
+                return new CommandResult($argv, 2, '', 'tar: staging directory missing', 1);
+            }
+            $members = $this->tarExtractMembers !== []
+                ? $this->tarExtractMembers
+                : [
+                    ['type' => 'dir', 'path' => 'alicehost'],
+                    ['type' => 'dir', 'path' => 'alicehost/public_html'],
+                    ['type' => 'file', 'path' => 'alicehost/public_html/index.php', 'content' => "restored by alphacp\n"],
+                ];
+            foreach ($members as $member) {
+                $full = rtrim($target, '/') . '/' . ltrim((string) ($member['path'] ?? ''), '/');
+                $type = (string) ($member['type'] ?? 'file');
+                if ($type === 'dir') {
+                    if (!is_dir($full) && !@mkdir($full, 0755, true) && !is_dir($full)) {
+                        return new CommandResult($argv, 2, '', 'tar: cannot mkdir ' . $full, 1);
+                    }
+                    if (isset($member['mode'])) {
+                        @chmod($full, (int) $member['mode']);
+                    }
+                    continue;
+                }
+                $parent = dirname($full);
+                if (!is_dir($parent) && !@mkdir($parent, 0755, true) && !is_dir($parent)) {
+                    return new CommandResult($argv, 2, '', 'tar: cannot mkdir ' . $parent, 1);
+                }
+                if ($type === 'symlink') {
+                    @unlink($full);
+                    if (!@symlink((string) ($member['target'] ?? '/etc/passwd'), $full)) {
+                        return new CommandResult($argv, 2, '', 'tar: cannot create symlink', 1);
+                    }
+                    continue;
+                }
+                if (@file_put_contents($full, (string) ($member['content'] ?? '')) === false) {
+                    return new CommandResult($argv, 2, '', 'tar: cannot write ' . $full, 1);
+                }
+                if (isset($member['mode'])) {
+                    @chmod($full, (int) $member['mode']);
+                }
+            }
+            return new CommandResult($argv, 0, '', '', 1);
         }
         return new CommandResult($argv, 2, '', 'tar: archive missing', 1);
     }

@@ -30,6 +30,7 @@ class BackupController extends Controller
             'rows' => $account?->backupJobs()->orderBy('id')->get() ?? collect(),
             'kinds' => Backup::KINDS,
             'archiveTasks' => $this->archiveTasks($account),
+            'restoreTasks' => $this->restoreTasks($account),
             'panelMode' => ModuleCatalog::modeFor($request->user()),
         ]);
     }
@@ -100,6 +101,46 @@ class BackupController extends Controller
         return redirect()->route('backup.index')->with('success', 'Home archive queued (task #' . $taskId . '). It will appear below when ready.');
     }
 
+    /**
+     * Restore a completed, checksum-verified home archive.
+     *
+     * Destructive: the whole home directory is replaced by the archive, so the
+     * customer must type the username (same confirmation model as terminate)
+     * and the agent task itself is `destructive` + `_confirm` gated.
+     */
+    public function restore(Request $request, string $archiveId): RedirectResponse
+    {
+        $account = $this->requireAccount($request);
+        if ($account->isTerminated() || $account->isSuspended()) {
+            return back()->withErrors(['restore' => 'Cannot restore a suspended/terminated account.']);
+        }
+        if (preg_match('/^[a-f0-9]{32}$/', $archiveId) !== 1) {
+            abort(404);
+        }
+        $data = $request->validate([
+            'confirm_username' => ['required', 'string', 'max:32'],
+        ]);
+        if (! hash_equals($account->username, strtolower(trim((string) $data['confirm_username'])))) {
+            return back()->withErrors(['confirm_username' => 'Type the username exactly to confirm the restore.'])->withInput();
+        }
+        $archive = $this->verifiedArchiveTask($account, $archiveId);
+        if ($archive === null) {
+            return back()->withErrors(['restore' => 'That archive is not a completed home archive of this account.']);
+        }
+
+        $taskId = BackupProvisioner::enqueueRecover($account, $archiveId);
+        $account->recordEvent('backup.recover.queued', 'home:' . $archiveId, ['task_id' => $taskId]);
+        Audit::log('backup.recover', 'critical', 'account', $account->id, [
+            'task_id' => $taskId,
+            'archive_id' => $archiveId,
+            'scope' => 'home',
+            'sha256' => $archive['sha256'],
+        ]);
+
+        return redirect()->route('backup.index')
+            ->with('warning', 'Home restore queued (task #' . $taskId . '). The home directory will be replaced by this archive.');
+    }
+
     public function download(Request $request, string $archiveId): BinaryFileResponse
     {
         $account = $this->requireAccount($request);
@@ -107,23 +148,8 @@ class BackupController extends Controller
             abort(404);
         }
 
-        $task = DB::table('tasks')
-            ->where('server_id', Panel::serverId())
-            ->where('account_id', $account->id)
-            ->where('type', 'backup.archive')
-            ->where('status', 'success')
-            ->where('result', 'like', '%' . $archiveId . '%')
-            ->orderByDesc('id')
-            ->first();
-        $result = json_decode((string) ($task->result ?? ''), true);
-        if (!is_array($result)
-            || ($result['archive_id'] ?? null) !== $archiveId
-            || ($result['username'] ?? null) !== $account->username
-            || ($result['scope'] ?? null) !== 'home'
-            || ($result['filename'] ?? null) !== $archiveId . '.tar.gz'
-            || !is_int($result['size_bytes'] ?? null)
-            || !is_string($result['sha256'] ?? null)
-            || preg_match('/^[a-f0-9]{64}$/', $result['sha256']) !== 1) {
+        $result = $this->verifiedArchiveTask($account, $archiveId);
+        if ($result === null) {
             abort(404);
         }
 
@@ -189,6 +215,78 @@ class BackupController extends Controller
                     'filename' => $downloadable ? (string) $result['filename'] : null,
                     'size_bytes' => $downloadable ? (int) $result['size_bytes'] : null,
                     'downloadable' => $downloadable,
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * The completed `backup.archive` task result for this account, or null.
+     * Shared by download and restore so both need the same proof: a successful
+     * task, owned by this account, with a well-formed home-archive result.
+     *
+     * @return array{archive_id:string,username:string,scope:string,filename:string,size_bytes:int,sha256:string}|null
+     */
+    private function verifiedArchiveTask(Account $account, string $archiveId): ?array
+    {
+        $task = DB::table('tasks')
+            ->where('server_id', Panel::serverId())
+            ->where('account_id', $account->id)
+            ->where('type', 'backup.archive')
+            ->where('status', 'success')
+            ->where('result', 'like', '%' . $archiveId . '%')
+            ->orderByDesc('id')
+            ->first();
+        $result = json_decode((string) ($task->result ?? ''), true);
+        if (!is_array($result)
+            || ($result['archive_id'] ?? null) !== $archiveId
+            || ($result['username'] ?? null) !== $account->username
+            || ($result['scope'] ?? null) !== 'home'
+            || ($result['filename'] ?? null) !== $archiveId . '.tar.gz'
+            || !is_int($result['size_bytes'] ?? null)
+            || !is_string($result['sha256'] ?? null)
+            || preg_match('/^[a-f0-9]{64}$/', $result['sha256']) !== 1) {
+            return null;
+        }
+
+        return [
+            'archive_id' => $archiveId,
+            'username' => $account->username,
+            'scope' => 'home',
+            'filename' => (string) $result['filename'],
+            'size_bytes' => (int) $result['size_bytes'],
+            'sha256' => (string) $result['sha256'],
+        ];
+    }
+
+    /** @return list<array{id:int,status:string,created_at:string,archive_id:?string,files:?int,bytes:?int,removed_symlinks:?int,previous_home:?string,error:?string}> */
+    private function restoreTasks(?Account $account): array
+    {
+        if ($account === null) {
+            return [];
+        }
+        return DB::table('tasks')
+            ->where('server_id', Panel::serverId())
+            ->where('account_id', $account->id)
+            ->where('type', 'backup.recover')
+            ->orderByDesc('id')
+            ->limit(20)
+            ->get()
+            ->map(static function (object $task): array {
+                $result = json_decode((string) ($task->result ?? ''), true);
+                $result = is_array($result) ? $result : [];
+                $id = is_string($result['archive_id'] ?? null) ? (string) $result['archive_id'] : null;
+
+                return [
+                    'id' => (int) $task->id,
+                    'status' => (string) $task->status,
+                    'created_at' => (string) $task->created_at,
+                    'archive_id' => $id !== null && preg_match('/^[a-f0-9]{32}$/', $id) === 1 ? $id : null,
+                    'files' => is_int($result['files'] ?? null) ? (int) $result['files'] : null,
+                    'bytes' => is_int($result['bytes'] ?? null) ? (int) $result['bytes'] : null,
+                    'removed_symlinks' => is_int($result['removed_symlinks'] ?? null) ? (int) $result['removed_symlinks'] : null,
+                    'previous_home' => is_string($result['previous_home'] ?? null) ? (string) $result['previous_home'] : null,
+                    'error' => is_string($task->error ?? null) && $task->error !== '' ? (string) $task->error : null,
                 ];
             })
             ->all();

@@ -15,6 +15,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `symlink inside the account home cannot escape (root write safety)`.
   This release is built on the live 0.65.0 lineage (all 0.62–0.65 features included).
 ### Added
+- **S10 real home restore (3 Oct)** — panel **0.67.0**, agent **0.60.0**: naya `destructive` agent task
+  **`backup.recover`** verified home archive ko account home me **asli me** restore karta hai.
+  Sequence fail-closed hai: manifest + SHA-256 + size + root-ownership dobara verify → root-owned `0700`
+  staging dir (home ke bagal me, same filesystem) me `tar --extract --gzip --no-same-owner -- <user>` →
+  staged tree ka audit (sirf ek account directory; special file reject; setuid/setgid clear; absolute ya
+  subtree se bahar jaane wale symlink **recreate nahi** — drop + report; ownership account ko transfer,
+  ek bhi ownership failure (jaise quota `EDQUOT`) par abort — tab tak live home untouched; 40 level /
+  250k entry cap) → live home ko rename se aside → staged home rename se live → swap fail ho to
+  **automatic rollback** → previous home delete. Free space check: `archive × 8 + 64 MiB`.
+  Panel side: `POST /backup/archive/{archiveId}/restore` (route `^[a-f0-9]{32}$` pinned + controller re-check),
+  **typed-username confirmation** (terminate jaisa), `critical` audit + `account_events` row, Backup page par
+  Restore form + **Restore history** table. Archive/download ka proof ab ek shared
+  `verifiedArchiveTask()` helper se aata hai (download aur restore dono wahi check karte hain).
+  GNU tar khud bhi staged symlink ke through likhne se inkaar karta hai (exit 2) aur `../` strip karta hai —
+  `tools/sim/backup-tar-sim.sh` **v0.2.0** isi ko real tar se user aur root dono me prove karta hai.
+  Tests: panel **407 pass / 0 fail / 6 wasm-skip**, provision-sim **98/98** (+6 restore tests),
+  backup-tar-sim v0.2.0 PASS (user + root), update-sim **186/186**.
+  Abhi bhi baaki: per-file/per-dir restore, mail/MySQL restore, schedule, remote destination,
+  cPanel `.tar.gz` import, WHM-side wiring, aur restore ke baad vhost/pool/cron re-provision.
+- **0.66.0 deployment verified (3 Oct 16:49Z)** — server snapshot: panel **0.66.0**, agent **0.59.0**,
+  HTTP **200**, trial expiry 13 Oct. Symlink root-write escape fix live hai. Deployed panel/agent code
+  repo source se **byte-for-byte** match karta hai (0 diffs), aur `panel-code-0.66.0.tar.gz` /
+  `agent-0.59.0.tar.gz` ke SHA-256 updater pins se match karte hain (rebuild = same sha).
 - **S10 actual home archive slice (3 Oct)** — panel **0.65.0**, agent **0.58.0**, deployed via updater 0.65.0 on 3 Oct. Server snapshot confirms HTTP **200**. Creates a real GNU tar.gz of an AlphaCP account home, verifies tar readability + SHA-256, atomically publishes a root-owned archive/manifest, and offers an account-scoped, checksum-verified download. PHP-FPM can read the dedicated backup subtree; the updater does not widen access to the AlphaCP root or `var/`. `backup.create` settings, mail/MySQL archives, scheduled/remote backup, restore/extraction, and cPanel transfer/import are still not implemented; S10 remains partial. Final verification: panel **401 pass / 0 fail / 6 wasm-skip**, agent/provision-sim **91/91**, update-sim **185/185**, GNU tar round-trip/symlink check PASS. The customer archive/download workflow has not yet been live end-to-end tested.
 - **Step 10 Review Transfers and Restores (3 Oct)** — WHM username+status via `backup.review`
   (JSON; no tar/rsync/shell; pipe/path fail closed). Panel **0.64.0**, agent **0.57.0**.

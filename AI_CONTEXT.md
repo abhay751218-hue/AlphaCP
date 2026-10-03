@@ -26,11 +26,11 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **S10 in progress** — panel 0.65.0 / agent 0.58.0 deployed 3 Oct; server snapshot confirms HTTP 200 |
+| Phase | **S10 in progress** — server par panel **0.66.0** / agent **0.59.0** live (3 Oct 16:49Z snapshot, HTTP 200, symlink security fix deployed); repo me **0.67.0 / 0.60.0** taiyar — real home restore (`backup.recover`), deploy command `COMMANDS.md` me |
 | Next task | Close pre-S10 real-service gaps (S5 per-domain PHP; S7 Exim/Dovecot; S8 MariaDB provisioning/SSO; S9 BIND), then finish S10 restore/schedule/remote/transfer/import/history; do not advance to later steps before those gates pass |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
-| Code written so far | paneld + Laravel 13 panel; S10 JSON configuration slices plus a real SHA-256-verified home archive and account-scoped download |
-| Blocking issues | S5 per-domain PHP; S7 real Exim/Dovecot mailflow; S8 MariaDB provisioning/SSO; S9 BIND write/reload remain incomplete. S10 restore/schedule/remote/cPanel import and live customer archive acceptance remain pending. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
+| Code written so far | paneld + Laravel 13 panel; S10 JSON configuration slices, a real SHA-256-verified home archive + account-scoped download, aur ab us archive ka **real staged restore** (audit + ownership + atomic swap + rollback) |
+| Blocking issues | S5 per-domain PHP; S7 real Exim/Dovecot mailflow; S8 MariaDB provisioning/SSO; S9 BIND write/reload remain incomplete. S10: per-file restore, mail/DB backup, schedule, remote destination, cPanel import and live customer archive/restore browser acceptance remain pending. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 

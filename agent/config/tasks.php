@@ -1355,6 +1355,25 @@ return [
         ],
     ],
 
+    'backup.recover' => [
+        'handler'     => Tasks\BackupRecover::class,
+        'safety'      => 'destructive',
+        'timeout'     => 3600,
+        'confirm'     => 'backup.recover',
+        'description' => 'Restore a SHA-256-verified home .tar.gz (staged extraction + audited atomic swap).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'archive_id', '_confirm'],
+            'properties'           => [
+                'username'   => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'archive_id' => ['type' => 'string', 'pattern' => '^[a-f0-9]{32}$', 'maxLength' => 32],
+                '_confirm'   => ['type' => 'string', 'enum' => ['backup.recover']],
+            ],
+        ],
+    ],
+
     'backup.wizard' => [
         'handler'     => Tasks\BackupWizard::class,
         'safety'      => 'mutating',

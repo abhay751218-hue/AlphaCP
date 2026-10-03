@@ -54,6 +54,7 @@ Legend: ✅ full · 🟡 own scope only · ⛔ none
 | cron.* | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
 | ssl.issue / install / renew | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
 | backup.archive / restore | ✅ | ✅ | ⛔ | 🟡 | 🟡 (own) |
+| backup.recover (real home restore) | ✅ | ✅ | ⛔ | 🟡 | 🟡 (own, typed username) |
 | backup.serverWide | ✅ | ✅ | ⛔ | ⛔ | ⛔ |
 | apps.install (one-click installer) | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
 | security.scan / quarantine | ✅ | ✅ | 🟡 (read) | 🟡 own accts | 🟡 own acct |
@@ -82,7 +83,7 @@ Every agent task type is registered in `agent/config/tasks.php` with a class:
 |---|---|---|---|
 | 🟢 `readonly` | No state change | `service.status`, `usage.sync`, `files.list` | permission check only |
 | 🟡 `mutating` | Changes state, reversible | `account.suspend`, `mail.createMailbox`, `dns.addRecord` | permission + audit row |
-| 🔴 `destructive` | Deletes/overwrites irreversibly | `account.terminate`, `files.delete`, `backup.restore`, `db.delete` | permission + **re-confirm (typed domain/username)** + audit + optional 2FA re-auth |
+| 🔴 `destructive` | Deletes/overwrites irreversibly | `account.terminate`, `files.delete`, `backup.recover`, `db.delete` | permission + **re-confirm (typed domain/username)** + audit + optional 2FA re-auth |
 
 Additional hard rules:
 1. Payload validated against JSON Schema **before** execution (agent side, not just panel).

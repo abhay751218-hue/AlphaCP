@@ -54,10 +54,10 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 ## 4b. Tests (sab sandbox me chalte hain — system PHP/MySQL ki zaroorat nahi)
 | Command | Kya test karta hai | Last result |
 |---|---|---|
-| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — panel 0.66.0 artifact | **402 pass, 0 fail, 6 wasm-skip** |
-| `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy/usage/ssh/mail/forward/autorespond/catchall/filter/deliverability/spam/list/routing/track/gfilter/encrypt/boxtrapper/calendar/mail.usage/webmail/db.set/db.phpmyadmin/db.remote/dns.zone/dns.dynamic/dns.track/dns.hostname/dns.templates/mail.globalrouting/dns.nsreport/dns.park/dns.cleanup/dns.ttl/dns.forward/dns.sync/dns.nameserver/backup.create/backup.archive/backup.wizard/backup.restore/backup.config/backup.restoration/backup.users/backup.filedir/backup.transfer/backup.cpanel/backup.review tasks | **92/92** (naya symlink-escape test) |
-| `bash tools/sim/backup-tar-sim.sh` | Native GNU tar create/list/extract, symlink preservation, and SHA-256 smoke test | **PASS** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.66.0: panel 0.66.0 + agent 0.59.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)** | **186/186** |
+| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — panel 0.67.0 artifact | **407 pass, 0 fail, 6 wasm-skip** |
+| `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy/usage/ssh/mail/forward/autorespond/catchall/filter/deliverability/spam/list/routing/track/gfilter/encrypt/boxtrapper/calendar/mail.usage/webmail/db.set/db.phpmyadmin/db.remote/dns.zone/dns.dynamic/dns.track/dns.hostname/dns.templates/mail.globalrouting/dns.nsreport/dns.park/dns.cleanup/dns.ttl/dns.forward/dns.sync/dns.nameserver/backup.create/backup.archive/**backup.recover (real restore)**/backup.wizard/backup.restore/backup.config/backup.restoration/backup.users/backup.filedir/backup.transfer/backup.cpanel/backup.review tasks | **98/98** (6 naye restore tests) |
+| `bash tools/sim/backup-tar-sim.sh` | v0.2.0 — native GNU tar create/list/extract + **restore ke exact staged-extract flags**, symlink-through-extraction block, `..` contained (user aur root dono me) | **PASS** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.67.0: panel 0.67.0 + agent 0.60.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)** | **186/186** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 
@@ -81,9 +81,10 @@ unka kaam PR se `main` me merge karo (29 Sep: `arena/01a0ea0d-alphacp` ka S2C ka
 
 ## 5. Abhi kahan hain (roadmap position)
 - Step 0–9 ke UI/config slices repo me hain; kuch host backends abhi JSON-only hain. `ROADMAP.md` me S7 mail, S8 database, aur S9 BIND gaps dekho.
-- `server-snapshot/STATE.md` ki latest committed state: server par panel **0.65.0**, agent **0.58.0**, Laravel 13.33.0, PHP 8.4.26, MariaDB 10.11; HTTP 200. **0.66.0 (symlink security fix) deploy pending hai** — COMMANDS.md ka NEXT STEP.
-- Deployed S10 slice real home-directory `.tar.gz` create + checksum-verified customer download provide karta hai. Version deploy/health confirm hai; live customer archive/download abhi end-to-end verify nahi hua.
-- S10 abhi **partial** hai: email/MySQL data backup (S7/S8 live backends par nirbhar), restore/extraction, scheduler, remote destination, real cPanel transfer/import abhi baaki. Checklist me JSON-only rows ko ✅ na samjho.
+- `server-snapshot/STATE.md` (3 Oct 16:49Z): server par panel **0.66.0**, agent **0.59.0**, Laravel 13.33.0, PHP 8.4.26, MariaDB 10.11; HTTP **200**; trial 13 Oct tak valid. Deployed code repo source se byte-for-byte match karta hai.
+- **Repo me agla release taiyar: panel 0.67.0 / agent 0.60.0 — S10 real home restore (`backup.recover`).** Deploy command `COMMANDS.md` ke NEXT STEP me hai (commit-pinned + sha256).
+- S10 abhi **partial** hai: email/MySQL data backup (S7/S8 live backends par nirbhar), per-file/per-dir restore, scheduler, remote destination, real cPanel transfer/import, WHM-side restore wiring abhi baaki. Checklist me JSON-only rows ko ✅ na samjho.
+- Live browser acceptance (customer archive create → download → restore) abhi end-to-end verify nahi hua; deploy ke baad yahi sabse pehla manual check hai.
 - Deploy command aur tested commit/SHA ke liye `COMMANDS.md` dekho. Server par kuch chalane se pehle usme likhi **ek hi next command** follow karo.
 
 Latest server status ke liye hamesha `server-snapshot/STATE.md` dekho; repo implementation ke liye `CHANGELOG.md` + `docs/09-cpanel-parity-checklist.md`.

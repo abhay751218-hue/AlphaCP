@@ -75,6 +75,7 @@ use Alphacp\Agent\Tasks\SyncSet;
 use Alphacp\Agent\Tasks\NameserverSet;
 use Alphacp\Agent\Tasks\BackupCreate;
 use Alphacp\Agent\Tasks\BackupArchiveCreate;
+use Alphacp\Agent\Tasks\BackupRecover;
 use Alphacp\Agent\Tasks\BackupWizard;
 use Alphacp\Agent\Tasks\BackupRestore;
 use Alphacp\Agent\Tasks\BackupConfig;
@@ -232,7 +233,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.archive', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.archive', 'backup.recover', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1995,6 +1996,166 @@ test('backup.archive rejects hostile ids and cleans up failed tar attempts', fun
     assert_true(!is_file($dir . '/' . str_repeat('b', 32) . '.json'), 'failed archive must not leave a manifest');
     acp_account_cleanup($harness);
 });
+test('backup.recover is destructive, confirm-gated and fail-closed', function (): void {
+    $reg = acp_task_registry();
+    assert_true($reg['backup.recover']['safety'] === 'destructive', 'restore must be destructive');
+    assert_true(($reg['backup.recover']['confirm'] ?? '') === 'backup.recover', 'restore needs a typed confirm');
+    assert_true(in_array('/usr/local/alphacp', $reg['backup.recover']['paths'], true), 'restore needs the backup root');
+    $schema = $reg['backup.recover']['schema'];
+    $good = ['username' => 'alicehost', 'archive_id' => str_repeat('a', 32), '_confirm' => 'backup.recover'];
+    assert_true(JsonSchema::validate($schema, $good) === [], 'valid restore payload should pass');
+    assert_true(JsonSchema::validate($schema, ['username' => 'alicehost', 'archive_id' => str_repeat('a', 32)]) !== [], 'missing _confirm');
+    $wrongConfirm = $good;
+    $wrongConfirm['_confirm'] = 'account.terminate';
+    assert_true(JsonSchema::validate($schema, $wrongConfirm) !== [], 'wrong confirm token');
+    assert_true(JsonSchema::validate($schema, $good + ['path' => '/etc/passwd']) !== [], 'additionalProperties');
+    $badId = $good;
+    $badId['archive_id'] = '../etc/passwd';
+    assert_true(JsonSchema::validate($schema, $badId) !== [], 'hostile archive id');
+});
+test('backup.recover restores a verified archive into the account home', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    file_put_contents($home . '/public_html/stale.html', 'old site');
+    $id = str_repeat('e', 32);
+    (new BackupArchiveCreate())->handle(['username' => 'alicehost', 'archive_id' => $id], $harness['ctx']);
+    $harness['cmd']->tarExtractMembers = [
+        ['type' => 'dir', 'path' => 'alicehost'],
+        ['type' => 'dir', 'path' => 'alicehost/public_html'],
+        ['type' => 'file', 'path' => 'alicehost/public_html/index.php', 'content' => "<?php echo 'restored';\n"],
+        ['type' => 'dir', 'path' => 'alicehost/logs'],
+    ];
+    $out = (new BackupRecover())->handle([
+        'username' => 'alicehost',
+        'archive_id' => $id,
+        '_confirm' => 'backup.recover',
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'restored', 'restore reports restored');
+    assert_true($out['scope'] === 'home');
+    assert_true($out['archive_id'] === $id);
+    assert_true($out['files'] === 1, 'restored file count');
+    assert_true($out['previous_home'] === 'removed', 'previous home is deleted after a verified swap');
+    assert_true(is_file($home . '/public_html/index.php'), 'restored file is live');
+    assert_true((string) file_get_contents($home . '/public_html/index.php') === "<?php echo 'restored';\n");
+    assert_true(!file_exists($home . '/public_html/stale.html'), 'pre-restore content is replaced');
+    assert_true(is_file($harness['root'] . '/alphacp/backups/accounts/alicehost/' . $id . '.tar.gz'), 'archive survives a restore');
+    assert_true(acp_restore_leftovers($harness['root'] . '/home') === [], 'no staging/rollback leftovers');
+    acp_account_cleanup($harness);
+});
+test('backup.recover refuses a tampered archive and keeps the live home', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    file_put_contents($home . '/public_html/stale.html', 'old site');
+    $id = str_repeat('f', 32);
+    (new BackupArchiveCreate())->handle(['username' => 'alicehost', 'archive_id' => $id], $harness['ctx']);
+    file_put_contents($harness['root'] . '/alphacp/backups/accounts/alicehost/' . $id . '.tar.gz', 'tampered bytes');
+    $threw = '';
+    try {
+        (new BackupRecover())->handle(['username' => 'alicehost', 'archive_id' => $id, '_confirm' => 'backup.recover'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = $e->getMessage();
+    }
+    assert_true(str_contains($threw, 'checksum'), 'tampered archive must fail checksum verification: ' . $threw);
+    assert_true(is_file($home . '/public_html/stale.html'), 'live home untouched after a failed verification');
+    assert_true(acp_restore_leftovers($harness['root'] . '/home') === [], 'no staging leftovers');
+    acp_account_cleanup($harness);
+});
+test('backup.recover rejects missing archives, hostile ids and foreign manifests', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $handler = new BackupRecover();
+    $missing = '';
+    try {
+        $handler->handle(['username' => 'alicehost', 'archive_id' => str_repeat('1', 32), '_confirm' => 'backup.recover'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $missing = $e->getMessage();
+    }
+    assert_true(str_contains($missing, 'regular file') || str_contains($missing, 'missing'), 'missing archive must fail closed: ' . $missing);
+    $hostile = '';
+    try {
+        $handler->handle(['username' => 'alicehost', 'archive_id' => '../|/bin/sh', '_confirm' => 'backup.recover'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $hostile = $e->getMessage();
+    }
+    assert_true(str_contains($hostile, 'id'), 'hostile archive id must fail closed: ' . $hostile);
+    $id = str_repeat('2', 32);
+    (new BackupArchiveCreate())->handle(['username' => 'alicehost', 'archive_id' => $id], $harness['ctx']);
+    $manifest = $harness['root'] . '/alphacp/backups/accounts/alicehost/' . $id . '.json';
+    $record = json_decode((string) file_get_contents($manifest), true);
+    $record['username'] = 'eviluser';
+    file_put_contents($manifest, json_encode($record));
+    $foreign = '';
+    try {
+        $handler->handle(['username' => 'alicehost', 'archive_id' => $id, '_confirm' => 'backup.recover'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $foreign = $e->getMessage();
+    }
+    assert_true(str_contains($foreign, 'manifest'), 'a manifest for another account must fail closed: ' . $foreign);
+    assert_true(acp_restore_leftovers($harness['root'] . '/home') === [], 'no staging leftovers');
+    acp_account_cleanup($harness);
+});
+test('backup.recover drops escaping symlinks instead of recreating them', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    $id = str_repeat('3', 32);
+    (new BackupArchiveCreate())->handle(['username' => 'alicehost', 'archive_id' => $id], $harness['ctx']);
+    $harness['cmd']->tarExtractMembers = [
+        ['type' => 'dir', 'path' => 'alicehost'],
+        ['type' => 'symlink', 'path' => 'alicehost/loot', 'target' => '/etc'],
+        ['type' => 'symlink', 'path' => 'alicehost/rel', 'target' => '../../etc'],
+        ['type' => 'symlink', 'path' => 'alicehost/inside', 'target' => 'public_html'],
+        ['type' => 'dir', 'path' => 'alicehost/public_html'],
+        ['type' => 'file', 'path' => 'alicehost/public_html/index.html', 'content' => 'ok'],
+    ];
+    $out = (new BackupRecover())->handle(['username' => 'alicehost', 'archive_id' => $id, '_confirm' => 'backup.recover'], $harness['ctx']);
+    assert_true($out['removed_symlinks'] === 2, 'absolute and ../ symlinks are dropped');
+    assert_true(!is_link($home . '/loot') && !file_exists($home . '/loot'), 'absolute symlink must not be recreated');
+    assert_true(!is_link($home . '/rel'), 'escaping relative symlink must not be recreated');
+    assert_true(is_link($home . '/inside') && readlink($home . '/inside') === 'public_html', 'in-home symlink is preserved');
+    assert_true(is_file($home . '/public_html/index.html'), 'normal files are restored');
+    acp_account_cleanup($harness);
+});
+test('backup.recover clears setuid bits and rejects foreign staged trees', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    file_put_contents($home . '/public_html/stale.html', 'old site');
+    $id = str_repeat('4', 32);
+    (new BackupArchiveCreate())->handle(['username' => 'alicehost', 'archive_id' => $id], $harness['ctx']);
+    $harness['cmd']->tarExtractMembers = [
+        ['type' => 'dir', 'path' => 'alicehost'],
+        ['type' => 'file', 'path' => 'alicehost/suid.sh', 'content' => "#!/bin/sh\n", 'mode' => 04755],
+        ['type' => 'file', 'path' => 'alicehost/sgid.sh', 'content' => "#!/bin/sh\n", 'mode' => 02755],
+        ['type' => 'file', 'path' => 'alicehost/plain.txt', 'content' => 'plain'],
+    ];
+    $out = (new BackupRecover())->handle(['username' => 'alicehost', 'archive_id' => $id, '_confirm' => 'backup.recover'], $harness['ctx']);
+    assert_true($out['status'] === 'restored');
+    assert_true($out['setuid_cleared'] === 2, 'setuid and setgid bits are cleared: ' . json_encode($out));
+    assert_true(is_file($home . '/suid.sh'));
+    assert_true(((int) (fileperms($home . '/suid.sh') & 06000)) === 0, 'no setuid bit survives a restore');
+    assert_true(((int) (fileperms($home . '/sgid.sh') & 06000)) === 0, 'no setgid bit survives a restore');
+    assert_true(((int) (fileperms($home . '/suid.sh') & 0777)) === 0755, 'normal permission bits are preserved');
+
+    $id2 = str_repeat('5', 32);
+    (new BackupArchiveCreate())->handle(['username' => 'alicehost', 'archive_id' => $id2], $harness['ctx']);
+    $harness['cmd']->tarExtractMembers = [
+        ['type' => 'dir', 'path' => 'alicehost'],
+        ['type' => 'dir', 'path' => 'eviluser'],
+    ];
+    $threw = '';
+    try {
+        (new BackupRecover())->handle(['username' => 'alicehost', 'archive_id' => $id2, '_confirm' => 'backup.recover'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = $e->getMessage();
+    }
+    assert_true(str_contains($threw, 'exactly one account directory'), 'foreign staged tree must fail closed: ' . $threw);
+    assert_true(!is_dir($home . '/eviluser'), 'nothing from a rejected restore reaches the live home');
+    assert_true(acp_restore_leftovers($harness['root'] . '/home') === [], 'no staging leftovers');
+    acp_account_cleanup($harness);
+});
 test('backup.wizard writes json and rejects hostile action/scope', function (): void {
     $harness = acp_account_harness();
     (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
@@ -2426,6 +2587,23 @@ fwrite(STDOUT, sprintf("passed: %d   failed: %d\n", $passed, $failed));
 exit($failed === 0 ? 0 : 1);
 
 /** @return array{root:string,cmd:FakeCommandExecutor,ctx:TaskContext} */
+/** Staging/rollback directories a restore must never leave behind. @return list<string> */
+function acp_restore_leftovers(string $accountsRoot): array
+{
+    $names = @scandir($accountsRoot);
+    if (!is_array($names)) {
+        return ['scandir-failed'];
+    }
+    $out = [];
+    foreach ($names as $name) {
+        if (str_starts_with($name, '.acp-restore-') || str_contains($name, '.pre-restore-')) {
+            $out[] = $name;
+        }
+    }
+
+    return $out;
+}
+
 function acp_account_harness(): array
 {
     $root = sys_get_temp_dir() . '/acp-acct-' . bin2hex(random_bytes(4));

@@ -1,5 +1,5 @@
 # 📊 PROJECT STATUS — Custom Hosting Panel
-**Last updated:** 28 Sep 2026
+**Last updated:** 3 Oct 2026
 
 ---
 
@@ -36,7 +36,7 @@
 | Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **UI/config through Webmail; real Exim/Dovecot mailflow + service integration pending** |
 | Step 8 | Databases (MySQL management) | 🟡 **UI/config through Remote MySQL; actual DB/users/GRANT + phpMyAdmin SSO pending** |
 | Step 9 | DNS management + nameservers | 🟡 **JSON/config through Nameserver Selection; BIND write/reload/dig validation + cluster pending** |
-| Step 10 | Backup / Restore / Migration | 🟡 **0.65.0 / agent 0.58.0 deployed 3 Oct; snapshot confirms HTTP 200. Real verified home archive/download is present; mail/DB backup, restore, schedule, remote, transfer/import still incomplete.** |
+| Step 10 | Backup / Restore / Migration | 🟡 **Server par 0.66.0 / agent 0.59.0 live (3 Oct 16:49Z snapshot, HTTP 200). Repo me 0.67.0 / agent 0.60.0: real verified home archive + download + real staged home restore (`backup.recover`). Mail/DB backup, per-file restore, schedule, remote, transfer/import still incomplete.** |
 | Step 11 | Monitoring, stats, resource limits | ⏳ |
 | Step 12 | 💳 Billing API layer (WHM API 1 + native REST) | ⏳ |
 | Step 13 | Security suite + WAF | ⏳ |

@@ -47,9 +47,9 @@
 | 5 | Web Disk | WebDAV drive | S6 | ⏳ S6 |
 | 6 | FTP Accounts | FTP users | S6 | ⏳ S6 |
 | 7 | FTP Connections | FTP session logs | S6 | ⏳ S6 |
-| 8 | Backup | Manual backup download | S10 | 🟡 (real SHA-256-verified home tar.gz + authenticated download; mail/MySQL/schedule/remote pending) |
-| 9 | Backup Wizard | Step-by-step backup/restore | S10 | 🟡 (JSON action/scope only; restore workflow pending) |
-| 10 | File & Directory Restoration | Deleted file wapas | S10 | 🟡 (request JSON only; safe extraction/copy pending) |
+| 8 | Backup | Manual backup download | S10 | 🟡 (real SHA-256-verified home tar.gz + authenticated download + **real staged restore of that archive**; mail/MySQL/schedule/remote pending) |
+| 9 | Backup Wizard | Step-by-step backup/restore | S10 | 🟡 (JSON action/scope only; wizard must queue the real archive/restore tasks itself) |
+| 10 | File & Directory Restoration | Deleted file wapas | S10 | 🟡 (request JSON only; full-home restore is real via `backup.recover`, per-file/per-dir copy still pending) |
 | 11 | Git™ Version Control | Git deploy/repo | S6 | ⏳ S6 |
 | 12 | Trash | File Manager trash bin | S6 | ⏳ S6 |
 
@@ -296,9 +296,9 @@
 | # | WHM tool | Step | Status |
 |---|---|---|---|
 | 176 | Backup Configuration (schedule, remote, retention) | S10 | 🟡 (JSON schedule/retention only; scheduler + remote destinations pending) |
-| 177 | Backup Restoration (full/partial/per-account) | S10 | 🟡 (JSON request only; safe restore engine pending) |
+| 177 | Backup Restoration (full/partial/per-account) | S10 | 🟡 (WHM row is JSON-only; the safe restore engine itself now exists as `backup.recover` for full-home archives — WHM wiring + partial/per-account modes pending) |
 | 178 | Backup User Selection | S10 | 🟡 (JSON usernames only; scheduler/execution pending) |
-| 179 | File and Directory Restoration | S10 | 🟡 (JSON username+path only; safe archive extraction/copy pending) |
+| 179 | File and Directory Restoration | S10 | 🟡 (JSON username+path only; staged extraction/audit/ownership/rollback primitives now exist in `backup.recover`, per-path selection pending) |
 | 180 | Configuration Cluster / DNS Cluster | S15 | ⏳ S15 |
 | 181 | Graceful / Forceful Server Reboot | S2B | 🟡 2B |
 | 182 | Server Information / Service Status / Apache Status | S11 | ⏳ S11 |

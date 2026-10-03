@@ -14,7 +14,8 @@ Agent provisioning (no sudo, php-wasm):
 
 ```bash
 bash tools/sim/provision-sim.sh          # account create/suspend/terminate/rollback + agent task suite
-bash tools/sim/backup-tar-sim.sh          # real GNU tar create/list/extract + symlink/hash smoke test
+bash tools/sim/backup-tar-sim.sh          # v0.2.0: real GNU tar create/list + restore staged-extract flags,
+                                          # symlink-through-extraction block, `..` contained (user aur root)
 ```
 
 Chalana (sudo chahiye, sirf throwaway sandbox/container me — `/usr/local/alphacp` banata hai):
