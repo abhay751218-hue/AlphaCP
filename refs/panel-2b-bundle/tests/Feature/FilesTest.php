@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\Package;
 use App\Models\Role;
 use App\Models\User;
+use App\Support\Files;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -93,6 +94,13 @@ class FilesTest extends TestCase
             ->assertOk()
             ->assertSee('File Manager')
             ->assertDontSee('Create Account');
+    }
+
+    public function test_null_byte_path_is_rejected(): void
+    {
+        $this->assertNull(Files::tryRel("public_html/a\0b"));
+        $this->assertSame('public_html/ok.txt', Files::tryRel('public_html/ok.txt'));
+        $this->assertNull(Files::tryRel('../etc/passwd'));
     }
 
     public function test_mail_cannot_open_file_manager(): void

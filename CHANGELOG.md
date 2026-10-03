@@ -4,6 +4,16 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Fixed / Changed
+- **Security fix — symlink root-write escape (3 Oct)** — panel **0.66.0**, agent **0.59.0**.
+  A hosting customer could create a symlink inside their own home (`~/loot -> /etc`) and the root
+  agent followed it: `files.set` / `files.list` / `files.usage` could then write and read **outside**
+  the allowlisted roots as root (reproduced with a PoC before the fix). `PathGuard::assertNoSymlink()`
+  + `SafeFs::assertSafe()` now refuse any symlink in the path chain, the atomic-write temp file is
+  guarded too, and path sanitizers **reject** null bytes instead of silently stripping them.
+  Normal File Manager operations are unchanged. Regression test:
+  `symlink inside the account home cannot escape (root write safety)`.
+  This release is built on the live 0.65.0 lineage (all 0.62–0.65 features included).
 ### Added
 - **S10 actual home archive slice (3 Oct)** — panel **0.65.0**, agent **0.58.0**, deployed via updater 0.65.0 on 3 Oct. Server snapshot confirms HTTP **200**. Creates a real GNU tar.gz of an AlphaCP account home, verifies tar readability + SHA-256, atomically publishes a root-owned archive/manifest, and offers an account-scoped, checksum-verified download. PHP-FPM can read the dedicated backup subtree; the updater does not widen access to the AlphaCP root or `var/`. `backup.create` settings, mail/MySQL archives, scheduled/remote backup, restore/extraction, and cPanel transfer/import are still not implemented; S10 remains partial. Final verification: panel **401 pass / 0 fail / 6 wasm-skip**, agent/provision-sim **91/91**, update-sim **185/185**, GNU tar round-trip/symlink check PASS. The customer archive/download workflow has not yet been live end-to-end tested.
 - **Step 10 Review Transfers and Restores (3 Oct)** — WHM username+status via `backup.review`

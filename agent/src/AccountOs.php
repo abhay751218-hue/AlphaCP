@@ -77,7 +77,7 @@ final class AccountOs
             if (!$this->fs->isFile($file)) {
                 continue;
             }
-            $body = (string) file_get_contents($this->fs->assert($file));
+            $body = $this->fs->read($file);   // symlink-safe read (root process)
             if (str_contains($body, 'privacy.conf')) {
                 continue;
             }
@@ -1303,8 +1303,8 @@ final class AccountOs
         $this->fs->mkdir($dir, 0700);
         $cert = $dir . '/cert.pem';
         $key = $dir . '/privkey.pem';
-        $this->fs->write($cert, (string) file_get_contents($this->fs->assert($liveCert)), 0644);
-        $this->fs->write($key, (string) file_get_contents($this->fs->assert($liveKey)), 0600);
+        $this->fs->write($cert, $this->fs->read($liveCert), 0644);
+        $this->fs->write($key, $this->fs->read($liveKey), 0600);
         $this->fs->chownName($dir, $username);
         $this->fs->chownName($cert, $username);
         $this->fs->chownName($key, $username);
@@ -1388,7 +1388,11 @@ final class AccountOs
         if (!$this->fs->isFile($path)) {
             return [];
         }
-        $body = (string) file_get_contents($this->fs->assert($path));
+        try {
+            $body = $this->fs->read($path);   // symlink-safe read (root process)
+        } catch (RuntimeException) {
+            return [];
+        }
         try {
             return PhpIni::parseFile($body);
         } catch (TaskRejectedException) {
@@ -1448,7 +1452,7 @@ final class AccountOs
             if (!$this->fs->isFile($file)) {
                 continue;
             }
-            $body = (string) file_get_contents($this->fs->assert($file));
+            $body = $this->fs->read($file);   // symlink-safe read (root process)
             if (str_contains($body, 'errorpages.conf')) {
                 continue;
             }
@@ -1491,7 +1495,7 @@ final class AccountOs
             if (!$this->fs->isFile($file)) {
                 continue;
             }
-            $body = (string) file_get_contents($this->fs->assert($file));
+            $body = $this->fs->read($file);   // symlink-safe read (root process)
             if (str_contains($body, 'handlers.conf')) {
                 continue;
             }
@@ -1534,7 +1538,7 @@ final class AccountOs
             if (!$this->fs->isFile($file)) {
                 continue;
             }
-            $body = (string) file_get_contents($this->fs->assert($file));
+            $body = $this->fs->read($file);   // symlink-safe read (root process)
             if (str_contains($body, 'mime.conf')) {
                 continue;
             }
@@ -1575,7 +1579,7 @@ final class AccountOs
             if (!$this->fs->isFile($file)) {
                 continue;
             }
-            $body = (string) file_get_contents($this->fs->assert($file));
+            $body = $this->fs->read($file);   // symlink-safe read (root process)
             $body = str_replace('Options -Indexes +FollowSymLinks', 'Options +FollowSymLinks', $body);
             if (!str_contains($body, 'indexes.conf') && str_contains($body, '</VirtualHost>')) {
                 $body = str_replace('</VirtualHost>', "    {$needle}\n</VirtualHost>", $body);
