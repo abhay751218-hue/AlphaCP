@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.63.0  ·  default panel bundle 0.63.0  ·  agent 0.56.0  ·  alphacp-sync v1.2
+# updater 0.64.0  ·  default panel bundle 0.64.0  ·  agent 0.57.0  ·  alphacp-sync v1.2
+#
+# 0.64.0: Step 10 — panel 0.64.0 (Review Transfers and Restores) + agent 0.57.0 (backup.review)
 #
 # 0.63.0: Step 10 — panel 0.63.0 (Transfer or Restore a cPanel Account) + agent 0.56.0 (backup.cpanel)
 #
@@ -143,17 +145,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.63.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.63.0}"
+UPDATER_VERSION="0.64.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.64.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-a026be7bb02bb5d3b5eabd77b41162bf404e186d}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-676d26f9544dabb88c7b8c10079e0687e8d703e5}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-fc84de59fff92618d84714d7f30eea521cd4acd317f8f076fb196367938fcd2a}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.56.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-a026be7bb02bb5d3b5eabd77b41162bf404e186d}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-c27e7dd4c2fc27f702129d881c707c5b7c33b532c2cc2205f099afc39ae5896b}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.57.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-676d26f9544dabb88c7b8c10079e0687e8d703e5}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-8c42074e631466ffa9a33785e4642a1a01b41675f2c519ca21cb31d60742e7be}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-46e5838df7266487ce7f8faceb1c12d79fcbf832cde02c8ced3107a550c3806b}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
