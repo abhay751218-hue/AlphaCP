@@ -13,7 +13,8 @@ Server (Ubuntu 24.04 + Ondrej php8.4-fpm) jaisi **asli** condition bana kar doct
 Agent provisioning (no sudo, php-wasm):
 
 ```bash
-bash tools/sim/provision-sim.sh          # account create/suspend/terminate/rollback
+bash tools/sim/provision-sim.sh          # account create/suspend/terminate/rollback + agent task suite
+bash tools/sim/backup-tar-sim.sh          # real GNU tar create/list/extract + symlink/hash smoke test
 ```
 
 Chalana (sudo chahiye, sirf throwaway sandbox/container me — `/usr/local/alphacp` banata hai):

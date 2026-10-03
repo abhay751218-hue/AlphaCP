@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.3.2   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.3.2   (.env)
-AGENT_VERSION : 0.1.0
+panel code    : 0.63.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.63.0   (.env)
+AGENT_VERSION : 0.56.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -35,14 +35,75 @@ signed     : no (local trial)
 
 ## Releases (/usr/local/alphacp/releases — sirf naam, code snapshot me nahi)
 ```
-panel-backup-20260928224358
-panel-backup-20260929001729
+agent-backup-20260929010705
+agent-backup-20260929012116
+agent-backup-20260929024057
+agent-backup-20260929025640
+agent-backup-20260929031724
+agent-backup-20260929033020
+agent-backup-20260929034157
+agent-backup-20260929060807
+agent-backup-20260929073343
+agent-backup-20260929151257
+agent-backup-20260929153015
+agent-backup-20260929154229
+agent-backup-20260929160317
+agent-backup-20260929162453
+agent-backup-20260930080151
+agent-backup-20260930082428
+agent-backup-20260930085017
+agent-backup-20260930102015
+agent-backup-20260930103748
+agent-backup-20260930142539
+agent-backup-20260930144737
+agent-backup-20260930151358
+agent-backup-20260930155140
+agent-backup-20260930161700
+agent-backup-20260930164306
+agent-backup-20260930171354
+agent-backup-20260930182126
+agent-backup-20260930184114
+agent-backup-20260930192045
+agent-backup-20261001090030
+agent-backup-20261001093302
+agent-backup-20261001100058
+agent-backup-20261001152446
+agent-backup-20261001154551
+agent-backup-20261001162037
+agent-backup-20261001164344
+agent-backup-20261001170804
+agent-backup-20261001173623
+agent-backup-20261001180257
+agent-backup-20261002012915
+agent-backup-20261002020037
+agent-backup-20261002022431
+agent-backup-20261002125039
+agent-backup-20261002141418
+agent-backup-20261002143910
+agent-backup-20261002150351
+agent-backup-20261002152927
+agent-backup-20261002174752
+agent-backup-20261002222409
+agent-backup-20261003011458
+agent-backup-20261003041343
+agent-backup-20261003062629
+agent-backup-20261003081849
+agent-backup-20261003085649
+agent-backup-20261003092937
+agent-backup-20261003101439
+agent-backup-20261003104840
+agent-backup-20261003111749
+agent-backup-20261003114715
+agent-backup-20261003124016
+panel-backup-20261003111749
+panel-backup-20261003114715
+panel-backup-20261003124016
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               failed
+alphacp-sync               activating
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -87,18 +148,196 @@ alphacp:admin-password
   0001_01_01_000001_create_cache_table   [1] Ran
   0001_01_01_000002_create_jobs_table   [1] Ran
   2026_09_28_000001_create_panel_core_tables   [1] Ran
-  2026_09_28_000002_agent_side_tables_if_missing .. [1] Ran
+  2026_09_28_000002_agent_side_tables_if_missing   [1] Ran
+  2026_09_29_000003_create_accounts_tables   [2] Ran
+  2026_09_29_000004_packages_feature_lists_and_limits   [3] Ran
+  2026_09_29_000005_create_domains_table   [4] Ran
+  2026_09_29_000006_create_cron_jobs_and_software_perms   [5] Ran
+  2026_09_29_000007_add_ssl_to_domains   [6] Ran
+  2026_09_29_000008_add_autossl_to_domains   [7] Ran
+  2026_09_29_000009_add_errorpages_permissions   [8] Ran
+  2026_09_29_000010_add_indexes_permissions   [9] Ran
+  2026_09_29_000011_add_mime_permissions   [10] Ran
+  2026_09_29_000012_add_handlers_permissions   [11] Ran
+  2026_09_29_000013_add_files_permissions   [12] Ran
+  2026_09_29_000014_add_privacy_permissions   [13] Ran
+  2026_09_29_000015_add_ssh_permissions   [14] Ran
+  2026_09_29_000016_create_mailboxes_table   [15] Ran
+  2026_09_29_000017_create_forwarders_table   [16] Ran
+  2026_09_29_000018_create_autoresponders_table   [17] Ran
+  2026_09_29_000019_create_catchalls_table   [18] Ran
+  2026_09_29_000020_create_mail_filters_table   [19] Ran
+  2026_09_29_000021_create_spam_settings_table   [20] Ran
+  2026_09_29_000022_create_mailing_lists_table   [21] Ran
+  2026_09_29_000023_create_email_routes_table   [22] Ran
+  2026_09_29_000024_create_global_filters_table   [23] Ran
+  2026_09_29_000025_create_encryption_keys_table   [24] Ran
+  2026_09_29_000026_create_boxtrapper_settings_table   [25] Ran
+  2026_09_29_000027_create_calendar_items_table   [26] Ran
+  2026_09_29_000028_create_webmail_settings_table   [27] Ran
+  2026_09_29_000029_create_mysql_databases_table   [28] Ran
+  2026_09_29_000030_create_phpmyadmin_settings_table   [29] Ran
+  2026_09_29_000031_create_mysql_remote_hosts_table   [30] Ran
+  2026_09_29_000032_create_dns_records_table   [31] Ran
+  2026_09_29_000033_create_dns_dynamic_hosts_table   [32] Ran
+  2026_09_29_000034_create_hostname_a_entries_table   [33] Ran
+  2026_09_29_000035_create_dns_templates_table   [34] Ran
+  2026_09_29_000036_create_global_email_routes_table   [35] Ran
+  2026_09_29_000037_create_ns_records_table   [36] Ran
+  2026_09_29_000038_create_parked_domains_table   [37] Ran
+  2026_09_29_000039_create_dns_cleanups_table   [38] Ran
+  2026_09_29_000040_create_zone_ttls_table   [39] Ran
+  2026_09_29_000041_create_domain_forwards_table   [40] Ran
+  2026_09_29_000042_create_dns_syncs_table   [41] Ran
+  2026_09_29_000043_create_nameserver_selections_table   [42] Ran
+  2026_09_29_000044_create_backup_jobs_table   [43] Ran
+  2026_09_29_000045_create_backup_wizards_table   [44] Ran
+  2026_09_29_000046_create_backup_restores_table   [45] Ran
+  2026_09_29_000047_create_backup_configs_table   [46] Ran
+  2026_09_29_000048_create_backup_restorations_table   [47] Ran
+  2026_09_29_000049_create_backup_user_selections_table   [48] Ran
+  2026_09_29_000050_create_file_directory_restorations_table   [49] Ran
+  2026_09_29_000051_create_transfer_tools_table   [50] Ran
+  2026_09_29_000052_create_transfer_restores_table   [51] Ran
 ```
 
 ## Routes (web)
 ```
 GET|HEAD           /                                             login
+GET|HEAD           /accounts                                     accounts.index
+POST               /accounts                                     accounts.store
+GET|HEAD           /accounts/create                              accounts.create
+GET|HEAD           /accounts/{account}                           accounts.show
+POST               /accounts/{account}/php                       accounts.php
+POST               /accounts/{account}/quota                     accounts.quota
+POST               /accounts/{account}/suspend                   accounts.suspend
+POST               /accounts/{account}/terminate                 accounts.terminate
+POST               /accounts/{account}/unsuspend                 accounts.unsuspend
+POST               /accounts/{account}/upgrade                   accounts.upgrade
+GET|HEAD           /address-importer                             address-importer.index
+POST               /address-importer                             address-importer.store
 GET|HEAD           /audit                                        audit.index
+GET|HEAD           /autoresponders                               autoresponders.index
+POST               /autoresponders                               autoresponders.store
+DELETE             /autoresponders/{autoresponder}               autoresponders.destroy
+GET|HEAD           /backup                                       backup.index
+POST               /backup                                       backup.store
+GET|HEAD           /backup-config                                backup-config.index
+POST               /backup-config                                backup-config.store
+GET|HEAD           /backup-restoration                           backup-restoration.index
+POST               /backup-restoration                           backup-restoration.store
+GET|HEAD           /backup-user-selection                        backup-user-selection.index
+POST               /backup-user-selection                        backup-user-selection.store
+GET|HEAD           /backup-wizard                                backup-wizard.index
+POST               /backup-wizard                                backup-wizard.store
+GET|HEAD           /boxtrapper                                   boxtrapper.index
+POST               /boxtrapper                                   boxtrapper.store
+GET|HEAD           /calendar                                     calendar.index
+POST               /calendar                                     calendar.store
+DELETE             /calendar/{calendar_item}                     calendar.destroy
+GET|HEAD           /cron                                         cron.index
+POST               /cron                                         cron.store
+DELETE             /cron/{cron}                                  cron.destroy
 GET|HEAD           /dashboard                                    dashboard
+GET|HEAD           /default-address                              default-address.index
+POST               /default-address                              default-address.store
+DELETE             /default-address/{catchall}                   default-address.destroy
+GET|HEAD           /deliverability                               deliverability.index
+POST               /deliverability                               deliverability.store
+GET|HEAD           /disk                                         disk.index
+GET|HEAD           /dns-cleanup                                  dns-cleanup.index
+POST               /dns-cleanup                                  dns-cleanup.store
+GET|HEAD           /dns-sync                                     dns-sync.index
+POST               /dns-sync                                     dns-sync.store
+GET|HEAD           /dns-zones                                    dns-zones.index
+POST               /dns-zones                                    dns-zones.store
+DELETE             /dns-zones                                    dns-zones.destroy
+POST               /dns-zones/{account}/sync                     dns-zones.sync
+GET|HEAD           /domain-forward                               domain-forward.index
+POST               /domain-forward                               domain-forward.store
+GET|HEAD           /domains                                      domains.index
+POST               /domains                                      domains.store
+DELETE             /domains/{domain}                             domains.destroy
+GET|HEAD           /dynamic-dns                                  dynamic-dns.index
+POST               /dynamic-dns                                  dynamic-dns.store
+DELETE             /dynamic-dns/{dns_dynamic_host}               dynamic-dns.destroy
+GET|HEAD           /email                                        email.index
+POST               /email                                        email.store
+GET|HEAD           /email-disk                                   email-disk.index
+GET|HEAD           /email-filters                                email-filters.index
+POST               /email-filters                                email-filters.store
+DELETE             /email-filters/{filter}                       email-filters.destroy
+GET|HEAD           /email-routing                                email-routing.index
+POST               /email-routing                                email-routing.store
+DELETE             /email/{mailbox}                              email.destroy
+GET|HEAD           /encryption                                   encryption.index
+POST               /encryption                                   encryption.store
+DELETE             /encryption/{encryption_key}                  encryption.destroy
+GET|HEAD           /errorpages                                   errorpages.index
+POST               /errorpages                                   errorpages.update
+GET|HEAD           /file-directory-restoration                   file-directory-restoration.index
+POST               /file-directory-restoration                   file-directory-restoration.store
+GET|HEAD           /file-restoration                             file-restoration.index
+POST               /file-restoration                             file-restoration.store
+GET|HEAD           /files                                        files.index
+POST               /files/delete                                 files.destroy
+POST               /files/mkdir                                  files.mkdir
+POST               /files/rename                                 files.rename
+POST               /files/write                                  files.write
+GET|HEAD           /forwarders                                   forwarders.index
+POST               /forwarders                                   forwarders.store
+DELETE             /forwarders/{forwarder}                       forwarders.destroy
+GET|HEAD           /global-email-routing                         global-email-routing.index
+POST               /global-email-routing                         global-email-routing.store
+GET|HEAD           /global-filters                               global-filters.index
+POST               /global-filters                               global-filters.store
+DELETE             /global-filters/{global_filter}               global-filters.destroy
+GET|HEAD           /handlers                                     handlers.index
+POST               /handlers                                     handlers.store
+DELETE             /handlers/{ext}                               handlers.destroy
+GET|HEAD           /hostname-a                                   hostname-a.index
+POST               /hostname-a                                   hostname-a.store
+GET|HEAD           /indexes                                      indexes.index
+POST               /indexes                                      indexes.update
 GET|HEAD           /license                                      license.index
 POST               /license/activate                             license.activate
 POST               /login                                        login.attempt
 POST               /logout                                       logout
+GET|HEAD           /mailing-lists                                mailing-lists.index
+POST               /mailing-lists                                mailing-lists.store
+DELETE             /mailing-lists/{mailing_list}                 mailing-lists.destroy
+GET|HEAD           /mime                                         mime.index
+POST               /mime                                         mime.store
+DELETE             /mime/{ext}                                   mime.destroy
+GET|HEAD           /mysql                                        mysql.index
+POST               /mysql                                        mysql.store
+GET|HEAD           /mysql-wizard                                 mysql-wizard.index
+POST               /mysql-wizard                                 mysql-wizard.store
+DELETE             /mysql/{mysql_database}                       mysql.destroy
+GET|HEAD           /nameserver-selection                         nameserver-selection.index
+POST               /nameserver-selection                         nameserver-selection.store
+GET|HEAD           /ns-report                                    ns-report.index
+POST               /ns-report                                    ns-report.store
+GET|HEAD           /packages                                     packages.index
+POST               /packages                                     packages.store
+GET|HEAD           /packages/create                              packages.create
+PUT                /packages/{package}                           packages.update
+POST               /packages/{package}/archive                   packages.archive
+GET|HEAD           /packages/{package}/edit                      packages.edit
+GET|HEAD           /park-domain                                  park-domain.index
+POST               /park-domain                                  park-domain.store
+GET|HEAD           /php                                          php.index
+POST               /php                                          php.update
+GET|HEAD           /php/ini                                      php.ini
+POST               /php/ini                                      php.ini.update
+GET|HEAD           /phpmyadmin                                   phpmyadmin.index
+POST               /phpmyadmin                                   phpmyadmin.store
+GET|HEAD           /privacy                                      privacy.index
+POST               /privacy                                      privacy.store
+POST               /privacy/delete                               privacy.destroy
+GET|HEAD           /remote-mysql                                 remote-mysql.index
+POST               /remote-mysql                                 remote-mysql.store
+DELETE             /remote-mysql/{mysql_remote_host}             remote-mysql.destroy
 GET|HEAD           /security                                     security.index
 POST               /security/2fa/confirm                         security.2fa.confirm
 POST               /security/2fa/disable                         security.2fa.disable
@@ -107,12 +346,31 @@ GET|HEAD           /security/password                            security.passwo
 POST               /security/password                            security.password.update
 GET|HEAD           /security/sessions                            security.sessions
 DELETE             /security/sessions/{id}                       security.sessions.destroy
+GET|HEAD           /spam-filters                                 spam-filters.index
+POST               /spam-filters                                 spam-filters.store
+GET|HEAD           /ssh                                          ssh.index
+POST               /ssh                                          ssh.store
+POST               /ssh/delete                                   ssh.destroy
+POST               /ssh/shell                                    ssh.shell
+GET|HEAD           /ssl                                          ssl.index
+POST               /ssl/autossl                                  ssl.autossl
+POST               /ssl/{domain}                                 ssl.issue
+DELETE             /ssl/{domain}                                 ssl.destroy
+POST               /ssl/{domain}/autossl                         ssl.toggle
 GET|HEAD           /storage/{path}                               storage.local
 PUT                /storage/{path}                               storage.local.upload
 GET|HEAD           /system                                       system.index
 GET|HEAD           /system/services                              system.services
 GET|HEAD           /system/tasks                                 system.tasks
 POST               /system/tasks/run                             system.tasks.run
+GET|HEAD           /track-delivery                               track-delivery.index
+POST               /track-delivery                               track-delivery.store
+GET|HEAD           /track-dns                                    track-dns.index
+POST               /track-dns                                    track-dns.store
+GET|HEAD           /transfer-restore                             transfer-restore.index
+POST               /transfer-restore                             transfer-restore.store
+GET|HEAD           /transfer-tool                                transfer-tool.index
+POST               /transfer-tool                                transfer-tool.store
 GET|HEAD           /two-factor                                   twofactor.challenge
 POST               /two-factor                                   twofactor.verify
 GET|HEAD           /up                                           
@@ -122,6 +380,16 @@ GET|HEAD           /users/create                                 users.create
 PUT                /users/{user}                                 users.update
 GET|HEAD           /users/{user}/edit                            users.edit
 POST               /users/{user}/password                        users.password
+GET|HEAD           /webmail                                      webmail.index
+POST               /webmail                                      webmail.store
+GET|HEAD           /zone-editor                                  zone-editor.index
+POST               /zone-editor                                  zone-editor.store
+DELETE             /zone-editor/{dns_record}                     zone-editor.destroy
+GET|HEAD           /zone-templates                               zone-templates.index
+POST               /zone-templates                               zone-templates.store
+DELETE             /zone-templates/{dns_template}                zone-templates.destroy
+GET|HEAD           /zone-ttl                                     zone-ttl.index
+POST               /zone-ttl                                     zone-ttl.store
 GET|HEAD           /{fallbackPlaceholder}                        
 ```
 
@@ -149,4 +417,7 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot se skip hui files (secret/binary)
 ```
+/usr/local/alphacp/agent/src/AccountOs.php  (secret jaisa pattern)
+/usr/local/alphacp/agent/tests/FakeCommandExecutor.php  (secret jaisa pattern)
+/usr/local/alphacp/panel/tests/Feature/SshTest.php  (secret jaisa pattern)
 ```

@@ -66,7 +66,7 @@ class UsersController extends Controller
         ]);
 
         return redirect()->route('users.index')
-            ->with('success', "User '{$user->username}' ban gaya — pehle login par password badalna padega.");
+            ->with('success', "User '{$user->username}' created — must change password on first login.");
     }
 
     public function edit(User $user): View
@@ -90,13 +90,13 @@ class UsersController extends Controller
 
         // Guard rails: no self-demotion, no touching the last root, only root can grant root.
         if ($user->id === $request->user()->id && $user->role_id !== $role->id) {
-            return back()->withErrors(['role_id' => 'Apna hi role badalna allowed nahi (lock-out se bachne ke liye).']);
+            return back()->withErrors(['role_id' => 'You cannot change your own role (prevents lock-out).']);
         }
         if ($role->isRoot() && ! $request->user()->isRoot()) {
             abort(403, 'Sirf root admin root role de sakta hai.');
         }
         if ($user->isRoot() && ! $role->isRoot() && User::query()->whereHas('role', fn ($q) => $q->where('level', 1))->count() <= 1) {
-            return back()->withErrors(['role_id' => 'Ye aakhri root user hai — iska role nahi badal sakte.']);
+            return back()->withErrors(['role_id' => 'This is the last root user — its role cannot change.']);
         }
 
         $before = ['role' => $user->role?->name, 'status' => $user->status];
@@ -112,7 +112,7 @@ class UsersController extends Controller
             'before' => $before, 'after' => ['role' => $role->name, 'status' => $data['status']],
         ]);
 
-        return redirect()->route('users.index')->with('success', "User '{$user->username}' update ho gaya.");
+        return redirect()->route('users.index')->with('success', "User '{$user->username}' updated.");
     }
 
     /** Admin-side password reset: sets a new temporary password + forces change. */
@@ -131,6 +131,6 @@ class UsersController extends Controller
 
         Audit::log('user.password_reset', 'critical', 'user', $user->id, ['by_admin' => $request->user()->username]);
 
-        return redirect()->route('users.edit', $user)->with('success', 'Naya temporary password set ho gaya (2FA bhi reset ho gaya).');
+        return redirect()->route('users.edit', $user)->with('success', 'New temporary password is set (2FA was also reset).');
     }
 }

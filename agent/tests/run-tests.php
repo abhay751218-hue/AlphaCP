@@ -72,6 +72,7 @@ use Alphacp\Agent\Tasks\ForwardSet;
 use Alphacp\Agent\Tasks\SyncSet;
 use Alphacp\Agent\Tasks\NameserverSet;
 use Alphacp\Agent\Tasks\BackupCreate;
+use Alphacp\Agent\Tasks\BackupArchiveCreate;
 use Alphacp\Agent\Tasks\BackupWizard;
 use Alphacp\Agent\Tasks\BackupRestore;
 use Alphacp\Agent\Tasks\BackupConfig;
@@ -80,6 +81,7 @@ use Alphacp\Agent\Tasks\BackupUsers;
 use Alphacp\Agent\Tasks\BackupFiledir;
 use Alphacp\Agent\Tasks\BackupTransfer;
 use Alphacp\Agent\Tasks\BackupCpanel;
+use Alphacp\Agent\Tasks\BackupReview;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -228,7 +230,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.archive', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1852,6 +1854,73 @@ test('backup.create writes json and rejects hostile kind/path', function (): voi
     assert_true($threwPath, 'hostile backup path must fail closed');
     acp_account_cleanup($harness);
 });
+test('backup.archive creates a verified home archive and retries idempotently', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    if (!is_dir($home . '/public_html')) {
+        mkdir($home . '/public_html', 0755, true);
+    }
+    file_put_contents($home . '/public_html/index.php', '<?php echo "healthy";');
+    $id = str_repeat('a', 32);
+    $handler = new BackupArchiveCreate();
+    $result = $handler->handle(['username' => 'alicehost', 'archive_id' => $id], $harness['ctx']);
+    assert_true($result['archive_id'] === $id);
+    assert_true($result['scope'] === 'home');
+    assert_true($result['status'] === 'ready');
+    assert_true(preg_match('/^[a-f0-9]{64}$/', $result['sha256']) === 1);
+    $archive = $harness['root'] . '/alphacp/backups/accounts/alicehost/' . $id . '.tar.gz';
+    $manifest = $harness['root'] . '/alphacp/backups/accounts/alicehost/' . $id . '.json';
+    assert_true(is_file($archive), 'real archive path must be published');
+    assert_true(is_file($manifest), 'checksum manifest must be published');
+    assert_true(hash_file('sha256', $archive) === $result['sha256'], 'manifest checksum must match archive');
+    $beforeTarCalls = count(array_filter($harness['cmd']->calls, static fn (array $argv): bool => basename($argv[0] ?? '') === 'tar'));
+    $again = $handler->handle(['username' => 'alicehost', 'archive_id' => $id], $harness['ctx']);
+    $afterTarCalls = count(array_filter($harness['cmd']->calls, static fn (array $argv): bool => basename($argv[0] ?? '') === 'tar'));
+    assert_true($again['sha256'] === $result['sha256'], 'retry must return the same archive');
+    assert_true($beforeTarCalls === $afterTarCalls, 'idempotent retry must not rerun tar');
+    acp_account_cleanup($harness);
+});
+test('backup.archive prunes expired snapshots before checking free space', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new BackupConfig())->handle(['schedule' => 'daily', 'retention' => 1], $harness['ctx']);
+    $handler = new BackupArchiveCreate();
+    $oldId = str_repeat('c', 32);
+    $newId = str_repeat('d', 32);
+    $handler->handle(['username' => 'alicehost', 'archive_id' => $oldId], $harness['ctx']);
+    $archiveDir = $harness['root'] . '/alphacp/backups/accounts/alicehost';
+    touch($archiveDir . '/' . $oldId . '.json', time() - 172800);
+    $handler->handle(['username' => 'alicehost', 'archive_id' => $newId], $harness['ctx']);
+    assert_true(!is_file($archiveDir . '/' . $oldId . '.tar.gz'), 'expired archive must be removed before the next archive');
+    assert_true(!is_file($archiveDir . '/' . $oldId . '.json'), 'expired manifest must be removed with its archive');
+    assert_true(is_file($archiveDir . '/' . $newId . '.tar.gz'), 'new archive should still be published');
+    acp_account_cleanup($harness);
+});
+test('backup.archive rejects hostile ids and cleans up failed tar attempts', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $handler = new BackupArchiveCreate();
+    $badId = false;
+    try {
+        $handler->handle(['username' => 'alicehost', 'archive_id' => '../|/bin/sh'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $badId = str_contains($e->getMessage(), 'id');
+    }
+    assert_true($badId, 'archive id must be strictly validated');
+    $harness['cmd']->failWhenContains = '--create';
+    $failed = false;
+    try {
+        $handler->handle(['username' => 'alicehost', 'archive_id' => str_repeat('b', 32)], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $failed = str_contains($e->getMessage(), 'creation failed');
+    }
+    assert_true($failed, 'tar failure must fail the task');
+    $dir = $harness['root'] . '/alphacp/backups/accounts/alicehost';
+    assert_true(!is_file($dir . '/' . str_repeat('b', 32) . '.tar.gz'), 'failed archive must not be published');
+    assert_true(!is_file($dir . '/' . str_repeat('b', 32) . '.json'), 'failed archive must not leave a manifest');
+    acp_account_cleanup($harness);
+});
 test('backup.wizard writes json and rejects hostile action/scope', function (): void {
     $harness = acp_account_harness();
     (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
@@ -2142,6 +2211,28 @@ test('backup.cpanel writes json and rejects hostile action', function (): void {
         $threwPath = str_contains($e->getMessage(), 'username') || str_contains($e->getMessage(), 'invalid');
     }
     assert_true($threwPath, 'hostile cpanel username path must fail closed');
+    acp_account_cleanup($harness);
+});
+test('backup.review writes JSON and rejects hostile status/username', function (): void {
+    $harness = acp_account_harness();
+    $out = (new BackupReview())->handle([
+        'username' => 'alicehost',
+        'status' => 'ok',
+    ], $harness['ctx']);
+    assert_true($out['username'] === 'alicehost');
+    assert_true($out['status'] === 'ok');
+    $file = $harness['root'] . '/alphacp/etc/backup/review.json';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, 'alicehost') && str_contains($body, 'ok'));
+    assert_true(!str_contains($body, '|'));
+    $threw = false;
+    try {
+        (new BackupReview())->handle(['username' => 'alicehost', 'status' => '|/bin/sh'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'status') || str_contains($e->getMessage(), 'invalid');
+    }
+    assert_true($threw, 'hostile review status must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {

@@ -58,7 +58,7 @@ class LoginController extends Controller
                 }
             }
 
-            return back()->withErrors(['username' => 'Username ya password galat hai.'])->onlyInput('username');
+            return back()->withErrors(['username' => 'Username or password is incorrect.'])->onlyInput('username');
         };
 
         if (! $user) {
@@ -66,7 +66,7 @@ class LoginController extends Controller
         }
         if ($user->isLocked()) {
             Audit::log('auth.login_blocked_locked', 'warning', 'user', $user->id);
-            return back()->withErrors(['username' => 'Account thodi der ke liye lock hai. Baad me try karo.'])->onlyInput('username');
+            return back()->withErrors(['username' => 'Account is locked for a short time. Try again later.'])->onlyInput('username');
         }
         if (! $user->isActive()) {
             return $fail('status_' . $user->status, $user);

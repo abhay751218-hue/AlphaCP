@@ -44,6 +44,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'setquota', 'systemctl' => new CommandResult($argv, 0, "fake {$bin} ok\n", '', 1),
             'crontab' => $this->handleCrontab($argv, $stdin),
             'certbot' => $this->handleCertbot($argv),
+            'tar' => $this->handleTar($argv),
             default => new CommandResult($argv, 0, '', '', 1),
         };
     }
@@ -108,6 +109,26 @@ final class FakeCommandExecutor implements CommandExecutor
             }
         }
         return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleTar(array $argv): CommandResult
+    {
+        $fileIndex = array_search('--file', $argv, true);
+        $path = is_int($fileIndex) ? (string) ($argv[$fileIndex + 1] ?? '') : '';
+        if ($path === '') {
+            return new CommandResult($argv, 2, '', 'tar: missing --file', 1);
+        }
+        if (in_array('--create', $argv, true)) {
+            if (@file_put_contents($path, "fake-gzip-tar-archive\n") === false) {
+                return new CommandResult($argv, 2, '', 'tar: cannot create archive', 1);
+            }
+            return new CommandResult($argv, 0, '', '', 1);
+        }
+        if (in_array('--list', $argv, true) && is_file($path)) {
+            return new CommandResult($argv, 0, "alicehost/\nalicehost/public_html/index.php\n", '', 1);
+        }
+        return new CommandResult($argv, 2, '', 'tar: archive missing', 1);
     }
 
     /** @param list<string> $argv */

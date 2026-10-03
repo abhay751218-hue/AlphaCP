@@ -25,6 +25,18 @@ final class BackupProvisioner
         ]);
     }
 
+    public static function enqueueArchive(Account $account, string $archiveId): int
+    {
+        if (preg_match('/^[a-f0-9]{32}$/', $archiveId) !== 1) {
+            throw new \InvalidArgumentException('Invalid backup archive id.');
+        }
+
+        return Paneld::enqueue('backup.archive', [
+            'username' => $account->username,
+            'archive_id' => $archiveId,
+        ], 'panel', $account->id);
+    }
+
     public static function limitReached(Account $account): bool
     {
         return $account->backupJobs()->count() >= Backup::MAX;
@@ -115,6 +127,14 @@ final class BackupProvisioner
         return Paneld::enqueue('backup.cpanel', [
             'username' => $username,
             'action' => $action,
+        ]);
+    }
+
+    public static function enqueueReview(string $username, string $status): int
+    {
+        return Paneld::enqueue('backup.review', [
+            'username' => $username,
+            'status' => $status,
         ]);
     }
 }

@@ -3,7 +3,7 @@
 > 👉 **Naya AI/developer? Sabse pehle [`START-HERE.md`](START-HERE.md) padho** — server ki live state `server-snapshot/STATE.md` me hai.
 
 > **Working title:** "AlphaCP" (final brand name aap decide karoge)
-> **Status:** 🟢 Step 2B-1 — panel live; installer v0.3.7 hardened; browser acceptance next
+> **Status:** 🟡 S10 in progress — source panel 0.65.0 / agent 0.58.0; server snapshot is panel 0.63.0. Real home-file archive is implemented; mail/DB backup, restore, scheduling, remote storage, and cPanel migration are still incomplete.
 > **Type:** Commercial hosting control panel (cPanel/WHM parity target)
 
 A from-scratch, cPanel-compatible hosting control panel written for real hosting businesses.

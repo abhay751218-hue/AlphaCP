@@ -31,12 +31,12 @@
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/unsuspend/terminate + Accounts UI, rollback) | ✅ **DEPLOYED 0.4.0** (29 Sep 01:07Z) |
 | Step 4 | Packages & limits manager | ✅ **DEPLOYED 0.5.0** (29 Sep 01:21Z) |
-| Step 5 | Domains, vHost, MultiPHP, SSL, Cron, Indexes, MIME, Handlers | ✅ **0.14.0 live** |
+| Step 5 | Domains, vHost, MultiPHP, SSL, Cron, Indexes, MIME, Handlers | 🟡 **through 0.14.0; per-domain PHP version/INI pending** |
 | Step 6 | File Manager + FTP + Git + SSH | 🟡 **FM + Privacy + Disk Usage + SSH live** |
-| Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **through Webmail live; virus/ClamAV later** |
-| Step 8 | Databases (MySQL management) | 🟡 **through Remote MySQL live; users/SSO later** |
-| Step 9 | DNS management + nameservers | 🟡 **through Nameserver Selection live; DNS Cluster S15** |
-| Step 10 | Backup / Restore / Migration | 🟡 **through Transfer Tool live; Transfer or Restore a cPanel Account 0.63.0 pending deploy** |
+| Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **UI/config through Webmail; real Exim/Dovecot mailflow + service integration pending** |
+| Step 8 | Databases (MySQL management) | 🟡 **UI/config through Remote MySQL; actual DB/users/GRANT + phpMyAdmin SSO pending** |
+| Step 9 | DNS management + nameservers | 🟡 **JSON/config through Nameserver Selection; BIND write/reload/dig validation + cluster pending** |
+| Step 10 | Backup / Restore / Migration | 🟡 **0.65.0 adds real, verified home archives/download; mail/DB backup, restore, schedule, remote, transfer/import still incomplete. Server snapshot remains panel 0.63.0 / agent 0.56.0.** |
 | Step 11 | Monitoring, stats, resource limits | ⏳ |
 | Step 12 | 💳 Billing API layer (WHM API 1 + native REST) | ⏳ |
 | Step 13 | Security suite + WAF | ⏳ |

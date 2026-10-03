@@ -38,6 +38,8 @@ final class CommandRunner implements CommandExecutor
         '/usr/bin/crontab',
         '/usr/bin/openssl',
         '/usr/bin/certbot',
+        '/usr/bin/tar',
+        '/bin/tar',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)
