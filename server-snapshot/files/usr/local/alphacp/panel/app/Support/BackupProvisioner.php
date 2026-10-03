@@ -60,4 +60,12 @@ final class BackupProvisioner
     {
         return $account->backupRestores()->count() >= Backup::MAX;
     }
+
+    public static function enqueueConfig(string $schedule, int $retention): int
+    {
+        return Paneld::enqueue('backup.config', [
+            'schedule' => $schedule,
+            'retention' => $retention,
+        ]);
+    }
 }

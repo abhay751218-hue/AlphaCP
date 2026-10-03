@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.57.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.57.0   (.env)
-AGENT_VERSION : 0.50.0
+panel code    : 0.58.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.58.0   (.env)
+AGENT_VERSION : 0.51.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -89,9 +89,10 @@ agent-backup-20261003041343
 agent-backup-20261003062629
 agent-backup-20261003081849
 agent-backup-20261003085649
-panel-backup-20261003062629
+agent-backup-20261003092937
 panel-backup-20261003081849
 panel-backup-20261003085649
+panel-backup-20261003092937
 panel-failed-20260928223644
 ```
 
@@ -187,6 +188,7 @@ alphacp:admin-password
   2026_09_29_000044_create_backup_jobs_table   [43] Ran
   2026_09_29_000045_create_backup_wizards_table   [44] Ran
   2026_09_29_000046_create_backup_restores_table   [45] Ran
+  2026_09_29_000047_create_backup_configs_table   [46] Ran
 ```
 
 ## Routes (web)
@@ -210,6 +212,8 @@ POST               /autoresponders                               autoresponders.
 DELETE             /autoresponders/{autoresponder}               autoresponders.destroy
 GET|HEAD           /backup                                       backup.index
 POST               /backup                                       backup.store
+GET|HEAD           /backup-config                                backup-config.index
+POST               /backup-config                                backup-config.store
 GET|HEAD           /backup-wizard                                backup-wizard.index
 POST               /backup-wizard                                backup-wizard.store
 GET|HEAD           /boxtrapper                                   boxtrapper.index
