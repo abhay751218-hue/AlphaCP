@@ -31,7 +31,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   GNU tar khud bhi staged symlink ke through likhne se inkaar karta hai (exit 2) aur `../` strip karta hai —
   `tools/sim/backup-tar-sim.sh` **v0.2.0** isi ko real tar se user aur root dono me prove karta hai.
   Tests: panel **407 pass / 0 fail / 6 wasm-skip**, provision-sim **98/98** (+6 restore tests),
-  backup-tar-sim v0.2.0 PASS (user + root), update-sim **186/186**.
+  backup-tar-sim v0.2.0 PASS (user + root), update-sim **192/192** (+6 restore assertions).
   Abhi bhi baaki: per-file/per-dir restore, mail/MySQL restore, schedule, remote destination,
   cPanel `.tar.gz` import, WHM-side wiring, aur restore ke baad vhost/pool/cron re-provision.
 - **0.66.0 deployment verified (3 Oct 16:49Z)** — server snapshot: panel **0.66.0**, agent **0.59.0**,
