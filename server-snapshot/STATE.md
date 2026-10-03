@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.58.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.58.0   (.env)
-AGENT_VERSION : 0.51.0
+panel code    : 0.59.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.59.0   (.env)
+AGENT_VERSION : 0.52.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -90,15 +90,16 @@ agent-backup-20261003062629
 agent-backup-20261003081849
 agent-backup-20261003085649
 agent-backup-20261003092937
-panel-backup-20261003081849
+agent-backup-20261003101439
 panel-backup-20261003085649
 panel-backup-20261003092937
+panel-backup-20261003101439
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -189,6 +190,7 @@ alphacp:admin-password
   2026_09_29_000045_create_backup_wizards_table   [44] Ran
   2026_09_29_000046_create_backup_restores_table   [45] Ran
   2026_09_29_000047_create_backup_configs_table   [46] Ran
+  2026_09_29_000048_create_backup_restorations_table   [47] Ran
 ```
 
 ## Routes (web)
@@ -214,6 +216,8 @@ GET|HEAD           /backup                                       backup.index
 POST               /backup                                       backup.store
 GET|HEAD           /backup-config                                backup-config.index
 POST               /backup-config                                backup-config.store
+GET|HEAD           /backup-restoration                           backup-restoration.index
+POST               /backup-restoration                           backup-restoration.store
 GET|HEAD           /backup-wizard                                backup-wizard.index
 POST               /backup-wizard                                backup-wizard.store
 GET|HEAD           /boxtrapper                                   boxtrapper.index

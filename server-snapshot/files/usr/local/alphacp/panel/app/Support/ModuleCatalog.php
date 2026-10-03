@@ -177,6 +177,7 @@ final class ModuleCatalog
                     ['name' => 'Nameserver Selection', 'step' => 'S9',  'status' => 'live', 'route' => 'nameserver-selection.index'],
                     ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'step'],
                     ['name' => 'Backup Config',       'step' => 'S10', 'status' => 'live', 'route' => 'backup-config.index'],
+                    ['name' => 'Backup Restoration',  'step' => 'S10', 'status' => 'live', 'route' => 'backup-restoration.index'],
                     ['name' => 'Security Center',     'step' => 'S13', 'status' => 'step'],
                     ['name' => 'API Tokens',          'step' => 'S12', 'status' => 'step'],
                     ['name' => 'License & Trial',      'step' => 'S2C', 'status' => 'live', 'route' => 'license.index'],
