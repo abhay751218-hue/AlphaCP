@@ -109,4 +109,12 @@ final class BackupProvisioner
             'source' => $source,
         ]);
     }
+
+    public static function enqueueCpanel(string $username, string $action): int
+    {
+        return Paneld::enqueue('backup.cpanel', [
+            'username' => $username,
+            'action' => $action,
+        ]);
+    }
 }

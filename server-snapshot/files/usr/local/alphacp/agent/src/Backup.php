@@ -321,4 +321,31 @@ final class Backup
 
         return $json . "\n";
     }
+
+    public const CPANEL_ACTIONS = ['transfer', 'restore'];
+
+    public static function normalizeCpanelAction(string $action): string
+    {
+        $action = strtolower(trim($action));
+        if (!in_array($action, self::CPANEL_ACTIONS, true)) {
+            throw new TaskRejectedException('invalid cPanel account action');
+        }
+
+        return $action;
+    }
+
+    public static function cpanelJson(string $username, string $action): string
+    {
+        $username = self::normalizeRestoreUsername($username);
+        $action = self::normalizeCpanelAction($action);
+        $json = json_encode([
+            'username' => $username,
+            'action' => $action,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('backup cpanel json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }
