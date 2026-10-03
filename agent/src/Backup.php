@@ -236,4 +236,44 @@ final class Backup
 
         return $json . "\n";
     }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{username: string}>
+     */
+    public static function sanitizeUsers(array $raw): array
+    {
+        if (count($raw) > self::MAX) {
+            throw new TaskRejectedException('too many backup users (10 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid backup user row at {$i}");
+            }
+            $username = self::normalizeRestoreUsername((string) ($row['username'] ?? ''));
+            if (isset($seen[$username])) {
+                throw new TaskRejectedException('duplicate backup user');
+            }
+            $seen[$username] = true;
+            $out[] = ['username' => $username];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  list<array{username: string}> $rows
+     */
+    public static function usersJson(array $rows): string
+    {
+        $rows = self::sanitizeUsers($rows);
+        $json = json_encode(['users' => $rows], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('backup users json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }

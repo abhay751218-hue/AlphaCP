@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 10 Backup User Selection (3 Oct)** — WHM usernames via `backup.users`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.60.0**, agent **0.53.0**.
+  Tests: panel **375/0**, provision-sim **84/84**, update-sim **168/168** (pin in B).
+  Deploy via `panel-update.sh` 0.60.0.
 - **Step 10 Backup Restoration (3 Oct)** — WHM full/partial/per-account via `backup.restoration`
   (JSON; no tar/shell; pipe/path fail closed). Panel **0.59.0**, agent **0.52.0**.
   Tests: panel **369/0**, provision-sim **83/83**, update-sim **166/166** (pin in B).

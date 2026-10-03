@@ -7,6 +7,7 @@ namespace App\Support;
 use App\Models\Account;
 use App\Models\BackupJob;
 use App\Models\BackupRestore;
+use App\Models\BackupUserSelection;
 use App\Models\BackupWizard;
 
 final class BackupProvisioner
@@ -75,5 +76,21 @@ final class BackupProvisioner
             'mode' => $mode,
             'username' => $username,
         ]);
+    }
+
+    public static function enqueueUsers(): int
+    {
+        $rows = BackupUserSelection::query()->orderBy('id')->get()->map(static fn (BackupUserSelection $row): array => [
+            'username' => $row->username,
+        ])->values()->all();
+
+        return Paneld::enqueue('backup.users', [
+            'users' => $rows,
+        ]);
+    }
+
+    public static function userSelectionLimitReached(): bool
+    {
+        return BackupUserSelection::query()->count() >= Backup::MAX;
     }
 }

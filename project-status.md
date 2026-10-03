@@ -36,7 +36,7 @@
 | Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **through Webmail live; virus/ClamAV later** |
 | Step 8 | Databases (MySQL management) | 🟡 **through Remote MySQL live; users/SSO later** |
 | Step 9 | DNS management + nameservers | 🟡 **through Nameserver Selection live; DNS Cluster S15** |
-| Step 10 | Backup / Restore / Migration | 🟡 **through Backup Config live; Backup Restoration 0.59.0 pending deploy** |
+| Step 10 | Backup / Restore / Migration | 🟡 **through Backup Restoration live; Backup User Selection 0.60.0 pending deploy** |
 | Step 11 | Monitoring, stats, resource limits | ⏳ |
 | Step 12 | 💳 Billing API layer (WHM API 1 + native REST) | ⏳ |
 | Step 13 | Security suite + WAF | ⏳ |

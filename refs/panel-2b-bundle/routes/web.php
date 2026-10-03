@@ -44,6 +44,7 @@ use App\Http\Controllers\DomainForwardController;
 use App\Http\Controllers\DnsSyncController;
 use App\Http\Controllers\BackupConfigController;
 use App\Http\Controllers\BackupRestorationController;
+use App\Http\Controllers\BackupUserSelectionController;
 use App\Http\Controllers\NameserverSelectionController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
@@ -391,6 +392,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('backup-restoration.index');
     Route::post('/backup-restoration', [BackupRestorationController::class, 'store'])
         ->middleware('perm:accounts.view')->name('backup-restoration.store');
+
+    Route::get('/backup-user-selection', [BackupUserSelectionController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('backup-user-selection.index');
+    Route::post('/backup-user-selection', [BackupUserSelectionController::class, 'store'])
+        ->middleware('perm:accounts.view')->name('backup-user-selection.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

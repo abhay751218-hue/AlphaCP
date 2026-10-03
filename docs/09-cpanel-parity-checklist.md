@@ -293,7 +293,7 @@
 |---|---|---|---|
 | 176 | Backup Configuration (schedule, remote, retention) | S10 | ✅ (JSON schedule/retention; remote later) |
 | 177 | Backup Restoration (full/partial/per-account) | S10 | ✅ (JSON full/partial/account; tar later) |
-| 178 | Backup User Selection | S10 | ⏳ S10 |
+| 178 | Backup User Selection | S10 | ✅ (JSON usernames; tar later) |
 | 179 | File and Directory Restoration | S10 | ⏳ S10 |
 | 180 | Configuration Cluster / DNS Cluster | S15 | ⏳ S15 |
 | 181 | Graceful / Forceful Server Reboot | S2B | 🟡 2B |
