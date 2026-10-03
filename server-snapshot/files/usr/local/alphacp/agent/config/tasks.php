@@ -1462,6 +1462,23 @@ return [
         ],
     ],
 
+    'backup.transfer' => [
+        'handler'     => Tasks\BackupTransfer::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write WHM cPanel→AlphaCP transfer (JSON; no tar/rsync/shell).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'source'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'maxLength' => 16],
+                'source'   => ['type' => 'string', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

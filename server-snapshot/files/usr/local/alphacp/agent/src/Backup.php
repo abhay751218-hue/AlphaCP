@@ -301,4 +301,24 @@ final class Backup
 
         return $json . "\n";
     }
+
+    public static function normalizeTransferSource(string $source): string
+    {
+        return Dns::normalizeDomain($source);
+    }
+
+    public static function transferJson(string $username, string $source): string
+    {
+        $username = self::normalizeRestoreUsername($username);
+        $source = self::normalizeTransferSource($source);
+        $json = json_encode([
+            'username' => $username,
+            'source' => $source,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('backup transfer json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }

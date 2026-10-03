@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.61.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.61.0   (.env)
-AGENT_VERSION : 0.54.0
+panel code    : 0.62.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.62.0   (.env)
+AGENT_VERSION : 0.55.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -93,9 +93,10 @@ agent-backup-20261003092937
 agent-backup-20261003101439
 agent-backup-20261003104840
 agent-backup-20261003111749
-panel-backup-20261003101439
+agent-backup-20261003114715
 panel-backup-20261003104840
 panel-backup-20261003111749
+panel-backup-20261003114715
 panel-failed-20260928223644
 ```
 
@@ -195,6 +196,7 @@ alphacp:admin-password
   2026_09_29_000048_create_backup_restorations_table   [47] Ran
   2026_09_29_000049_create_backup_user_selections_table   [48] Ran
   2026_09_29_000050_create_file_directory_restorations_table   [49] Ran
+  2026_09_29_000051_create_transfer_tools_table   [50] Ran
 ```
 
 ## Routes (web)
@@ -363,6 +365,8 @@ GET|HEAD           /track-delivery                               track-delivery.
 POST               /track-delivery                               track-delivery.store
 GET|HEAD           /track-dns                                    track-dns.index
 POST               /track-dns                                    track-dns.store
+GET|HEAD           /transfer-tool                                transfer-tool.index
+POST               /transfer-tool                                transfer-tool.store
 GET|HEAD           /two-factor                                   twofactor.challenge
 POST               /two-factor                                   twofactor.verify
 GET|HEAD           /up                                           
