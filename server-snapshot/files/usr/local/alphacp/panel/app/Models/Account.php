@@ -154,6 +154,11 @@ class Account extends Model
         return $this->hasMany(BackupJob::class);
     }
 
+    public function backupWizard(): HasOne
+    {
+        return $this->hasOne(BackupWizard::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

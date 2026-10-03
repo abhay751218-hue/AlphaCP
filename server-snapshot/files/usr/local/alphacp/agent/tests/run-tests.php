@@ -72,6 +72,7 @@ use Alphacp\Agent\Tasks\ForwardSet;
 use Alphacp\Agent\Tasks\SyncSet;
 use Alphacp\Agent\Tasks\NameserverSet;
 use Alphacp\Agent\Tasks\BackupCreate;
+use Alphacp\Agent\Tasks\BackupWizard;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -220,7 +221,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.wizard', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1842,6 +1843,46 @@ test('backup.create writes json and rejects hostile kind/path', function (): voi
         $threwPath = str_contains($e->getMessage(), 'path') || str_contains($e->getMessage(), 'escape') || str_contains($e->getMessage(), 'invalid');
     }
     assert_true($threwPath, 'hostile backup path must fail closed');
+    acp_account_cleanup($harness);
+});
+test('backup.wizard writes json and rejects hostile action/scope', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $out = (new BackupWizard())->handle([
+        'username' => 'alicehost',
+        'action' => 'backup',
+        'scope' => 'home',
+    ], $harness['ctx']);
+    assert_true($out['action'] === 'backup');
+    assert_true($out['scope'] === 'home');
+    $file = $harness['root'] . '/home/alicehost/etc/backup/wizard.json';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, 'backup'));
+    assert_true(str_contains($body, 'home'));
+    assert_true(!str_contains($body, '|'));
+    $threwAction = false;
+    try {
+        (new BackupWizard())->handle([
+            'username' => 'alicehost',
+            'action' => '|/bin/sh',
+            'scope' => 'home',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwAction = str_contains($e->getMessage(), 'action') || str_contains($e->getMessage(), 'invalid');
+    }
+    assert_true($threwAction, 'hostile backup wizard action must fail closed');
+    $threwScope = false;
+    try {
+        (new BackupWizard())->handle([
+            'username' => 'alicehost',
+            'action' => 'backup',
+            'scope' => '../etc',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwScope = str_contains($e->getMessage(), 'scope') || str_contains($e->getMessage(), 'invalid') || str_contains($e->getMessage(), 'escape');
+    }
+    assert_true($threwScope, 'hostile backup wizard scope must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {
