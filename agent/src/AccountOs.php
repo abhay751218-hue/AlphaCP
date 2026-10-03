@@ -434,6 +434,31 @@ final class AccountOs
     }
 
     /**
+     * @return array{action: string, scope: string}
+     */
+    public function setBackupWizard(string $username, string $action, string $scope): array
+    {
+        $action = Backup::normalizeAction($action);
+        $scope = Backup::normalizeScope($scope);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/backup');
+        if (is_link($dir)) {
+            throw new RuntimeException('backup conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/backup/wizard.json');
+        if (is_link($file)) {
+            throw new RuntimeException('backup wizard is a symlink');
+        }
+        $this->fs->write($file, Backup::wizardJson($action, $scope), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info("backup wizard {$action}/{$scope} for {$username}");
+
+        return ['action' => $action, 'scope' => $scope];
+    }
+
+    /**
      * @return list<array{id: string, time: string, sender: string, recipient: string, status: string}>
      */
     public function track(string $username, string $query): array

@@ -36,7 +36,7 @@ final class ModuleCatalog
                     ['name' => 'Disk Usage',          'step' => 'S6',  'status' => 'live', 'route' => 'disk.index'],
                     ['name' => 'FTP Accounts',        'step' => 'S6',  'status' => 'step'],
                     ['name' => 'Backup',              'step' => 'S10', 'status' => 'live', 'route' => 'backup.index'],
-                    ['name' => 'Backup Wizard',       'step' => 'S10', 'status' => 'step'],
+                    ['name' => 'Backup Wizard',       'step' => 'S10', 'status' => 'live', 'route' => 'backup-wizard.index'],
                     ['name' => 'Git Version Control', 'step' => 'S6',  'status' => 'step'],
                     ['name' => 'File Restoration',    'step' => 'S10', 'status' => 'step'],
                     ['name' => 'Trash',               'step' => 'S6',  'status' => 'step'],

@@ -74,4 +74,42 @@ final class Backup
 
         return $json . "\n";
     }
+
+    public const ACTIONS = ['backup', 'restore'];
+    public const SCOPES = ['full', 'home', 'mail', 'mysql'];
+
+    public static function normalizeAction(string $action): string
+    {
+        $action = strtolower(trim($action));
+        if (!in_array($action, self::ACTIONS, true)) {
+            throw new TaskRejectedException('invalid backup wizard action');
+        }
+
+        return $action;
+    }
+
+    public static function normalizeScope(string $scope): string
+    {
+        $scope = strtolower(trim($scope));
+        if (!in_array($scope, self::SCOPES, true)) {
+            throw new TaskRejectedException('invalid backup wizard scope');
+        }
+
+        return $scope;
+    }
+
+    public static function wizardJson(string $action, string $scope): string
+    {
+        $action = self::normalizeAction($action);
+        $scope = self::normalizeScope($scope);
+        $json = json_encode([
+            'action' => $action,
+            'scope' => $scope,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('backup wizard json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }
