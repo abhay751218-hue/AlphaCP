@@ -20,7 +20,7 @@
 | Path | Kya |
 |---|---|
 | **`refs/panel-2b-bundle/`** | ⭐ **Panel ka SOURCE (Laravel 13.33.0)** — login, RBAC, 2FA, **license + 15-day trial** (`app/Support/License/`, design: `docs/modules/license.md`), `PasswordGenerator`. Panel badalna ho to yahin badlo. |
-| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Latest source artifact: **0.65.0** (live server snapshot is still 0.63.0). |
+| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Latest source + deployed server version: **0.65.0** (agent 0.58.0; HTTP 200 on 3 Oct). |
 | `artifacts/panel-bundle-0.3.0.tar.gz` | Purana bundle **vendor/ ke saath** — sandbox tests isi ka vendor use karte hain (composer.lock same). |
 | `server-snapshot/files/usr/local/alphacp/…` | **Server par jo ABHI deployed hai** (alphacp-sync se). Source se mismatch ho to server = sach; farq samjho phir source theek karo. |
 | `server-snapshot/files/etc/...`, `server-snapshot/db-schema.sql` | nginx vhost, php-fpm pool, systemd drop-ins; DB structure (data nahi) |
@@ -81,8 +81,8 @@ unka kaam PR se `main` me merge karo (29 Sep: `arena/01a0ea0d-alphacp` ka S2C ka
 
 ## 5. Abhi kahan hain (roadmap position)
 - Step 0–9 ke UI/config slices repo me hain; kuch host backends abhi JSON-only hain. `ROADMAP.md` me S7 mail, S8 database, aur S9 BIND gaps dekho.
-- `server-snapshot/STATE.md` ki latest committed state: server par panel **0.63.0**, agent **0.56.0**, Laravel 13.33.0, PHP 8.4.26, MariaDB 10.11; HTTP 200.
-- Feature branch me S10 ka panel **0.65.0** / agent **0.58.0** source hai. Isme real home-directory `.tar.gz` create + checksum-verified customer download hai. Ye **abhi server par deploy nahi** hua.
+- `server-snapshot/STATE.md` ki latest committed state: server par panel **0.65.0**, agent **0.58.0**, Laravel 13.33.0, PHP 8.4.26, MariaDB 10.11; HTTP 200. Updater 0.65.0 3 Oct ko successfully deployed hua.
+- Deployed S10 slice real home-directory `.tar.gz` create + checksum-verified customer download provide karta hai. Version deploy/health confirm hai; live customer archive/download abhi end-to-end verify nahi hua.
 - S10 abhi **partial** hai: email/MySQL data backup (S7/S8 live backends par nirbhar), restore/extraction, scheduler, remote destination, real cPanel transfer/import abhi baaki. Checklist me JSON-only rows ko ✅ na samjho.
 - Deploy command aur tested commit/SHA ke liye `COMMANDS.md` dekho. Server par kuch chalane se pehle usme likhi **ek hi next command** follow karo.
 

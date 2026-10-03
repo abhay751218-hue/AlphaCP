@@ -1,7 +1,8 @@
 # Module: Backup
-- **Step:** S10   **Status:** partial (panel 0.65.0 / agent 0.58.0)
+- **Step:** S10   **Status:** partial (panel 0.65.0 / agent 0.58.0; deployed 3 Oct, HTTP 200)
 
 ## What works now
+- Panel 0.65.0 / agent 0.58.0 are deployed; the server snapshot confirms HTTP 200. The update itself succeeded, but a live customer archive/download has not yet been end-to-end exercised.
 - Customer can queue an actual GNU tar + gzip archive of their AlphaCP home directory.
 - paneld validates the account, checks for free disk space, refuses symlinked storage roots, writes to root-owned storage, verifies the archive by listing it, records a SHA-256 manifest, and publishes it atomically.
 - Retries are idempotent by a panel-generated 128-bit archive id; existing files are returned only after manifest and checksum verification.

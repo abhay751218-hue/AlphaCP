@@ -48,6 +48,7 @@ use App\Http\Controllers\BackupUserSelectionController;
 use App\Http\Controllers\FileDirectoryRestorationController;
 use App\Http\Controllers\TransferRestoreController;
 use App\Http\Controllers\TransferToolController;
+use App\Http\Controllers\TransferReviewController;
 use App\Http\Controllers\NameserverSelectionController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
@@ -170,6 +171,10 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:files.view')->name('backup.index');
     Route::post('/backup', [BackupController::class, 'store'])
         ->middleware('perm:files.manage')->name('backup.store');
+    Route::post('/backup/archive', [BackupController::class, 'archive'])
+        ->middleware('perm:files.manage')->name('backup.archive');
+    Route::get('/backup/archive/{archiveId}/download', [BackupController::class, 'download'])
+        ->middleware('perm:files.view')->name('backup.archive-download');
 
     Route::get('/backup-wizard', [BackupWizardController::class, 'index'])
         ->middleware('perm:files.view')->name('backup-wizard.index');
@@ -415,6 +420,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('transfer-restore.index');
     Route::post('/transfer-restore', [TransferRestoreController::class, 'store'])
         ->middleware('perm:accounts.view')->name('transfer-restore.store');
+
+    Route::get('/transfer-review', [TransferReviewController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('transfer-review.index');
+    Route::post('/transfer-review', [TransferReviewController::class, 'store'])
+        ->middleware('perm:accounts.view')->name('transfer-review.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');
