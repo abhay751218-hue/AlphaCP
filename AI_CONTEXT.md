@@ -4,7 +4,7 @@
 
 > **Purpose:** This file gives ANY AI assistant (or new developer) complete context to work on
 > this project safely. Keep it updated whenever architecture, conventions, or status change.
-> **Last updated:** 2026-10-03 (S10 audit + verified archive and updater simulations)
+> **Last updated:** 2026-10-03 (S10 audit + S5 per-domain MultiPHP, panel 0.66.0 / agent 0.59.0)
 
 ---
 
@@ -27,10 +27,10 @@ reseller/OEM deals).
 | Item | State |
 |---|---|
 | Phase | **S10 in progress** — panel 0.65.0 / agent 0.58.0 deployed 3 Oct; server snapshot confirms HTTP 200 |
-| Next task | Close pre-S10 real-service gaps (S5 per-domain PHP; S7 Exim/Dovecot; S8 MariaDB provisioning/SSO; S9 BIND), then finish S10 restore/schedule/remote/transfer/import/history; do not advance to later steps before those gates pass |
+| Next task | Deploy panel 0.66.0 / agent 0.59.0 (S5 per-domain MultiPHP done in source); then remaining gaps: S7 Exim/Dovecot, S8 MariaDB provisioning/SSO, S9 BIND, S10 restore/schedule/remote/transfer/import |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
 | Code written so far | paneld + Laravel 13 panel; S10 JSON configuration slices plus a real SHA-256-verified home archive and account-scoped download |
-| Blocking issues | S5 per-domain PHP; S7 real Exim/Dovecot mailflow; S8 MariaDB provisioning/SSO; S9 BIND write/reload remain incomplete. S10 restore/schedule/remote/cPanel import and live customer archive acceptance remain pending. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
+| Blocking issues | S7 real Exim/Dovecot mailflow; S8 MariaDB provisioning/SSO; S9 BIND write/reload remain incomplete. S10 restore/schedule/remote/cPanel import and live customer archive acceptance remain pending. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 

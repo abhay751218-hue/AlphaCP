@@ -129,6 +129,19 @@ CONF;
     /** @param array<string, string> $directives */
     public static function pool(string $username, string $home, string $socketName, array $directives = []): string
     {
+        return self::poolNamed($username, $username, $home, $socketName, $directives);
+    }
+
+    /** Per-domain pool: same body as the account pool, unique section + socket. */
+    public static function domainPool(string $username, string $domain, string $home, string $socketName, array $directives = []): string
+    {
+        $poolName = 'acp_' . str_replace(['.', '-'], '_', strtolower($username . '_' . $domain));
+        return self::poolNamed($poolName, $username, $home, $socketName, $directives);
+    }
+
+    /** @param array<string, string> $directives */
+    public static function poolNamed(string $poolName, string $username, string $home, string $socketName, array $directives = []): string
+    {
         $sock = '/run/php/' . $socketName;
         $extra = '';
         foreach ($directives as $key => $value) {
@@ -137,7 +150,7 @@ CONF;
 
         return <<<CONF
 ; AlphaCP account pool — managed file, do not edit by hand
-[{$username}]
+[{$poolName}]
 user = {$username}
 group = {$username}
 listen = {$sock}

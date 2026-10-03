@@ -447,6 +447,115 @@ test('php.setVersion rewrites the pool and reloads the new fpm', function (): vo
     assert_true($reloaded, 'php8.3-fpm should reload');
     acp_account_cleanup($harness);
 });
+test('php.setVersion with domain gives that domain its own pool + vhost socket', function (): void {
+    $harness = acp_account_harness();
+    putenv('ACP_PHP_POOL_DIR_FMT=' . $harness['root'] . '/php/pool.d/{php}');
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    // main vhost = alicehost, extra subdomain vhost = blog.shop.example.com
+    (new DomainAdd())->handle([
+        'username' => 'alicehost',
+        'domain' => 'blog.shop.example.com',
+        'type' => 'sub',
+        'document_root' => $harness['root'] . '/home/alicehost/public_html/blog',
+    ], $harness['ctx']);
+
+    $out = (new PhpSetVersion())->handle([
+        'username' => 'alicehost',
+        'domain' => 'blog.shop.example.com',
+        'php_version' => '8.3',
+    ], $harness['ctx']);
+    assert_true($out['php_version'] === '8.3', 'domain php recorded');
+    assert_true($out['vhosts'] === 1, 'exactly one vhost should serve the subdomain, got ' . $out['vhosts']);
+    $pool = $harness['root'] . '/php/pool.d/8.3/' . $out['pool'];
+    assert_true(is_file($pool), 'per-domain pool should live under the 8.3 pool dir');
+    $body = (string) file_get_contents($pool);
+    assert_true(str_contains($body, '[acp_alicehost_blog_shop_example_com]'), 'pool section must be unique per domain');
+    assert_true(str_contains($body, 'listen = /run/php/' . $out['socket']));
+    $vhost = (string) file_get_contents($harness['root'] . '/apache/sites-available/acp-alicehost-blog-shop-example-com.conf');
+    assert_true(str_contains($vhost, 'proxy:unix:/run/php/' . $out['socket'] . '|fcgi://localhost'));
+    $main = (string) file_get_contents($harness['root'] . '/apache/sites-available/acp-alicehost.conf');
+    assert_true(str_contains($main, 'proxy:unix:/run/php/acp-alicehost.sock|fcgi://localhost'), 'main vhost socket untouched');
+    $reloaded = false;
+    foreach ($harness['cmd']->calls as $argv) {
+        if (in_array('php8.3-fpm', $argv, true)) {
+            $reloaded = true;
+        }
+    }
+    assert_true($reloaded, 'php8.3-fpm should reload for the per-domain pool');
+    acp_account_cleanup($harness);
+    putenv('ACP_PHP_POOL_DIR_FMT');
+});
+
+test('php.setVersion per-domain fails closed for unknown domain or no vhost', function (): void {
+    $harness = acp_account_harness();
+    putenv('ACP_PHP_POOL_DIR_FMT=' . $harness['root'] . '/php/pool.d/{php}');
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $threw = false;
+    try {
+        (new PhpSetVersion())->handle([
+            'username' => 'alicehost',
+            'domain' => 'not-mine.example.com',
+            'php_version' => '8.3',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'no AlphaCP vhost');
+    }
+    assert_true($threw, 'domain without an AlphaCP vhost must fail closed');
+    $threwBad = false;
+    try {
+        (new PhpSetVersion())->handle([
+            'username' => 'alicehost',
+            'domain' => '../etc',
+            'php_version' => '8.3',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwBad = true;
+    }
+    assert_true($threwBad, 'hostile domain must fail closed before touching disk');
+    assert_true(!is_dir($harness['root'] . '/php/pool.d/8.3'), 'no pool dir may be created on failure');
+    acp_account_cleanup($harness);
+    putenv('ACP_PHP_POOL_DIR_FMT');
+});
+
+test('php.setIni per-domain writes ~/etc/php.<slug>.ini and that domain pool only', function (): void {
+    $harness = acp_account_harness();
+    putenv('ACP_PHP_POOL_DIR_FMT=' . $harness['root'] . '/php/pool.d/{php}');
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new DomainAdd())->handle([
+        'username' => 'alicehost',
+        'domain' => 'blog.shop.example.com',
+        'type' => 'sub',
+        'document_root' => $harness['root'] . '/home/alicehost/public_html/blog',
+    ], $harness['ctx']);
+    $out = (new PhpSetIni())->handle([
+        'username' => 'alicehost',
+        'domain' => 'blog.shop.example.com',
+        'php_version' => '8.3',
+        'directives' => ['memory_limit' => '256M', 'display_errors' => 'Off'],
+    ], $harness['ctx']);
+    assert_true($out['domain'] === 'blog.shop.example.com');
+    $ini = (string) file_get_contents($harness['root'] . '/home/alicehost/etc/php.blog-shop-example-com.ini');
+    assert_true(str_contains($ini, 'memory_limit = 256M'));
+    $pool = (string) file_get_contents($harness['root'] . '/php/pool.d/8.3/acp-alicehost-blog-shop-example-com.conf');
+    assert_true(str_contains($pool, 'php_admin_value[memory_limit] = 256M'));
+    assert_true(str_contains($pool, 'php_admin_flag[display_errors] = off'));
+    $accountPool = (string) file_get_contents($harness['root'] . '/php/pool.d/8.4/acp-alicehost.conf');
+    assert_true(!str_contains($accountPool, '256M'), 'account pool must not be touched by a per-domain INI');
+    $threw = false;
+    try {
+        (new PhpSetIni())->handle([
+            'username' => 'alicehost',
+            'domain' => 'blog.shop.example.com',
+            'directives' => ['memory_limit' => '256M'],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'php_version');
+    }
+    assert_true($threw, 'per-domain INI without php_version must fail closed');
+    acp_account_cleanup($harness);
+    putenv('ACP_PHP_POOL_DIR_FMT');
+});
+
 test('php.setIni writes allowlisted pool values and ~/etc/php.ini', function (): void {
     $harness = acp_account_harness();
     (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);

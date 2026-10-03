@@ -10,7 +10,8 @@ use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskRejectedException;
 
 /**
- * php.setVersion — move the account PHP-FPM pool to another MultiPHP version.
+ * php.setVersion — move the account PHP-FPM pool to another MultiPHP version,
+ * or (payload.domain diya ho to) sirf us domain ko apna pool + vhost socket do.
  *
  * @acp-task php.setVersion
  */
@@ -20,7 +21,11 @@ final class PhpSetVersion implements TaskInterface
     {
         $username = (string) $payload['username'];
         $php = (string) $payload['php_version'];
+        $domain = isset($payload['domain']) && $payload['domain'] !== '' ? strtolower((string) $payload['domain']) : null;
         $err = AccountIdentity::username($username) ?? AccountIdentity::phpVersion($php);
+        if ($err === null && $domain !== null) {
+            $err = AccountIdentity::domain($domain);
+        }
         if ($err !== null) {
             throw new TaskRejectedException($err);
         }
@@ -32,11 +37,30 @@ final class PhpSetVersion implements TaskInterface
         if (!$os->userExists($username) || !$os->isOurUser($username)) {
             throw new TaskRejectedException("linux user '{$username}' is not an AlphaCP account");
         }
-        $os->setPhpVersion($username, $php);
+
+        if ($domain === null) {
+            $os->setPhpVersion($username, $php);
+
+            return [
+                'username'    => $username,
+                'php_version' => $php,
+                'status'      => 'active',
+            ];
+        }
+
+        try {
+            $out = $os->setDomainPhp($username, $domain, $php);
+        } catch (\RuntimeException $e) {
+            throw new TaskRejectedException($e->getMessage());
+        }
 
         return [
             'username'    => $username,
-            'php_version' => $php,
+            'php_version' => $out['php_version'],
+            'domain'      => $domain,
+            'pool'        => $out['pool'],
+            'socket'      => $out['socket'],
+            'vhosts'      => $out['vhosts'],
             'status'      => 'active',
         ];
     }

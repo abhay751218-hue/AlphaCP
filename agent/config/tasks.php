@@ -195,7 +195,7 @@ return [
         'handler'     => Tasks\PhpSetVersion::class,
         'safety'      => 'mutating',
         'timeout'     => 45,
-        'description' => 'Move account PHP-FPM pool to another MultiPHP version.',
+        'description' => 'Move account PHP-FPM pool to another MultiPHP version, or only one domain (payload.domain).',
         'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
         'schema'      => [
             'type'                 => 'object',
@@ -204,6 +204,8 @@ return [
             'properties'           => [
                 'username'    => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
                 'php_version' => ['type' => 'string', 'pattern' => '^(7\\.4|8\\.[0-9])$'],
+                // per-domain override (S5, docs/09 row 68): domain ka apna pool + vhost socket
+                'domain'      => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
             ],
         ],
     ],
@@ -212,7 +214,7 @@ return [
         'handler'     => Tasks\PhpSetIni::class,
         'safety'      => 'mutating',
         'timeout'     => 45,
-        'description' => 'Write allowlisted MultiPHP INI directives into the account FPM pool.',
+        'description' => 'Write allowlisted MultiPHP INI directives into the account pool, or one domain pool (payload.domain + php_version).',
         'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
         'schema'      => [
             'type'                 => 'object',
@@ -240,6 +242,9 @@ return [
                         'default_charset'        => ['type' => 'string', 'maxLength' => 20],
                     ],
                 ],
+                // per-domain INI (S5, docs/09 row 69): dono saath aate hain
+                'domain'      => ['type' => 'string', 'pattern' => '^[a-z0-9.-]+$', 'maxLength' => 190],
+                'php_version' => ['type' => 'string', 'pattern' => '^(7\\.4|8\\.[0-9])$'],
             ],
         ],
     ],

@@ -10,7 +10,7 @@
 | **S2** | Panel core: auth/RBAC/2FA/audit, **paneld agent**, task queue, license client + trial, base UI shell, systemd units | ✅ **2A/2B** · **2C 🟡** (license client/trial deployed; license-server API pending) |
 | **S3** | Provisioning engine: account create/suspend/unsuspend/terminate/limits (+ rollback), account UI | ✅ **deployed 0.4.0** (dedicated IP later) |
 | **S4** | Packages & limits manager (+ feature lists, cPanel-compatible limit keys) | ✅ **deployed 0.5.0** |
-| **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | 🟡 **through Apache Handlers (0.14.0)** — MultiPHP/INI are account-level; per-domain selection still pending |
+| **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | 🟡 **0.66.0** — account **aur per-domain** MultiPHP/INI done; baaki S5 items (Web Template Editor etc.) pending |
 | **S6** | File Manager, disk usage, FTP (+ jailed shell), SSH keys, Git deploys, trash | 🟡 **FM + Privacy + Disk Usage + SSH (0.18.0)** — zip/FTP/jail later |
 | **S7** | Email suite: mailboxes/quotas, forwarders, autoresponders, filters, spam/virus, deliverability (SPF/DKIM/DMARC), lists, webmail | 🟡 **through Webmail UI/config (0.35.0)** — real Exim/Dovecot provisioning and mail store still pending; virus/ClamAV later |
 | **S8** | Databases: create/manage, users, privileges, size limits, phpMyAdmin SSO, remote access | 🟡 **through Remote MySQL UI/config (0.39.0)** — real database/user provisioning and SSO still pending |

@@ -34,7 +34,7 @@ final class AccountPaths
             accountsRoot: rtrim((string) (getenv('ACP_ACCOUNTS_ROOT') ?: '/home'), '/'),
             apacheSites: rtrim((string) (getenv('ACP_APACHE_SITES') ?: '/etc/apache2/sites-available'), '/'),
             apacheEnabled: rtrim((string) (getenv('ACP_APACHE_ENABLED') ?: '/etc/apache2/sites-enabled'), '/'),
-            phpPoolDir: rtrim((string) (getenv('ACP_PHP_POOL_DIR') ?: "/etc/php/{$php}/fpm/pool.d"), '/'),
+            phpPoolDir: self::phpPoolDir($php, $phpVersion !== null),
             suspendedRoot: rtrim((string) (getenv('ACP_SUSPENDED_ROOT') ?: '/usr/local/alphacp/share/suspended'), '/'),
             phpFpmService: (string) (getenv('ACP_PHP_FPM_SERVICE') ?: "php{$php}-fpm"),
             apacheService: (string) (getenv('ACP_APACHE_SERVICE') ?: 'apache2'),
@@ -152,6 +152,43 @@ final class AccountPaths
     public function socketName(string $username): string
     {
         return 'acp-' . $username . '.sock';
+    }
+
+    /**
+     * PHP-FPM pool dir for one version.
+     *
+     * Production (no env): /etc/php/<version>/fpm/pool.d — per version, so a
+     * per-domain MultiPHP pool can live under its own PHP version.
+     * Tests/dev may pin ACP_PHP_POOL_DIR (all versions, old behaviour) and/or
+     * ACP_PHP_POOL_DIR_FMT ("/tmp/x/pool.d/{php}") when they need per-version dirs.
+     */
+    private static function phpPoolDir(string $php, bool $explicitVersion): string
+    {
+        $pin = (string) (getenv('ACP_PHP_POOL_DIR') ?: '');
+        $fmt = (string) (getenv('ACP_PHP_POOL_DIR_FMT') ?: '');
+        if ($pin !== '' && ($fmt === '' || !$explicitVersion)) {
+            return rtrim($pin, '/');
+        }
+        $pattern = $fmt !== '' ? $fmt : '/etc/php/{php}/fpm/pool.d';
+        return rtrim(str_replace('{php}', $php, $pattern), '/');
+    }
+
+    /** Per-domain pool file (acp-<user>-<domain-slug>.conf in that PHP version's dir). */
+    public function poolFor(string $username, string $domain): string
+    {
+        return $this->phpPoolDir . '/acp-' . $username . '-' . $this->vhostSlug($domain) . '.conf';
+    }
+
+    /** Per-domain FPM socket name — unique per account + domain. */
+    public function socketNameFor(string $username, string $domain): string
+    {
+        return 'acp-' . $username . '-' . $this->vhostSlug($domain) . '.sock';
+    }
+
+    /** Per-domain php.ini mirror kept next to the account ini (readable by the user). */
+    public function phpIniFileFor(string $username, string $domain): string
+    {
+        return $this->home($username) . '/etc/php.' . $this->vhostSlug($domain) . '.ini';
     }
 
     public static function detectPhpVersion(): string

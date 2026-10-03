@@ -4,6 +4,21 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Added
+- **S5 per-domain MultiPHP (3 Oct)** — panel **0.66.0**, agent **0.59.0**: cPanel MultiPHP
+  Manager/INI Editor ka per-domain part ab real hai (docs/09 rows **68**, **69** ✅).
+  * `domains.php_ini` (nayi additive migration `2026_10_03_000054_add_domain_php_ini.php`),
+    `Domain` model cast — koi column hataya/renamed nahi.
+  * Panel: `POST /php/domain/{domain}` + `POST /php/ini/domain/{domain}` (`software.manage`,
+    ownership check → 403 warna), `php/index` + `php/ini` views me per-domain section.
+  * Agent: `php.setVersion` / `php.setIni` me optional `domain` (+ `php_version` for INI) —
+    domain ka **apna** FPM pool (`/etc/php/<ver>/fpm/pool.d/acp-<user>-<slug>.conf`, section
+    `acp_<user>_<domain>`), apna socket, aur sirf usi domain ke vhost me `SetHandler` rewrite.
+    Version switch par purane version ka pool hata diya jata hai. Fail closed: koi AlphaCP
+    vhost (`ServerName`) na mile / vhost me AlphaCP handler na ho / hostile domain / INI without
+    php_version. Account-level behavior waisa hi (regression nahi).
+  * Tests: panel suite **406 pass / 0 fail / 6 wasm-skip**, provision-sim **94/94** (5 naye
+    panel tests + 3 naye agent tests).
 ### Fixed
 - **alphacp-sync v1.3 — snapshot ab poora hai (3 Oct)** — server → GitHub snapshot do jagah se
   adhoora ban raha tha: (1) prune list me `-name backup` / `-name ssl` / `-name private` **global**

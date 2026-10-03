@@ -39,19 +39,31 @@ final class PhpSetIni implements TaskInterface
             throw $e;
         }
 
+        $domain = isset($payload['domain']) && $payload['domain'] !== '' ? strtolower((string) $payload['domain']) : null;
+        $phpVersion = isset($payload['php_version']) && $payload['php_version'] !== '' ? (string) $payload['php_version'] : null;
+        if ($domain !== null) {
+            $cerr = AccountIdentity::domain($domain) ?? ($phpVersion === null ? 'php_version is required for a per-domain INI' : AccountIdentity::phpVersion($phpVersion));
+            if ($cerr !== null) {
+                throw new TaskRejectedException($cerr);
+            }
+        }
+
         $os = new AccountOs($ctx->cmd, new SafeFs($ctx->paths), AccountPaths::fromEnv(), $ctx->log);
         if (!$os->userExists($username) || !$os->isOurUser($username)) {
             throw new TaskRejectedException("linux user '{$username}' is not an AlphaCP account");
         }
         try {
-            $written = $os->setIni($username, $directives);
+            $written = $domain === null
+                ? $os->setIni($username, $directives)
+                : $os->setDomainIni($username, $domain, (string) $phpVersion, $directives);
         } catch (RuntimeException $e) {
             throw new TaskRejectedException($e->getMessage());
         }
-        $ctx->log->info("php.ini updated for {$username} (" . count($written) . ' keys)');
+        $ctx->log->info('php.ini updated for ' . ($domain ?? $username) . ' (' . count($written) . ' keys)');
 
         return [
             'username'   => $username,
+            'domain'     => $domain,
             'directives' => $written,
             'status'     => 'active',
         ];

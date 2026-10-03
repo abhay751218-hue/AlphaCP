@@ -1660,6 +1660,144 @@ final class AccountOs
         return $phpVersion;
     }
 
+    /**
+     * Per-domain MultiPHP: give this domain its own FPM pool + vhost socket
+     * (cPanel: MultiPHP Manager → per-domain version). Fail closed when no
+     * AlphaCP vhost declares the domain.
+     *
+     * @param  array<string, string>|null $directives null = keep existing per-domain ini
+     * @return array{php_version: string, pool: string, socket: string, vhosts: int}
+     */
+    public function setDomainPhp(string $username, string $domain, string $phpVersion, ?array $directives = null): array
+    {
+        $err = AccountIdentity::phpVersion($phpVersion);
+        if ($err !== null) {
+            throw new RuntimeException($err);
+        }
+        $home = $this->paths->home($username);
+        $vhosts = $this->domainVhostFiles($username, $domain);
+        $directives ??= $this->readDomainIni($username, $domain);
+        $next = AccountPaths::fromEnv($phpVersion);
+        $socket = $next->socketNameFor($username, $domain);
+        $body = AccountTemplates::domainPool($username, $domain, $home, $socket, $directives);
+        $this->fs->write($next->poolFor($username, $domain), $body, 0644);
+        $this->fs->chownName($next->poolFor($username, $domain), $username);
+
+        // version switch: purane version ke pool ka leftover na rahe
+        foreach ($this->knownPhpVersions() as $version) {
+            $other = AccountPaths::fromEnv($version);
+            if ($other->phpPoolDir === $next->phpPoolDir) {
+                continue;
+            }
+            $this->fs->unlink($other->poolFor($username, $domain));
+        }
+
+        foreach ($vhosts as $file) {
+            $this->rewriteVhostSocket($file, $socket);
+        }
+        $this->reload($this->paths->apacheService);
+        $this->reload($next->phpFpmService);
+        $this->log->info("php {$phpVersion} for {$domain} ({$username})");
+
+        return [
+            'php_version' => $phpVersion,
+            'pool'        => basename($next->poolFor($username, $domain)),
+            'socket'      => $socket,
+            'vhosts'      => count($vhosts),
+        ];
+    }
+
+    /** Per-domain php.ini mirror + that domain's own pool. @param array<string, string> $directives */
+    public function setDomainIni(string $username, string $domain, string $phpVersion, array $directives): array
+    {
+        $clean = PhpIni::sanitize($directives);
+        $path = $this->paths->phpIniFileFor($username, $domain);
+        $this->fs->mkdir(dirname($path), 0750);
+        $this->fs->write($path, PhpIni::renderFile($clean), 0640);
+        $this->fs->chownName(dirname($path), $username);
+        $this->fs->chownName($path, $username);
+        $this->setDomainPhp($username, $domain, $phpVersion, $clean);
+
+        return $clean;
+    }
+
+    /** @return array<string, string> */
+    public function readDomainIni(string $username, string $domain): array
+    {
+        $path = $this->paths->phpIniFileFor($username, $domain);
+        if (!$this->fs->isFile($path)) {
+            return [];
+        }
+
+        return PhpIni::parseFile($this->fs->read($path));
+    }
+
+    /** @return list<string> vhost files that declare this domain (empty + throw = fail closed) */
+    public function domainVhostFiles(string $username, string $domain): array
+    {
+        $domain = strtolower($domain);
+        if (AccountIdentity::domain($domain) !== null) {
+            throw new RuntimeException('bad domain');
+        }
+        $candidates = array_values(array_unique([
+            $this->paths->vhostExtra($username, $domain),
+            $this->paths->vhostSsl($username, $domain),
+            $this->paths->vhost($username),
+        ]));
+        $out = [];
+        foreach ($candidates as $file) {
+            if (!$this->fs->isFile($file)) {
+                continue;
+            }
+            $body = (string) file_get_contents($this->fs->assert($file));
+            if (preg_match('/^[ \t]*ServerName[ \t]+' . preg_quote($domain, '/') . '[ \t]*$/mi', $body) !== 1) {
+                continue;
+            }
+            $out[] = $file;
+        }
+        if ($out === []) {
+            throw new RuntimeException("no AlphaCP vhost serves {$domain}");
+        }
+
+        return $out;
+    }
+
+    private function rewriteVhostSocket(string $file, string $socketName): void
+    {
+        $body = (string) file_get_contents($this->fs->assert($file));
+        $new = preg_replace(
+            '#SetHandler "proxy:unix:/run/php/acp-[A-Za-z0-9._-]+\.sock\|fcgi://localhost"#',
+            'SetHandler "proxy:unix:/run/php/' . $socketName . '|fcgi://localhost"',
+            $body,
+            -1,
+            $count,
+        );
+        if ($new === null || $count === 0) {
+            throw new RuntimeException('vhost has no AlphaCP php handler: ' . basename($file));
+        }
+        $this->fs->write($file, $new, 0644);
+    }
+
+    /** @return list<string> */
+    private function knownPhpVersions(): array
+    {
+        $env = trim((string) (getenv('ACP_PHP_VERSIONS') ?: ''));
+        if ($env !== '') {
+            $parts = preg_split('/[\s,]+/', $env) ?: [];
+            $list = [];
+            foreach ($parts as $part) {
+                if (preg_match('/^[78]\.[0-9]$/', $part) === 1) {
+                    $list[] = $part;
+                }
+            }
+            if ($list !== []) {
+                return $list;
+            }
+        }
+
+        return ['8.4', '8.3', '8.2', '8.1', '7.4'];
+    }
+
     public function applyCrontab(string $username, string $body): void
     {
         if (AccountIdentity::username($username) !== null) {

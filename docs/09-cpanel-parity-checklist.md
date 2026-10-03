@@ -137,8 +137,8 @@
 | 65 | WP Guardian-style security | Malware scan + vuln patch | S14 | ⏳ S14 |
 | 66 | Node.js® Selector | Node apps + npm | S14 | ⏳ S14 |
 | 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 |
-| 68 | MultiPHP Manager | Per-domain PHP version | S5 | 🟡 (Account-level only: per-domain PHP version/INI selection pending; (account-level; per-domain later)) |
-| 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | 🟡 (Account-level only: per-domain PHP version/INI selection pending; (account-level FPM php_admin_value; per-dir later)) |
+| 68 | MultiPHP Manager | Per-domain PHP version | S5 | ✅ (account + **per-domain** = apna FPM pool + vhost socket; panel 0.66.0 / agent 0.59.0) |
+| 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ✅ (account + **per-domain** `~/etc/php.<domain>.ini` + uske pool ke php_admin_value; panel 0.66.0 / agent 0.59.0) |
 | 70 | PHP Composer | Composer in panel | S14 | ⏳ S14 |
 | 71 | PHP PEAR Packages | 🔵 legacy | post-v1 | 🔵 |
 | 72 | Ruby Gems | 🔵 legacy | post-v1 | 🔵 |
@@ -351,7 +351,7 @@
 | Admin/Reseller (WHM) | 99 | 7 | 32 | 60 | 0 |
 | System/Business | 10 | **4** | 1 | 5 | 0 |
 | cPanel 138 naye features | 6 | 0 | 1 | 2 | 3 |
-| **TOTAL** | **208** | **30** | **70** | **99** | **9** |
+| **TOTAL** | **208** | **32** | **68** | **99** | **9** |
 
 > Note: ✅ = row ke stated behavior ke liye implementation + test proof; 🟡 = partial/JSON/config-only ya host-service integration pending. Counts 208 numbered rows ko parse karke reconcile kiye gaye hain; server deployment status hamesha `server-snapshot/STATE.md` se alag verify karein.
 > JSON settings save hona, apne aap me, mail/DNS/database/backup ka real service operation nahi maana jayega.

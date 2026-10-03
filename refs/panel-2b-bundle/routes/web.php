@@ -124,10 +124,14 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:software.view')->name('php.index');
     Route::post('/php', [PhpController::class, 'update'])
         ->middleware('perm:software.manage')->name('php.update');
+    Route::post('/php/domain/{domain}', [PhpController::class, 'updateDomain'])
+        ->middleware('perm:software.manage')->name('php.domain.update');
     Route::get('/php/ini', [PhpIniController::class, 'index'])
         ->middleware('perm:software.view')->name('php.ini');
     Route::post('/php/ini', [PhpIniController::class, 'update'])
         ->middleware('perm:software.manage')->name('php.ini.update');
+    Route::post('/php/ini/domain/{domain}', [PhpIniController::class, 'updateDomain'])
+        ->middleware('perm:software.manage')->name('php.ini.domain.update');
 
     Route::get('/errorpages', [ErrorPagesController::class, 'index'])
         ->middleware('perm:errorpages.view')->name('errorpages.index');

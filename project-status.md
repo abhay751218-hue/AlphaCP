@@ -31,7 +31,7 @@
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/unsuspend/terminate + Accounts UI, rollback) | ✅ **DEPLOYED 0.4.0** (29 Sep 01:07Z) |
 | Step 4 | Packages & limits manager | ✅ **DEPLOYED 0.5.0** (29 Sep 01:21Z) |
-| Step 5 | Domains, vHost, MultiPHP, SSL, Cron, Indexes, MIME, Handlers | 🟡 **through 0.14.0; per-domain PHP version/INI pending** |
+| Step 5 | Domains, vHost, MultiPHP, SSL, Cron, Indexes, MIME, Handlers | 🟡 **0.66.0: domain + account/per-domain PHP/INI live; vhost engine se aage (FTP/WebDisk etc.) S6** |
 | Step 6 | File Manager + FTP + Git + SSH | 🟡 **FM + Privacy + Disk Usage + SSH live** |
 | Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **UI/config through Webmail; real Exim/Dovecot mailflow + service integration pending** |
 | Step 8 | Databases (MySQL management) | 🟡 **UI/config through Remote MySQL; actual DB/users/GRANT + phpMyAdmin SSO pending** |
