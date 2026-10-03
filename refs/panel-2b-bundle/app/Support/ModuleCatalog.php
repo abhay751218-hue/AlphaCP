@@ -182,6 +182,7 @@ final class ModuleCatalog
                     ['name' => 'File and Directory Restoration', 'step' => 'S10', 'status' => 'live', 'route' => 'file-directory-restoration.index'],
                     ['name' => 'Transfer Tool',       'step' => 'S10', 'status' => 'live', 'route' => 'transfer-tool.index'],
                     ['name' => 'Transfer or Restore a cPanel Account', 'step' => 'S10', 'status' => 'live', 'route' => 'transfer-restore.index'],
+                    ['name' => 'Review Transfers and Restores', 'step' => 'S10', 'status' => 'live', 'route' => 'transfer-review.index'],
                     ['name' => 'Security Center',     'step' => 'S13', 'status' => 'step'],
                     ['name' => 'API Tokens',          'step' => 'S12', 'status' => 'step'],
                     ['name' => 'License & Trial',      'step' => 'S2C', 'status' => 'live', 'route' => 'license.index'],

@@ -1496,6 +1496,23 @@ return [
         ],
     ],
 
+    'backup.review' => [
+        'handler'     => Tasks\BackupReview::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write WHM review transfers and restores (JSON; no tar/rsync/shell).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'status'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'maxLength' => 16],
+                'status'   => ['type' => 'string', 'maxLength' => 16],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

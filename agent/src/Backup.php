@@ -348,4 +348,31 @@ final class Backup
 
         return $json . "\n";
     }
+
+    public const REVIEW_STATUSES = ['pending', 'ok', 'failed'];
+
+    public static function normalizeReviewStatus(string $status): string
+    {
+        $status = strtolower(trim($status));
+        if (!in_array($status, self::REVIEW_STATUSES, true)) {
+            throw new TaskRejectedException('invalid review status');
+        }
+
+        return $status;
+    }
+
+    public static function reviewJson(string $username, string $status): string
+    {
+        $username = self::normalizeRestoreUsername($username);
+        $status = self::normalizeReviewStatus($status);
+        $json = json_encode([
+            'username' => $username,
+            'status' => $status,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('backup review json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }

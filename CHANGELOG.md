@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 10 Review Transfers and Restores (3 Oct)** — WHM username+status via `backup.review`
+  (JSON; no tar/rsync/shell; pipe/path fail closed). Panel **0.64.0**, agent **0.57.0**.
+  Tests: panel **399/0**, provision-sim **88/88**, update-sim **176/176** (pin in B).
+  Deploy via `panel-update.sh` 0.64.0.
 - **Step 10 Transfer or Restore a cPanel Account (3 Oct)** — WHM username+action via `backup.cpanel`
   (JSON; no tar/rsync/shell; pipe/path fail closed). Panel **0.63.0**, agent **0.56.0**.
   Tests: panel **393/0**, provision-sim **87/87**, update-sim **174/174** (pin in B).

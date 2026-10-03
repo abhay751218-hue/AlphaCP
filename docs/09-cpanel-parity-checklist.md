@@ -304,7 +304,7 @@
 | 185 | Transfer Tool (cPanel→AlphaCP migration) | S10 | ✅ (JSON username+source FQDN; copy later) |
 | 186 | Transfer or Restore a cPanel Account | S10 | ✅ (JSON username+action transfer/restore; copy later) |
 | 187 | Convert Addon Domain to Account | S15 | ⏳ S15 |
-| 188 | Review Transfers and Restores | S10 | ⏳ S10 |
+| 188 | Review Transfers and Restores | S10 | ✅ (JSON username+status pending/ok/failed; copy later) |
 | 189 | IP Functions (assign/show IPs) | S15 | ⏳ S15 |
 | 190 | Change Hostname / Resolver Configuration | S15 | ⏳ S15 |
 | 191 | Locales (add/edit/import language) | S2B | 🟡 2B |

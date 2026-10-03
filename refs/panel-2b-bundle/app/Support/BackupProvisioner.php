@@ -117,4 +117,12 @@ final class BackupProvisioner
             'action' => $action,
         ]);
     }
+
+    public static function enqueueReview(string $username, string $status): int
+    {
+        return Paneld::enqueue('backup.review', [
+            'username' => $username,
+            'status' => $status,
+        ]);
+    }
 }
