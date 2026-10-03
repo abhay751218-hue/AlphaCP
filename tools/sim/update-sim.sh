@@ -7,7 +7,7 @@
 #            curl     : raw.githubusercontent -> local artifact;  127.0.0.1:8090 -> asli Laravel request
 #            composer : 0.3.0 bundle ka vendor/ (composer.lock same hona chahiye — check hota hai)
 #            systemctl: doctor-sim ka stub
-#  U1 normal update 0.3.0 -> 0.3.2      U2 sha256 mismatch -> kuch nahi chhedta
+#  U1 normal update 0.3.0 -> latest artifact      U2 sha256 mismatch -> kuch nahi chhedta
 #  U3 health fail -> auto rollback       U4 backups prune (KEEP=1) + sync-tool checksum fail
 #  U1 me alphacp-sync v1.0 -> v1.2 upgrade + sync hook bhi
 #  U5 private repo (raw 404) + sync v1.2 -> get      U6 private + purana sync -> saaf error
@@ -112,7 +112,7 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.63.0'" grep -q "updater 0.63.0" "${U}/update-U1.out"
+chk "banner 'updater 0.65.0'" grep -q "updater 0.65.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -189,7 +189,10 @@ chk "BackupUserSelectionController present (0.60.0)" test -f "${PANEL}/app/Http/
 chk "FileDirectoryRestorationController present (0.61.0)" test -f "${PANEL}/app/Http/Controllers/FileDirectoryRestorationController.php"
 chk "TransferToolController present (0.62.0)" test -f "${PANEL}/app/Http/Controllers/TransferToolController.php"
 chk "TransferRestoreController present (0.63.0)" test -f "${PANEL}/app/Http/Controllers/TransferRestoreController.php"
-chk "agent 0.56.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.56.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
+chk "TransferReviewController present (0.64.0)" test -f "${PANEL}/app/Http/Controllers/TransferReviewController.php"
+chk "BackupController has archive download endpoint (0.65.0)" grep -q "function download" "${PANEL}/app/Http/Controllers/BackupController.php"
+chk "agent 0.58.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.58.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
+chk "real backup archive handler installed" test -f "${ACP_HOME}/agent/src/BackupArchiveStore.php"
 chk "account.create in paneld allowlist" grep -q "account.create" "${ACP_HOME}/agent/config/tasks.php"
 chk "domain.add in paneld allowlist" grep -q "domain.add" "${ACP_HOME}/agent/config/tasks.php"
 chk "php.setVersion in paneld allowlist" grep -q "php.setVersion" "${ACP_HOME}/agent/config/tasks.php"
@@ -245,9 +248,17 @@ chk "backup.users in paneld allowlist" grep -q "backup.users" "${ACP_HOME}/agent
 chk "backup.filedir in paneld allowlist" grep -q "backup.filedir" "${ACP_HOME}/agent/config/tasks.php"
 chk "backup.transfer in paneld allowlist" grep -q "backup.transfer" "${ACP_HOME}/agent/config/tasks.php"
 chk "backup.cpanel in paneld allowlist" grep -q "backup.cpanel" "${ACP_HOME}/agent/config/tasks.php"
+chk "backup.review in paneld allowlist" grep -q "backup.review" "${ACP_HOME}/agent/config/tasks.php"
+chk "backup.archive in paneld allowlist" grep -q "backup.archive" "${ACP_HOME}/agent/config/tasks.php"
+chk "tar binary allowlisted" grep -q "'/usr/bin/tar'" "${ACP_HOME}/agent/src/CommandRunner.php"
 chk "issueLetsEncrypt in agent" grep -q "issueLetsEncrypt" "${ACP_HOME}/agent/src/AccountOs.php"
 chk "suspended page installed" test -f "${ACP_HOME}/share/suspended/index.html"
-chk ".env ACP_AGENT_VERSION=0.56.0" grep -q "^ACP_AGENT_VERSION=0.56.0$" "${PANEL}/.env"
+chk ".env ACP_AGENT_VERSION=0.58.0" grep -q "^ACP_AGENT_VERSION=0.58.0$" "${PANEL}/.env"
+FPM_POOL="/etc/php/8.4/fpm/pool.d/alphacp.conf"
+chk "PHP-FPM open_basedir includes the dedicated backup subtree" grep -Fq "${ACP_HOME}/backups" "${FPM_POOL}"
+chk "PHP-FPM open_basedir does not expose the ACP_HOME root" bash -c "! grep -Fq '${ACP_HOME}:' '${FPM_POOL}'"
+chk "PHP-FPM open_basedir does not expose root-only var" bash -c "! grep -Fq '${ACP_HOME}/var' '${FPM_POOL}'"
+chk "backup root is root:alphacp 0750" test "$(stat -c '%a %U:%G' "${ACP_HOME}/backups")" = '750 root:alphacp'
 chk "route cache me /license" grep -rqs "license" "${PANEL}/bootstrap/cache/"
 chk "backup bana (1)" test "$(nbackups)" -eq 1
 chk "backup = purana ${BEFORE_VER}" grep -q "\"version\": \"${BEFORE_VER}\"" "$(find "${REL}" -maxdepth 1 -name 'panel-backup-*' | head -1)/MANIFEST.json"
@@ -271,10 +282,14 @@ chk "sync NAHI chala (fail par)" test ! -f "${U}/state/sync-called"
 # ================================================================= U3
 echo; echo "=== U3: health check fail -> automatic rollback ==="
 sleep 1; touch "${U}/state/fail-health-once"
+FPM_POOL="/etc/php/8.4/fpm/pool.d/alphacp.conf"
+sed -i "s#:${ACP_HOME}/backups##g" "${FPM_POOL}"
+FPM_POOL_BEFORE="$(cat "${FPM_POOL}")"
 MARK="rollback-marker-$$"; echo "${MARK}" > "${PANEL}/storage/app/private/marker.txt"; chown alphacp:alphacp "${PANEL}/storage/app/private/marker.txt"
 run_update U3; rc=$?
 chk "exit != 0" test ${rc} -ne 0
 chk "'Rollback successful'" grep -q "Rollback successful" "${U}/update-U3.out"
+chk "failed update restores original PHP-FPM open_basedir" test "$(cat "${FPM_POOL}")" = "${FPM_POOL_BEFORE}"
 chk "panel wapas purana (marker file)" grep -q "${MARK}" "${PANEL}/storage/app/private/marker.txt"
 chk "HTTP 200 (rollback ke baad)" test "$(http_now)" = 200
 chk "failed release rakha gaya (debug ke liye)" test "$(find "${REL}" -maxdepth 1 -name 'panel-failed-*' | wc -l)" -ge 1

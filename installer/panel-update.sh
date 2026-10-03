@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.63.0  ·  default panel bundle 0.63.0  ·  agent 0.56.0  ·  alphacp-sync v1.2
+# updater 0.65.0  ·  default panel bundle 0.65.0  ·  agent 0.58.0  ·  alphacp-sync v1.2
+#
+# 0.65.0: S10 — real, verified home tar.gz archive + account-scoped download; backup storage open_basedir
+# 0.64.0: Step 10 — panel 0.64.0 (Review Transfers and Restores) + agent 0.57.0 (backup.review)
 #
 # 0.63.0: Step 10 — panel 0.63.0 (Transfer or Restore a cPanel Account) + agent 0.56.0 (backup.cpanel)
 #
@@ -143,17 +146,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.63.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.63.0}"
+UPDATER_VERSION="0.65.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.65.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-a026be7bb02bb5d3b5eabd77b41162bf404e186d}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-8b1ca1e3ac735dcd5ff103d7f07b8344489ca3b7}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-fc84de59fff92618d84714d7f30eea521cd4acd317f8f076fb196367938fcd2a}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.56.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-a026be7bb02bb5d3b5eabd77b41162bf404e186d}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-2e0310c4eb946353401bbb992ed39e987a4f10e8986ec5621f6b828f699cbf0e}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.58.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-8b1ca1e3ac735dcd5ff103d7f07b8344489ca3b7}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-8c42074e631466ffa9a33785e4642a1a01b41675f2c519ca21cb31d60742e7be}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-b30f340806b1eed18ed0e58a50bc1ff0f39b612f6762851f772f350e916b1083}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -184,6 +187,10 @@ RELEASES="${ACP_HOME}/releases"
 NEW_PANEL=""
 BACKUP_PANEL=""
 SWAPPED=0
+POOL_BACKUP=""
+POOL_CHANGED=0
+POOL_FILE=""
+PANEL_GROUP="${ACP_PANEL_GROUP:-${PANEL_USER}}"
 
 C_BOLD=$'\033[1m'; C_RED=$'\033[31m'; C_GREEN=$'\033[32m'; C_YELLOW=$'\033[33m'; C_RESET=$'\033[0m'
 say() { printf '%s\n' "$*"; }
@@ -194,6 +201,9 @@ warn() { log "WARN $*"; say "${C_YELLOW}[!]${C_RESET} $*"; }
 die() { log "FAIL $*"; say "${C_RED}[x]${C_RESET} $*"; say "Log: ${LOG_FILE}"; exit 1; }
 
 cleanup_preflight() {
+  if (( SWAPPED == 0 && POOL_CHANGED == 1 )) && [[ -n "${POOL_BACKUP}" && -f "${POOL_BACKUP}" && -n "${POOL_FILE}" ]]; then
+    cp -a "${POOL_BACKUP}" "${POOL_FILE}" 2>/dev/null || true
+  fi
   if (( SWAPPED == 0 )) && [[ -n "${NEW_PANEL}" && -d "${NEW_PANEL}" ]]; then
     rm -rf "${NEW_PANEL}"
   fi
@@ -227,6 +237,37 @@ PHP_BIN="/usr/bin/php${FPM_VERSION}"
 [[ -x "${PHP_BIN}" ]] || die "PHP ${FPM_VERSION} CLI missing"
 FPM_UNIT="php${FPM_VERSION}-fpm"
 
+ensure_backup_read_access() {
+  local backup_root="${ACP_HOME}/backups"
+  [[ -n "${POOL_FILE}" && -f "${POOL_FILE}" ]] || die "AlphaCP PHP-FPM pool file missing; cannot safely enable backup downloads"
+  [[ ! -L "${backup_root}" ]] || die "backup storage path is a symlink: ${backup_root}"
+  [[ ! -e "${backup_root}" || -d "${backup_root}" ]] || die "backup storage path is not a directory: ${backup_root}"
+  getent group "${PANEL_GROUP}" >/dev/null 2>&1 || die "panel group missing: ${PANEL_GROUP}"
+  install -d -o root -g "${PANEL_GROUP}" -m 0750 "${backup_root}" || die "backup storage directory setup failed"
+
+  local open_basedir_line
+  open_basedir_line="$(grep -F -m1 'php_admin_value[open_basedir]' "${POOL_FILE}" || true)"
+  [[ -n "${open_basedir_line}" ]] || die "FPM pool has no open_basedir directive: ${POOL_FILE}"
+  if [[ "${open_basedir_line}" == *"${backup_root}"* ]]; then
+    ok "backup download path already allowlisted in PHP-FPM"
+    return 0
+  fi
+
+  POOL_BACKUP="${TMP_DIR}/alphacp-fpm-pool.original"
+  cp -a "${POOL_FILE}" "${POOL_BACKUP}" || die "cannot back up PHP-FPM pool config"
+  POOL_CHANGED=1
+  sed -i -E "/^[[:space:]]*php_admin_value\\[open_basedir\\][[:space:]]*=/ s#\$#:${backup_root}#" "${POOL_FILE}"
+  if ! grep -Fq "${backup_root}" "${POOL_FILE}"; then
+    die "could not add backup path to PHP-FPM open_basedir"
+  fi
+  local fpm_binary
+  fpm_binary="$(command -v "php-fpm${FPM_VERSION}" 2>/dev/null || true)"
+  if [[ -n "${fpm_binary}" ]]; then
+    "${fpm_binary}" -t >>"${LOG_FILE}" 2>&1 || die "PHP-FPM config test failed after open_basedir update"
+  fi
+  ok "private backup download path allowlisted in PHP-FPM"
+}
+
 say ""
 say "${C_BOLD}AlphaCP existing-server updater ${UPDATER_VERSION}${C_RESET}   (yahan '${UPDATER_VERSION}' dikhe = sahi command)"
 say "Panel bundle: ${PANEL_VERSION}  ·  agent: ${AGENT_VERSION}"
@@ -234,7 +275,7 @@ say "PHP-FPM: ${FPM_UNIT} · PHP: $(${PHP_BIN} -r 'echo PHP_VERSION;' 2>/dev/nul
 say ""
 
 TMP_DIR="$(mktemp -d /tmp/alphacp-update.XXXXXX)"
-trap 'rm -rf "${TMP_DIR}"; cleanup_preflight' EXIT
+trap 'cleanup_preflight; rm -rf "${TMP_DIR}"' EXIT
 
 info "new panel artifact download ho raha hai"
 if [[ -n "${BUNDLE_URL}" ]]; then
@@ -389,6 +430,8 @@ EOF
   ok "php-fpm sandbox allowlist ready"
 fi
 
+ensure_backup_read_access
+
 BACKUP_PANEL="${RELEASES}/panel-backup-${STAMP}"
 
 rollback_current() {
@@ -403,6 +446,10 @@ rollback_current() {
   else
     say "${C_RED}Backup panel directory missing: ${BACKUP_PANEL}${C_RESET}"
     exit 1
+  fi
+  if (( POOL_CHANGED == 1 )) && [[ -f "${POOL_BACKUP}" ]]; then
+    cp -a "${POOL_BACKUP}" "${POOL_FILE}" && POOL_CHANGED=0 \
+      || warn "PHP-FPM pool config rollback failed; check ${POOL_FILE}"
   fi
   systemctl restart "${FPM_UNIT}" >>"${LOG_FILE}" 2>&1 || true
   local rollback_code
