@@ -1384,6 +1384,23 @@ return [
         ],
     ],
 
+    'backup.config' => [
+        'handler'     => Tasks\BackupConfig::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write WHM backup schedule/retention (JSON; no tar/shell).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['schedule', 'retention'],
+            'properties'           => [
+                'schedule'  => ['type' => 'string', 'maxLength' => 16],
+                'retention' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

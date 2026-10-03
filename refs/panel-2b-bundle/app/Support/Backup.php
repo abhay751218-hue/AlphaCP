@@ -18,6 +18,9 @@ final class Backup
     /** @var list<string> */
     public const SCOPES = ['full', 'home', 'mail', 'mysql'];
 
+    /** @var list<string> */
+    public const SCHEDULES = ['daily', 'weekly', 'monthly', 'disabled'];
+
     public static function tryKind(string $kind): ?string
     {
         $kind = strtolower(trim($kind));
@@ -46,5 +49,29 @@ final class Backup
         }
 
         return $scope;
+    }
+
+    public static function trySchedule(string $schedule): ?string
+    {
+        $schedule = strtolower(trim($schedule));
+        if (! in_array($schedule, self::SCHEDULES, true)) {
+            return null;
+        }
+
+        return $schedule;
+    }
+
+    public static function tryRetention(string $raw): ?int
+    {
+        $raw = trim($raw);
+        if ($raw === '' || ! ctype_digit($raw)) {
+            return null;
+        }
+        $n = (int) $raw;
+        if ($n < 1 || $n > 365) {
+            return null;
+        }
+
+        return $n;
     }
 }

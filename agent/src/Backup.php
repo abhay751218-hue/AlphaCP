@@ -155,4 +155,47 @@ final class Backup
 
         return $json . "\n";
     }
+
+    public const SCHEDULES = ['daily', 'weekly', 'monthly', 'disabled'];
+
+    public static function normalizeSchedule(string $schedule): string
+    {
+        $schedule = strtolower(trim($schedule));
+        if (!in_array($schedule, self::SCHEDULES, true)) {
+            throw new TaskRejectedException('invalid backup schedule');
+        }
+
+        return $schedule;
+    }
+
+    public static function normalizeRetention(mixed $raw): int
+    {
+        if (is_int($raw)) {
+            $n = $raw;
+        } elseif (is_string($raw) && ctype_digit($raw)) {
+            $n = (int) $raw;
+        } else {
+            throw new TaskRejectedException('invalid backup retention');
+        }
+        if ($n < 1 || $n > 365) {
+            throw new TaskRejectedException('invalid backup retention');
+        }
+
+        return $n;
+    }
+
+    public static function configJson(string $schedule, int $retention): string
+    {
+        $schedule = self::normalizeSchedule($schedule);
+        $retention = self::normalizeRetention($retention);
+        $json = json_encode([
+            'schedule' => $schedule,
+            'retention' => $retention,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('backup config json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }

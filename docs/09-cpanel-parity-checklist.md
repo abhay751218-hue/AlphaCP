@@ -291,7 +291,7 @@
 ### Backup / Clusters / Reboot / Status
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 176 | Backup Configuration (schedule, remote, retention) | S10 | ⏳ S10 |
+| 176 | Backup Configuration (schedule, remote, retention) | S10 | ✅ (JSON schedule/retention; remote later) |
 | 177 | Backup Restoration (full/partial/per-account) | S10 | ⏳ S10 |
 | 178 | Backup User Selection | S10 | ⏳ S10 |
 | 179 | File and Directory Restoration | S10 | ⏳ S10 |
