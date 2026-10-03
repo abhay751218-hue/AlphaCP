@@ -276,4 +276,29 @@ final class Backup
 
         return $json . "\n";
     }
+
+    public static function normalizeFiledirPath(string $path): string
+    {
+        $path = Files::normalizeRel($path);
+        if ($path === '') {
+            throw new TaskRejectedException('invalid backup filedir path');
+        }
+
+        return $path;
+    }
+
+    public static function filedirJson(string $username, string $path): string
+    {
+        $username = self::normalizeRestoreUsername($username);
+        $path = self::normalizeFiledirPath($path);
+        $json = json_encode([
+            'username' => $username,
+            'path' => $path,
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('backup filedir json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }

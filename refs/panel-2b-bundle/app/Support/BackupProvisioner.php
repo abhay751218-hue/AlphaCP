@@ -93,4 +93,12 @@ final class BackupProvisioner
     {
         return BackupUserSelection::query()->count() >= Backup::MAX;
     }
+
+    public static function enqueueFiledir(string $username, string $path): int
+    {
+        return Paneld::enqueue('backup.filedir', [
+            'username' => $username,
+            'path' => $path,
+        ]);
+    }
 }

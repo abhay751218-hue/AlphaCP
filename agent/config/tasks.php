@@ -1445,6 +1445,23 @@ return [
         ],
     ],
 
+    'backup.filedir' => [
+        'handler'     => Tasks\BackupFiledir::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write WHM file/directory restoration (JSON; no tar/shell).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'path'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'maxLength' => 16],
+                'path'     => ['type' => 'string', 'maxLength' => 240],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',
