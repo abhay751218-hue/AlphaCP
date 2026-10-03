@@ -1271,6 +1271,26 @@ return [
         ],
     ],
 
+    'dns.sync' => [
+        'handler'     => Tasks\SyncSet::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write DNS sync queue (JSON; no BIND rewrite).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['domains'],
+            'properties'           => [
+                'domains' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => ['type' => 'string', 'maxLength' => 190],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',
