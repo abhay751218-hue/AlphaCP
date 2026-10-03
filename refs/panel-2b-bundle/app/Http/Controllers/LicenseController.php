@@ -38,7 +38,7 @@ final class LicenseController extends Controller
             'message' => (string) ($result['message'] ?? 'unknown'),
         ]);
         return redirect()->route('license.index')->withErrors([
-            'license_key' => (string) ($result['message'] ?? 'License activate nahi hua.'),
+            'license_key' => (string) ($result['message'] ?? 'License was not activated.'),
         ]);
     }
 }

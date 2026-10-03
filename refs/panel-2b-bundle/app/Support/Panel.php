@@ -57,14 +57,14 @@ final class Panel
         }
         $diff = time() - strtotime($timestamp);
         if ($diff < 60) {
-            return $diff . 's pehle';
+            return $diff . 's ago';
         }
         if ($diff < 3600) {
-            return intdiv($diff, 60) . 'm pehle';
+            return intdiv($diff, 60) . 'm ago';
         }
         if ($diff < 86400) {
-            return intdiv($diff, 3600) . 'h pehle';
+            return intdiv($diff, 3600) . 'h ago';
         }
-        return intdiv($diff, 86400) . 'd pehle';
+        return intdiv($diff, 86400) . 'd ago';
     }
 }

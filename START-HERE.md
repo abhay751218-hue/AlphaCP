@@ -54,8 +54,9 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 ## 4b. Tests (sab sandbox me chalte hain — system PHP/MySQL ki zaroorat nahi)
 | Command | Kya test karta hai | Last result |
 |---|---|---|
-| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **42 pass, 0 fail, 6 wasm-skip** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.3.0: update, sha mismatch, rollback, backup prune, sync-tool upgrade, **private repo (get)** | **54/54** |
+| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **365 pass, 0 fail, 6 wasm-skip** (0.58.0) |
+| `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy/usage/ssh/mail/forward/autorespond/catchall/filter/deliverability/spam/list/routing/track/gfilter/encrypt/boxtrapper/calendar/mail.usage/webmail/db.set/db.phpmyadmin/db.remote/dns.zone/dns.dynamic/dns.track/dns.hostname/dns.templates/mail.globalrouting/dns.nsreport/dns.park/dns.cleanup/dns.ttl/dns.forward/dns.sync/dns.nameserver/backup.create/backup.wizard/backup.restore/backup.config tasks | **82/82** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.58.0: panel 0.58.0 + agent 0.51.0, sha mismatch, rollback, backup prune, sync-tool, **private repo (get)** | **164/164** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 
@@ -78,14 +79,13 @@ Real server (PHP 8.4 FPM) par poora suite: `cd /usr/local/alphacp/panel && sudo 
 unka kaam PR se `main` me merge karo (29 Sep: `arena/01a0ea0d-alphacp` ka S2C kaam PR #1 me merge hua).
 
 ## 5. Abhi kahan hain (roadmap position)
-- Step 0 → 2B (panel + login + RBAC + 2FA + password change) ✅
-- Step 2C (license + 15-day trial) 🟡 — **panel client + offline trial server par deployed (0.3.1)**;
-  apna license-server API (`license-server/`, activation/renewal) abhi baaki.
-- Server par abhi (snapshot se verified, 29 Sep): panel **0.3.1** (= source byte-for-byte), Laravel 13.33.0, PHP 8.4.26,
-  MariaDB 10.11, nginx (8090) + Apache (80/443), bind, spamd, redis, fail2ban, paneld.
-- 29 Sep 00:17Z: panel **0.3.2** + alphacp-sync v1.1 deployed (updater 0.2.1) ✅. Trial expiry 13 Oct.
-- Next command: alphacp-sync **v1.2** (private repo support) → phir user repo PRIVATE karega (`COMMANDS.md`).
-- **Next: Step 3 — Provisioning engine** (hosting account create/suspend/unsuspend/terminate: Linux user, home dir,
-  Apache vhost, PHP-FPM pool, quota). Uske baad S4 Packages & limits → … → S12 WHM API 1 billing layer.
+- Step 0 → 2B ✅ · Step 2C 🟡 (license client + 15-day trial deployed; apna license-server API baaki)
+- Step 3–8 ✅/🟡: provisioning, packages, websites (domains/MultiPHP/SSL/cron/error pages),
+  File Manager/Disk/Privacy/SSH, email suite (Webmail tak), databases (Remote MySQL tak).
+- **Step 9 ✅ (Nameserver Selection 0.54.0 tak)** — WHM DNS tools JSON me; asli BIND rewrite baad me.
+- **Step 10 🟡** — customer Backup / Backup Wizard / File Restoration (0.57.0) + WHM **Backup Configuration**
+  (panel **0.58.0**, agent **0.51.0**, deploy command `COMMANDS.md` me). Baaki: 177–179, Transfer Tool 185–188, 199.
+- Server par abhi (snapshot 3 Oct): panel **0.57.0**, agent **0.50.0**, HTTP 200, trial 13 Oct tak valid.
+- **Aage:** S10 ke baaki rows, phir **S11 Monitoring** (logs/bandwidth/stats/Network Tools) → S12 WHM API 1 billing layer.
 
 Latest status ke liye hamesha `server-snapshot/STATE.md` + `CHANGELOG.md` dekho.

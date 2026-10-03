@@ -19,7 +19,7 @@ class EnsurePermission
         $user = $request->user();
 
         if (! $user || ! $user->hasPermission($permission)) {
-            abort(403, "Permission nahi hai: {$permission}");
+            abort(403, "Missing permission: {$permission}");
         }
 
         return $next($request);

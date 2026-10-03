@@ -22,7 +22,7 @@ class EnsurePasswordIsFresh
         if ($user?->force_password_change
             && ! $request->routeIs('security.password', 'security.password.update', 'logout')) {
             return redirect()->route('security.password')
-                ->with('warning', 'Pehle apna password badalna zaroori hai (security policy).');
+                ->with('warning', 'You must change your password first (security policy).');
         }
 
         return $next($request);
