@@ -12,6 +12,7 @@ use App\Models\ParkedDomain;
 use App\Models\DnsCleanup;
 use App\Models\ZoneTtl;
 use App\Models\DomainForward;
+use App\Models\DnsSync;
 
 final class DnsProvisioner
 {
@@ -119,6 +120,15 @@ final class DnsProvisioner
 
         return Paneld::enqueue('dns.forward', [
             'forwards' => $rows,
+        ]);
+    }
+
+    public static function enqueueSync(): int
+    {
+        $rows = DnsSync::query()->orderBy('id')->pluck('domain')->values()->all();
+
+        return Paneld::enqueue('dns.sync', [
+            'domains' => $rows,
         ]);
     }
 }

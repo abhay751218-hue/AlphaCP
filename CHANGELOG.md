@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Synchronize DNS Records (2 Oct)** — WHM sync via `dns.sync`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.53.0**, agent **0.46.0**.
+  Tests: panel **333/0**, provision-sim **77/77**, update-sim **152/152** (pin in B).
+  Deploy via `panel-update.sh` 0.53.0.
 - **Step 9 Domain Forwarding (2 Oct)** — WHM forward via `dns.forward`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.52.0**, agent **0.45.0**.
   Tests: panel **327/0**, provision-sim **76/76**, update-sim **150/150** (pin in B).
