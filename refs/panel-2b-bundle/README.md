@@ -9,11 +9,11 @@ Laravel 13 + Blade, no build step, no CDN, no Node.
 - **Privileged work:** never here. The panel writes rows to `tasks`; the root agent `paneld`
   (see `../agent/`) validates them against its allowlist and executes.
 
-## What works today (Step 2B)
-Login with lockout + rate limit · TOTP 2FA (replay-protected) · password policy + force-change ·
-RBAC (root / reseller / user / mail, per-permission gates) · users CRUD + admin password reset ·
-audit log viewer · live server info, services and task queue (from `paneld`) · dashboard with the
-full cPanel tool grid and parity progress · offline-first license/trial status and admin activation page.
+## What works today (Step 3 / panel 0.4.0)
+Login with lockout + rate limit · TOTP 2FA · password policy + force-change ·
+RBAC · users CRUD · audit log · live server info / services / task queue ·
+offline-first license/trial · **Accounts**: create / list / suspend / unsuspend / terminate
+(OS work is paneld-only; create rolls back on failure).
 
 Everything else on the cPanel tool list is planned and tracked — one row per tool — in
 `../docs/09-cpanel-parity-checklist.md` (the written contract: rows are never removed, only marked done).

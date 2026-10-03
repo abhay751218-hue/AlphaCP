@@ -53,7 +53,7 @@ Legend: ✅ full · 🟡 own scope only · ⛔ none
 | ssh.keys.* | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
 | cron.* | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
 | ssl.issue / install / renew | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
-| backup.run / restore | ✅ | ✅ | ⛔ | 🟡 | 🟡 (own) |
+| backup.archive / restore | ✅ | ✅ | ⛔ | 🟡 | 🟡 (own) |
 | backup.serverWide | ✅ | ✅ | ⛔ | ⛔ | ⛔ |
 | apps.install (one-click installer) | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
 | security.scan / quarantine | ✅ | ✅ | 🟡 (read) | 🟡 own accts | 🟡 own acct |
@@ -160,3 +160,6 @@ Unmapped tokens = denied (fail closed). Mapping file: `panel/config/whm_token_pe
 8. Destructive task without `confirm:true` in payload is rejected and audited.
 9. License failure never disables customer services (only panel degradation).
 10. Rate limits: login (per IP+user), API (per token), mail (per account/hour).
+11. Symlink escape: a symlink inside a customer home (`~/x -> /etc`) can never be followed by
+    the root agent — `PathGuard::assertNoSymlink()` fails closed for every SafeFs read/write/list
+    (provision-sim: `symlink inside the account home cannot escape`).

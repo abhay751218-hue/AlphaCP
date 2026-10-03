@@ -72,7 +72,9 @@ chown -R alphacp:alphacp "${PANEL}"; chmod 0640 "${PANEL}/.env"
 cat > /etc/php/8.4/fpm/pool.d/alphacp.conf <<EOF
 [alphacp]
 user = alphacp
+group = alphacp
 listen = /run/php/alphacp-fpm.sock
+php_admin_value[open_basedir] = /usr/local/alphacp/panel:/usr/local/alphacp/etc:/usr/local/alphacp/agent/config:/tmp
 EOF
 
 # ---------------------------------------------------------------- request handler (= php-fpm worker)

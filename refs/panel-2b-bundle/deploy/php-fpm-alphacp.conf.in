@@ -20,7 +20,7 @@ pm.max_requests      = 500
 ; open_basedir keeps the panel inside its own tree. The agent's config dir is
 ; included read-only so the panel can list the task allowlist (root-owned, 0644
 ; — the panel user cannot write there, so this is not a privilege escalation).
-php_admin_value[open_basedir]     = @@PANEL_ROOT@@:@@ACP_HOME@@/etc:@@ACP_HOME@@/agent/config:/tmp
+php_admin_value[open_basedir]     = @@PANEL_ROOT@@:@@ACP_HOME@@/etc:@@ACP_HOME@@/agent/config:@@ACP_HOME@@/backups:/tmp
 php_admin_value[upload_tmp_dir]   = /tmp
 php_admin_value[session.save_path] = @@PANEL_ROOT@@/storage/framework/sessions
 php_admin_value[disable_functions] = exec,passthru,shell_exec,system,proc_open,popen,pcntl_exec

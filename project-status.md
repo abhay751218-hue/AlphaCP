@@ -29,14 +29,14 @@
 | Step 2B-2 | First-login password change + 2FA login verification + RBAC/User Manager pages | ✅ **VERIFIED** |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
-| Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |
-| Step 4 | Packages & limits manager | ⏳ |
-| Step 5 | Domains, vHost, MultiPHP, SSL, Cron | ⏳ |
-| Step 6 | File Manager + FTP + Git + SSH | ⏳ |
-| Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | ⏳ |
-| Step 8 | Databases (MySQL management) | ⏳ |
-| Step 9 | DNS management + nameservers | ⏳ |
-| Step 10 | Backup / Restore / Migration | ⏳ |
+| Step 3 | Provisioning engine (account create/suspend/unsuspend/terminate + Accounts UI, rollback) | ✅ **DEPLOYED 0.4.0** (29 Sep 01:07Z) |
+| Step 4 | Packages & limits manager | ✅ **DEPLOYED 0.5.0** (29 Sep 01:21Z) |
+| Step 5 | Domains, vHost, MultiPHP, SSL, Cron, Indexes, MIME, Handlers | 🟡 **through 0.14.0; per-domain PHP version/INI pending** |
+| Step 6 | File Manager + FTP + Git + SSH | 🟡 **FM + Privacy + Disk Usage + SSH live** |
+| Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **UI/config through Webmail; real Exim/Dovecot mailflow + service integration pending** |
+| Step 8 | Databases (MySQL management) | 🟡 **UI/config through Remote MySQL; actual DB/users/GRANT + phpMyAdmin SSO pending** |
+| Step 9 | DNS management + nameservers | 🟡 **JSON/config through Nameserver Selection; BIND write/reload/dig validation + cluster pending** |
+| Step 10 | Backup / Restore / Migration | 🟡 **0.65.0 / agent 0.58.0 deployed 3 Oct; snapshot confirms HTTP 200. Real verified home archive/download is present; mail/DB backup, restore, schedule, remote, transfer/import still incomplete.** |
 | Step 11 | Monitoring, stats, resource limits | ⏳ |
 | Step 12 | 💳 Billing API layer (WHM API 1 + native REST) | ⏳ |
 | Step 13 | Security suite + WAF | ⏳ |

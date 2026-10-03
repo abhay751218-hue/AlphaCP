@@ -15,8 +15,10 @@ require __DIR__ . '/../src/Bootstrap.php';
 require __DIR__ . '/FakeCommandExecutor.php';
 
 use Alphacp\Agent\AccountIdentity;
+use Alphacp\Agent\AccountOs;
 use Alphacp\Agent\AccountPaths;
 use Alphacp\Agent\CommandRunner;
+use Alphacp\Agent\Files;
 use Alphacp\Agent\JsonSchema;
 use Alphacp\Agent\PathGuard;
 use Alphacp\Agent\PathGuardException;
@@ -612,6 +614,78 @@ test('handlers.set writes AddHandler and rejects php-script', function (): void 
         $threwExt = str_contains($e->getMessage(), 'blocked handler extension');
     }
     assert_true($threwExt, 'php extension must fail closed');
+    acp_account_cleanup($harness);
+});
+test('symlink inside the account home cannot escape (root write safety)', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+
+    // Outside dir is NOT in PathGuard roots — a write here would be a root escape.
+    $outside = $harness['root'] . '/outside';
+    mkdir($outside, 0755, true);
+    file_put_contents($outside . '/secret.txt', 'top secret');
+
+    // A hosting customer can create this symlink themselves (shell/FTP).
+    $link = $harness['root'] . '/home/alicehost/loot';
+    symlink($outside, $link);
+    assert_true(is_link($link), 'poc symlink should exist');
+
+    $blocked = static function (callable $fn): bool {
+        try {
+            $fn();
+        } catch (Throwable) {
+            return true;
+        }
+
+        return false;
+    };
+
+    assert_true($blocked(static fn () => (new FilesSet())->handle([
+        'username' => 'alicehost', 'op' => 'write', 'path' => 'loot/pwned.txt', 'content' => 'owned',
+    ], $harness['ctx'])), 'write through symlinked parent must fail closed');
+    assert_true(!file_exists($outside . '/pwned.txt'), 'nothing may be written outside the home');
+
+    assert_true($blocked(static fn () => (new FilesSet())->handle([
+        'username' => 'alicehost', 'op' => 'mkdir', 'path' => 'loot/newdir',
+    ], $harness['ctx'])), 'mkdir through symlinked parent must fail closed');
+    assert_true(!is_dir($outside . '/newdir'), 'no directory may be created outside the home');
+
+    assert_true($blocked(static fn () => (new FilesSet())->handle([
+        'username' => 'alicehost', 'op' => 'delete', 'path' => 'loot/secret.txt',
+    ], $harness['ctx'])), 'delete through symlinked parent must fail closed');
+    assert_true(file_exists($outside . '/secret.txt'), 'outside file must survive');
+
+    assert_true($blocked(static fn () => (new FilesSet())->handle([
+        'username' => 'alicehost', 'op' => 'rename', 'path' => 'loot/secret.txt', 'to' => 'stolen.txt',
+    ], $harness['ctx'])), 'rename through symlinked parent must fail closed');
+    assert_true(file_exists($outside . '/secret.txt'), 'outside file must survive rename attempt');
+
+    assert_true($blocked(static fn () => (new FilesList())->handle([
+        'username' => 'alicehost', 'path' => 'loot',
+    ], $harness['ctx'])), 'listing through symlinked dir must fail closed');
+
+    assert_true($blocked(static fn () => (new FilesUsage())->handle([
+        'username' => 'alicehost', 'path' => 'loot',
+    ], $harness['ctx'])), 'disk usage through symlinked dir must fail closed');
+
+    // Read path: a symlinked php.ini must not leak an outside file.
+    $ini = $harness['root'] . '/home/alicehost/etc/php.ini';
+    @unlink($ini);
+    symlink($outside . '/secret.txt', $ini);
+    $os = new AccountOs($harness['ctx']->cmd, new SafeFs($harness['ctx']->paths), AccountPaths::fromEnv(), $harness['ctx']->log);
+    assert_true($os->readUserIni('alicehost') === [], 'symlinked php.ini must not be read');
+    @unlink($ini);
+
+    // Null bytes are rejected, not silently stripped.
+    assert_true($blocked(static fn () => Files::normalizeRel("public_html/a\0b")), 'null byte path must be rejected');
+
+    // Normal file manager work still succeeds.
+    $ok = (new FilesSet())->handle([
+        'username' => 'alicehost', 'op' => 'write', 'path' => 'public_html/ok.txt', 'content' => 'fine',
+    ], $harness['ctx']);
+    assert_true($ok['status'] === 'ok');
+    assert_true(is_file($harness['root'] . '/home/alicehost/public_html/ok.txt'));
+
     acp_account_cleanup($harness);
 });
 test('files.list and files.set stay inside home and reject ..', function (): void {
