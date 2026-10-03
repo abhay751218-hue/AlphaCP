@@ -11,8 +11,10 @@ final class Files
 
     public static function tryRel(string $rel): ?string
     {
+        if (str_contains($rel, "\0")) {
+            return null;
+        }
         $rel = str_replace('\\', '/', $rel);
-        $rel = str_replace("\0", '', $rel);
         $rel = trim($rel);
         $rel = ltrim($rel, '/');
         if ($rel === '' || $rel === '.') {
