@@ -43,6 +43,7 @@ use App\Http\Controllers\ZoneTtlController;
 use App\Http\Controllers\DomainForwardController;
 use App\Http\Controllers\DnsSyncController;
 use App\Http\Controllers\NameserverSelectionController;
+use App\Http\Controllers\BackupConfigurationController;
 use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
@@ -379,6 +380,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('nameserver-selection.index');
     Route::post('/nameserver-selection', [NameserverSelectionController::class, 'store'])
         ->middleware('perm:accounts.view')->name('nameserver-selection.store');
+
+    Route::get('/backup-configuration', [BackupConfigurationController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('backup-configuration.index');
+    Route::post('/backup-configuration', [BackupConfigurationController::class, 'store'])
+        ->middleware('perm:accounts.view')->name('backup-configuration.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');

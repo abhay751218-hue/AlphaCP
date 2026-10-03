@@ -1384,6 +1384,28 @@ return [
         ],
     ],
 
+    'backup.config' => [
+        'handler'     => Tasks\BackupConfig::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write WHM backup schedule/retention/destination (JSON; no tar/shell).',
+        'paths'       => ['/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['schedule', 'retention_days', 'destination'],
+            'properties'           => [
+                'enabled'        => ['type' => 'boolean'],
+                'schedule'       => ['type' => 'string', 'maxLength' => 16],
+                'retention_days' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 3650],
+                'destination'    => ['type' => 'string', 'maxLength' => 16],
+                'remote_host'    => ['type' => 'string', 'maxLength' => 190],
+                'remote_user'    => ['type' => 'string', 'maxLength' => 64],
+                'remote_path'    => ['type' => 'string', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',

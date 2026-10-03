@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Models\Account;
+use App\Models\BackupConfig;
 use App\Models\BackupJob;
 use App\Models\BackupRestore;
 use App\Models\BackupWizard;
@@ -59,5 +60,18 @@ final class BackupProvisioner
     public static function restoreLimitReached(Account $account): bool
     {
         return $account->backupRestores()->count() >= Backup::MAX;
+    }
+
+    public static function enqueueConfig(BackupConfig $row): int
+    {
+        return Paneld::enqueue('backup.config', [
+            'enabled'        => (bool) $row->enabled,
+            'schedule'       => (string) $row->schedule,
+            'retention_days' => (int) $row->retention_days,
+            'destination'    => (string) $row->destination,
+            'remote_host'    => (string) ($row->remote_host ?? ''),
+            'remote_user'    => (string) ($row->remote_user ?? ''),
+            'remote_path'    => (string) ($row->remote_path ?? ''),
+        ]);
     }
 }

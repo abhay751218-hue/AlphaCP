@@ -74,6 +74,7 @@ use Alphacp\Agent\Tasks\NameserverSet;
 use Alphacp\Agent\Tasks\BackupCreate;
 use Alphacp\Agent\Tasks\BackupWizard;
 use Alphacp\Agent\Tasks\BackupRestore;
+use Alphacp\Agent\Tasks\BackupConfig;
 use Alphacp\Agent\Tasks\MimeTypesSet;
 use Alphacp\Agent\Tasks\PhpSetIni;
 use Alphacp\Agent\Tasks\PhpSetVersion;
@@ -222,7 +223,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.wizard', 'backup.restore', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.wizard', 'backup.restore', 'backup.config', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1925,6 +1926,78 @@ test('backup.restore writes json and rejects hostile path', function (): void {
         $threwPath = str_contains($e->getMessage(), 'path') || str_contains($e->getMessage(), 'escape') || str_contains($e->getMessage(), 'invalid');
     }
     assert_true($threwPath, 'hostile restore path must fail closed');
+    acp_account_cleanup($harness);
+});
+test('backup.config writes json and rejects hostile destination/path', function (): void {
+    $harness = acp_account_harness();
+    $out = (new BackupConfig())->handle([
+        'enabled'        => true,
+        'schedule'       => 'weekly',
+        'retention_days' => 30,
+        'destination'    => 'remote',
+        'remote_host'    => 'backup.example.com',
+        'remote_user'    => 'acpbackup',
+        'remote_path'    => 'backups/server1',
+    ], $harness['ctx']);
+    assert_true($out['schedule'] === 'weekly');
+    assert_true($out['retention'] === 30);
+    assert_true($out['status'] === 'ok');
+    $file = $harness['root'] . '/alphacp/etc/backup/config.json';
+    assert_true(is_file($file));
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, 'backup.example.com'));
+    assert_true(str_contains($body, 'backups/server1'));
+    assert_true(!str_contains($body, '|'));
+    $threwPath = false;
+    try {
+        (new BackupConfig())->handle([
+            'schedule'       => 'daily',
+            'retention_days' => 30,
+            'destination'    => 'remote',
+            'remote_host'    => 'backup.example.com',
+            'remote_user'    => 'acpbackup',
+            'remote_path'    => '/etc/passwd',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPath = str_contains($e->getMessage(), 'path') || str_contains($e->getMessage(), 'escape') || str_contains($e->getMessage(), 'invalid');
+    }
+    assert_true($threwPath, 'hostile backup remote path must fail closed');
+    $threwPipe = false;
+    try {
+        (new BackupConfig())->handle([
+            'schedule'       => 'daily',
+            'retention_days' => 30,
+            'destination'    => 'remote',
+            'remote_host'    => 'backup|sh',
+            'remote_user'    => 'acpbackup',
+            'remote_path'    => 'backups',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwPipe = str_contains($e->getMessage(), 'host') || str_contains($e->getMessage(), 'escape') || str_contains($e->getMessage(), 'invalid');
+    }
+    assert_true($threwPipe, 'hostile backup remote host must fail closed');
+    $threwRetention = false;
+    try {
+        (new BackupConfig())->handle([
+            'schedule'       => 'daily',
+            'retention_days' => 0,
+            'destination'    => 'local',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwRetention = str_contains($e->getMessage(), 'retention');
+    }
+    assert_true($threwRetention, 'bad backup retention must fail closed');
+    $threwSchedule = false;
+    try {
+        (new BackupConfig())->handle([
+            'schedule'       => 'hourly',
+            'retention_days' => 30,
+            'destination'    => 'local',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwSchedule = str_contains($e->getMessage(), 'schedule');
+    }
+    assert_true($threwSchedule, 'bad backup schedule must fail closed');
     acp_account_cleanup($harness);
 });
 test('cron.set writes crontab body and rejects newlines', function (): void {
