@@ -14,20 +14,37 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 3 Oct 2026
 
-### panel-update 0.66.0 — Security: symlink root-write escape fix (live 0.65.0 ke upar)
+### panel-update 0.67.0 — S10 REAL home restore (`backup.recover`), live 0.66.0 ke upar
+```bash
+sudo alphacp-sync get 443294cd7049bf76c6be0ae24a25d8505f837a75 installer/panel-update.sh /tmp/acp-panel-update-0.67.0.sh a32aa3b83698fd745a25d8e470c430eeaa7f59689be7592463e30e5e46d01ee3 && sudo bash /tmp/acp-panel-update-0.67.0.sh
+```
+- Updater SHA-256: `a32aa3b83698fd745a25d8e470c430eeaa7f59689be7592463e30e5e46d01ee3`
+- Expected: banner `updater 0.67.0` → `Panel bundle: 0.67.0 · agent: 0.60.0` → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Kya naya hai:** Backup page par har verified archive ke neeche **Restore** form (username type karke confirm)
+  aur **Restore history** table. Agent task `backup.recover` (destructive, `_confirm` gated) archive ko
+  root-owned staging dir me extract karke audit karta hai (escaping symlink drop, setuid/setgid clear,
+  ownership transfer, quota fail = abort) aur phir home ko atomic rename se swap karta hai — fail hone par
+  automatic rollback, purana home tab tak safe.
+- Bundles commit `f66527b73ea6aec48c23c26b8a4d83f39ecd5583` par pinned: panel SHA-256
+  `5c697a13b8e6a80888cf7e3427884ec767f5a11269bc1f2ee49d8ad01efaee13`, agent SHA-256
+  `fedb89c29fb8bb564c6767f0e7d437c346baf25e7806f82a0a0faba4abe987a2` (dono GitHub se re-fetch karke verify kiye).
+- Tests: panel **407 pass / 0 fail / 6 wasm-skip**, provision-sim **98/98**, backup-tar-sim **v0.2.0 PASS**
+  (user + root), update-sim **192/192**.
+- ⚠️ Restore **whole-home** hai (mail/MySQL include nahi; S7/S8 abhi real nahi). Archive ke baad bane files
+  restore par chale jaate hain — isliye typed confirmation.
+
+## ✅ Latest deployment (3 Oct 2026 16:48Z; already completed)
+
+### panel-update 0.66.0 — Security: symlink root-write escape fix
 ```bash
 sudo alphacp-sync get 039efb98319e297fe7ba90444d50bad0b113c6bf installer/panel-update.sh /tmp/acp-panel-update-0.66.0.sh f72362b240179a49d024e318fb7fed91e30b8d7dabb3e107a467c40b43b3f237 && sudo bash /tmp/acp-panel-update-0.66.0.sh
 ```
-- Updater SHA-256: `f72362b240179a49d024e318fb7fed91e30b8d7dabb3e107a467c40b43b3f237`.
-- Expected: banner `updater 0.66.0` → agent **0.59.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Kya fix hota hai:** customer apne home me symlink (`~/loot -> /etc`) bana kar root agent se apne home ke
-  **bahar** likh/read karwa sakta tha (`files.set` / `files.list` / `files.usage`). Ab har path-chain me
-  symlink milne par agent **fail-closed** reject karta hai; null-byte path bhi reject hota hai.
-  File Manager ka normal kaam (mkdir/write/rename/delete/list) pehle jaisa chalta rehta hai.
-- Ye 0.62–0.65 ke saare features included hain (updater hamesha latest bundle lagata hai) — 0.65.0 dobara chalane ki zaroorat nahi.
-- Tests: panel **402/0**, provision-sim **92/92** (naya symlink-escape test), update-sim **186/186**.
-
-## ✅ Latest deployment (3 Oct 2026; already completed)
+- **Live result:** panel **0.66.0**, agent **0.59.0**, HTTP **200** (server snapshot 2026-10-03 16:49Z).
+  Rollback backup: `/usr/local/alphacp/releases/panel-backup-20261003164842`.
+- Deployed code repo source se **byte-for-byte** match karta hai (panel + agent, 0 diffs) aur trial 13 Oct tak valid hai.
+- Fix: customer `~/loot -> /etc` symlink se root agent ko home ke bahar likhwa sakta tha (`files.set/list/usage`);
+  ab PathGuard har path-chain me symlink par **fail-closed** reject karta hai, null-byte path bhi reject.
+- **Dobara chalane ki zaroorat nahi**; 0.67.0 updater isi ke upar chadhta hai.
 
 ### panel-update 0.65.0 — S10: verified home archive + account-scoped download
 ```bash
@@ -43,7 +60,7 @@ sudo alphacp-sync get 491c62966025ba8a251a9bb0a72a5c7071abed2d installer/panel-u
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
-| panel-update 0.66.0 (`039efb9…`) → panel 0.66.0 + agent 0.59.0 | 3 Oct | ⏳ symlink root-write escape fix (NEXT STEP me hai) |
+| panel-update 0.66.0 (`039efb9…`) → panel 0.66.0 + agent 0.59.0 | 3 Oct 16:48Z | ✅ UPDATE COMPLETE, HTTP 200; symlink root-write escape fix live (snapshot 16:49Z) |
 | panel-update 0.65.0 (`491c629…`) → panel 0.65.0 + agent 0.58.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200; home archive slice deployed |
 | panel-update 0.63.0 (`4c1195b…`) → panel 0.63.0 + agent 0.56.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer or Restore a cPanel Account |
 | panel-update 0.62.0 (`16f2c24…`) → panel 0.62.0 + agent 0.55.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer Tool |
