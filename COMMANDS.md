@@ -12,6 +12,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
+## ✅ Abhi chalani hai (NEXT STEP) — 3 Oct 2026
+
+### panel-update 0.66.0 — Security: symlink root-write escape fix (live 0.65.0 ke upar)
+```bash
+sudo alphacp-sync get 039efb98319e297fe7ba90444d50bad0b113c6bf installer/panel-update.sh /tmp/acp-panel-update-0.66.0.sh f72362b240179a49d024e318fb7fed91e30b8d7dabb3e107a467c40b43b3f237 && sudo bash /tmp/acp-panel-update-0.66.0.sh
+```
+- Updater SHA-256: `f72362b240179a49d024e318fb7fed91e30b8d7dabb3e107a467c40b43b3f237`.
+- Expected: banner `updater 0.66.0` → agent **0.59.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Kya fix hota hai:** customer apne home me symlink (`~/loot -> /etc`) bana kar root agent se apne home ke
+  **bahar** likh/read karwa sakta tha (`files.set` / `files.list` / `files.usage`). Ab har path-chain me
+  symlink milne par agent **fail-closed** reject karta hai; null-byte path bhi reject hota hai.
+  File Manager ka normal kaam (mkdir/write/rename/delete/list) pehle jaisa chalta rehta hai.
+- Ye 0.62–0.65 ke saare features included hain (updater hamesha latest bundle lagata hai) — 0.65.0 dobara chalane ki zaroorat nahi.
+- Tests: panel **402/0**, provision-sim **92/92** (naya symlink-escape test), update-sim **186/186**.
+
 ## ✅ Latest deployment (3 Oct 2026; already completed)
 
 ### panel-update 0.65.0 — S10: verified home archive + account-scoped download
@@ -28,6 +43,7 @@ sudo alphacp-sync get 491c62966025ba8a251a9bb0a72a5c7071abed2d installer/panel-u
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.66.0 (`039efb9…`) → panel 0.66.0 + agent 0.59.0 | 3 Oct | ⏳ symlink root-write escape fix (NEXT STEP me hai) |
 | panel-update 0.65.0 (`491c629…`) → panel 0.65.0 + agent 0.58.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200; home archive slice deployed |
 | panel-update 0.63.0 (`4c1195b…`) → panel 0.63.0 + agent 0.56.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer or Restore a cPanel Account |
 | panel-update 0.62.0 (`16f2c24…`) → panel 0.62.0 + agent 0.55.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer Tool |
