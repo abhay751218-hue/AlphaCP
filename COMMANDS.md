@@ -12,7 +12,23 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ Latest deployment (3 Oct 2026; already completed)
+## ✅ Abhi chalani hai (NEXT STEP) — panel 0.66.0 (S5 per-domain MultiPHP)
+
+```bash
+sudo alphacp-sync get 64c7dd3a869a209575c453413a020281c2e9851a installer/panel-update.sh /tmp/acp-panel-update-0.66.0.sh 0fb43150887a3f826a691d6a5a82da8dbdb42da84b6ec9ce7186aa74bd0d9e94 && sudo bash /tmp/acp-panel-update-0.66.0.sh
+```
+- Updater **0.66.0** → panel **0.66.0** + agent **0.59.0** (panel sha256 `ca34d014…`, agent sha256 `161c0b16…`).
+- Naya: **per-domain MultiPHP** (docs/09 rows 68/69) — domain ka apna PHP-FPM pool + vhost socket;
+  `POST /php/domain/{domain}` aur `POST /php/ini/domain/{domain}`. Account-level PHP waisa hi chalta rahega.
+- Migration: `2026_10_03_000054_add_domain_php_ini.php` (sirf naya column `domains.php_ini`, additive).
+- Expected: banner `updater 0.66.0` → `UPDATE COMPLETE` → HTTP **200**; panel ke `/php` page par
+  "Per-domain PHP version" card dikhna chahiye. Rollback khud ho jayega agar health check fail hue.
+- Tests jo pehle se pass hain: panel **406 pass / 0 fail / 6 wasm-skip**, provision-sim **94/94**,
+  update-sim **188/188**, sync-sim **66/66**.
+
+## ✅ Ho chuka (dobara chalane ki zaroorat nahi)
+
+
 
 ### panel-update 0.65.0 — S10: verified home archive + account-scoped download
 ```bash
@@ -29,6 +45,7 @@ sudo alphacp-sync get 491c62966025ba8a251a9bb0a72a5c7071abed2d installer/panel-u
 | Command | Kab | Result |
 |---|---|---|
 | panel-update 0.65.0 (`491c629…`) → panel 0.65.0 + agent 0.58.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200; home archive slice deployed |
+| alphacp-sync v1.3 (`efc0979…`) — snapshot completeness fix (backup/ssl views + fixture PEM) | 3 Oct | ✅ PRIVATE repo; sync-sim 66/66 |
 | panel-update 0.63.0 (`4c1195b…`) → panel 0.63.0 + agent 0.56.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer or Restore a cPanel Account |
 | panel-update 0.62.0 (`16f2c24…`) → panel 0.62.0 + agent 0.55.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer Tool |
 | panel-update 0.61.0 (`0b4919d…`) → panel 0.61.0 + agent 0.54.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, File and Directory Restoration |
