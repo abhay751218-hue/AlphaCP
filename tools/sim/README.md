@@ -10,6 +10,13 @@ Server (Ubuntu 24.04 + Ondrej php8.4-fpm) jaisi **asli** condition bana kar doct
   seeders, asli `alphacp:admin-password` command. PHP 8.4 = php-wasm (`@php-wasm/cli`).
 * Sirf `systemctl` aur `curl` stub hain (sandbox me systemd/nginx nahi chalta).
 
+Agent provisioning (no sudo, php-wasm):
+
+```bash
+bash tools/sim/provision-sim.sh          # account create/suspend/terminate/rollback + agent task suite
+bash tools/sim/backup-tar-sim.sh          # real GNU tar create/list/extract + symlink/hash smoke test
+```
+
 Chalana (sudo chahiye, sirf throwaway sandbox/container me — `/usr/local/alphacp` banata hai):
 
 ```bash

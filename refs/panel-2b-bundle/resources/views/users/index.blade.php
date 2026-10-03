@@ -1,11 +1,11 @@
 @extends('layouts.panel')
 
 @section('title', 'User Manager')
-@section('subtitle', 'Panel logins (hosting ACCOUNTS Step 3 me aayenge)')
+@section('subtitle', 'Panel logins — hosting accounts alag page par hain (Accounts)')
 
 @section('actions')
     @can('users.manage')
-        <a class="btn small" href="{{ route('users.create') }}">+ Naya user</a>
+        <a class="btn small" href="{{ route('users.create') }}">+ New user</a>
     @endcan
 @endsection
 
@@ -21,7 +21,7 @@
                     <td><span class="badge {{ $user->isRoot() ? 'red' : 'blue' }}">{{ $user->role?->name }}</span></td>
                     <td><span class="badge {{ $user->status === 'active' ? 'green' : 'amber' }}">{{ $user->status }}</span></td>
                     <td>{!! $user->two_factor_enabled ? '<span class="badge green">ON</span>' : '<span class="badge">OFF</span>' !!}</td>
-                    <td class="muted">{{ $user->last_login_at?->diffForHumans() ?? 'kabhi nahi' }}</td>
+                    <td class="muted">{{ $user->last_login_at?->diffForHumans() ?? 'never' }}</td>
                     <td class="right">
                         @can('users.manage')
                             <a class="btn small ghost" href="{{ route('users.edit', $user) }}">edit</a>
@@ -29,7 +29,7 @@
                     </td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="empty">Koi user nahi.</td></tr>
+                <tr><td colspan="7" class="empty">No users yet.</td></tr>
             @endforelse
         </table>
     </div>
@@ -39,7 +39,7 @@
     <h3>🎭 Roles (RBAC)</h3>
     <div class="table-wrap">
         <table>
-            <tr><th>Role</th><th>Level</th><th>Kis ke liye</th><th>Users</th></tr>
+            <tr><th>Role</th><th>Level</th><th>Audience</th><th>Users</th></tr>
             @foreach ($roles as $role)
                 <tr>
                     <td class="mono">{{ $role->name }}</td>

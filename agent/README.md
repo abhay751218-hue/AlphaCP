@@ -1,8 +1,8 @@
 # agent/ — paneld (Privileged Task Agent)
 
 **Language:** PHP 8.3 CLI (long-running via systemd) · **Runs as:** `root` · **Interface:** none (DB queue only)
-**Status:** ✅ **Implemented (Step 2A, v0.1.0)** — installed by `installer/step2-install.sh`, tested end-to-end
-(install → migrate → queue → result). 3 readonly tasks ship today: `agent.ping`, `system.info`, `service.status`.
+**Status:** ✅ **v0.2.0 (Step 3)** — readonly health tasks plus account create/suspend/unsuspend/terminate/setQuota
+with PathGuard + compensating rollback. Install/update via `panel-update.sh` (agent tarball) on an existing server.
 
 ## What it is
 The ONLY component allowed to perform privileged operations (useradd, config writes, service
