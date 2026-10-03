@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 9 Nameserver Selection (2 Oct)** — WHM nameserver via `dns.nameserver`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.54.0**, agent **0.47.0**.
+  Tests: panel **339/0**, provision-sim **78/78**, update-sim **154/154** (pin in B).
+  Deploy via `panel-update.sh` 0.54.0.
 - **Step 9 Synchronize DNS Records (2 Oct)** — WHM sync via `dns.sync`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.53.0**, agent **0.46.0**.
   Tests: panel **333/0**, provision-sim **77/77**, update-sim **152/152** (pin in B).

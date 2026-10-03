@@ -284,7 +284,7 @@
 | # | WHM tool | Step | Status |
 |---|---|---|---|
 | 171 | Service Manager (start/stop/enable) | S2B |S2B|🟡 2B-2| 172 | Restart: DNS / HTTP / IMAP / Mail / SQL / SSH / PHP-FPM / Mailing List | S2B | 🟡 2B |
-| 173 | Exim / FTP Server Selection / Mailserver / Nameserver Selection | S7·S9 | ⏳ |
+| 173 | Exim / FTP Server Selection / Mailserver / Nameserver Selection | S7·S9 | 🟡 (WHM nameserver JSON; Exim/FTP/mailserver later) |
 | 174 | Manage Service SSL Certificates | S5 | ⏳ S5 |
 | 175 | cPanel Web Disk & Web Services Configuration | S6 | ⏳ S6 |
 

@@ -174,6 +174,7 @@ final class ModuleCatalog
                     ['name' => 'Set Zone TTL', 'step' => 'S9',  'status' => 'live', 'route' => 'zone-ttl.index'],
                     ['name' => 'Setup/Edit Domain Forwarding', 'step' => 'S9',  'status' => 'live', 'route' => 'domain-forward.index'],
                     ['name' => 'Synchronize DNS Records', 'step' => 'S9',  'status' => 'live', 'route' => 'dns-sync.index'],
+                    ['name' => 'Nameserver Selection', 'step' => 'S9',  'status' => 'live', 'route' => 'nameserver-selection.index'],
                     ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'step'],
                     ['name' => 'Backup Config',       'step' => 'S10', 'status' => 'step'],
                     ['name' => 'Security Center',     'step' => 'S13', 'status' => 'step'],
