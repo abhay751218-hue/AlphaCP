@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — SERVER → GITHUB SYNC  v1.2
+#  AlphaCP — SERVER → GITHUB SYNC  v1.3
+#  v1.3: prune ab sirf ACP_HOME ke khaas secret/heavy folders par (`license/`, `etc`, `var`,
+#        `releases`, `certs`) — pehle `-name backup`/`-name ssl`/`-name private` global tha,
+#        isliye panel ke sahi code folders (`resources/views/backup`, `resources/views/ssl`)
+#        snapshot se chhoot jaate the. PEM detection ab poora key body dekhta hai, isliye
+#        test-fixtures (`-----BEGIN PRIVATE KEY-----` ek chhoti line ke saath) skip nahi hote,
+#        par asli private keys (lambi base64 lines) pehle jaisa hi block hote hain.
 #  v1.2: `alphacp-sync get <commit> <path> <out> [sha256]` — deploy key se repo ki file laata hai
 #        (PRIVATE repo me bhi chalta hai; raw.githubusercontent private repo par 404 deta hai)
 #  v1.1: releases/ (purane backup/failed panel copies) snapshot me nahi — sirf naam STATE.md me;
@@ -25,7 +31,7 @@
 # =============================================================================
 set -uo pipefail
 
-SYNC_VERSION="1.2"
+SYNC_VERSION="1.3"
 REPO_SLUG="${SYNC_REPO_SLUG:-abhay751218-hue/AlphaCP}"
 BRANCH="${SYNC_BRANCH:-main}"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
@@ -252,8 +258,10 @@ copy_tree() {  # $1 = source dir; secrets/heavy cheezein prune
   local src="$1"
   ( cd / && find "${src#/}" \
       \( -name vendor -o -name node_modules -o -name storage -o -name .git -o -name cache -o -name logs -o -name log \
-         -o -name tmp -o -name backups -o -name backup -o -path "${ACP_HOME#/}/etc" -o -path "${ACP_HOME#/}/var" -o -path "${ACP_HOME#/}/releases" \
-         -o -name ssl -o -name certs -o -name keys -o -name private \) -prune -o \
+         -o -name tmp -o -name backups \
+         -o -path "${ACP_HOME#/}/etc" -o -path "${ACP_HOME#/}/var" -o -path "${ACP_HOME#/}/releases" \
+         -o -path "${ACP_HOME#/}/license" -o -path "${ACP_HOME#/}/certs" -o -path "${ACP_HOME#/}/keys" \
+         -o -path "${ACP_HOME#/}/private" -o -path "${ACP_HOME#/}/panel/storage" \) -prune -o \
       -type f \! \( -name '.env' -o -name '.env.*' -o -name '*.sqlite' -o -name '*.sqlite3' -o -name '*.db' -o -name '*.pem' \
          -o -name '*.key' -o -name '*.crt' -o -name '*.p12' -o -name '*.pfx' -o -name 'id_*' -o -name '*.log' -o -name '*.bak*' \
          -o -name '*.disabled-*' -o -iname '*secret*' -o -iname '*private*' -o -name '*.tar*' -o -name '*.zip' -o -name '*.gz' -o -name '*.sock' \) \
@@ -279,7 +287,9 @@ import os, re, sys
 root, secf, skipf = sys.argv[1], sys.argv[2], sys.argv[3]
 secrets = [l.rstrip("\n") for l in open(secf, encoding="utf-8", errors="ignore") if len(l.strip()) >= 8]
 pat = re.compile(
-    r"-----BEGIN [A-Z ]*PRIVATE KEY-----"
+    # Asli private key = PEM header + uske aas-paas lambi base64 body (4000+ char real keys).
+    # Test-fixtures me sirf chhoti dummy line hoti hai ("LE-fake"), wo snapshot me jaani chahiye.
+    r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]{0,120}?[A-Za-z0-9+/=]{40,}"
     r"|APP_KEY=base64:[A-Za-z0-9+/=]{20,}"
     r"|\bAKIA[0-9A-Z]{16}\b"
     r"|\bgh[pousr]_[A-Za-z0-9]{30,}"

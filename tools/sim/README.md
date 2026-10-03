@@ -15,6 +15,8 @@ Agent provisioning (no sudo, php-wasm):
 ```bash
 bash tools/sim/provision-sim.sh          # account create/suspend/terminate/rollback + agent task suite
 bash tools/sim/backup-tar-sim.sh          # real GNU tar create/list/extract + symlink/hash smoke test
+sudo bash tools/sim/sync-sim.sh           # alphacp-sync v1.3 server -> GitHub snapshot tests (66 checks)
+sudo bash tools/sim/update-sim.sh         # panel-update 0.65.0 tests (185 checks)
 ```
 
 Chalana (sudo chahiye, sirf throwaway sandbox/container me — `/usr/local/alphacp` banata hai):

@@ -4,6 +4,19 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Fixed
+- **alphacp-sync v1.3 — snapshot ab poora hai (3 Oct)** — server → GitHub snapshot do jagah se
+  adhoora ban raha tha: (1) prune list me `-name backup` / `-name ssl` / `-name private` **global**
+  tha, isliye panel ke asli code folders `resources/views/backup/` aur `resources/views/ssl/`
+  chup-chaap skip ho jaate the; ab prune sirf ACP_HOME ke khaas folders (`etc/`, `var/`,
+  `releases/`, `license/`, `certs/`, `keys/`, `private/`, `panel/storage/`) par lagta hai.
+  (2) PEM pattern sirf header line dekhta tha, isliye test-fixtures (jaise `AccountOs.php` ka
+  "private key" reject-check, `FakeCommandExecutor`, `SshTest`) secret samajh kar snapshot se
+  hat jaate the — ab poora key body (40+ base64 chars) dekha jata hai: asli private key block
+  hoti hai, dummy fixture nahi. `tools/sim/sync-sim.sh` me 6 nayi checks (fixture PEM +
+  backup/ssl views push hone chahiye, asli-jaisa PEM block hona chahiye) → **66/66**.
+  Sync-sim ka `get` ref-fallback bhi `rev-parse --verify --quiet` se fix hua (missing ref par
+  purana `rev-parse` apna argument stdout par chhap deta tha, jisse `get` galat SHA leta tha).
 ### Added
 - **S10 actual home archive slice (3 Oct)** — panel **0.65.0**, agent **0.58.0**, deployed via updater 0.65.0 on 3 Oct. Server snapshot confirms HTTP **200**. Creates a real GNU tar.gz of an AlphaCP account home, verifies tar readability + SHA-256, atomically publishes a root-owned archive/manifest, and offers an account-scoped, checksum-verified download. PHP-FPM can read the dedicated backup subtree; the updater does not widen access to the AlphaCP root or `var/`. `backup.create` settings, mail/MySQL archives, scheduled/remote backup, restore/extraction, and cPanel transfer/import are still not implemented; S10 remains partial. Final verification: panel **401 pass / 0 fail / 6 wasm-skip**, agent/provision-sim **91/91**, update-sim **185/185**, GNU tar round-trip/symlink check PASS. The customer archive/download workflow has not yet been live end-to-end tested.
 - **Step 10 Review Transfers and Restores (3 Oct)** — WHM username+status via `backup.review`
