@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.54.0 — Step 9: Nameserver Selection
+### panel-update 0.55.0 — Step 10: Backup
 ```bash
-sudo alphacp-sync get 76efb34d8cf9ff30d43a8e1f3fedc6b38cd21cb9 installer/panel-update.sh /tmp/acp-panel-update-0.54.0.sh 1887a4372375c3b0617098d8c97f72ea1b754424c0bb4c3090cec68a54587b88 && sudo bash /tmp/acp-panel-update-0.54.0.sh
+sudo alphacp-sync get 8105811445fbb239c183c3d62bcdc2093b75a787 installer/panel-update.sh /tmp/acp-panel-update-0.55.0.sh 66361e45214fc7022bc7e5f016fafae3089530d2510e39dba0e93ecc8e80745e && sudo bash /tmp/acp-panel-update-0.55.0.sh
 ```
-- sha256: `1887a4372375c3b0617098d8c97f72ea1b754424c0bb4c3090cec68a54587b88`
-- Expected: banner `updater 0.54.0` → agent **0.47.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Nameserver Selection (software + ns1 + ns2 JSON). Hostile software/ns fail closed. No BIND rewrite.
-- Customer cPanel does not see this tile.
+- sha256: `66361e45214fc7022bc7e5f016fafae3089530d2510e39dba0e93ecc8e80745e`
+- Expected: banner `updater 0.55.0` → agent **0.48.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Backup (kind home/mail/mysql JSON). Hostile kind/path fail closed. No tar/shell.
+- Root WHM does not see this tile (has Create Account).
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **339/0**, provision-sim **78/78**, update-sim **156/156**.
+- Test: panel-tests **345/0**, provision-sim **79/79**, update-sim **158/158**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.54.0 (`76efb34…`) → panel 0.54.0 + agent 0.47.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Nameserver Selection |
 | panel-update 0.53.0 (`439efc4…`) → panel 0.53.0 + agent 0.46.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Synchronize DNS Records |
 | panel-update 0.52.0 (`2ba0e82…`) → panel 0.52.0 + agent 0.45.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Setup/Edit Domain Forwarding |
 | panel-update 0.51.0 (`60bdca4…`) → panel 0.51.0 + agent 0.44.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Set Zone TTL |
