@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.60.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.60.0   (.env)
-AGENT_VERSION : 0.53.0
+panel code    : 0.61.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.61.0   (.env)
+AGENT_VERSION : 0.54.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -92,15 +92,16 @@ agent-backup-20261003085649
 agent-backup-20261003092937
 agent-backup-20261003101439
 agent-backup-20261003104840
-panel-backup-20261003092937
+agent-backup-20261003111749
 panel-backup-20261003101439
 panel-backup-20261003104840
+panel-backup-20261003111749
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -193,6 +194,7 @@ alphacp:admin-password
   2026_09_29_000047_create_backup_configs_table   [46] Ran
   2026_09_29_000048_create_backup_restorations_table   [47] Ran
   2026_09_29_000049_create_backup_user_selections_table   [48] Ran
+  2026_09_29_000050_create_file_directory_restorations_table   [49] Ran
 ```
 
 ## Routes (web)
@@ -269,6 +271,8 @@ POST               /encryption                                   encryption.stor
 DELETE             /encryption/{encryption_key}                  encryption.destroy
 GET|HEAD           /errorpages                                   errorpages.index
 POST               /errorpages                                   errorpages.update
+GET|HEAD           /file-directory-restoration                   file-directory-restoration.index
+POST               /file-directory-restoration                   file-directory-restoration.store
 GET|HEAD           /file-restoration                             file-restoration.index
 POST               /file-restoration                             file-restoration.store
 GET|HEAD           /files                                        files.index
