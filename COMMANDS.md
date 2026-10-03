@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.61.0 — Step 10: File and Directory Restoration
+### panel-update 0.62.0 — Step 10: Transfer Tool
 ```bash
-sudo alphacp-sync get 0b4919de4dc575ca9e0147c26e1b60b7af04b236 installer/panel-update.sh /tmp/acp-panel-update-0.61.0.sh 5e164a250cbb597da18c099b41245be7128e0d25f76533321611e677d87e4e9c && sudo bash /tmp/acp-panel-update-0.61.0.sh
+sudo alphacp-sync get 16f2c24b407a9e42aac9b24602a1e942e6868a9e installer/panel-update.sh /tmp/acp-panel-update-0.62.0.sh 074b3eca124c5819b0e5c4412a6bc9853373188221a7ccdc98fc9d6507466131 && sudo bash /tmp/acp-panel-update-0.62.0.sh
 ```
-- sha256: `5e164a250cbb597da18c099b41245be7128e0d25f76533321611e677d87e4e9c`
-- Expected: banner `updater 0.61.0` → agent **0.54.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Root WHM: File and Directory Restoration (username+path JSON). Hostile path fail closed. No tar/shell.
+- sha256: `074b3eca124c5819b0e5c4412a6bc9853373188221a7ccdc98fc9d6507466131`
+- Expected: banner `updater 0.62.0` → agent **0.55.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Root WHM: Transfer Tool (username+source FQDN JSON). Hostile source fail closed. No tar/rsync/shell.
 - Customer cPanel does not see this tile (has File Restoration).
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **381/0**, provision-sim **85/85**, update-sim **170/170**.
+- Test: panel-tests **387/0**, provision-sim **86/86**, update-sim **172/172**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.61.0 (`0b4919d…`) → panel 0.61.0 + agent 0.54.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, File and Directory Restoration |
 | panel-update 0.60.0 (`65eb642…`) → panel 0.60.0 + agent 0.53.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup User Selection |
 | panel-update 0.59.0 (`56d98f5…`) → panel 0.59.0 + agent 0.52.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup Restoration |
 | panel-update 0.58.0 (`98da0f4…`) → panel 0.58.0 + agent 0.51.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup Config |
