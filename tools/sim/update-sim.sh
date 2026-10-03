@@ -9,8 +9,8 @@
 #            systemctl: doctor-sim ka stub
 #  U1 normal update 0.3.0 -> latest artifact      U2 sha256 mismatch -> kuch nahi chhedta
 #  U3 health fail -> auto rollback       U4 backups prune (KEEP=1) + sync-tool checksum fail
-#  U1 me alphacp-sync v1.0 -> v1.2 upgrade + sync hook bhi
-#  U5 private repo (raw 404) + sync v1.2 -> get      U6 private + purana sync -> saaf error
+#  U1 me alphacp-sync v1.0 -> v1.3 upgrade + sync hook bhi
+#  U5 private repo (raw 404) + sync v1.3 -> get      U6 private + purana sync -> saaf error
 # =============================================================================
 set -uo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -114,10 +114,10 @@ run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
 chk "banner 'updater 0.65.0'" grep -q "updater 0.65.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
-chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
+chk "alphacp-sync v1.0 -> v1.3 upgrade hua" grep -q '^SYNC_VERSION="1.3"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
 chk "sync tool 0755" test "$(stat -c %a "${SYNC_BIN}")" = 755
-chk "'alphacp-sync v1.2 install hua' dikha" grep -q "alphacp-sync v1.2 install hua" "${U}/update-U1.out"
+chk "'alphacp-sync v1.3 install hua' dikha" grep -q "alphacp-sync v1.3 install hua" "${U}/update-U1.out"
 chk "'Update complete'" grep -q "UPDATE COMPLETE" "${U}/update-U1.out"
 chk "download commit-pinned URL se (branch nahi)" grep -qE "download https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/[0-9a-f]{40}/" "${U}/state/calls.log"
 chk "MANIFEST version = ${ART_VER}" test "$(panel_ver)" = "${ART_VER}"
@@ -308,7 +308,7 @@ chk "HTTP 200" test "$(http_now)" = 200
 chk "storage preserve hua (marker)" grep -q "${MARK}" "${PANEL}/storage/app/private/marker.txt"
 
 # ================================================================= U5
-echo; echo "=== U5: repo PRIVATE (raw URL 404) + sync v1.2 -> 'get' se update ==="
+echo; echo "=== U5: repo PRIVATE (raw URL 404) + sync v1.3 -> 'get' se update ==="
 sleep 1; install_new_sync; touch "${U}/state/private"; echo "U5-marker" > "${PANEL}/storage/app/private/u5.txt"
 run_update U5; rc=$?
 chk "exit 0" test ${rc} -eq 0
@@ -323,7 +323,7 @@ echo; echo "=== U6: repo PRIVATE + purana sync v1.0 (no get) -> saaf error, pane
 sleep 1; install_old_sync; B6="$(nbackups)"
 run_update U6; rc=$?
 chk "exit != 0" test ${rc} -ne 0
-chk "message: alphacp-sync v1.2 chahiye" grep -q "alphacp-sync v1.2 chahiye" "${U}/update-U6.out"
+chk "message: alphacp-sync v1.2+ chahiye" grep -q "alphacp-sync v1.2+ chahiye" "${U}/update-U6.out"
 chk "koi naya backup/swap nahi" test "$(nbackups)" -eq "${B6}"
 chk "HTTP 200 abhi bhi" test "$(http_now)" = 200
 rm -f "${U}/state/private"

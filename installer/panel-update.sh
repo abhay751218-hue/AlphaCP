@@ -158,9 +158,9 @@ AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-8b1ca1e3ac735dcd5ff103d7f07b8344489ca3b
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
 AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-b30f340806b1eed18ed0e58a50bc1ff0f39b612f6762851f772f350e916b1083}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
-SYNC_TOOL_VERSION="1.2"
-SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
-SYNC_TOOL_SHA256="${ACP_SYNC_TOOL_SHA256:-c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852}"
+SYNC_TOOL_VERSION="1.3"
+SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-efc0979416f8898b926b8b616739e79282427978}"
+SYNC_TOOL_SHA256="${ACP_SYNC_TOOL_SHA256:-0d50f25bb832cc85a10af5e33fe4723ca5213870033f336010c8d6d001b4ecca}"
 SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
 
 # repo file laao: $1 commit  $2 path  $3 out  $4 sha256
@@ -284,7 +284,7 @@ if [[ -n "${BUNDLE_URL}" ]]; then
   FETCH_VIA="custom URL"
 else
   fetch_repo_file "${BUNDLE_COMMIT}" "${BUNDLE_PATH}" "${TMP_DIR}/panel-code.tar.gz" "${BUNDLE_SHA256}" \
-    || die "artifact download fail — repo private hai to pehle alphacp-sync v1.2 chahiye (COMMANDS.md)"
+    || die "artifact download fail — repo private hai to pehle alphacp-sync v1.2+ chahiye (COMMANDS.md)"
 fi
 info "artifact source: ${FETCH_VIA}"
 
@@ -296,7 +296,7 @@ tar tzf "${TMP_DIR}/panel-code.tar.gz" >/dev/null 2>&1 || die "artifact corrupt"
 
 info "agent ${AGENT_VERSION} download ho raha hai"
 fetch_repo_file "${AGENT_COMMIT}" "${AGENT_PATH}" "${TMP_DIR}/agent.tar.gz" "${AGENT_SHA256}" \
-  || die "agent artifact download fail — repo private hai to pehle alphacp-sync v1.2 chahiye (COMMANDS.md)"
+  || die "agent artifact download fail — repo private hai to pehle alphacp-sync v1.2+ chahiye (COMMANDS.md)"
 AGENT_ACTUAL="$(sha256sum "${TMP_DIR}/agent.tar.gz" | awk '{print $1}')"
 [[ "${AGENT_ACTUAL}" == "${AGENT_SHA256}" ]] \
   || die "agent checksum mismatch: got ${AGENT_ACTUAL}, expected ${AGENT_SHA256}"
