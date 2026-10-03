@@ -14,20 +14,22 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.57.0 — Step 10: File Restoration
+### panel-update 0.58.0 — Step 10: Backup Configuration (WHM)
 ```bash
-sudo alphacp-sync get 1c769fe1e89062ae7b5d0a9751e76579e6194e7f installer/panel-update.sh /tmp/acp-panel-update-0.57.0.sh 7943d1a9153354602936be95db4202d3909d27b856bd5571b2fda150a3db5e47 && sudo bash /tmp/acp-panel-update-0.57.0.sh
+sudo alphacp-sync get b38b1ea3be49544a9582f1ca4bbda858106b79ff installer/panel-update.sh /tmp/acp-panel-update-0.58.0.sh dfce085e09262e06971c68cf36b2de19d9becfea8a52c4c3119c7677e30f6fc6 && sudo bash /tmp/acp-panel-update-0.58.0.sh
 ```
-- sha256: `7943d1a9153354602936be95db4202d3909d27b856bd5571b2fda150a3db5e47`
-- Expected: banner `updater 0.57.0` → agent **0.50.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: File Restoration (relative path JSON). Hostile path fail closed. No tar/shell.
-- Root WHM does not see this tile (has Create Account).
-- Trial/password/APP_KEY unchanged.
-- Test: panel-tests **357/0**, provision-sim **81/81**, update-sim **162/162**.
+- sha256: `dfce085e09262e06971c68cf36b2de19d9becfea8a52c4c3119c7677e30f6fc6`
+- Expected: banner `updater 0.58.0` → agent **0.51.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM page: `/backup-configuration` (Backup Config tile) — schedule, retention days, destination
+  (local/remote + host/user/relative path) `/usr/local/alphacp/etc/backup/config.json` me JSON.
+  No tar/shell; hostile pipe/path fail closed. Customer/mail ko ye page 403 deta hai.
+- Trial/password/APP_KEY/customer sites unchanged.
+- Test: panel-tests **365/0**, provision-sim **82/82**, update-sim **164/164** (private-repo `get` bhi).
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.57.0 (`1c769fe…`) → panel 0.57.0 + agent 0.50.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, File Restoration |
 | panel-update 0.56.0 (`90314bf…`) → panel 0.56.0 + agent 0.49.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup Wizard |
 | panel-update 0.55.0 (`8105811…`) → panel 0.55.0 + agent 0.48.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup |
 | panel-update 0.54.0 (`76efb34…`) → panel 0.54.0 + agent 0.47.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Nameserver Selection |
@@ -99,14 +101,17 @@ curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/da3539029d1
 - Dobara chalana safe hai (password dobara nahi badalta, drop-in dobara nahi banta).
 
 ## 🔁 Update deploy ka tareeka (aage har update ke liye)
-Har naye feature/fix ke saath yahan ek nayi row aayegi:
-`curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/<COMMIT>/<script> -o /tmp/<name>-<version>.sh && sudo bash /tmp/<name>-<version>.sh`
+Har naye feature/fix ke saath yahan ek nayi row aayegi (commit-pinned, sha256-verified):
+```bash
+sudo alphacp-sync get <COMMIT-40-char> installer/panel-update.sh /tmp/acp-panel-update-<ver>.sh <SHA256> && sudo bash /tmp/acp-panel-update-<ver>.sh
+```
 
 ## ❌ Superseded — mat chalao
 | Purani command | Kyun |
 |---|---|
 | `arena/01a0ea0d-alphacp/installer/panel-update.sh` (updater 0.1.0, panel 0.3.1) | chal chuka (S2C deployed); ab 0.2.1 → 0.3.2 |
 | `1d61cb8…/installer/panel-update.sh` (updater 0.2.0) | kabhi diya nahi gaya; 0.2.1 use karo |
+| panel-update 0.57.0 (`1c769fe…`, sha `7943d1a9…`) | chal chuka (File Restoration live); ab 0.58.0 chalao |
 | paste.rs/G72oK (doctor v1.6) | v1.7 me cwd bug fix + security step |
 | paste.rs/pnV7U, LxbJT, vbVD9, wsPmr (doctor v1.5–v1.1) | superseded |
 | paste.rs/0r1Mi, VD0Px, vVdFC, EPW3b (installer v0.3.3–v0.3.6) | panel install ho chuka hai; v0.3.7 aayega |
