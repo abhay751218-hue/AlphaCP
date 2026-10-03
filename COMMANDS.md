@@ -12,22 +12,23 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ Abhi chalani hai (NEXT STEP)
+## ✅ Ready for operator review (NOT deployed by this work)
 
-### panel-update 0.63.0 — Step 10: Transfer or Restore a cPanel Account
+### panel-update 0.65.0 — S10: verified home archive + account-scoped download
 ```bash
-sudo alphacp-sync get 4c1195b392be676119c2d2c04ea54c3d25c344a6 installer/panel-update.sh /tmp/acp-panel-update-0.63.0.sh d71abd2955c9d23ba545ed61c57d92771f77301c76432a0c2d5ce59573406432 && sudo bash /tmp/acp-panel-update-0.63.0.sh
+sudo alphacp-sync get 491c62966025ba8a251a9bb0a72a5c7071abed2d installer/panel-update.sh /tmp/acp-panel-update-0.65.0.sh 2e77e8f9ee58e5ab9c58595edbe3d7193b63dc8d6125432b019ec12cf879aec5 && sudo bash /tmp/acp-panel-update-0.65.0.sh
 ```
-- sha256: `d71abd2955c9d23ba545ed61c57d92771f77301c76432a0c2d5ce59573406432`
-- Expected: banner `updater 0.63.0` → agent **0.56.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Root WHM: Transfer or Restore a cPanel Account (username+action transfer/restore JSON). Hostile action/username fail closed. No tar/rsync/shell.
-- Customer cPanel does not see this tile (has File Restoration).
-- Trial/password/APP_KEY unchanged.
-- Test: panel-tests **393/0**, provision-sim **87/87**, update-sim **174/174**.
+- Updater SHA-256: `2e77e8f9ee58e5ab9c58595edbe3d7193b63dc8d6125432b019ec12cf879aec5`.
+- Bundles pinned to commit `8b1ca1e3ac735dcd5ff103d7f07b8344489ca3b7`: panel SHA-256 `2e0310c4eb946353401bbb992ed39e987a4f10e8986ec5621f6b828f699cbf0e`; agent SHA-256 `b30f340806b1eed18ed0e58a50bc1ff0f39b612f6762851f772f350e916b1083`.
+- Expected: banner `updater 0.65.0` → panel **0.65.0** / agent **0.58.0** → `==> UPDATE COMPLETE ✅` → HTTP 200. Updater adds only `/usr/local/alphacp/backups` to the existing FPM `open_basedir` and tests that rollback restores the previous pool file.
+- This release provides **home files only**. Mail/MySQL exports, safe restore, schedules, remote storage, real cPanel transfer/import, and transfer/restore history remain incomplete; S10 is **not complete**.
+- Tests: panel **401 pass / 0 fail / 6 wasm-skip**, provision-sim **91/91**, update-sim **185/185**, GNU tar round-trip/symlink smoke test PASS.
+- Server snapshot still reports panel **0.63.0** / agent **0.56.0**. This command is recorded for review and has **not** been run against the live server.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.63.0 (`4c1195b…`) → panel 0.63.0 + agent 0.56.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer or Restore a cPanel Account |
 | panel-update 0.62.0 (`16f2c24…`) → panel 0.62.0 + agent 0.55.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer Tool |
 | panel-update 0.61.0 (`0b4919d…`) → panel 0.61.0 + agent 0.54.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, File and Directory Restoration |
 | panel-update 0.60.0 (`65eb642…`) → panel 0.60.0 + agent 0.53.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup User Selection |

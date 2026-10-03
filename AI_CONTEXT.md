@@ -4,7 +4,7 @@
 
 > **Purpose:** This file gives ANY AI assistant (or new developer) complete context to work on
 > this project safely. Keep it updated whenever architecture, conventions, or status change.
-> **Last updated:** 2026-09-28 (Step 0 complete)
+> **Last updated:** 2026-10-03 (S10 audit + verified archive and updater simulations)
 
 ---
 
@@ -26,11 +26,11 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **Step 5 — Indexes** 🟡 (panel 0.12.0 / agent 0.9.0; Error Pages deployed 0.11.0) |
-| Next task | Deploy 0.12.0 to dev-srv1; then MIME/handlers or S6 |
+| Phase | **S10 in progress** — source panel 0.65.0 / agent 0.58.0; server snapshot remains panel 0.63.0 / agent 0.56.0 |
+| Next task | Close pre-S10 real-service gaps (S5 per-domain PHP; S7 Exim/Dovecot; S8 MariaDB provisioning/SSO; S9 BIND), then finish S10 restore/schedule/remote/transfer/import/history; do not advance to later steps before those gates pass |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
-| Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor + license client/trial |
-| Blocking issues | PHP/Laravel test execution still needs a PHP 8.3+ build environment; server acceptance of new S2C bundle pending |
+| Code written so far | paneld + Laravel 13 panel; S10 JSON configuration slices plus a real SHA-256-verified home archive and account-scoped download |
+| Blocking issues | S7 mail and S8 database backends are still configuration/JSON layers; S9 BIND writes are pending. Full cPanel parity and complete multi-service backups are not yet achieved. PHP tests use php-wasm sandbox; live browser acceptance/deploy pending. |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 

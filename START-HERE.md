@@ -20,7 +20,7 @@
 | Path | Kya |
 |---|---|
 | **`refs/panel-2b-bundle/`** | ⭐ **Panel ka SOURCE (Laravel 13.33.0)** — login, RBAC, 2FA, **license + 15-day trial** (`app/Support/License/`, design: `docs/modules/license.md`), `PasswordGenerator`. Panel badalna ho to yahin badlo. |
-| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Server par yahi deploy hota hai. Latest: **0.3.2**. |
+| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Latest source artifact: **0.65.0** (live server snapshot is still 0.63.0). |
 | `artifacts/panel-bundle-0.3.0.tar.gz` | Purana bundle **vendor/ ke saath** — sandbox tests isi ka vendor use karte hain (composer.lock same). |
 | `server-snapshot/files/usr/local/alphacp/…` | **Server par jo ABHI deployed hai** (alphacp-sync se). Source se mismatch ho to server = sach; farq samjho phir source theek karo. |
 | `server-snapshot/files/etc/...`, `server-snapshot/db-schema.sql` | nginx vhost, php-fpm pool, systemd drop-ins; DB structure (data nahi) |
@@ -54,9 +54,10 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 ## 4b. Tests (sab sandbox me chalte hain — system PHP/MySQL ki zaroorat nahi)
 | Command | Kya test karta hai | Last result |
 |---|---|---|
-| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **393 pass, 0 fail, 6 wasm-skip** (0.63.0) |
-| `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy/usage/ssh/mail/forward/autorespond/catchall/filter/deliverability/spam/list/routing/track/gfilter/encrypt/boxtrapper/calendar/mail.usage/webmail/db.set/db.phpmyadmin/db.remote/dns.zone/dns.dynamic/dns.track/dns.hostname/dns.templates/mail.globalrouting/dns.nsreport/dns.park/dns.cleanup/dns.ttl/dns.forward/dns.sync/dns.nameserver/backup.create/backup.wizard/backup.restore/backup.config/backup.restoration/backup.users/backup.filedir/backup.transfer/backup.cpanel tasks | **87/87** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.63.0: panel 0.63.0 + agent 0.56.0, sha mismatch, rollback, backup prune, sync-tool, **private repo (get)** | **174/174** |
+| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — panel 0.65.0 artifact | **401 pass, 0 fail, 6 wasm-skip** |
+| `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy/usage/ssh/mail/forward/autorespond/catchall/filter/deliverability/spam/list/routing/track/gfilter/encrypt/boxtrapper/calendar/mail.usage/webmail/db.set/db.phpmyadmin/db.remote/dns.zone/dns.dynamic/dns.track/dns.hostname/dns.templates/mail.globalrouting/dns.nsreport/dns.park/dns.cleanup/dns.ttl/dns.forward/dns.sync/dns.nameserver/backup.create/backup.archive/backup.wizard/backup.restore/backup.config/backup.restoration/backup.users/backup.filedir/backup.transfer/backup.cpanel/backup.review tasks | **91/91** |
+| `bash tools/sim/backup-tar-sim.sh` | Native GNU tar create/list/extract, symlink preservation, and SHA-256 smoke test | **PASS** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.65.0: panel 0.65.0 + agent 0.58.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)** | **185/185** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 
@@ -79,14 +80,10 @@ Real server (PHP 8.4 FPM) par poora suite: `cd /usr/local/alphacp/panel && sudo 
 unka kaam PR se `main` me merge karo (29 Sep: `arena/01a0ea0d-alphacp` ka S2C kaam PR #1 me merge hua).
 
 ## 5. Abhi kahan hain (roadmap position)
-- Step 0 → 2B (panel + login + RBAC + 2FA + password change) ✅
-- Step 2C (license + 15-day trial) 🟡 — **panel client + offline trial server par deployed (0.3.1)**;
-  apna license-server API (`license-server/`, activation/renewal) abhi baaki.
-- Server par abhi (snapshot se verified, 29 Sep): panel **0.3.1** (= source byte-for-byte), Laravel 13.33.0, PHP 8.4.26,
-  MariaDB 10.11, nginx (8090) + Apache (80/443), bind, spamd, redis, fail2ban, paneld.
-- 29 Sep 00:17Z: panel **0.3.2** + alphacp-sync v1.1 deployed (updater 0.2.1) ✅. Trial expiry 13 Oct.
-- Next command: alphacp-sync **v1.2** (private repo support) → phir user repo PRIVATE karega (`COMMANDS.md`).
-- **Step 3 🟡** — provisioning engine repo me hai (panel **0.4.0**, agent **0.2.0**): Accounts page +
-  paneld tasks with rollback. Server deploy `COMMANDS.md` ki next command se. Uske baad S4 Packages.
+- Step 0–9 ke UI/config slices repo me hain; kuch host backends abhi JSON-only hain. `ROADMAP.md` me S7 mail, S8 database, aur S9 BIND gaps dekho.
+- `server-snapshot/STATE.md` ki latest committed state: server par panel **0.63.0**, agent **0.56.0**, Laravel 13.33.0, PHP 8.4.26, MariaDB 10.11; HTTP 200.
+- Feature branch me S10 ka panel **0.65.0** / agent **0.58.0** source hai. Isme real home-directory `.tar.gz` create + checksum-verified customer download hai. Ye **abhi server par deploy nahi** hua.
+- S10 abhi **partial** hai: email/MySQL data backup (S7/S8 live backends par nirbhar), restore/extraction, scheduler, remote destination, real cPanel transfer/import abhi baaki. Checklist me JSON-only rows ko ✅ na samjho.
+- Deploy command aur tested commit/SHA ke liye `COMMANDS.md` dekho. Server par kuch chalane se pehle usme likhi **ek hi next command** follow karo.
 
-Latest status ke liye hamesha `server-snapshot/STATE.md` + `CHANGELOG.md` dekho.
+Latest server status ke liye hamesha `server-snapshot/STATE.md` dekho; repo implementation ke liye `CHANGELOG.md` + `docs/09-cpanel-parity-checklist.md`.

@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **S10 actual home archive slice (3 Oct)** — panel **0.65.0**, agent **0.58.0**. Creates a real GNU tar.gz of an AlphaCP account home, verifies tar readability + SHA-256, atomically publishes a root-owned archive/manifest, and offers an account-scoped, checksum-verified download. PHP-FPM can read the dedicated backup subtree; the updater does not widen access to the AlphaCP root or `var/`. `backup.create` settings, mail/MySQL archives, scheduled/remote backup, restore/extraction, and cPanel transfer/import are still not implemented; S10 remains partial. Final verification: panel **401 pass / 0 fail / 6 wasm-skip**, agent/provision-sim **91/91**, update-sim **185/185**, GNU tar round-trip/symlink check PASS. No live deployment was performed.
+- **Step 10 Review Transfers and Restores (3 Oct)** — WHM username+status via `backup.review`
+  (JSON; no tar/rsync/shell; pipe/path fail closed). Panel **0.64.0**, agent **0.57.0**.
+  Tests: panel **399/0**, provision-sim **88/88**, update-sim **176/176**.
+  Deploy via `panel-update.sh` 0.64.0.
 - **Step 10 Transfer or Restore a cPanel Account (3 Oct)** — WHM username+action via `backup.cpanel`
   (JSON; no tar/rsync/shell; pipe/path fail closed). Panel **0.63.0**, agent **0.56.0**.
   Tests: panel **393/0**, provision-sim **87/87**, update-sim **174/174** (pin in B).
