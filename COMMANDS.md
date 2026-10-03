@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.56.0 — Step 10: Backup Wizard
+### panel-update 0.57.0 — Step 10: File Restoration
 ```bash
-sudo alphacp-sync get 90314bff326ad92339706fcfd79a84ed9f03f44c installer/panel-update.sh /tmp/acp-panel-update-0.56.0.sh 5c9c82579245a68ce8ee2f653c02ae1a67c5a96fb5d55567e828408090828eea && sudo bash /tmp/acp-panel-update-0.56.0.sh
+sudo alphacp-sync get 1c769fe1e89062ae7b5d0a9751e76579e6194e7f installer/panel-update.sh /tmp/acp-panel-update-0.57.0.sh 7943d1a9153354602936be95db4202d3909d27b856bd5571b2fda150a3db5e47 && sudo bash /tmp/acp-panel-update-0.57.0.sh
 ```
-- sha256: `5c9c82579245a68ce8ee2f653c02ae1a67c5a96fb5d55567e828408090828eea`
-- Expected: banner `updater 0.56.0` → agent **0.49.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Backup Wizard (action backup/restore, scope full/home/mail/mysql JSON). Hostile action/scope fail closed. No tar/shell.
+- sha256: `7943d1a9153354602936be95db4202d3909d27b856bd5571b2fda150a3db5e47`
+- Expected: banner `updater 0.57.0` → agent **0.50.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: File Restoration (relative path JSON). Hostile path fail closed. No tar/shell.
 - Root WHM does not see this tile (has Create Account).
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **351/0**, provision-sim **80/80**, update-sim **160/160**.
+- Test: panel-tests **357/0**, provision-sim **81/81**, update-sim **162/162**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.56.0 (`90314bf…`) → panel 0.56.0 + agent 0.49.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup Wizard |
 | panel-update 0.55.0 (`8105811…`) → panel 0.55.0 + agent 0.48.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup |
 | panel-update 0.54.0 (`76efb34…`) → panel 0.54.0 + agent 0.47.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Nameserver Selection |
 | panel-update 0.53.0 (`439efc4…`) → panel 0.53.0 + agent 0.46.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Synchronize DNS Records |
