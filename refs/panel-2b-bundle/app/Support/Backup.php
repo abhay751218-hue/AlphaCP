@@ -24,6 +24,9 @@ final class Backup
     /** @var list<string> */
     public const MODES = ['full', 'partial', 'account'];
 
+    /** @var list<string> */
+    public const CPANEL_ACTIONS = ['transfer', 'restore'];
+
     public static function tryKind(string $kind): ?string
     {
         $kind = strtolower(trim($kind));
@@ -99,5 +102,15 @@ final class Backup
         }
 
         return $raw;
+    }
+
+    public static function tryCpanelAction(string $action): ?string
+    {
+        $action = strtolower(trim($action));
+        if (! in_array($action, self::CPANEL_ACTIONS, true)) {
+            return null;
+        }
+
+        return $action;
     }
 }

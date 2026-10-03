@@ -46,6 +46,7 @@ use App\Http\Controllers\BackupConfigController;
 use App\Http\Controllers\BackupRestorationController;
 use App\Http\Controllers\BackupUserSelectionController;
 use App\Http\Controllers\FileDirectoryRestorationController;
+use App\Http\Controllers\TransferRestoreController;
 use App\Http\Controllers\TransferToolController;
 use App\Http\Controllers\NameserverSelectionController;
 use App\Http\Controllers\MailingListsController;
@@ -409,6 +410,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('transfer-tool.index');
     Route::post('/transfer-tool', [TransferToolController::class, 'store'])
         ->middleware('perm:accounts.view')->name('transfer-tool.store');
+
+    Route::get('/transfer-restore', [TransferRestoreController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('transfer-restore.index');
+    Route::post('/transfer-restore', [TransferRestoreController::class, 'store'])
+        ->middleware('perm:accounts.view')->name('transfer-restore.store');
 
     Route::get('/ssh', [SshController::class, 'index'])
         ->middleware('perm:ssh.view')->name('ssh.index');
