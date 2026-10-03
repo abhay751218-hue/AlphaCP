@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.61.0  ·  default panel bundle 0.61.0  ·  agent 0.54.0  ·  alphacp-sync v1.2
+# updater 0.62.0  ·  default panel bundle 0.62.0  ·  agent 0.55.0  ·  alphacp-sync v1.2
+#
+# 0.62.0: Step 10 — panel 0.62.0 (Transfer Tool) + agent 0.55.0 (backup.transfer)
 #
 # 0.61.0: Step 10 — panel 0.61.0 (File and Directory Restoration) + agent 0.54.0 (backup.filedir)
 #
@@ -139,17 +141,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.61.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.61.0}"
+UPDATER_VERSION="0.62.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.62.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-b8eb9befd408ee9d8ff57bf60563843366664713}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-fcd9864cabbeab1a7ab66f984497668b82186757}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-2fcd67d86504cc01f8d89368c794091d182be1bf015b3f643d63aabeba2979d0}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.54.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-b8eb9befd408ee9d8ff57bf60563843366664713}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-a39764fca3c5b2938397d6ff67fcac4a43b32f5426f3a69bfc4dfbb018fd6e67}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.55.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-fcd9864cabbeab1a7ab66f984497668b82186757}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-0bce2dc77eb38cf5830ed014b8972caa946e7e7f97bd6f5a1985c5c380a6b113}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-5ff1552bf33877c36dff85002decdbf69dfa37e69a08bafb219641ec9f31140c}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
