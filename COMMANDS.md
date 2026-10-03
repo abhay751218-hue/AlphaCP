@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.53.0 — Step 9: Synchronize DNS Records
+### panel-update 0.54.0 — Step 9: Nameserver Selection
 ```bash
-sudo alphacp-sync get 439efc466b6d77391b94c2ef8f4b1f1816238357 installer/panel-update.sh /tmp/acp-panel-update-0.53.0.sh 7fac1fa931f72e7d755874c5393bb905d05106ad6675d864060cd08c3ff0061c && sudo bash /tmp/acp-panel-update-0.53.0.sh
+sudo alphacp-sync get 76efb34d8cf9ff30d43a8e1f3fedc6b38cd21cb9 installer/panel-update.sh /tmp/acp-panel-update-0.54.0.sh 1887a4372375c3b0617098d8c97f72ea1b754424c0bb4c3090cec68a54587b88 && sudo bash /tmp/acp-panel-update-0.54.0.sh
 ```
-- sha256: `7fac1fa931f72e7d755874c5393bb905d05106ad6675d864060cd08c3ff0061c`
-- Expected: banner `updater 0.53.0` → agent **0.46.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- WHM: Synchronize DNS Records (domain JSON). Hostile domain fail closed. No BIND rewrite.
+- sha256: `1887a4372375c3b0617098d8c97f72ea1b754424c0bb4c3090cec68a54587b88`
+- Expected: banner `updater 0.54.0` → agent **0.47.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- WHM: Nameserver Selection (software + ns1 + ns2 JSON). Hostile software/ns fail closed. No BIND rewrite.
 - Customer cPanel does not see this tile.
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **333/0**, provision-sim **77/77**, update-sim **154/154**.
+- Test: panel-tests **339/0**, provision-sim **78/78**, update-sim **156/156**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.53.0 (`439efc4…`) → panel 0.53.0 + agent 0.46.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Synchronize DNS Records |
 | panel-update 0.52.0 (`2ba0e82…`) → panel 0.52.0 + agent 0.45.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Setup/Edit Domain Forwarding |
 | panel-update 0.51.0 (`60bdca4…`) → panel 0.51.0 + agent 0.44.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Set Zone TTL |
 | panel-update 0.50.0 (`4154c83…`) → panel 0.50.0 + agent 0.43.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Perform a DNS Cleanup |
