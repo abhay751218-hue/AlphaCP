@@ -14,20 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### panel-update 0.55.0 — Step 10: Backup
+### panel-update 0.56.0 — Step 10: Backup Wizard
 ```bash
-sudo alphacp-sync get 8105811445fbb239c183c3d62bcdc2093b75a787 installer/panel-update.sh /tmp/acp-panel-update-0.55.0.sh 66361e45214fc7022bc7e5f016fafae3089530d2510e39dba0e93ecc8e80745e && sudo bash /tmp/acp-panel-update-0.55.0.sh
+sudo alphacp-sync get 90314bff326ad92339706fcfd79a84ed9f03f44c installer/panel-update.sh /tmp/acp-panel-update-0.56.0.sh 5c9c82579245a68ce8ee2f653c02ae1a67c5a96fb5d55567e828408090828eea && sudo bash /tmp/acp-panel-update-0.56.0.sh
 ```
-- sha256: `66361e45214fc7022bc7e5f016fafae3089530d2510e39dba0e93ecc8e80745e`
-- Expected: banner `updater 0.55.0` → agent **0.48.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- Customer cPanel: Backup (kind home/mail/mysql JSON). Hostile kind/path fail closed. No tar/shell.
+- sha256: `5c9c82579245a68ce8ee2f653c02ae1a67c5a96fb5d55567e828408090828eea`
+- Expected: banner `updater 0.56.0` → agent **0.49.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- Customer cPanel: Backup Wizard (action backup/restore, scope full/home/mail/mysql JSON). Hostile action/scope fail closed. No tar/shell.
 - Root WHM does not see this tile (has Create Account).
 - Trial/password/APP_KEY unchanged.
-- Test: panel-tests **345/0**, provision-sim **79/79**, update-sim **158/158**.
+- Test: panel-tests **351/0**, provision-sim **80/80**, update-sim **160/160**.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.55.0 (`8105811…`) → panel 0.55.0 + agent 0.48.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Backup |
 | panel-update 0.54.0 (`76efb34…`) → panel 0.54.0 + agent 0.47.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Nameserver Selection |
 | panel-update 0.53.0 (`439efc4…`) → panel 0.53.0 + agent 0.46.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Synchronize DNS Records |
 | panel-update 0.52.0 (`2ba0e82…`) → panel 0.52.0 + agent 0.45.0 | 2 Oct | ✅ UPDATE COMPLETE, HTTP 200, Setup/Edit Domain Forwarding |
