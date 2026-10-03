@@ -45,7 +45,7 @@
 | 5 | Web Disk | WebDAV drive | S6 | ⏳ S6 |
 | 6 | FTP Accounts | FTP users | S6 | ⏳ S6 |
 | 7 | FTP Connections | FTP session logs | S6 | ⏳ S6 |
-| 8 | Backup | Manual backup download | S10 | ⏳ S10 |
+| 8 | Backup | Manual backup download | S10 | ✅ (JSON jobs home/mail/mysql; tar later) |
 | 9 | Backup Wizard | Step-by-step backup/restore | S10 | ⏳ S10 |
 | 10 | File & Directory Restoration | Deleted file wapas | S10 | ⏳ S10 |
 | 11 | Git™ Version Control | Git deploy/repo | S6 | ⏳ S6 |

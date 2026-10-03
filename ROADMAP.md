@@ -15,7 +15,7 @@
 | **S7** | Email suite: mailboxes/quotas, forwarders, autoresponders, filters, spam/virus, deliverability (SPF/DKIM/DMARC), lists, webmail | 🟡 **through Webmail (0.35.0)** — virus/ClamAV later |
 | **S8** | Databases: create/manage, users, privileges, size limits, phpMyAdmin SSO, remote access | 🟡 **through Remote MySQL (0.39.0)** — users/SSO later |
 | **S9** | DNS: zone editor, templates, nameservers, cluster | 🟡 **through Nameserver Selection (0.54.0)** — BIND later |
-| **S10** | Backup/restore + schedules + remote destinations + **cPanel backup import** | ⏳ |
+| **S10** | Backup/restore + schedules + remote destinations + **cPanel backup import** | 🟡 **through Backup (0.55.0)** — tar/restore later |
 | **S11** | Monitoring: usage sync, bandwidth, resource limits (cgroups), alerts, stats, health checks | ⏳ |
 | **S12** | 💳 **Billing API layer**: WHM API 1 core set (exact shape), native REST v1, webhooks, API tokens UI | ⏳ |
 | **S13** | Security suite: WAF (ModSecurity), malware scan, brute-force protection, IP blocker, 2FA enforcement, security center | ⏳ |

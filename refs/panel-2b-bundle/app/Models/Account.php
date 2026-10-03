@@ -149,6 +149,11 @@ class Account extends Model
         return $this->hasMany(DnsDynamicHost::class);
     }
 
+    public function backupJobs(): HasMany
+    {
+        return $this->hasMany(BackupJob::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 10 Backup (3 Oct)** — customer backup jobs via `backup.create`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.55.0**, agent **0.48.0**.
+  Tests: panel **345/0**, provision-sim **79/79**, update-sim **158/158** (pin in B).
+  Deploy via `panel-update.sh` 0.55.0.
 - **Step 9 Nameserver Selection (2 Oct)** — WHM nameserver via `dns.nameserver`
   (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.54.0**, agent **0.47.0**.
   Tests: panel **339/0**, provision-sim **78/78**, update-sim **154/154** (pin in B).

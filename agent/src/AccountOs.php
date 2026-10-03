@@ -404,6 +404,36 @@ final class AccountOs
     }
 
     /**
+     * @param  list<array{kind: string, path: string}> $jobs
+     * @return list<array{kind: string, path: string}>
+     */
+    public function setBackup(string $username, array $jobs): array
+    {
+        $jobs = Backup::sanitize($jobs);
+        $home = $this->paths->home($username);
+        $dir = Files::resolve($home, 'etc/backup');
+        if (is_link($dir)) {
+            throw new RuntimeException('backup conf dir is a symlink');
+        }
+        $this->fs->mkdir($dir, 0750);
+        $this->fs->chownName($dir, $username);
+        $file = Files::resolve($home, 'etc/backup/jobs.json');
+        if (is_link($file)) {
+            throw new RuntimeException('backup jobs is a symlink');
+        }
+        foreach ($jobs as $row) {
+            if ($row['path'] !== '') {
+                Files::resolve($home, $row['path']);
+            }
+        }
+        $this->fs->write($file, Backup::backupJson($jobs), 0640);
+        $this->fs->chownName($file, $username);
+        $this->log->info('backup jobs ' . count($jobs) . " for {$username}");
+
+        return $jobs;
+    }
+
+    /**
      * @return list<array{id: string, time: string, sender: string, recipient: string, status: string}>
      */
     public function track(string $username, string $query): array
