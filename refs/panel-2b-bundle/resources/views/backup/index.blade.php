@@ -20,7 +20,7 @@
 <div class="card">
     <h3>Home archive — {{ $account->username }}</h3>
     <p class="help">Creates a real gzip-compressed tar archive of this account's home directory. Each completed archive is SHA-256 verified before download.</p>
-    <p class="help"><strong>Scope:</strong> home files only. Mail and MySQL data are not included yet; their S7/S8 backends must become real before those can be backed up safely. Automated schedules, remote destinations, and restore are not enabled yet.</p>
+    <p class="help"><strong>Scope:</strong> home files only. Mail and MySQL data are not included yet; their S7/S8 backends must become real before those can be backed up safely. Automated schedules and remote destinations are not enabled yet.</p>
     @can('files.manage')
     <form method="post" action="{{ route('backup.archive') }}" class="mt">
         @csrf
@@ -59,6 +59,65 @@
         </table>
     </div>
 </div>
+
+@can('files.manage')
+<div class="card mt">
+    <h3>Restore a home archive</h3>
+    <p class="help"><strong>Destructive:</strong> restoring replaces current files with the archive's copy. The agent first moves the replaced files to a pre-restore folder on the server and keeps them there — the last one per account — in case you need them back. Leave the path empty to restore the whole home, or name one folder/file (e.g. <span class="mono">public_html</span>) to restore just that part.</p>
+    <form method="post" action="{{ route('backup.restore-archive') }}" class="stack">
+        @csrf
+        <label>
+            Archive
+            <select name="archive_id" required>
+                @forelse ($archiveTasks as $task)
+                    @if ($task['downloadable'])
+                        <option value="{{ $task['archive_id'] }}" @selected(old('archive_id') === $task['archive_id'])>
+                            #{{ $task['id'] }} · {{ $task['created_at'] }} · {{ number_format($task['size_bytes'] / 1048576, 2) }} MiB
+                        </option>
+                    @endif
+                @empty
+                @endforelse
+            </select>
+        </label>
+        <label>
+            Path (optional, relative under home)
+            <input name="path" value="{{ old('path', '') }}" maxlength="240" placeholder="public_html">
+        </label>
+        <label class="checkbox">
+            <input type="checkbox" name="confirm" value="1" required>
+            I understand this replaces current files (a pre-restore copy is kept on the server).
+        </label>
+        @error('archive_id')<p class="error">{{ $message }}</p>@enderror
+        @error('path')<p class="error">{{ $message }}</p>@enderror
+        @error('confirm')<p class="error">{{ $message }}</p>@enderror
+        @error('restore')<p class="error">{{ $message }}</p>@enderror
+        <button class="btn danger" type="submit">Restore archive</button>
+    </form>
+
+    <div class="table-wrap mt">
+        <table>
+            <tr>
+                <th>Task</th>
+                <th>Requested</th>
+                <th>Archive</th>
+                <th>Path</th>
+                <th>Status</th>
+            </tr>
+            @forelse ($restoreTasks as $task)
+                <tr>
+                    <td class="mono">#{{ $task['id'] }}</td>
+                    <td>{{ $task['created_at'] }}</td>
+                    <td class="mono">{{ $task['archive_id'] ? substr($task['archive_id'], 0, 8) . '…' : '—' }}</td>
+                    <td class="mono">{{ $task['path'] === '' || $task['path'] === null ? 'whole home' : $task['path'] }}</td>
+                    <td class="mono">{{ $task['status'] }}@if ($task['error'])<span class="error"> — {{ \Illuminate\Support\Str::limit($task['error'], 80) }}</span>@endif</td>
+                </tr>
+            @empty
+                <tr><td colspan="5" class="empty">No restores requested yet.</td></tr>
+            @endforelse
+        </table>
+    </div>
+</div>
+@endcan
 
 <div class="card mt">
     <h3>Backup job list — settings only</h3>

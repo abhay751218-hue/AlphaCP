@@ -9,6 +9,7 @@ use App\Models\BackupJob;
 use App\Models\BackupRestore;
 use App\Models\BackupUserSelection;
 use App\Models\BackupWizard;
+use App\Support\Files;
 
 final class BackupProvisioner
 {
@@ -35,6 +36,28 @@ final class BackupProvisioner
             'username' => $account->username,
             'archive_id' => $archiveId,
         ], 'panel', $account->id);
+    }
+
+    /** Destructive: restoring an archive replaces current files, so it carries `_confirm`. */
+    public static function enqueueExtract(Account $account, string $archiveId, string $path = ''): int
+    {
+        if (preg_match('/^[a-f0-9]{32}$/', $archiveId) !== 1) {
+            throw new \InvalidArgumentException('Invalid backup archive id.');
+        }
+        if ($path !== '' && Files::tryRel($path) === null) {
+            throw new \InvalidArgumentException('Invalid restore path.');
+        }
+
+        $payload = [
+            'username' => $account->username,
+            'archive_id' => $archiveId,
+            '_confirm' => 'backup.extract',
+        ];
+        if ($path !== '') {
+            $payload['path'] = $path;
+        }
+
+        return Paneld::enqueue('backup.extract', $payload, 'panel', $account->id);
     }
 
     public static function limitReached(Account $account): bool

@@ -4,6 +4,20 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Added
+- **S10 safe home restore — File and Directory Restoration (3 Oct)** — panel **0.67.0**, agent **0.60.0**.
+  `backup.extract` (destructive, needs `_confirm`) restores a previously published, checksum-verified
+  home archive back into the account: manifest + SHA-256 are re-verified first, every tar entry is
+  inspected (`..`/absolute paths, hardlinks, device nodes and FIFOs are refused), extraction happens in
+  a root-owned staging dir outside the account with `--no-same-owner`, files are then chowned to the
+  account (symlinks skipped, never followed), and the swap is done with same-filesystem renames — the
+  replaced tree is kept as `/home/.acp-prerestore-<user>-<stamp>` (last one per account) and any
+  failure rolls the old tree back. `path` restores a single subtree (cPanel File and Directory
+  Restoration); empty path restores the whole home. Panel: customer Backup page gets a
+  confirm-checkbox restore form scoped to that account's own completed archives.
+  Tests: panel **405/0 (6 wasm-skip)**, provision-sim **94/94**, update-sim **187/187**, real GNU tar round-trip
+  (create → literal-list → numeric-verbose-list → full/subtree extract → symlink kept as link) PASS.
+
 ### Fixed / Changed
 - **Security fix — symlink root-write escape (3 Oct)** — panel **0.66.0**, agent **0.59.0**.
   A hosting customer could create a symlink inside their own home (`~/loot -> /etc`) and the root

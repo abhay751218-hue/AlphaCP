@@ -25,6 +25,15 @@ final class FakeCommandExecutor implements CommandExecutor
 
     public ?string $crontabBody = null;
 
+    /** @var list<string>|null overrides the plain `tar --list` output */
+    public ?array $tarListLines = null;
+
+    /** @var list<string>|null overrides the verbose `tar --list --verbose` output */
+    public ?array $tarVerboseLines = null;
+
+    /** @var list<string>|null files materialised on `tar --extract` (relative to --directory) */
+    public ?array $tarExtractPaths = null;
+
     public ?string $failWhenContains = null;
 
     public function run(array $argv, ?int $timeout = null, ?string $stdin = null): CommandResult
@@ -126,7 +135,37 @@ final class FakeCommandExecutor implements CommandExecutor
             return new CommandResult($argv, 0, '', '', 1);
         }
         if (in_array('--list', $argv, true) && is_file($path)) {
-            return new CommandResult($argv, 0, "alicehost/\nalicehost/public_html/index.php\n", '', 1);
+            if (in_array('--verbose', $argv, true)) {
+                $lines = $this->tarVerboseLines ?? [
+                    'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 alicehost/',
+                    'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 alicehost/public_html/',
+                    '-rw-r--r-- 1500/1500 21 2026-10-03 16:00 alicehost/public_html/index.php',
+                ];
+                return new CommandResult($argv, 0, implode("\n", $lines) . "\n", '', 1);
+            }
+            $lines = $this->tarListLines ?? ['alicehost/', 'alicehost/public_html/index.php'];
+            return new CommandResult($argv, 0, implode("\n", $lines) . "\n", '', 1);
+        }
+        if (in_array('--extract', $argv, true)) {
+            $dirIndex = array_search('--directory', $argv, true);
+            $target = is_int($dirIndex) ? (string) ($argv[$dirIndex + 1] ?? '') : '';
+            if ($target === '' || !is_dir($target)) {
+                return new CommandResult($argv, 2, '', 'tar: cannot chdir', 1);
+            }
+            $paths = $this->tarExtractPaths ?? [
+                'alicehost/public_html/index.php' => '<?php echo "restored";',
+                'alicehost/public_html/restored.txt' => 'restored file',
+            ];
+            foreach ($paths as $key => $rel) {
+                $file = $target . '/' . (is_int($key) ? $rel : $key);
+                if (!is_dir(dirname($file)) && !@mkdir(dirname($file), 0755, true) && !is_dir(dirname($file))) {
+                    return new CommandResult($argv, 2, '', 'tar: mkdir failed', 1);
+                }
+                if (@file_put_contents($file, is_int($key) ? 'restored' : $rel) === false) {
+                    return new CommandResult($argv, 2, '', 'tar: write failed', 1);
+                }
+            }
+            return new CommandResult($argv, 0, '', '', 1);
         }
         return new CommandResult($argv, 2, '', 'tar: archive missing', 1);
     }

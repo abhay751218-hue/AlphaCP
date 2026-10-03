@@ -75,6 +75,7 @@ use Alphacp\Agent\Tasks\SyncSet;
 use Alphacp\Agent\Tasks\NameserverSet;
 use Alphacp\Agent\Tasks\BackupCreate;
 use Alphacp\Agent\Tasks\BackupArchiveCreate;
+use Alphacp\Agent\Tasks\BackupExtract;
 use Alphacp\Agent\Tasks\BackupWizard;
 use Alphacp\Agent\Tasks\BackupRestore;
 use Alphacp\Agent\Tasks\BackupConfig;
@@ -232,7 +233,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.archive', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1955,6 +1956,88 @@ test('backup.archive creates a verified home archive and retries idempotently', 
     assert_true($beforeTarCalls === $afterTarCalls, 'idempotent retry must not rerun tar');
     acp_account_cleanup($harness);
 });
+test('backup.extract restores a verified archive and keeps a pre-restore copy', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    $id = str_repeat('e', 32);
+
+    (new BackupArchiveCreate())->handle(['username' => 'alicehost', 'archive_id' => $id], $harness['ctx']);
+
+    // customer changes the live file after the archive was taken
+    file_put_contents($home . '/public_html/index.php', '<?php echo "broken";');
+
+    $result = (new BackupExtract())->handle([
+        'username' => 'alicehost',
+        'archive_id' => $id,
+        '_confirm' => 'backup.extract',
+    ], $harness['ctx']);
+
+    assert_true($result['status'] === 'restored');
+    assert_true($result['archive_id'] === $id);
+    assert_true($result['path'] === '');
+    assert_true(str_contains((string) file_get_contents($home . '/public_html/index.php'), 'restored'), 'archive content must be back');
+    assert_true(is_file($home . '/public_html/restored.txt'), 'restored file must exist');
+
+    $pre = glob($harness['root'] . '/home/.acp-prerestore-alicehost-*');
+    assert_true(is_array($pre) && count($pre) === 1, 'exactly one pre-restore copy must be kept');
+    assert_true(str_contains((string) file_get_contents($pre[0] . '/public_html/index.php'), 'broken'), 'pre-restore copy must hold the replaced files');
+    assert_true(is_file($harness['root'] . '/alphacp/backups/accounts/alicehost/' . $id . '.tar.gz'), 'archive must stay after a restore');
+    assert_true(!is_dir($harness['root'] . '/home/.acp-restore-' . $id . '-' . gmdate('YmdHis')), 'staging dir must be cleaned up');
+    acp_account_cleanup($harness);
+});
+
+test('backup.extract restores a subtree and rejects hostile archives', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    $id = str_repeat('f', 32);
+    (new BackupArchiveCreate())->handle(['username' => 'alicehost', 'archive_id' => $id], $harness['ctx']);
+
+    // subtree restore
+    $harness['cmd']->tarListLines = ['alicehost/', 'alicehost/public_html/', 'alicehost/public_html/index.php'];
+    $harness['cmd']->tarExtractPaths = ['alicehost/public_html/index.php' => 'subtree-restored'];
+    $result = (new BackupExtract())->handle([
+        'username' => 'alicehost',
+        'archive_id' => $id,
+        'path' => 'public_html',
+        '_confirm' => 'backup.extract',
+    ], $harness['ctx']);
+    assert_true($result['path'] === 'public_html');
+    assert_true(str_contains((string) file_get_contents($home . '/public_html/index.php'), 'subtree-restored'));
+
+    // entry outside the account home
+    $harness['cmd']->tarListLines = ['alicehost/', 'alicehost/../../etc/passwd'];
+    $threwOutside = false;
+    try {
+        (new BackupExtract())->handle(['username' => 'alicehost', 'archive_id' => $id, '_confirm' => 'backup.extract'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwOutside = str_contains($e->getMessage(), 'escape') || str_contains($e->getMessage(), 'outside');
+    }
+    assert_true($threwOutside, 'path escape inside an archive must fail closed');
+
+    // hardlink entry (would land /etc/shadow inside the home)
+    $harness['cmd']->tarListLines = ['alicehost/', 'alicehost/shadow'];
+    $harness['cmd']->tarVerboseLines = ['hrw-r--r-- 1500/1500 0 2026-10-03 16:00 alicehost/shadow link to /etc/shadow'];
+    $threwLink = false;
+    try {
+        (new BackupExtract())->handle(['username' => 'alicehost', 'archive_id' => $id, '_confirm' => 'backup.extract'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwLink = str_contains($e->getMessage(), 'hardlink') || str_contains($e->getMessage(), 'special');
+    }
+    assert_true($threwLink, 'hardlink entries must fail closed');
+
+    // unknown archive
+    $threwMissing = false;
+    try {
+        (new BackupExtract())->handle(['username' => 'alicehost', 'archive_id' => str_repeat('a', 32), '_confirm' => 'backup.extract'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwMissing = str_contains($e->getMessage(), 'not found');
+    }
+    assert_true($threwMissing, 'restoring an unknown archive must fail closed');
+    acp_account_cleanup($harness);
+});
+
 test('backup.archive prunes expired snapshots before checking free space', function (): void {
     $harness = acp_account_harness();
     (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);

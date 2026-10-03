@@ -175,6 +175,8 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:files.manage')->name('backup.archive');
     Route::get('/backup/archive/{archiveId}/download', [BackupController::class, 'download'])
         ->middleware('perm:files.view')->name('backup.archive-download');
+    Route::post('/backup/restore', [BackupController::class, 'restore'])
+        ->middleware('perm:files.manage')->name('backup.restore-archive');
 
     Route::get('/backup-wizard', [BackupWizardController::class, 'index'])
         ->middleware('perm:files.view')->name('backup-wizard.index');
