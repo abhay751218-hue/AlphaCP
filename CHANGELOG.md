@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 10 File Restoration (3 Oct)** — customer restore paths via `backup.restore`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.57.0**, agent **0.50.0**.
+  Tests: panel **357/0**, provision-sim **81/81**, update-sim **162/162** (pin in B).
+  Deploy via `panel-update.sh` 0.57.0.
 - **Step 10 Backup Wizard (3 Oct)** — customer wizard via `backup.wizard`
   (JSON; no tar/shell; pipe/path fail closed). Panel **0.56.0**, agent **0.49.0**.
   Tests: panel **351/0**, provision-sim **80/80**, update-sim **160/160** (pin in B).

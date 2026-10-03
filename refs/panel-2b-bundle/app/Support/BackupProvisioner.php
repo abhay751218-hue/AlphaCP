@@ -6,6 +6,7 @@ namespace App\Support;
 
 use App\Models\Account;
 use App\Models\BackupJob;
+use App\Models\BackupRestore;
 use App\Models\BackupWizard;
 
 final class BackupProvisioner
@@ -41,5 +42,22 @@ final class BackupProvisioner
             'action' => $action,
             'scope' => $scope,
         ]);
+    }
+
+    public static function enqueueRestore(Account $account): int
+    {
+        $rows = $account->backupRestores()->orderBy('id')->get()->map(static fn (BackupRestore $row): array => [
+            'path' => $row->path,
+        ])->values()->all();
+
+        return AccountProvisioner::enqueue($account, 'backup.restore', [
+            'username' => $account->username,
+            'paths' => $rows,
+        ]);
+    }
+
+    public static function restoreLimitReached(Account $account): bool
+    {
+        return $account->backupRestores()->count() >= Backup::MAX;
     }
 }

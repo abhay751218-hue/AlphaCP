@@ -112,4 +112,47 @@ final class Backup
 
         return $json . "\n";
     }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{path: string}>
+     */
+    public static function sanitizeRestore(array $raw): array
+    {
+        if (count($raw) > self::MAX) {
+            throw new TaskRejectedException('too many restore paths (10 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $i => $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException("invalid restore row at {$i}");
+            }
+            $path = Files::normalizeRel((string) ($row['path'] ?? ''));
+            if ($path === '') {
+                throw new TaskRejectedException('restore path required');
+            }
+            if (isset($seen[$path])) {
+                throw new TaskRejectedException('duplicate restore path');
+            }
+            $seen[$path] = true;
+            $out[] = ['path' => $path];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  list<array{path: string}> $rows
+     */
+    public static function restoreJson(array $rows): string
+    {
+        $rows = self::sanitizeRestore($rows);
+        $json = json_encode(['paths' => $rows], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('restore json encode failed');
+        }
+
+        return $json . "\n";
+    }
 }

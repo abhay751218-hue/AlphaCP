@@ -38,7 +38,7 @@ final class ModuleCatalog
                     ['name' => 'Backup',              'step' => 'S10', 'status' => 'live', 'route' => 'backup.index'],
                     ['name' => 'Backup Wizard',       'step' => 'S10', 'status' => 'live', 'route' => 'backup-wizard.index'],
                     ['name' => 'Git Version Control', 'step' => 'S6',  'status' => 'step'],
-                    ['name' => 'File Restoration',    'step' => 'S10', 'status' => 'step'],
+                    ['name' => 'File Restoration',    'step' => 'S10', 'status' => 'live', 'route' => 'file-restoration.index'],
                     ['name' => 'Trash',               'step' => 'S6',  'status' => 'step'],
                 ],
             ],

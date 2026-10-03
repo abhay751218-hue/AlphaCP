@@ -49,6 +49,7 @@ use App\Http\Controllers\MailController;
 use App\Http\Controllers\IndexesController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\BackupWizardController;
+use App\Http\Controllers\FileRestorationController;
 use App\Http\Controllers\DiskUsageController;
 use App\Http\Controllers\FilesController;
 use App\Http\Controllers\HandlersController;
@@ -168,6 +169,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:files.view')->name('backup-wizard.index');
     Route::post('/backup-wizard', [BackupWizardController::class, 'store'])
         ->middleware('perm:files.manage')->name('backup-wizard.store');
+
+    Route::get('/file-restoration', [FileRestorationController::class, 'index'])
+        ->middleware('perm:files.view')->name('file-restoration.index');
+    Route::post('/file-restoration', [FileRestorationController::class, 'store'])
+        ->middleware('perm:files.manage')->name('file-restoration.store');
 
     Route::get('/email', [MailController::class, 'index'])
         ->middleware('perm:email.view')->name('email.index');
