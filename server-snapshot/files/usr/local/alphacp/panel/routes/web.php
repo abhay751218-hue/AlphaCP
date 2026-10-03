@@ -47,6 +47,7 @@ use App\Http\Controllers\MailingListsController;
 use App\Http\Controllers\SpamFiltersController;
 use App\Http\Controllers\MailController;
 use App\Http\Controllers\IndexesController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\DiskUsageController;
 use App\Http\Controllers\FilesController;
 use App\Http\Controllers\HandlersController;
@@ -156,6 +157,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
 
     Route::get('/disk', [DiskUsageController::class, 'index'])
         ->middleware('perm:files.view')->name('disk.index');
+
+    Route::get('/backup', [BackupController::class, 'index'])
+        ->middleware('perm:files.view')->name('backup.index');
+    Route::post('/backup', [BackupController::class, 'store'])
+        ->middleware('perm:files.manage')->name('backup.store');
 
     Route::get('/email', [MailController::class, 'index'])
         ->middleware('perm:email.view')->name('email.index');

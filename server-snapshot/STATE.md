@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.54.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.54.0   (.env)
-AGENT_VERSION : 0.47.0
+panel code    : 0.55.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.55.0   (.env)
+AGENT_VERSION : 0.48.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -86,15 +86,16 @@ agent-backup-20261002174752
 agent-backup-20261002222409
 agent-backup-20261003011458
 agent-backup-20261003041343
-panel-backup-20261002222409
+agent-backup-20261003062629
 panel-backup-20261003011458
 panel-backup-20261003041343
+panel-backup-20261003062629
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -181,6 +182,7 @@ alphacp:admin-password
   2026_09_29_000041_create_domain_forwards_table   [40] Ran
   2026_09_29_000042_create_dns_syncs_table   [41] Ran
   2026_09_29_000043_create_nameserver_selections_table   [42] Ran
+  2026_09_29_000044_create_backup_jobs_table   [43] Ran
 ```
 
 ## Routes (web)
@@ -202,6 +204,8 @@ GET|HEAD           /audit                                        audit.index
 GET|HEAD           /autoresponders                               autoresponders.index
 POST               /autoresponders                               autoresponders.store
 DELETE             /autoresponders/{autoresponder}               autoresponders.destroy
+GET|HEAD           /backup                                       backup.index
+POST               /backup                                       backup.store
 GET|HEAD           /boxtrapper                                   boxtrapper.index
 POST               /boxtrapper                                   boxtrapper.store
 GET|HEAD           /calendar                                     calendar.index

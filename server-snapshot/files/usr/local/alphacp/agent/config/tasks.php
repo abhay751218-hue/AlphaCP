@@ -1309,6 +1309,35 @@ return [
         ],
     ],
 
+    'backup.create' => [
+        'handler'     => Tasks\BackupCreate::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Write account backup job list (JSON; no tar/shell).',
+        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'jobs'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'jobs'     => [
+                    'type'     => 'array',
+                    'maxItems' => 10,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['kind'],
+                        'properties'           => [
+                            'kind' => ['type' => 'string', 'maxLength' => 16],
+                            'path' => ['type' => 'string', 'maxLength' => 240],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'cron.set' => [
         'handler'     => Tasks\CronSet::class,
         'safety'      => 'mutating',
