@@ -112,7 +112,7 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.57.0'" grep -q "updater 0.57.0" "${U}/update-U1.out"
+chk "banner 'updater 0.58.0'" grep -q "updater 0.58.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -183,7 +183,8 @@ chk "NameserverSelectionController present (0.54.0)" test -f "${PANEL}/app/Http/
 chk "BackupController present (0.55.0)" test -f "${PANEL}/app/Http/Controllers/BackupController.php"
 chk "BackupWizardController present (0.56.0)" test -f "${PANEL}/app/Http/Controllers/BackupWizardController.php"
 chk "FileRestorationController present (0.57.0)" test -f "${PANEL}/app/Http/Controllers/FileRestorationController.php"
-chk "agent 0.50.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.50.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
+chk "BackupConfigController present (0.58.0)" test -f "${PANEL}/app/Http/Controllers/BackupConfigController.php"
+chk "agent 0.51.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.51.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
 chk "account.create in paneld allowlist" grep -q "account.create" "${ACP_HOME}/agent/config/tasks.php"
 chk "domain.add in paneld allowlist" grep -q "domain.add" "${ACP_HOME}/agent/config/tasks.php"
 chk "php.setVersion in paneld allowlist" grep -q "php.setVersion" "${ACP_HOME}/agent/config/tasks.php"
@@ -233,9 +234,10 @@ chk "dns.nameserver in paneld allowlist" grep -q "dns.nameserver" "${ACP_HOME}/a
 chk "backup.create in paneld allowlist" grep -q "backup.create" "${ACP_HOME}/agent/config/tasks.php"
 chk "backup.wizard in paneld allowlist" grep -q "backup.wizard" "${ACP_HOME}/agent/config/tasks.php"
 chk "backup.restore in paneld allowlist" grep -q "backup.restore" "${ACP_HOME}/agent/config/tasks.php"
+chk "backup.config in paneld allowlist" grep -q "backup.config" "${ACP_HOME}/agent/config/tasks.php"
 chk "issueLetsEncrypt in agent" grep -q "issueLetsEncrypt" "${ACP_HOME}/agent/src/AccountOs.php"
 chk "suspended page installed" test -f "${ACP_HOME}/share/suspended/index.html"
-chk ".env ACP_AGENT_VERSION=0.50.0" grep -q "^ACP_AGENT_VERSION=0.50.0$" "${PANEL}/.env"
+chk ".env ACP_AGENT_VERSION=0.51.0" grep -q "^ACP_AGENT_VERSION=0.51.0$" "${PANEL}/.env"
 chk "route cache me /license" grep -rqs "license" "${PANEL}/bootstrap/cache/"
 chk "backup bana (1)" test "$(nbackups)" -eq 1
 chk "backup = purana ${BEFORE_VER}" grep -q "\"version\": \"${BEFORE_VER}\"" "$(find "${REL}" -maxdepth 1 -name 'panel-backup-*' | head -1)/MANIFEST.json"
