@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.68.0  ·  default panel bundle 0.68.0  ·  agent 0.60.0  ·  alphacp-sync v1.2
+# updater 0.69.0  ·  default panel bundle 0.69.0  ·  agent 0.61.0  ·  alphacp-sync v1.2
 #
+# 0.69.0: S10 — real cPanel account import (cpmove/legacy/nested, sha256-verified, home swap,
+#         pre-restore copy) + transfer/restore job history + import drop dir (FPM read allowlist)
 # 0.68.0: S10 — scheduled backups: cron (schedule:run) + hourly alphacp:scheduled-backups, window marker
 # 0.67.0: S10 — safe home restore (whole home or one subtree, pre-restore copy); panel 0.67.0 + agent 0.60.0
 # 0.66.0: Security — symlink root-write escape fix (agent files.set/list/usage); panel 0.66.0 + agent 0.59.0
@@ -149,17 +151,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.68.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.68.0}"
+UPDATER_VERSION="0.69.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.69.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-a8c4db8a5cd89f30684623a6114185fd7d00af18}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-13b3bf71fb364ddf0e08a7b8cd77223d2f4815c9}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-f6d67ae4eef9ccb470ca3fe6e9a26b4f206e6fc87092bfd64e4021fedb696a2d}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.60.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-a8c4db8a5cd89f30684623a6114185fd7d00af18}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-c691798240f53b759efc1a67c19cce447ac248b82160ec8b4260db4647119d06}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.61.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-13b3bf71fb364ddf0e08a7b8cd77223d2f4815c9}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-9c0d4302f81b73217dd6929e8f67b7e6456094bbfca1ee1774c343ae5864ae4e}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-6d369bcea732d5cb5bfb0c2f5b3ee22fa86c41ad5687482cb6a9a0549099e98c}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -270,6 +272,44 @@ ensure_backup_read_access() {
     "${fpm_binary}" -t >>"${LOG_FILE}" 2>&1 || die "PHP-FPM config test failed after open_basedir update"
   fi
   ok "private backup download path allowlisted in PHP-FPM"
+}
+
+# cPanel account import (0.69.0): the operator drops a migration archive
+# (cpmove-<user>.tar.gz) into ${ACP_HOME}/incoming and the WHM transfer pages
+# offer it. The panel only *reads names/sizes* from that one directory, so it is
+# added to the pool open_basedir the same way the backup download path is.
+ensure_import_read_access() {
+  local drop_root="${ACP_HOME}/incoming"
+  [[ -n "${POOL_FILE}" && -f "${POOL_FILE}" ]] || die "AlphaCP PHP-FPM pool file missing; cannot safely enable cPanel import"
+  [[ ! -L "${drop_root}" ]] || die "cPanel import drop dir is a symlink: ${drop_root}"
+  [[ ! -e "${drop_root}" || -d "${drop_root}" ]] || die "cPanel import drop dir is not a directory: ${drop_root}"
+  getent group "${PANEL_GROUP}" >/dev/null 2>&1 || die "panel group missing: ${PANEL_GROUP}"
+  install -d -o root -g "${PANEL_GROUP}" -m 0750 "${drop_root}" || die "cPanel import drop dir setup failed"
+  ok "cPanel import drop dir ready → ${drop_root} (0750 root:${PANEL_GROUP})"
+
+  local open_basedir_line
+  open_basedir_line="$(grep -F -m1 'php_admin_value[open_basedir]' "${POOL_FILE}" || true)"
+  [[ -n "${open_basedir_line}" ]] || die "FPM pool has no open_basedir directive: ${POOL_FILE}"
+  if [[ "${open_basedir_line}" == *"${drop_root}"* ]]; then
+    ok "cPanel import path already allowlisted in PHP-FPM"
+    return 0
+  fi
+
+  if (( POOL_CHANGED == 0 )); then
+    POOL_BACKUP="${TMP_DIR}/alphacp-fpm-pool.original"
+    cp -a "${POOL_FILE}" "${POOL_BACKUP}" || die "cannot back up PHP-FPM pool config"
+  fi
+  POOL_CHANGED=1
+  sed -i -E "/^[[:space:]]*php_admin_value\\[open_basedir\\][[:space:]]*=/ s#\$#:${drop_root}#" "${POOL_FILE}"
+  if ! grep -Fq "${drop_root}" "${POOL_FILE}"; then
+    die "could not add cPanel import path to PHP-FPM open_basedir"
+  fi
+  local fpm_binary
+  fpm_binary="$(command -v "php-fpm${FPM_VERSION}" 2>/dev/null || true)"
+  if [[ -n "${fpm_binary}" ]]; then
+    "${fpm_binary}" -t >>"${LOG_FILE}" 2>&1 || die "PHP-FPM config test failed after open_basedir update"
+  fi
+  ok "cPanel import drop path allowlisted in PHP-FPM"
 }
 
 say ""
@@ -435,6 +475,7 @@ EOF
 fi
 
 ensure_backup_read_access
+ensure_import_read_access
 
 BACKUP_PANEL="${RELEASES}/panel-backup-${STAMP}"
 
