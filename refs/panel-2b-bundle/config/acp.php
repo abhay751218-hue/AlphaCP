@@ -10,7 +10,7 @@ declare(strict_types=1);
  */
 return [
     // Panel + agent versions (shown in the UI footer and system page)
-    'version'       => env('ACP_VERSION', '0.67.0'),
+    'version'       => env('ACP_VERSION', '0.68.0'),
     'agent_version' => env('ACP_AGENT_VERSION', '0.60.0'),
 
     // AlphaCP install root (agent, etc/, logs/, panel/)
@@ -52,6 +52,15 @@ return [
         'store_path' => (string) env('ACP_LICENSE_STORE_PATH', storage_path('app/private/license.json')),
         'public_key' => (string) env('ACP_LICENSE_PUBLIC_KEY', ''),
         'public_key_path' => (string) env('ACP_LICENSE_PUBLIC_KEY_PATH', config_path('license_public.pem')),
+    ],
+
+    // S10 scheduled backups (routes/console.php → alphacp:scheduled-backups).
+    //
+    // `file` is the window marker: it records which day / ISO week / month was
+    // already backed up, so the hourly tick runs the real archive pass exactly
+    // once per window. Tests point it at a temp file.
+    'backup_schedule' => [
+        'file' => (string) env('ACP_BACKUP_SCHEDULE_FILE', storage_path('app/private/backup-schedule.json')),
     ],
 
     // Password quality

@@ -26,7 +26,8 @@ final class BackupProvisioner
         ]);
     }
 
-    public static function enqueueArchive(Account $account, string $archiveId): int
+    /** `$source` is 'panel' for a customer click, 'scheduler' for cron (WHM backup schedule). */
+    public static function enqueueArchive(Account $account, string $archiveId, string $source = 'panel'): int
     {
         if (preg_match('/^[a-f0-9]{32}$/', $archiveId) !== 1) {
             throw new \InvalidArgumentException('Invalid backup archive id.');
@@ -35,7 +36,7 @@ final class BackupProvisioner
         return Paneld::enqueue('backup.archive', [
             'username' => $account->username,
             'archive_id' => $archiveId,
-        ], 'panel', $account->id);
+        ], $source, $account->id);
     }
 
     /** Destructive: restoring an archive replaces current files, so it carries `_confirm`. */
