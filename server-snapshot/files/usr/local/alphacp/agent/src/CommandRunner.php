@@ -40,6 +40,8 @@ final class CommandRunner implements CommandExecutor
         '/usr/bin/certbot',
         '/usr/bin/tar',
         '/bin/tar',
+        '/usr/bin/mariadb',
+        '/usr/bin/mysql',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

@@ -5,7 +5,10 @@ namespace Alphacp\Agent;
 
 /**
  * Customer MySQL database names under the account prefix.
- * Agent never runs mysql/mysqladmin — JSON only (CREATE DATABASE later).
+ *
+ * @deprecated 0.70.0 — this class backs the JSON-only `db.set` task. The real
+ * provisioning lives in MysqlServer + the `db.create` / `db.user.*` tasks.
+ * Kept because the registry still ships `db.set` for older panels.
  */
 final class Mysql
 {

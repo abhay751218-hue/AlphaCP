@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'MySQL Databases')
-@section('subtitle', 'Prefixed names — no mysql binary, no GRANT')
+@section('subtitle', 'Real MariaDB databases — agent db.create/db.drop (socket auth, SQL stdin)')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
@@ -19,7 +19,7 @@
 @else
 <div class="card">
     <h3>MySQL Databases — {{ $account->username }}</h3>
-    <p class="help">JSON <span class="mono">~/etc/mysql/databases.json</span>. Prefix <span class="mono">{{ $account->username }}_</span>. mysql/GRANT later. Pipe/shell fail closed. MAXSQL {{ $maxSql }}.</p>
+    <p class="help">Agent <span class="mono">db.create</span> se asli MariaDB database banta hai (utf8mb4) aur <span class="mono">db.drop</span> se hat’ta hai — privileges bhi revoke hote hain. Users/grants <a href="{{ route('mysql-users.index') }}">MySQL Users</a> page par. MAXSQL {{ $maxSql }}.</p>
     <div class="table-wrap mt">
         <table>
             <tr>
