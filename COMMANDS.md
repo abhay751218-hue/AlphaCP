@@ -35,7 +35,7 @@ sudo alphacp-sync get a5e557fd443b411d27d33f9a0bdbed25e2ee73cc installer/panel-u
   (password turant copy kar lo) + database checkbox tick karo → Task Queue me `db.user.create`.
   Server par verify: `sudo mariadb -e "SHOW DATABASES LIKE 'USERNAME_%'"` aur
   `sudo mariadb -e "SHOW GRANTS FOR 'USERNAME_wp_admin'@'localhost'"`.
-- Tests: panel **434/0**, update-sim **224/224**, provision-sim **104/104**, mysql-sim **PASS**
+- Tests: panel **434/0**, update-sim **224/224**, provision-sim **106/106**, mysql-sim **PASS**
   (asli handlers + generated SQL ka lint), cpanel-import-sim/cpanel-import-e2e **PASS**, backup-tar-sim **PASS**.
 - Ye 0.69.0 (real cPanel account import) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
 
