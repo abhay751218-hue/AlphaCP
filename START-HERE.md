@@ -59,7 +59,7 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 | `bash tools/sim/backup-tar-sim.sh` | Native GNU tar create/list/extract/subtree-extract, symlink preservation, hostile path-escape visibility, SHA-256 smoke test (v0.2.0) | **PASS** |
 | `bash tools/sim/cpanel-import-sim.sh` | Real GNU tar (cpmove / legacy / nested layout) + asli `CpanelArchive` class (php-wasm): genuine archive accept, path-escape / hardlink / symlink-traversal reject (v0.69.0) | **PASS** |
 | `bash tools/sim/cpanel-import-e2e.sh` | Asli `BackupArchiveStore` + real `CommandRunner` + real tar, throwaway accounts root: home swap + `.acp-prerestore-*` copy + symlink preserved + staging cleanup, aur 7 hostile archives (escape / write-through / hardlink / doosra account / galat sha256 / missing / not-a-tar) fail closed (v0.69.0) | **PASS** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.69.0: panel 0.69.0 + agent 0.61.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)**, **scheduler cron + import drop dir** | **PENDING** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.69.0: panel 0.69.0 + agent 0.61.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)**, **scheduler cron + import drop dir (U8)** | **213/213** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 

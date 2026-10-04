@@ -23,7 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   Transfers and Restores** now shows the real job history from the task queue (status, account,
   files/bytes, skipped sections, agent error) with the legacy JSON note kept below it. Transfer pages
   scan well-known drop paths (`/home`, `<ACP home>/incoming`) and offer detected archives.
-  Tests: panel **425/0 (6 wasm-skip)**, update-sim **—/—**, provision-sim **98/98**, cpanel-import-sim **PASS**
+  Tests: panel **425/0 (6 wasm-skip)**, update-sim **213/213** (incl. the new U8 drop-dir/allowlist case), provision-sim **98/98**, cpanel-import-sim **PASS**
   (real GNU tar + real `CpanelArchive`), cpanel-import-e2e **PASS** (real `BackupArchiveStore` +
   real tar: home swap, pre-restore copy, 7 hostile archives refused), backup-tar-sim **PASS**.
 - **S10 scheduled backups — cron scheduler (3 Oct)** — panel **0.68.0** (agent unchanged **0.60.0**).
