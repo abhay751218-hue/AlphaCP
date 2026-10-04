@@ -138,20 +138,40 @@ final class BackupProvisioner
         ]);
     }
 
-    public static function enqueueTransfer(string $username, string $source): int
+    /**
+     * WHM Transfer Tool: import a cPanel archive that already sits on this
+     * server. Destructive (it replaces the account home) → `_confirm` is sent;
+     * the agent engine keeps an `/home/.acp-prerestore-*` copy.
+     */
+    public static function enqueueTransfer(string $username, string $source, string $archivePath, string $sha256 = ''): int
     {
-        return Paneld::enqueue('backup.transfer', [
+        $payload = [
             'username' => $username,
             'source' => $source,
-        ]);
+            'archive_path' => $archivePath,
+            '_confirm' => 'backup.transfer',
+        ];
+        if ($sha256 !== '') {
+            $payload['sha256'] = $sha256;
+        }
+
+        return Paneld::enqueue('backup.transfer', $payload);
     }
 
-    public static function enqueueCpanel(string $username, string $action): int
+    /** Import a cPanel archive into an existing account (WHM Transfer or Restore). */
+    public static function enqueueCpanel(string $username, string $action, string $archivePath, string $sha256 = ''): int
     {
-        return Paneld::enqueue('backup.cpanel', [
+        $payload = [
             'username' => $username,
             'action' => $action,
-        ]);
+            'archive_path' => $archivePath,
+            '_confirm' => 'backup.cpanel',
+        ];
+        if ($sha256 !== '') {
+            $payload['sha256'] = $sha256;
+        }
+
+        return Paneld::enqueue('backup.cpanel', $payload);
     }
 
     public static function enqueueReview(string $username, string $status): int

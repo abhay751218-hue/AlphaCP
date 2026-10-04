@@ -1,15 +1,44 @@
 @extends('layouts.panel')
 
 @section('title', 'Review Transfers and Restores')
-@section('subtitle', 'WHM review job — no tar, no rsync, no pipe')
+@section('subtitle', 'WHM cpmove import job history — agent result ke saath')
 
 @section('actions')
+    <a class="btn small secondary" href="{{ route('transfer-tool.index') }}">Transfer Tool</a>
+    <a class="btn small secondary" href="{{ route('transfer-restore.index') }}">Transfer or Restore</a>
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
 @endsection
 
 @section('content')
 <div class="card">
-    <h3>Review transfers and restores</h3>
+    <h3>Transfer / restore jobs</h3>
+    <p class="help">Har row ek <span class="mono">backup.cpanel</span> / <span class="mono">backup.transfer</span> task hai — status aur agent result seedha task queue se aata hai.</p>
+    <div class="table-wrap">
+        <table>
+            <tr><th>#</th><th>Type</th><th>Account</th><th>Status</th><th>Imported</th><th>Skipped sections</th><th>Source</th><th>When</th></tr>
+            @forelse ($jobs as $job)
+                <tr>
+                    <td class="mono">{{ $job['id'] }}</td>
+                    <td class="mono">{{ $job['type'] }}</td>
+                    <td class="mono">{{ $job['username'] !== '' ? $job['username'] : '—' }}</td>
+                    <td><span class="badge {{ $job['status'] === 'success' ? 'green' : ($job['status'] === 'failed' ? 'red' : 'amber') }}">{{ $job['status'] }}</span></td>
+                    <td class="mono">{{ $job['status'] === 'success' ? $job['files'] . ' files · ' . number_format($job['bytes'] / 1048576, 1) . ' MB' : '—' }}</td>
+                    <td class="mono">{{ $job['sections'] !== '' ? $job['sections'] : '—' }}</td>
+                    <td class="mono">{{ $job['source'] !== '' ? $job['source'] : '—' }}</td>
+                    <td class="muted">{{ \App\Support\Panel::ago($job['created_at']) }}</td>
+                </tr>
+                @if ($job['error'] !== '')
+                    <tr><td colspan="8" class="error mono">{{ $job['error'] }}</td></tr>
+                @endif
+            @empty
+                <tr><td colspan="8" class="empty">Koi cPanel import job nahi — Transfer Tool ya Transfer or Restore se queue karo.</td></tr>
+            @endforelse
+        </table>
+    </div>
+</div>
+
+<div class="card mt">
+    <h3>Manual review note (legacy)</h3>
     <p class="help">JSON <span class="mono">/usr/local/alphacp/etc/backup/review.json</span>. Copy later. Pipe/shell fail closed.</p>
     @if ($row)
         <p class="mono mt">{{ $row->status }} · {{ $row->username }}</p>
@@ -20,7 +49,7 @@
 
 @can('accounts.view')
 <div class="card mt">
-    <h3>Queue review</h3>
+    <h3>Queue review note</h3>
     <form method="post" action="{{ route('transfer-review.store') }}" class="stack">
         @csrf
         <label>

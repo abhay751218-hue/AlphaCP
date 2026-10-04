@@ -324,6 +324,219 @@ final class BackupArchiveStore
         }
     }
 
+    /**
+     * Import a cPanel account archive (`cpmove-<user>.tar.gz` or a legacy
+     * `backup-*.tar.gz`) into an EXISTING account home. Same safety pipeline as
+     * restoreHome — verified listing, path/type checks, staging outside the
+     * account, root-owned pre-restore copy — plus:
+     *
+     *   - the archive is an outside file, so it is path-guarded, must be a real
+     *     regular file and is checksum-verified when the panel sends a sha256,
+     *   - only the `homedir` subtree is extracted; MySQL dumps, DNS zones,
+     *     mail and cPanel userdata are reported in `sections`, never touched,
+     *   - archives that write through symlinks are refused.
+     *
+     * @return array{username:string,action:string,archive:string,sha256:string,size_bytes:int,layout:string,root:string,files:int,dirs:int,bytes:int,sections:list<string>,section_entries:array<string,int>,prerestore:?string,status:string}
+     */
+    public function importCpanelHome(string $username, string $archivePath, string $expectedSha256 = '', string $action = 'restore'): array
+    {
+        $this->assertUsername($username);
+        if (!in_array($action, ['transfer', 'restore'], true)) {
+            throw new TaskRejectedException('invalid cPanel import action');
+        }
+        $expectedSha256 = strtolower(trim($expectedSha256));
+        if ($expectedSha256 !== '' && preg_match('/^[a-f0-9]{64}$/', $expectedSha256) !== 1) {
+            throw new TaskRejectedException('invalid cPanel archive checksum');
+        }
+
+        $archive = $this->assertReadableArchive($archivePath);
+        $sha256 = hash_file('sha256', $archive);
+        $size = filesize($archive);
+        if (!is_string($sha256) || preg_match('/^[a-f0-9]{64}$/', $sha256) !== 1 || !is_int($size) || $size < 20) {
+            throw new TaskRejectedException('cPanel archive checksum could not be computed');
+        }
+        if ($expectedSha256 !== '' && !hash_equals($expectedSha256, $sha256)) {
+            throw new TaskRejectedException('cPanel archive checksum mismatch; refusing to import');
+        }
+
+        $accountsRoot = $this->paths->accountsRoot;
+        $home = $this->paths->home($username);
+        $this->assertDirectory($accountsRoot, 'account root');
+        $this->assertDirectory($home, 'account home');
+        $stateRoot = rtrim($this->stateRoot, '/');
+        if ($stateRoot === '' || $stateRoot === '/' || is_link($stateRoot)) {
+            throw new TaskRejectedException('invalid backup state root');
+        }
+        $this->assertDirectory($stateRoot, 'state root');
+
+        $lock = $this->acquireLock($username);
+        $staging = $accountsRoot . '/.acp-import-' . $username . '-' . gmdate('YmdHis');
+        try {
+            $plan = CpanelArchive::structure($this->tarListing($archive), $username);
+
+            $this->ensureDirectory($staging, 0700);
+            if ($plan['layout'] === 'direct') {
+                $homeListing = $this->tarListing($archive, false, $plan['member']);
+                $homeVerbose = $this->tarListing($archive, true, $plan['member']);
+                $counts = CpanelArchive::homeCounts($homeVerbose);
+                CpanelArchive::assertNoSymlinkTraversal($homeListing, $homeVerbose);
+                $this->assertFreeSpace($accountsRoot, $counts['bytes']);
+                $this->extract($archive, $staging, $plan['member'], 'cPanel archive extraction failed');
+                $stagedRoot = $staging . '/' . $plan['member'];
+            } else {
+                $this->extract($archive, $staging, (string) $plan['nested_member'], 'cPanel archive extraction failed');
+                $inner = $staging . '/' . $plan['nested_member'];
+                if (is_link($inner) || !is_file($inner)) {
+                    throw new TaskRejectedException('cPanel archive nested home was not extracted');
+                }
+                $innerListing = $this->tarListing($inner);
+                $innerVerbose = $this->tarListing($inner, true);
+                $counts = CpanelArchive::homeCounts($innerVerbose);
+                CpanelArchive::assertNoSymlinkTraversal($innerListing, $innerVerbose);
+                $this->assertFreeSpace($accountsRoot, $counts['bytes']);
+                $innerStaging = $staging . '/home';
+                $this->ensureDirectory($innerStaging, 0700);
+                $this->extract($inner, $innerStaging, null, 'cPanel archive home extraction failed');
+                $stagedRoot = $innerStaging;
+            }
+
+            if (is_link($stagedRoot) || !is_dir($stagedRoot)) {
+                throw new TaskRejectedException('cPanel archive home could not be staged');
+            }
+            $this->chownTree($stagedRoot, $username);
+            $kept = $this->swapWholeHome($username, $stagedRoot, $home);
+
+            $this->log->info("cPanel archive " . basename($archive) . " imported for {$username} ({$counts['files']} files)");
+
+            return [
+                'username' => $username,
+                'action' => $action,
+                'archive' => basename($archive),
+                'sha256' => $sha256,
+                'size_bytes' => $size,
+                'layout' => $plan['layout'],
+                'root' => $plan['root'],
+                'files' => $counts['files'],
+                'dirs' => $counts['dirs'],
+                'bytes' => $counts['bytes'],
+                'sections' => $plan['sections'],
+                'section_entries' => $plan['section_entries'],
+                'prerestore' => $kept,
+                'status' => 'imported',
+            ];
+        } finally {
+            if (is_dir($staging) && !is_link($staging)) {
+                try {
+                    $this->removeTree($staging);
+                } catch (Throwable $e) {
+                    $this->log->warning('cPanel import staging cleanup failed: ' . $e->getMessage());
+                }
+            }
+            $this->releaseLock($lock);
+        }
+    }
+
+    private function extract(string $archive, string $directory, ?string $member, string $error): void
+    {
+        $argv = [
+            self::TAR_BIN,
+            '--extract',
+            '--file', $archive,
+            '--directory', $directory,
+            '--no-same-owner',
+            '--one-file-system',
+            '--',
+        ];
+        if ($member !== null) {
+            $argv[] = $member;
+        }
+        $result = $this->cmd->run($argv, self::TAR_TIMEOUT);
+        if (!$result->ok()) {
+            throw new TaskRejectedException($error . ' (tar exit ' . $result->exitCode . ')');
+        }
+    }
+
+    /** @param list<string>|null $members */
+    private function tarListing(string $archive, bool $verbose = false, ?string $member = null): string
+    {
+        $argv = [self::TAR_BIN, '--list'];
+        if ($verbose) {
+            $argv[] = '--verbose';
+            $argv[] = '--numeric-owner';
+        }
+        $argv[] = '--quoting-style=literal';
+        $argv[] = '--file';
+        $argv[] = $archive;
+        if ($member !== null) {
+            $argv[] = '--';
+            $argv[] = $member;
+        }
+        $result = $this->cmd->run($argv, 300);
+        if (!$result->ok()) {
+            throw new TaskRejectedException('cPanel archive is unreadable');
+        }
+
+        return $result->stdout;
+    }
+
+    private function assertReadableArchive(string $path): string
+    {
+        if ($path === '' || str_contains($path, "\0")) {
+            throw new TaskRejectedException('cPanel archive path is missing');
+        }
+        if (!str_starts_with($path, '/')) {
+            throw new TaskRejectedException('cPanel archive path must be absolute');
+        }
+        $real = realpath($path);
+        if ($real === false || !is_file($real)) {
+            throw new TaskRejectedException('cPanel archive file not found');
+        }
+        try {
+            $this->fs->assert($real); // must still sit inside an allowlisted root
+        } catch (Throwable $e) {
+            throw new TaskRejectedException('cPanel archive path is outside the allowlisted roots');
+        }
+        if (preg_match('/\.(tar|tar\.gz|tgz)$/i', basename($real)) !== 1) {
+            throw new TaskRejectedException('cPanel archive must be a .tar, .tar.gz or .tgz file');
+        }
+
+        return $real;
+    }
+
+    /**
+     * Swap a freshly staged home tree into place, keeping the replaced tree as
+     * an `.acp-prerestore-<user>-<stamp>` copy (same convention as restoreHome).
+     * Any failure puts the old home back before the exception leaves.
+     */
+    private function swapWholeHome(string $username, string $stagedRoot, string $home): ?string
+    {
+        $accountsRoot = $this->paths->accountsRoot;
+        if (is_link($home) || !is_dir($home)) {
+            throw new TaskRejectedException('account home changed while importing');
+        }
+        $stamp = gmdate('YmdHis');
+        $pre = $accountsRoot . '/.acp-prerestore-' . $username . '-' . $stamp;
+        $suffix = 1;
+        while (file_exists($pre) || is_link($pre)) {
+            $suffix++;
+            if ($suffix > 50) {
+                throw new TaskRejectedException('pre-restore path already exists');
+            }
+            $pre = $accountsRoot . '/.acp-prerestore-' . $username . '-' . $stamp . '-' . $suffix;
+        }
+        $this->fs->rename($home, $pre);
+        try {
+            $this->fs->rename($stagedRoot, $home);
+        } catch (Throwable $e) {
+            $this->fs->rename($pre, $home);
+            throw new TaskRejectedException('cPanel import swap failed; previous files were put back: ' . $e->getMessage());
+        }
+        $this->fs->chownName($pre, 'root', $this->panelGroup());
+        $this->prunePrerestore($accountsRoot, $username, $pre);
+
+        return basename($pre);
+    }
+
     public static function normalizeSubPath(string $subPath): string
     {
         if (trim($subPath) === '') {
@@ -417,6 +630,7 @@ final class BackupArchiveStore
         if (!$verbose->ok()) {
             throw new TaskRejectedException('home archive entry types could not be verified');
         }
+        CpanelArchive::assertNoSymlinkTraversal($names->stdout, $verbose->stdout);
         $bytes = 0;
         foreach (preg_split('/\r?\n/', rtrim($verbose->stdout, "\n")) ?: [] as $line) {
             if ($line === '') {

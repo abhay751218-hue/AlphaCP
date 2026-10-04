@@ -1,4 +1,4 @@
-# AlphaCP panel scheduler — S10 scheduled backups (panel 0.68.0). Managed by panel-update; do not edit.
+# AlphaCP panel scheduler — S10 scheduled backups (panel 0.69.0). Managed by panel-update; do not edit.
 SHELL=/bin/sh
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 * * * * * alphacp cd /usr/local/alphacp/panel && env ACP_HOME=/usr/local/alphacp /usr/bin/php8.4 artisan schedule:run >> /usr/local/alphacp/panel/storage/logs/panel-schedule.log 2>&1

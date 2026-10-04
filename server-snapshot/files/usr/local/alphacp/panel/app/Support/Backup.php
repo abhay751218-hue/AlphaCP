@@ -126,4 +126,50 @@ final class Backup
 
         return $status;
     }
+
+    /**
+     * A cPanel archive the operator placed on this server.
+     *
+     * Import is a server-side file operation (a real cpmove archive is far
+     * bigger than any PHP upload limit), so the panel only accepts an absolute
+     * path — and the agent re-validates it against its own allowlisted roots
+     * before a single byte is read.
+     */
+    public static function tryArchivePath(string $raw): ?string
+    {
+        $raw = trim($raw);
+        if ($raw === '' || strlen($raw) > 255) {
+            return null;
+        }
+        if (str_contains($raw, "\0") || str_contains($raw, '|') || str_contains($raw, chr(92))) {
+            return null;
+        }
+        if (! str_starts_with($raw, '/')) {
+            return null;
+        }
+        if (preg_match('#^/[A-Za-z0-9._/-]+$#', $raw) !== 1) {
+            return null;
+        }
+        foreach (explode('/', $raw) as $segment) {
+            if ($segment === '..') {
+                return null;
+            }
+        }
+        if (preg_match('/\.(tar|tar\.gz|tgz)$/i', $raw) !== 1) {
+            return null;
+        }
+
+        return $raw;
+    }
+
+    /** '' stays empty; a valid sha256 comes back lowercased; anything else is null (invalid). */
+    public static function normalizeSha256(string $raw): ?string
+    {
+        $raw = strtolower(trim($raw));
+        if ($raw === '') {
+            return '';
+        }
+
+        return preg_match('/^[a-f0-9]{64}$/', $raw) === 1 ? $raw : null;
+    }
 }
