@@ -23,7 +23,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   a host + database checkboxes, Add User To Database, reset password, remove user); drops are `destructive` tasks
   (`_confirm`) and a database drop detaches/revokes its grants. The updater now installs
   `mariadb-client` when it is missing and fails the run if the S8 tasks did not ship.
-  Tests: panel **434/0 (6 wasm-skip)**, update-sim **UPDOK/UPDTOT**, provision-sim **106/106**, mysql-sim **PASS** (real handlers +
+  Tests: panel **434/0 (6 wasm-skip)**, update-sim **224/224**, provision-sim **106/106**, mysql-sim **PASS** (real handlers +
   SQL lint), cpanel-import-sim/cpanel-import-e2e **PASS**, backup-tar-sim **PASS**.
 - **S10 real cPanel account import — Transfer Tool + Transfer or Restore (4 Oct)** — panel **0.69.0**,
   agent **0.61.0**. The three WHM transfer pages stop writing JSON stubs and import a real cPanel

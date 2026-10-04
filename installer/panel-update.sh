@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.69.0  ·  default panel bundle 0.69.0  ·  agent 0.61.0  ·  alphacp-sync v1.2
+# updater 0.70.0  ·  default panel bundle 0.70.0  ·  agent 0.62.0  ·  alphacp-sync v1.2
 #
+# 0.70.0: S8 — real MariaDB databases/users/GRANTs (socket-auth client, SQL on stdin) + MySQL Users page
 # 0.69.0: S10 — real cPanel account import (cpmove/legacy/nested, sha256-verified, home swap,
 #         pre-restore copy) + transfer/restore job history + import drop dir (FPM read allowlist)
 # 0.68.0: S10 — scheduled backups: cron (schedule:run) + hourly alphacp:scheduled-backups, window marker
@@ -151,17 +152,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.69.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.69.0}"
+UPDATER_VERSION="0.70.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.70.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-13b3bf71fb364ddf0e08a7b8cd77223d2f4815c9}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-a5e557fd443b411d27d33f9a0bdbed25e2ee73cc}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-c691798240f53b759efc1a67c19cce447ac248b82160ec8b4260db4647119d06}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.61.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-13b3bf71fb364ddf0e08a7b8cd77223d2f4815c9}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-50166a6aa5144b334c1961b4b83015b378f6ac2276d95f92304e63eaeefdb586}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.62.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-a5e557fd443b411d27d33f9a0bdbed25e2ee73cc}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-6d369bcea732d5cb5bfb0c2f5b3ee22fa86c41ad5687482cb6a9a0549099e98c}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-fd9f2721d2c2461e0ce7f610c88151319aa4597026f0d1afeefc7f4f4205dce6}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -377,6 +378,23 @@ if [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; then
   systemctl restart paneld >>"${LOG_FILE}" 2>&1 && ok "paneld restarted" || warn "paneld restart skip (unit missing?)"
 fi
 grep -q 'issueLetsEncrypt' "${AGENT_ROOT}/src/AccountOs.php" || die "agent AutoSSL (issueLetsEncrypt) missing"
+grep -q "'db.user.create'" "${AGENT_ROOT}/config/tasks.php" || die "agent S8 MariaDB tasks missing"
+
+# S8: the agent talks to MariaDB through the client binary (socket auth, SQL on
+# stdin). Install it when it is missing; the admin MariaDB server is assumed to
+# be the distro package the server already runs.
+if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]] && [[ ! -x /usr/bin/mariadb && ! -x /usr/bin/mysql ]]; then
+  if command -v apt-get >/dev/null 2>&1; then
+    info "mariadb-client install ho raha hai (MySQL Databases provisioning)"
+    if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq mariadb-client >>"${LOG_FILE}" 2>&1; then
+      ok "mariadb-client installed"
+    else
+      warn "mariadb-client install fail — db.* tasks client ke bina chalenge nahi"
+    fi
+  else
+    warn "mariadb-client missing (apt-get nahi) — db.* tasks client ke bina chalenge nahi"
+  fi
+fi
 
 if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
   if [[ -x /usr/bin/certbot ]]; then

@@ -14,49 +14,52 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 4 Oct 2026
 
-### panel-update 0.69.0 — S10: real cPanel account import + transfer/restore job history
+### panel-update 0.70.0 — S8: real MySQL/MariaDB databases + users + privileges
 ```bash
-sudo alphacp-sync get b23fafec02f187c49294b25b0bf708161d95885d installer/panel-update.sh /tmp/acp-panel-update-0.69.0.sh 83f15b4b2f030b8a347429cb72963a5d10ee907c2b9884b8938e7e1d5afd1b7d && sudo bash /tmp/acp-panel-update-0.69.0.sh
+sudo alphacp-sync get a5e557fd443b411d27d33f9a0bdbed25e2ee73cc installer/panel-update.sh /tmp/acp-panel-update-0.70.0.sh 010b0a3379a226c58aa055a2fed4bac646600db7ec37ce040f1df0d2c82ca098 && sudo bash /tmp/acp-panel-update-0.70.0.sh
 ```
-- Updater SHA-256: `83f15b4b2f030b8a347429cb72963a5d10ee907c2b9884b8938e7e1d5afd1b7d`.
-- Expected: banner `updater 0.69.0` → panel **0.69.0** + agent **0.61.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Naya kya:** WHM ke teen transfer pages ab JSON stub nahi — asli **cPanel account import** chalta hai.
-  Aap `cpmove-<user>.tar.gz` (ya legacy `backup-*.tar.gz`, ya purana nested `homedir/homedir.tar`) server par
-  rakhte ho (`/home/...` ya naya drop dir `/usr/local/alphacp/incoming/`), page par poora path + optional
-  **SHA-256** dete ho, aur root agent usi path ko verify karke account ka home import kar deta hai. Sirf
-  `homedir` aata hai — archive ka MySQL/mail/DNS hissa job result me **sections** ke roop me dikhta hai
-  (import uske agle S10 slice me). Har entry check hoti hai: `..`/absolute path, hardlink/device node, aur
-  symlink ke through likhne wala archive **fail closed**; import staging me hota hai aur purana home
-  `/home/.acp-prerestore-<user>-<stamp>` me safe rehta hai (failure par rollback).
-  `backup.cpanel` / `backup.transfer` ab **destructive** tasks hain (`_confirm`, 3600s) aur
-  **Review Transfers and Restores** page asli job history dikhata hai (status, account, files/bytes, skipped
-  sections, error). Updater naya drop dir `/usr/local/alphacp/incoming` (0750 root:alphacp) bhi banata hai.
-- Optional manual check: panel me **WHM → Transfer Tool** kholo — form me "Archive path on this server"
-  field dikhni chahiye (purane `transfer.json` text ki jagah).
-- Tests: panel **425/0 (6 wasm-skip)**, update-sim **213/213**, provision-sim **98/98**, cpanel-import-sim **PASS**
-  (real GNU tar + asli `CpanelArchive` accept/reject), cpanel-import-e2e **PASS** (asli
-  `BackupArchiveStore` + real tar se home swap/rollback), backup-tar-sim **PASS**.
-- Ye 0.68.0 (scheduled backups) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
+- Updater SHA-256: `010b0a3379a226c58aa055a2fed4bac646600db7ec37ce040f1df0d2c82ca098`.
+- Expected: banner `updater 0.70.0` → panel **0.70.0** + agent **0.62.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Naya kya:** Databases ka JSON stub khatam. Ab **asli MariaDB** chalti hai —
+  `Create Database` sach me database banata hai, nayi **MySQL Users** page se user banta hai
+  (host `localhost`/`%`, checkbox se kaunse databases par `ALL PRIVILEGES`), "Add User To
+  Database" sach me GRANT karta hai, aur remove/drop sach me DROP karte hain (pehle privileges
+  revoke). Agent MariaDB **client** ko `--protocol=socket --batch` ke saath chalata hai aur SQL
+  script **stdin** se deta hai — isliye koi database/user naam ya password kabhi process list
+  (argv) me nahi jaata; identifiers backtick-quoted aur literals escape hote hain. Password panel
+  generate karta hai (20 chars), **sirf ek baar** dikhta hai, kahin store nahi hota. `db.drop` /
+  `db.user.drop` destructive tasks hain (`_confirm`), aur database drop se uske saare grants bhi
+  hat jaate hain. Updater `mariadb-client` missing ho to install karta hai.
+- **Optional manual check (recommended):** panel me **MySQL Databases** page kholo → ek database
+  banao → **Task Queue** me `db.create` success dikhna chahiye; phir **MySQL Users** → user banao
+  (password turant copy kar lo) + database checkbox tick karo → Task Queue me `db.user.create`.
+  Server par verify: `sudo mariadb -e "SHOW DATABASES LIKE 'USERNAME_%'"` aur
+  `sudo mariadb -e "SHOW GRANTS FOR 'USERNAME_wp_admin'@'localhost'"`.
+- Tests: panel **434/0**, update-sim **224/224**, provision-sim **104/104**, mysql-sim **PASS**
+  (asli handlers + generated SQL ka lint), cpanel-import-sim/cpanel-import-e2e **PASS**, backup-tar-sim **PASS**.
+- Ye 0.69.0 (real cPanel account import) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
 
 ## ✅ Latest deployment (4 Oct 2026; already completed)
 
-### panel-update 0.68.0 — S10: scheduled backups (cron)
+### panel-update 0.69.0 — S10: real cPanel account import + transfer job history
+```bash
+sudo alphacp-sync get b23fafec02f187c49294b25b0bf708161d95885d installer/panel-update.sh /tmp/acp-panel-update-0.69.0.sh 83f15b4b2f030b8a347429cb72963a5d10ee907c2b9884b8938e7e1d5afd1b7d && sudo bash /tmp/acp-panel-update-0.69.0.sh
+```
+- **Live result:** server snapshot 2026-10-04 03:30Z → panel **0.69.0**, agent **0.61.0**, HTTP **200**.
+- Updater SHA-256: `83f15b4b2f030b8a347429cb72963a5d10ee907c2b9884b8938e7e1d5afd1b7d`.
+- WHM transfer pages (Transfer Tool / Transfer or Restore / Review Transfers) ab asli
+  `cpmove-<user>.tar.gz` (ya legacy/nested) import karte hain: sha256 verify, sirf `homedir`,
+  staging + home swap, purana home `/home/.acp-prerestore-<user>-<stamp>` me, hostile archive fail closed,
+  aur Review page asli job history dikhata hai. Naya drop dir `/usr/local/alphacp/incoming`.
+
+### panel-update 0.68.0 — S10: scheduled backups (cron, history)
 ```bash
 sudo alphacp-sync get 337516473d108f7c40e19cbce7b0c168aafe59fb installer/panel-update.sh /tmp/acp-panel-update-0.68.0.sh d3cb42257ac05e4fc7e1596962ac8059f6355a177fe1efef3f4044768e624071 && sudo bash /tmp/acp-panel-update-0.68.0.sh
 ```
-- **Live result:** server snapshot 2026-10-04 02:44Z → panel **0.68.0**, agent **0.60.0**, HTTP **200**.
-- Updater SHA-256: `d3cb42257ac05e4fc7e1596962ac8059f6355a177fe1efef3f4044768e624071`.
+- Live result (0.68.0 ke waqt): panel **0.68.0**, agent **0.60.0**, HTTP **200**.
 - WHM → Backup Config ka daily/weekly/monthly schedule ab cron se sach me chalta hai; ek window me ek hi
-  pass, retention + Backup User Selection list honour hoti hai. **Note:** default schedule disabled hai —
+  pass, retention + Backup User Selection list honour hoti hai. Default schedule disabled hai —
   auto-backups ke liye WHM → Backup Configuration me schedule set karna zaroori hai.
-
-### panel-update 0.67.0 — S10: safe home restore (history)
-```bash
-sudo alphacp-sync get 4d99491e867e020ec23f9615fe8e2d6c5801e58c installer/panel-update.sh /tmp/acp-panel-update-0.67.0.sh df33d7b26908af2a17d73c224646f3892cdeee5163c39fa71c83a19b1debaf6c && sudo bash /tmp/acp-panel-update-0.67.0.sh
-```
-- Live result (0.67.0 ke waqt): panel **0.67.0**, agent **0.60.0**, HTTP **200** — ab 0.68.0 ise supersede karta hai.
-- Customer Backup page par "Restore a home archive" card: verified archive se poora home ya ek subtree
-  restore, pre-restore copy `/home/.acp-prerestore-<user>-<stamp>` me; hostile archive/path fail closed.
 
 ### panel-update 0.65.0 — S10: verified home archive + account-scoped download (history)
 ```bash
