@@ -13,6 +13,9 @@ interface CommandExecutor
 {
     /**
      * @param  list<string> $argv full argv, argv[0] must be an absolute path
+     * @param  string|null  $stdin raw script on stdin (small SQL, no secrets in argv)
+     * @param  string|null  $stdinFile file streamed to stdin in chunks (large SQL dumps;
+     *                      never loaded into memory)
      */
-    public function run(array $argv, ?int $timeout = null, ?string $stdin = null): CommandResult;
+    public function run(array $argv, ?int $timeout = null, ?string $stdin = null, ?string $stdinFile = null): CommandResult;
 }

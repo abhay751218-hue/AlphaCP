@@ -15,6 +15,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   create/grant/login/reset/refuse/drop sab verify karti hai, aur panel me account na ho to khud ek
   temp account (`acpvXXXXXX`) bana kar ant me hata deti hai. Offline sim uske liye:
   `tools/sim/s8-live-check-sim.sh` (10/0; ek deliberately broken run included).
+  **Live result (4 Oct, 15:14Z):** updater 0.70.1 deployed → panel 0.70.0 + agent 0.63.0, HTTP 200;
+  `tools/verify/s8-live-check.sh` → **21 pass / 0 fail** (tasks #184–#191: real CREATE DATABASE,
+  user + ALL PRIVILEGES, asli login, password reset, `_confirm` guard, drop, temp account cleanup).
   Tests: panel **434/0 (6 wasm-skip)**, update-sim **225/225** (naya check: GECOS marker colon-free),
   provision-sim **107/107**, mysql-sim **PASS**, s8-live-check-sim **10/0**, commands-check **10/0**.
 

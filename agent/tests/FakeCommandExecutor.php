@@ -68,8 +68,16 @@ final class FakeCommandExecutor implements CommandExecutor
 
     public ?string $mysqlFailWhenContains = null;
 
-    public function run(array $argv, ?int $timeout = null, ?string $stdin = null): CommandResult
+    /** @var list<array{argv: list<string>, file: string, contents: string}> stdinFile calls (db.restore) */
+    public array $stdinFiles = [];
+
+    public function run(array $argv, ?int $timeout = null, ?string $stdin = null, ?string $stdinFile = null): CommandResult
     {
+        if ($stdinFile !== null) {
+            $contents = @file_get_contents($stdinFile);
+            $this->stdinFiles[] = ['argv' => $argv, 'file' => $stdinFile, 'contents' => is_string($contents) ? $contents : ''];
+            $stdin = is_string($contents) ? $contents : '';
+        }
         $this->calls[] = $argv;
         $line = implode(' ', $argv);
         if ($this->failWhenContains !== null && str_contains($line, $this->failWhenContains)) {
@@ -274,7 +282,7 @@ final class FakeCommandExecutor implements CommandExecutor
             if ($this->mysqlFailWhenContains !== null && str_contains($statement, $this->mysqlFailWhenContains)) {
                 return new CommandResult($argv, 1, '', "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax near '…'", 1);
             }
-            if (preg_match('/^CREATE DATABASE `([a-z0-9_]+)`/i', $statement, $m) === 1) {
+            if (preg_match('/^CREATE DATABASE (?:IF NOT EXISTS )?`([a-z0-9_]+)`/i', $statement, $m) === 1) {
                 $this->mysqlDatabases[] = $m[1];
                 $this->mysqlDatabases = array_values(array_unique($this->mysqlDatabases));
                 continue;

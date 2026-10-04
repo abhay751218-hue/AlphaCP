@@ -64,6 +64,7 @@ use Alphacp\Agent\Tasks\DbList;
 use Alphacp\Agent\Tasks\DbUserCreate;
 use Alphacp\Agent\Tasks\DbUserDrop;
 use Alphacp\Agent\Tasks\DbUserGrant;
+use Alphacp\Agent\Tasks\DbRestore;
 use Alphacp\Agent\Tasks\DbUserPassword;
 use Alphacp\Agent\Tasks\MysqlSet;
 use Alphacp\Agent\Tasks\PhpmyadminSet;
@@ -2304,6 +2305,104 @@ test('backup.extract restores a subtree and rejects hostile archives', function 
         $threwMissing = str_contains($e->getMessage(), 'not found');
     }
     assert_true($threwMissing, 'restoring an unknown archive must fail closed');
+    acp_account_cleanup($harness);
+});
+
+test('db.restore imports cpmove mysql dumps into real databases (and refuses a hostile one)', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $archive = $harness['root'] . '/home/cpmove-alicehost.tar.gz';
+    file_put_contents($archive, str_repeat('cpmove-archive-bytes', 8));
+    $sha = (string) hash_file('sha256', $archive);
+
+    $harness['cmd']->tarListLines = [
+        'cpmove-alicehost/', 'cpmove-alicehost/homedir/', 'cpmove-alicehost/homedir/public_html/index.php',
+        'cpmove-alicehost/mysql/', 'cpmove-alicehost/mysql/alicehost_shop.sql',
+        'cpmove-alicehost/mysql/alicehost_blog.sql', 'cpmove-alicehost/mysql/alicehost_notes.txt',
+    ];
+    $harness['cmd']->tarMemberList['cpmove-alicehost/mysql'] = [
+        'cpmove-alicehost/mysql/',
+        'cpmove-alicehost/mysql/alicehost_shop.sql',
+        'cpmove-alicehost/mysql/alicehost_blog.sql',
+        'cpmove-alicehost/mysql/alicehost_notes.txt',
+    ];
+    // shop: a normal dump (mysqldump --add-drop-database shaped) — imports fine
+    // blog: touches ANOTHER database — must refuse before anything runs
+    $harness['cmd']->tarExtractPaths = [
+        'cpmove-alicehost/mysql/alicehost_shop.sql' =>
+            "USE `alicehost_shop`;\nDROP DATABASE IF EXISTS `alicehost_shop`;\nCREATE DATABASE `alicehost_shop`;\n"
+            . "CREATE TABLE `wp` (`id` int);\nINSERT INTO `wp` VALUES (7);\n",
+        'cpmove-alicehost/mysql/alicehost_blog.sql' => "DROP DATABASE `someotherdb`;\n",
+    ];
+
+    $blocked = false;
+    try {
+        (new DbRestore())->handle([
+            'username' => 'alicehost', 'archive_path' => $archive, 'sha256' => $sha, '_confirm' => 'db.restore',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $blocked = str_contains($e->getMessage(), 'another database');
+    }
+    assert_true($blocked, 'a dump naming another database must refuse the whole import');
+    assert_true($harness['cmd']->mysqlDatabases === [], 'nothing is imported when one dump is hostile');
+    assert_true($harness['cmd']->stdinFiles === [], 'nothing is streamed when one dump is hostile');
+
+    // the operator can exclude it explicitly (the panel shows which dump failed)
+    $result = (new DbRestore())->handle([
+        'username' => 'alicehost', 'archive_path' => $archive, 'sha256' => $sha,
+        'only' => ['shop'], '_confirm' => 'db.restore',
+    ], $harness['ctx']);
+
+    assert_true($result['status'] === 'imported', 'restore report success');
+    assert_true(count($result['databases']) === 1, 'only the requested dump is imported');
+    assert_true($result['databases'][0]['database'] === 'alicehost_shop', 'target database carries the account prefix');
+    assert_true($result['databases'][0]['database_created'] === true, 'missing database is created first');
+    assert_true(in_array('alicehost_shop', $harness['cmd']->mysqlDatabases, true), 'database exists in MariaDB');
+    assert_true(count($harness['cmd']->stdinFiles) === 1, 'the dump is streamed to the client');
+    $stdin = $harness['cmd']->stdinFiles[0]['contents'];
+    assert_true(str_starts_with($stdin, "USE `alicehost_shop`;"), 'prepared dump selects the target database');
+    assert_true(str_contains($stdin, 'CREATE TABLE `wp`'), 'dump statements are kept');
+    assert_true(substr_count($stdin, 'USE ') === 1, 'the archive USE line is not duplicated');
+    assert_true(!str_contains($stdin, 'DROP DATABASE'), 'drop-database lines for our own db are stripped');
+    assert_true(substr_count($stdin, 'CREATE DATABASE') === 0, 'create-database lines are stripped too');
+    $skipped = array_column($result['skipped'], 'member');
+    assert_true(in_array('cpmove-alicehost/mysql/alicehost_notes.txt', $skipped, true), 'non-.sql members are reported as skipped');
+
+    // a dump that tries to write files as the database user is refused as well
+    $harness['cmd']->tarExtractPaths = [
+        'cpmove-alicehost/mysql/alicehost_shop.sql' => "SELECT 'x' INTO OUTFILE '/root/evil';\n",
+    ];
+    $harness['cmd']->stdinFiles = [];
+    $outfileBlocked = false;
+    try {
+        (new DbRestore())->handle([
+            'username' => 'alicehost', 'archive_path' => $archive, 'only' => ['shop'],
+            '_confirm' => 'db.restore',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $outfileBlocked = str_contains($e->getMessage(), 'INTO OUTFILE');
+    }
+    assert_true($outfileBlocked, 'INTO OUTFILE must be refused');
+    assert_true($harness['cmd']->stdinFiles === [], 'a refused dump is never streamed');
+
+    $staging = glob($harness['root'] . '/home/.acp-mysql-alicehost-*');
+    assert_true($staging === [] || $staging === false, 'mysql staging dir must be cleaned up');
+    acp_account_cleanup($harness);
+});
+
+test('db.restore reports an archive without mysql dumps instead of failing', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $archive = $harness['root'] . '/home/cpmove-alicehost.tar.gz';
+    file_put_contents($archive, str_repeat('cpmove-archive-bytes', 8));
+
+    $harness['cmd']->tarListLines = ['cpmove-alicehost/', 'cpmove-alicehost/homedir/', 'cpmove-alicehost/homedir/public_html/index.php'];
+    $result = (new DbRestore())->handle([
+        'username' => 'alicehost', 'archive_path' => $archive, '_confirm' => 'db.restore',
+    ], $harness['ctx']);
+
+    assert_true($result['status'] === 'empty', 'a home-only archive reports empty');
+    assert_true($result['databases'] === [], 'nothing is restored');
     acp_account_cleanup($harness);
 });
 
