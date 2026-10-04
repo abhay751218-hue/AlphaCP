@@ -283,6 +283,37 @@ test('rejects reserved, short, and hostile usernames', function (): void {
 });
 
 fwrite(STDOUT, "\nAccount handlers (fake executor)\n");
+test('useradd comment never contains a colon (real useradd rejects it)', function (): void {
+    // Live bug: `useradd: invalid comment 'AlphaCP:example.com'` — isliye panel ka
+    // Create Account asli host par hamesha fail hota tha.
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+
+    $comment = null;
+    foreach ($harness['cmd']->calls as $argv) {
+        if (basename((string) ($argv[0] ?? '')) !== 'useradd') {
+            continue;
+        }
+        foreach ($argv as $i => $arg) {
+            if ($arg === '-c' && isset($argv[$i + 1])) {
+                $comment = $argv[$i + 1];
+            }
+        }
+    }
+    assert_true($comment !== null, 'useradd -c comment bheja gaya');
+    assert_true(!str_contains((string) $comment, ':'), "comment me colon nahi hona chahiye (mila: {$comment})");
+    assert_true(str_starts_with((string) $comment, AccountOs::GECOS_MARKER . ' '), 'comment AlphaCP marker se shuru hota hai');
+
+    // getent se pahchaan: naya format + legacy 'AlphaCP:' dono chalne chahiye
+    $harness['cmd']->users['acpnewstyle'] = AccountOs::GECOS_MARKER . ' shop.example.com';
+    $harness['cmd']->users['acplegacy'] = 'AlphaCP:shop.example.com';
+    $os = new AccountOs($harness['ctx']->cmd, new SafeFs($harness['ctx']->paths), AccountPaths::fromEnv(), $harness['ctx']->log);
+    assert_true($os->isOurUser('acpnewstyle') === true, 'naya GECOS format pehchana jata hai');
+    assert_true($os->isOurUser('acplegacy') === true, 'legacy AlphaCP: user bhi pehchana jata hai');
+    assert_true($os->isOurUser('notours') === false, 'doosre user ko AlphaCP nahi samajhta');
+    acp_account_cleanup($harness);
+});
+
 test('create writes home, vhost, pool and records useradd', function (): void {
     $harness = acp_account_harness();
     $result = (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
