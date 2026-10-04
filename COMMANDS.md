@@ -16,7 +16,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ### panel-update 0.70.0 — S8: real MySQL/MariaDB databases + users + privileges
 ```bash
-sudo alphacp-sync get a5e557fd443b411d27d33f9a0bdbed25e2ee73cc installer/panel-update.sh /tmp/acp-panel-update-0.70.0.sh 010b0a3379a226c58aa055a2fed4bac646600db7ec37ce040f1df0d2c82ca098 && sudo bash /tmp/acp-panel-update-0.70.0.sh
+sudo alphacp-sync get 683e8b6a48d6b62373d405e5e0c5e3f43bf14889 installer/panel-update.sh /tmp/acp-panel-update-0.70.0.sh 010b0a3379a226c58aa055a2fed4bac646600db7ec37ce040f1df0d2c82ca098 && sudo bash /tmp/acp-panel-update-0.70.0.sh
 ```
 - Updater SHA-256: `010b0a3379a226c58aa055a2fed4bac646600db7ec37ce040f1df0d2c82ca098`.
 - Expected: banner `updater 0.70.0` → panel **0.70.0** + agent **0.62.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.

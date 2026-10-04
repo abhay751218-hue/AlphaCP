@@ -55,12 +55,13 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 | Command | Kya test karta hai | Last result |
 |---|---|---|
 | `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — panel 0.70.0 artifact | **434/0, 6 skip** |
-| `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy/usage/ssh/mail/forward/autorespond/catchall/filter/deliverability/spam/list/routing/track/gfilter/encrypt/boxtrapper/calendar/mail.usage/webmail/db.set/db.phpmyadmin/db.remote/dns.zone/dns.dynamic/dns.track/dns.hostname/dns.templates/mail.globalrouting/dns.nsreport/dns.park/dns.cleanup/dns.ttl/dns.forward/dns.sync/dns.nameserver/backup.create/backup.archive/backup.wizard/backup.restore/backup.config/backup.restoration/backup.users/backup.filedir/backup.transfer/backup.cpanel/backup.review/backup.extract tasks | **98/98** (symlink-escape + safe-restore + cpmove-import tests) |
+| `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy/usage/ssh/mail/forward/autorespond/catchall/filter/deliverability/spam/list/routing/track/gfilter/encrypt/boxtrapper/calendar/mail.usage/webmail/db.set/db.phpmyadmin/db.remote/dns.zone/dns.dynamic/dns.track/dns.hostname/dns.templates/mail.globalrouting/dns.nsreport/dns.park/dns.cleanup/dns.ttl/dns.forward/dns.sync/dns.nameserver/backup.create/backup.archive/backup.wizard/backup.restore/backup.config/backup.restoration/backup.users/backup.filedir/backup.transfer/backup.cpanel/backup.review/backup.extract tasks | **106/106** (symlink-escape + safe-restore + cpmove-import + S8 MySQL tests) |
 | `bash tools/sim/backup-tar-sim.sh` | Native GNU tar create/list/extract/subtree-extract, symlink preservation, hostile path-escape visibility, SHA-256 smoke test (v0.2.0) | **PASS** |
 | `bash tools/sim/mysql-sim.sh` | Asli `db.*` handlers (php-wasm) se generated MariaDB SQL ka lint: statement verbs, balanced quoting, backticked account-prefixed identifiers, argv me kabhi identifier/password nahi, hostile input se **koi SQL nahi** (v0.70.0) | **PASS** |
 | `bash tools/sim/cpanel-import-sim.sh` | Real GNU tar (cpmove / legacy / nested layout) + asli `CpanelArchive` class (php-wasm): genuine archive accept, path-escape / hardlink / symlink-traversal reject (v0.69.0) | **PASS** |
 | `bash tools/sim/cpanel-import-e2e.sh` | Asli `BackupArchiveStore` + real `CommandRunner` + real tar, throwaway accounts root: home swap + `.acp-prerestore-*` copy + symlink preserved + staging cleanup, aur 7 hostile archives (escape / write-through / hardlink / doosra account / galat sha256 / missing / not-a-tar) fail closed (v0.69.0) | **PASS** |
 | `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.70.0: panel 0.70.0 + agent 0.62.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)**, **cron + import drop dir (U8)**, **S8 MySQL tasks (U9)** | **224/224** |
+| `bash tools/sim/commands-check.sh` | COMMANDS.md ka NEXT command (offline, root-free): pinned commit par file maujood hai, byte-sha match karta hai, updater banner/version sahi hai, aur andar ke BUNDLE/AGENT artifact pins us commit ke artifacts se match karte hain | **10/0** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 
@@ -76,7 +77,10 @@ Real server (PHP 8.4 FPM) par poora suite: `cd /usr/local/alphacp/panel && sudo 
 3. `bash tools/sim/panel-tests.sh` → 0 fail. Commit + push (commit **A**).
 4. `installer/panel-update.sh` me `UPDATER_VERSION`, `PANEL_VERSION`, `BUNDLE_URL` (commit **A** ka raw link), `BUNDLE_SHA256` badlo.
 5. `sudo bash tools/sim/update-sim.sh` → sab PASS. Commit + push (commit **B**). `gh api` se GitHub copy verify karo.
-6. `COMMANDS.md` me commit **B** ka link. Updater end me `alphacp-sync` khud chalata hai → GitHub bhi update.
+6. `COMMANDS.md` me commit **B** ka link (**artifact commit nahi** — us par purana updater hota hai).
+7. `bash tools/sim/commands-check.sh` → 0 fail **se pehle** ki command user ko di jaye; yehi check 4 Oct ki galti
+   (0.70.0 command me commit A pin ho gaya tha → `sha256 mismatch … file NAHI likhi`) pakadta hai.
+8. Updater end me `alphacp-sync` khud chalata hai → GitHub bhi update.
    (Sync tool badla ho to updater ke `SYNC_TOOL_VERSION/URL/SHA256` bhi badlo — updater use upgrade kar deta hai.)
 
 ⚠️ Dusre AI kabhi-kabhi alag `arena/*` branch par push karte hain. Shuru me `git ls-remote origin` dekho, aur
