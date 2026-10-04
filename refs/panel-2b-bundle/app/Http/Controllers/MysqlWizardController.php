@@ -14,7 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** cPanel MySQL Database Wizard — step-by-step name via existing db.set. No mysql binary. */
+/** cPanel MySQL Database Wizard (S8) — same real `db.create` task, step-by-step UI. */
 class MysqlWizardController extends Controller
 {
     public function index(Request $request): View
@@ -76,15 +76,15 @@ class MysqlWizardController extends Controller
         if ($exists) {
             return back()->withErrors(['name' => 'This database already exists.']);
         }
-        MysqlDatabase::query()->create([
+        $database = MysqlDatabase::query()->create([
             'account_id' => $account->id,
             'name' => $name,
         ]);
-        DatabaseProvisioner::enqueue($account);
+        DatabaseProvisioner::enqueueCreate($account, $database);
         $account->recordEvent('db.wizard.queued', $account->username . '_' . $name);
         Audit::log('db.wizard', 'info', 'account', $account->id, ['name' => $account->username . '_' . $name]);
 
-        return redirect()->route('mysql-wizard.index')->with('success', 'Database is queued (db.set).');
+        return redirect()->route('mysql-wizard.index')->with('success', 'Step 4 complete — MariaDB database is queued. Users/privileges MySQL Users page se lagao.');
     }
 
     private function accountFor(Request $request): ?Account

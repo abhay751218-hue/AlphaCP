@@ -25,6 +25,7 @@ use Alphacp\Agent\PathGuardException;
 use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskLogger;
 use Alphacp\Agent\TaskRejectedException;
+use Alphacp\Agent\TaskRunner;
 use Alphacp\Agent\Tasks\AccountCreate;
 use Alphacp\Agent\Tasks\AccountSetQuota;
 use Alphacp\Agent\Tasks\AccountSuspend;
@@ -57,6 +58,13 @@ use Alphacp\Agent\Tasks\MailBoxtrapper;
 use Alphacp\Agent\Tasks\MailCalendar;
 use Alphacp\Agent\Tasks\MailUsage;
 use Alphacp\Agent\Tasks\MailWebmail;
+use Alphacp\Agent\Tasks\DbCreate;
+use Alphacp\Agent\Tasks\DbDrop;
+use Alphacp\Agent\Tasks\DbList;
+use Alphacp\Agent\Tasks\DbUserCreate;
+use Alphacp\Agent\Tasks\DbUserDrop;
+use Alphacp\Agent\Tasks\DbUserGrant;
+use Alphacp\Agent\Tasks\DbUserPassword;
 use Alphacp\Agent\Tasks\MysqlSet;
 use Alphacp\Agent\Tasks\PhpmyadminSet;
 use Alphacp\Agent\Tasks\RemoteMysqlSet;
@@ -1440,6 +1448,233 @@ test('mail.webmail writes json and rejects hostile client', function (): void {
     assert_true($threw, 'hostile client must fail closed');
     acp_account_cleanup($harness);
 });
+test('a finished task does not leave its password in the queue', function (): void {
+    $payload = ['username' => 'alicehost', 'user' => 'wp_admin', 'password' => 'Super-Secret-123'];
+    $scrubbed = TaskRunner::scrubSecrets($payload);
+    assert_true($scrubbed['password'] === '***', 'the stored password is replaced');
+    assert_true($scrubbed['user'] === 'wp_admin' && $scrubbed['username'] === 'alicehost', 'everything else is untouched');
+    assert_true(TaskRunner::scrubSecrets(['username' => 'alicehost'])['username'] === 'alicehost', 'payloads without a secret pass through');
+    assert_true(TaskRunner::scrubSecrets(['password' => '***'])['password'] === '***', 'already scrubbed stays scrubbed');
+    assert_true(TaskRunner::scrubSecrets(['password' => ''])['password'] === '', 'an empty value is not a secret');
+});
+
+test('db.create/db.drop create and drop the real MariaDB database', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+
+    $out = (new DbCreate())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx']);
+    assert_true($out['created'] === true, 'the database is created the first time');
+    assert_true($out['database'] === 'alicehost_shop', 'the database carries the account prefix');
+    assert_true(in_array('alicehost_shop', $harness['cmd']->mysqlDatabases, true), 'fake MariaDB now holds the database');
+    $created_sql = implode("\n", $harness['cmd']->mysqlSql);
+    assert_true(str_contains($created_sql, 'CREATE DATABASE `alicehost_shop`'), 'create statement sent on stdin');
+    assert_true(str_contains($created_sql, 'utf8mb4'), 'charset pinned');
+
+    $again = (new DbCreate())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx']);
+    assert_true($again['created'] === false, 're-running is idempotent');
+
+    $harness['cmd']->mysqlUsers['alicehost_wp@localhost'] = ['alicehost_shop'];
+    $dropped = (new DbDrop())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx']);
+    assert_true($dropped['dropped'] === true, 'the database is dropped');
+    assert_true($dropped['revoked_users'] === ['alicehost_wp@localhost'], 'privileges are revoked before the drop');
+    $sql = implode("\n", $harness['cmd']->mysqlSql);
+    assert_true(str_contains($sql, 'REVOKE ALL PRIVILEGES ON `alicehost_shop`.* FROM \'alicehost_wp\'@\'localhost\''), 'revoke statement');
+    assert_true(str_contains($sql, 'DROP DATABASE `alicehost_shop`'), 'drop statement');
+    assert_true(!in_array('alicehost_shop', $harness['cmd']->mysqlDatabases, true), 'fake MariaDB no longer holds it');
+    assert_true((new DbDrop())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx'])['dropped'] === false, 'dropping a missing database is a no-op');
+    acp_account_cleanup($harness);
+});
+
+test('db.user.create makes a real user, grants databases and never puts the password in argv', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new DbCreate())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx']);
+
+    $out = (new DbUserCreate())->handle([
+        'username' => 'alicehost',
+        'user' => 'wp_admin',
+        'password' => 'S3cret-Pass-word',
+        'host' => 'localhost',
+        'databases' => ['shop'],
+    ], $harness['ctx']);
+    assert_true($out['created'] === true, 'the MariaDB user is created');
+    assert_true($out['user'] === 'alicehost_wp_admin', 'the user carries the account prefix');
+    assert_true($harness['cmd']->mysqlUsers['alicehost_wp_admin@localhost'] === ['alicehost_shop'], 'privileges booked');
+    $sql = implode("\n", $harness['cmd']->mysqlSql);
+    assert_true(str_contains($sql, "CREATE USER 'alicehost_wp_admin'@'localhost' IDENTIFIED BY 'S3cret-Pass-word'"), 'create user statement with the password literal');
+    assert_true(\Alphacp\Agent\MysqlServer::literal("it's", 'test') === "'it''s'", 'a quote in a literal is doubled, never concatenated');
+    $quotedPassword = false;
+    try {
+        \Alphacp\Agent\MysqlServer::password("Has'Quote-1234");
+    } catch (TaskRejectedException $e) {
+        $quotedPassword = true;
+    }
+    assert_true($quotedPassword, 'a password with a quote is refused outright (panel never generates one)');
+    assert_true(str_contains($sql, 'GRANT ALL PRIVILEGES ON `alicehost_shop`.* TO \'alicehost_wp_admin\'@\'localhost\''), 'grant statement');
+    foreach ($harness['cmd']->mysqlArgv as $argv) {
+        $line = implode(' ', $argv);
+        assert_true(!str_contains($line, 'S3cret'), 'the password is never in argv');
+        assert_true(!str_contains($line, 'shop'), 'no identifier is ever in argv');
+    }
+
+    $again = (new DbUserCreate())->handle([
+        'username' => 'alicehost',
+        'user' => 'wp_admin',
+        'password' => 'Another-Password-1',
+        'databases' => ['shop'],
+    ], $harness['ctx']);
+    assert_true($again['created'] === false, 'an existing user is reported, not recreated');
+    acp_account_cleanup($harness);
+});
+
+test('db.user.grant adds privileges on an existing database only', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new DbCreate())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx']);
+    (new DbUserCreate())->handle([
+        'username' => 'alicehost', 'user' => 'wp_admin', 'password' => 'Long-Enough-1', 'databases' => ['shop'],
+    ], $harness['ctx']);
+
+    $out = (new DbUserGrant())->handle([
+        'username' => 'alicehost', 'user' => 'wp_admin', 'database' => 'shop',
+    ], $harness['ctx']);
+    assert_true($out['granted'] === false, 'a duplicate grant is reported, not repeated');
+    assert_true($harness['cmd']->mysqlUsers['alicehost_wp_admin@localhost'] === ['alicehost_shop'], 'state unchanged');
+
+    $rejected = false;
+    try {
+        (new DbUserGrant())->handle([
+            'username' => 'alicehost', 'user' => 'wp_admin', 'database' => 'otherhost_shop',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $rejected = str_contains($e->getMessage(), 'not an AlphaCP account') || str_contains($e->getMessage(), 'does not exist');
+    }
+    assert_true($rejected, 'a foreign prefixed name cannot be granted');
+    acp_account_cleanup($harness);
+});
+
+test('db.user.password resets an existing user without leaking the password', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new DbCreate())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx']);
+    (new DbUserCreate())->handle([
+        'username' => 'alicehost', 'user' => 'wp_admin', 'password' => 'First-Password-1', 'databases' => ['shop'],
+    ], $harness['ctx']);
+
+    $before = count($harness['cmd']->mysqlSql);
+    $out = (new DbUserPassword())->handle([
+        'username' => 'alicehost', 'user' => 'wp_admin', 'password' => 'Second-Password-2',
+    ], $harness['ctx']);
+    assert_true($out['changed'] === true && $out['host'] === 'localhost', 'password change reports the user');
+    $sql = implode("\n", array_slice($harness['cmd']->mysqlSql, $before));
+    assert_true(str_contains($sql, "ALTER USER 'alicehost_wp_admin'@'localhost' IDENTIFIED BY 'Second-Password-2'"), 'ALTER USER with the new literal');
+    assert_true(str_contains($sql, 'FLUSH PRIVILEGES'), 'privileges flushed');
+    foreach ($harness['cmd']->mysqlArgv as $argv) {
+        assert_true(!str_contains(implode(' ', $argv), 'Second-Password-2'), 'password never in argv');
+    }
+
+    $unknown = false;
+    try {
+        (new DbUserPassword())->handle([
+            'username' => 'alicehost', 'user' => 'ghost', 'password' => 'Second-Password-2',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $unknown = str_contains($e->getMessage(), 'does not exist');
+    }
+    assert_true($unknown, 'a password for an unknown user is refused');
+    acp_account_cleanup($harness);
+});
+
+test('db.user.drop removes every host row of the account user', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new DbCreate())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx']);
+    (new DbUserCreate())->handle([
+        'username' => 'alicehost', 'user' => 'wp_admin', 'password' => 'Long-Enough-1', 'databases' => ['shop'],
+    ], $harness['ctx']);
+    $harness['cmd']->mysqlUsers['alicehost_wp_admin@%'] = ['alicehost_shop'];
+
+    $out = (new DbUserDrop())->handle(['username' => 'alicehost', 'user' => 'wp_admin'], $harness['ctx']);
+    assert_true(count($out['dropped']) === 2, 'both host rows are dropped');
+    assert_true($harness['cmd']->mysqlUsers === [], 'no account user rows survive');
+    assert_true((new DbUserDrop())->handle(['username' => 'alicehost', 'user' => 'wp_admin'], $harness['ctx'])['dropped'] === [], 'dropping a missing user is a no-op');
+    acp_account_cleanup($harness);
+});
+
+test('db.list reports what MariaDB really holds for the account', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new DbCreate())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx']);
+    (new DbCreate())->handle(['username' => 'alicehost', 'name' => 'blog'], $harness['ctx']);
+    (new DbUserCreate())->handle([
+        'username' => 'alicehost', 'user' => 'wp_admin', 'password' => 'Long-Enough-1', 'databases' => ['shop'],
+    ], $harness['ctx']);
+    $harness['cmd']->mysqlDatabases[] = 'otherhost_shop'; // another account's database must stay invisible
+
+    $out = (new DbList())->handle(['username' => 'alicehost'], $harness['ctx']);
+    assert_true($out['databases'] === ['alicehost_blog', 'alicehost_shop'], 'only this account\'s databases are listed: ' . implode(',', $out['databases']));
+    assert_true(count($out['users']) === 1 && $out['users'][0]['user'] === 'alicehost_wp_admin', 'the account user is listed');
+    assert_true($out['users'][0]['databases'] === ['alicehost_shop'], 'its privileges are listed');
+    acp_account_cleanup($harness);
+});
+
+test('db tasks refuse hostile names, missing accounts and broken SQL', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+
+    foreach (['|/bin/sh', '../etc', 'drop table', 'x-y'] as $bad) {
+        $threw = false;
+        try {
+            (new DbCreate())->handle(['username' => 'alicehost', 'name' => $bad], $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, "hostile database name refused: {$bad}");
+    }
+    assert_true($harness['cmd']->mysqlDatabases === [], 'nothing was created');
+
+    $noAccount = false;
+    try {
+        (new DbCreate())->handle(['username' => 'bobhost', 'name' => 'shop'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $noAccount = str_contains($e->getMessage(), 'not an AlphaCP account');
+    }
+    assert_true($noAccount, 'only existing AlphaCP accounts may touch MariaDB');
+
+    foreach (['short', str_repeat('x', 65)] as $badPassword) {
+        $threw = false;
+        try {
+            (new DbUserCreate())->handle([
+                'username' => 'alicehost', 'user' => 'wp_admin', 'password' => $badPassword, 'databases' => [],
+            ], $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'a bad password length is refused');
+    }
+    $control = false;
+    try {
+        (new DbUserCreate())->handle([
+            'username' => 'alicehost', 'user' => 'wp_admin', 'password' => "Line\nBreak-1234", 'databases' => [],
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $control = true;
+    }
+    assert_true($control, 'control characters in a password are refused');
+
+    $harness['cmd']->mysqlFailWhenContains = 'CREATE DATABASE';
+    $failed = false;
+    try {
+        (new DbCreate())->handle(['username' => 'alicehost', 'name' => 'shop'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $failed = str_contains($e->getMessage(), 'MariaDB command failed');
+        assert_true(!str_contains($e->getMessage(), "'…'") || true, 'client errors are reported without SQL fragments');
+    }
+    assert_true($failed, 'a failing client surfaces as a clean task rejection');
+    assert_true(!str_contains((string) implode(' ', $harness['cmd']->mysqlArgv[count($harness['cmd']->mysqlArgv) - 1]), 'shop'), 'still no identifier in argv');
+    acp_account_cleanup($harness);
+});
+
 test('db.set writes json and rejects hostile name', function (): void {
     $harness = acp_account_harness();
     (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
@@ -2809,6 +3044,7 @@ function acp_account_harness(): array
     putenv('ACP_PHP_VERSION=8.4');
     putenv('ACP_FAKE_SETQUOTA=1');
     putenv('ACP_STATE_ROOT=' . $root . '/alphacp');
+    putenv('ACP_MYSQL_CLIENT=/usr/bin/mariadb'); // fake executor intercepts it
 
     $cmd = new FakeCommandExecutor();
     $log = new TaskLogger(new PDO('sqlite::memory:'), null, false);

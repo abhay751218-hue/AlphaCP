@@ -51,6 +51,23 @@ final class FakeCommandExecutor implements CommandExecutor
 
     public ?string $failWhenContains = null;
 
+    /** @var list<string> databases that exist in the fake MariaDB */
+    public array $mysqlDatabases = [];
+
+    /** @var array<string, list<string>> 'user@host' => granted databases */
+    public array $mysqlUsers = [];
+
+    /** @var list<list<string>> rows returned by the next SQL that is a SELECT */
+    public ?array $mysqlRows = null;
+
+    /** @var list<string> every SQL script the agent sent to the client */
+    public array $mysqlSql = [];
+
+    /** @var list<string> the client's argv for each SQL call */
+    public array $mysqlArgv = [];
+
+    public ?string $mysqlFailWhenContains = null;
+
     public function run(array $argv, ?int $timeout = null, ?string $stdin = null): CommandResult
     {
         $this->calls[] = $argv;
@@ -69,6 +86,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'crontab' => $this->handleCrontab($argv, $stdin),
             'certbot' => $this->handleCertbot($argv),
             'tar' => $this->handleTar($argv),
+            'mariadb', 'mysql' => $this->handleMysql($argv, $stdin),
             default => new CommandResult($argv, 0, '', '', 1),
         };
     }
@@ -233,6 +251,101 @@ final class FakeCommandExecutor implements CommandExecutor
         file_put_contents($live . '/fullchain.pem', "-----BEGIN CERTIFICATE-----\nLE-fake\n-----END CERTIFICATE-----\n");
         file_put_contents($live . '/privkey.pem', "-----BEGIN PRIVATE KEY-----\nLE-fake\n-----END PRIVATE KEY-----\n");
         return new CommandResult($argv, 0, "Successfully received certificate.\n", '', 1);
+    }
+
+    /**
+     * A tiny MariaDB client: understands the small SQL surface the db.* tasks
+     * send, and records the SQL + argv so tests can prove no password ever
+     * reaches the command line.
+     *
+     * @param list<string> $argv
+     */
+    private function handleMysql(array $argv, ?string $stdin): CommandResult
+    {
+        $this->mysqlArgv[] = $argv;
+        $sql = (string) ($stdin ?? '');
+        $this->mysqlSql[] = $sql;
+
+        foreach (explode(";", $sql) as $statement) {
+            $statement = trim($statement);
+            if ($statement === '') {
+                continue;
+            }
+            if ($this->mysqlFailWhenContains !== null && str_contains($statement, $this->mysqlFailWhenContains)) {
+                return new CommandResult($argv, 1, '', "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax near '…'", 1);
+            }
+            if (preg_match('/^CREATE DATABASE `([a-z0-9_]+)`/i', $statement, $m) === 1) {
+                $this->mysqlDatabases[] = $m[1];
+                $this->mysqlDatabases = array_values(array_unique($this->mysqlDatabases));
+                continue;
+            }
+            if (preg_match('/^DROP DATABASE `([a-z0-9_]+)`/i', $statement, $m) === 1) {
+                $this->mysqlDatabases = array_values(array_diff($this->mysqlDatabases, [$m[1]]));
+                continue;
+            }
+            if (preg_match('/^CREATE USER \'([a-z0-9_]+)\'@\'([^\']+)\'/i', $statement, $m) === 1) {
+                $this->mysqlUsers[$m[1] . '@' . $m[2]] ??= [];
+                continue;
+            }
+            if (preg_match('/^DROP USER \'([a-z0-9_]+)\'@\'([^\']+)\'/i', $statement, $m) === 1) {
+                unset($this->mysqlUsers[$m[1] . '@' . $m[2]]);
+                continue;
+            }
+            if (preg_match('/^GRANT ALL PRIVILEGES ON `([a-z0-9_]+)`\.\* TO \'([a-z0-9_]+)\'@\'([^\']+)\'/i', $statement, $m) === 1) {
+                $key = $m[2] . '@' . $m[3];
+                $this->mysqlUsers[$key] ??= [];
+                if (!in_array($m[1], $this->mysqlUsers[$key], true)) {
+                    $this->mysqlUsers[$key][] = $m[1];
+                }
+                continue;
+            }
+            if (preg_match('/^REVOKE ALL PRIVILEGES ON `([a-z0-9_]+)`\.\* FROM \'([a-z0-9_]+)\'@\'([^\']+)\'/i', $statement, $m) === 1) {
+                $key = $m[2] . '@' . $m[3];
+                $this->mysqlUsers[$key] = array_values(array_diff($this->mysqlUsers[$key] ?? [], [$m[1]]));
+                continue;
+            }
+            if (preg_match('/^(SHOW DATABASES|SELECT SCHEMA_NAME|SELECT User|SHOW GRANTS)/i', $statement) === 1) {
+                return new CommandResult($argv, 0, $this->mysqlSelect($statement), '', 1);
+            }
+        }
+
+        return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    private function mysqlSelect(string $statement): string
+    {
+        if (str_starts_with($statement, 'SHOW DATABASES')) {
+            return implode("\n", $this->mysqlDatabases) . "\n";
+        }
+        if (str_starts_with($statement, 'SELECT SCHEMA_NAME')) {
+            if (preg_match("/SCHEMA_NAME = '([a-z0-9_]+)'/", $statement, $m) === 1 && in_array($m[1], $this->mysqlDatabases, true)) {
+                return $m[1] . "\n";
+            }
+            return '';
+        }
+        if (preg_match("/^SELECT User FROM mysql[.]user WHERE User = '([a-z0-9_]+)' AND Host = '([^']+)'/", $statement, $m) === 1) {
+            return isset($this->mysqlUsers[$m[1] . '@' . $m[2]]) ? $m[1] . "\n" : '';
+        }
+        if (str_starts_with($statement, 'SELECT User, Host')) {
+            $lines = [];
+            foreach (array_keys($this->mysqlUsers) as $key) {
+                [$user, $host] = explode('@', $key, 2);
+                $lines[] = $user . "\t" . $host;
+            }
+            return $lines === [] ? '' : implode("\n", $lines) . "\n";
+        }
+        if (preg_match("/^SHOW GRANTS FOR '([a-z0-9_]+)'@'([^']+)'/", $statement, $m) === 1) {
+            $key = $m[1] . '@' . $m[2];
+            if (!isset($this->mysqlUsers[$key])) {
+                return '';
+            }
+            $lines = ["GRANT USAGE ON *.* TO `{$m[1]}`@`{$m[2]}`"];
+            foreach ($this->mysqlUsers[$key] as $database) {
+                $lines[] = "GRANT ALL PRIVILEGES ON `{$database}`.* TO `{$m[1]}`@`{$m[2]}`";
+            }
+            return implode("\n", $lines) . "\n";
+        }
+        return '';
     }
 
     /** @param list<string> $argv */

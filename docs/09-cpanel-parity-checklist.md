@@ -91,10 +91,10 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 37 | MySQL® Databases | DB + users + privileges | S8 | 🟡 (JSON/config only: real MariaDB database/user/GRANT provisioning and phpMyAdmin SSO pending; (prefixed names JSON; no mysql binary; users later)) |
-| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | 🟡 (JSON/config only: real MariaDB database/user/GRANT provisioning and phpMyAdmin SSO pending; (session confirm; reuses db.set; users later)) |
+| 37 | MySQL® Databases | DB + users + privileges | S8 | 🟡 (real `db.create`/`db.drop` MariaDB provisioning via socket-auth client + stdin SQL; per-database size limits + phpMyAdmin SSO pending) |
+| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | 🟡 (session wizard now queues the real `db.create`; step-3 user/privilege step ab MySQL Users page par) |
 | 39 | phpMyAdmin | DB GUI (SSO login) | S8 | 🟡 (JSON/config only: real MariaDB database/user/GRANT provisioning and phpMyAdmin SSO pending; (enabled JSON; no phpMyAdmin install; SSO later)) |
-| 40 | Remote MySQL | Remote access hosts | S8 | 🟡 (JSON/config only: real MariaDB database/user/GRANT provisioning and phpMyAdmin SSO pending; (%/IPv4/FQDN JSON; no mysql GRANT)) |
+| 40 | Remote MySQL | Remote access hosts | S8 | 🟡 (host list still JSON + `db.user.create --host` se real `user@host` grant ho sakta hai; hosts auto-grant pending) |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
 | 42 | PostgreSQL Wizard | 🔵 optional module | post-v1 | 🔵 |
 

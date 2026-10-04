@@ -36,9 +36,9 @@ final class AccountProvisioner
     }
 
     /** @param array<string, mixed> $payload */
-    public static function enqueue(Account $account, string $type, array $payload): int
+    public static function enqueue(Account $account, string $type, array $payload, string $source = 'panel'): int
     {
-        $id = Paneld::enqueue($type, $payload, 'panel', $account->id);
+        $id = Paneld::enqueue($type, $payload, $source, $account->id);
         self::waitIfConfigured($id);
         self::refresh($account);
 

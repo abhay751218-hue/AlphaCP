@@ -26,6 +26,7 @@ use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\EmailDiskUsageController;
 use App\Http\Controllers\WebmailController;
 use App\Http\Controllers\MysqlDatabasesController;
+use App\Http\Controllers\MysqlUsersController;
 use App\Http\Controllers\MysqlWizardController;
 use App\Http\Controllers\PhpmyadminController;
 use App\Http\Controllers\RemoteMysqlController;
@@ -295,6 +296,17 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:databases.manage')->name('mysql.store');
     Route::delete('/mysql/{mysql_database}', [MysqlDatabasesController::class, 'destroy'])
         ->middleware('perm:databases.manage')->name('mysql.destroy');
+
+    Route::get('/mysql-users', [MysqlUsersController::class, 'index'])
+        ->middleware('perm:databases.view')->name('mysql-users.index');
+    Route::post('/mysql-users', [MysqlUsersController::class, 'store'])
+        ->middleware('perm:databases.manage')->name('mysql-users.store');
+    Route::post('/mysql-users/grant', [MysqlUsersController::class, 'grant'])
+        ->middleware('perm:databases.manage')->name('mysql-users.grant');
+    Route::post('/mysql-users/{mysql_user}/password', [MysqlUsersController::class, 'password'])
+        ->middleware('perm:databases.manage')->name('mysql-users.password');
+    Route::delete('/mysql-users/{mysql_user}', [MysqlUsersController::class, 'destroy'])
+        ->middleware('perm:databases.manage')->name('mysql-users.destroy');
 
     Route::get('/mysql-wizard', [MysqlWizardController::class, 'index'])
         ->middleware('perm:databases.view')->name('mysql-wizard.index');

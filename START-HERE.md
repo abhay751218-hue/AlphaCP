@@ -20,7 +20,7 @@
 | Path | Kya |
 |---|---|
 | **`refs/panel-2b-bundle/`** | ⭐ **Panel ka SOURCE (Laravel 13.33.0)** — login, RBAC, 2FA, **license + 15-day trial** (`app/Support/License/`, design: `docs/modules/license.md`), `PasswordGenerator`. Panel badalna ho to yahin badlo. |
-| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Latest source: **0.69.0** (agent 0.61.0, real cPanel account import); server par abhi **0.68.0** (agent 0.60.0; HTTP 200). |
+| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Latest source: **0.70.0** (agent 0.62.0, real MySQL/MariaDB databases + users); server par abhi **0.69.0** (agent 0.61.0; HTTP 200). |
 | `artifacts/panel-bundle-0.3.0.tar.gz` | Purana bundle **vendor/ ke saath** — sandbox tests isi ka vendor use karte hain (composer.lock same). |
 | `server-snapshot/files/usr/local/alphacp/…` | **Server par jo ABHI deployed hai** (alphacp-sync se). Source se mismatch ho to server = sach; farq samjho phir source theek karo. |
 | `server-snapshot/files/etc/...`, `server-snapshot/db-schema.sql` | nginx vhost, php-fpm pool, systemd drop-ins; DB structure (data nahi) |
@@ -54,12 +54,13 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 ## 4b. Tests (sab sandbox me chalte hain — system PHP/MySQL ki zaroorat nahi)
 | Command | Kya test karta hai | Last result |
 |---|---|---|
-| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — panel 0.69.0 artifact | **425 pass, 0 fail, 6 wasm-skip** |
+| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — panel 0.70.0 artifact | **434/0, 6 skip** |
 | `bash tools/sim/provision-sim.sh` | Agent account + domain + php/cron/ssl/ini/errorpages/indexes/mime/handlers/files/privacy/usage/ssh/mail/forward/autorespond/catchall/filter/deliverability/spam/list/routing/track/gfilter/encrypt/boxtrapper/calendar/mail.usage/webmail/db.set/db.phpmyadmin/db.remote/dns.zone/dns.dynamic/dns.track/dns.hostname/dns.templates/mail.globalrouting/dns.nsreport/dns.park/dns.cleanup/dns.ttl/dns.forward/dns.sync/dns.nameserver/backup.create/backup.archive/backup.wizard/backup.restore/backup.config/backup.restoration/backup.users/backup.filedir/backup.transfer/backup.cpanel/backup.review/backup.extract tasks | **98/98** (symlink-escape + safe-restore + cpmove-import tests) |
 | `bash tools/sim/backup-tar-sim.sh` | Native GNU tar create/list/extract/subtree-extract, symlink preservation, hostile path-escape visibility, SHA-256 smoke test (v0.2.0) | **PASS** |
+| `bash tools/sim/mysql-sim.sh` | Asli `db.*` handlers (php-wasm) se generated MariaDB SQL ka lint: statement verbs, balanced quoting, backticked account-prefixed identifiers, argv me kabhi identifier/password nahi, hostile input se **koi SQL nahi** (v0.70.0) | **PASS** |
 | `bash tools/sim/cpanel-import-sim.sh` | Real GNU tar (cpmove / legacy / nested layout) + asli `CpanelArchive` class (php-wasm): genuine archive accept, path-escape / hardlink / symlink-traversal reject (v0.69.0) | **PASS** |
 | `bash tools/sim/cpanel-import-e2e.sh` | Asli `BackupArchiveStore` + real `CommandRunner` + real tar, throwaway accounts root: home swap + `.acp-prerestore-*` copy + symlink preserved + staging cleanup, aur 7 hostile archives (escape / write-through / hardlink / doosra account / galat sha256 / missing / not-a-tar) fail closed (v0.69.0) | **PASS** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.69.0: panel 0.69.0 + agent 0.61.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)**, **scheduler cron + import drop dir (U8)** | **213/213** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.70.0: panel 0.70.0 + agent 0.62.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)**, **cron + import drop dir (U8)**, **S8 MySQL tasks (U9)** | **UPDOK/UPDTOT** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 
