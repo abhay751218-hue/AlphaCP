@@ -41,7 +41,7 @@ sudo alphacp-sync get e1df33775f05fe0c6df39a941834d0a9cf41080f tools/verify/s10-
   archive dir delete, temp account terminate — `trap` me bhi).
 - Expected last line: `=== S10 MYSQL RESTORE LIVE CHECK: 17 pass, 0 fail ===`.
 - Chaaho to ye step skip karo — update khud-tested hai (panel **437/0** + 6 wasm-skip, update-sim
-  **232/232**, provision-sim **109/109**, mysql-sim **PASS**, s10-mysql-restore-sim **8/0**).
+  **234/234**, provision-sim **109/109**, mysql-sim **PASS**, s10-mysql-restore-sim **8/0**).
 
 - Ye 0.70.1 (agent useradd fix) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
 
