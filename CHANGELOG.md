@@ -5,6 +5,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **S10 scheduled backups — cron scheduler (3 Oct)** — panel **0.68.0** (agent unchanged **0.60.0**).
+  The WHM Backup Configuration schedule now *runs*: the updater installs `/etc/cron.d/alphacp-panel`
+  (`* * * * * <panel user> … artisan schedule:run`), `routes/console.php` schedules
+  `alphacp:scheduled-backups` hourly, and the command turns the daily/weekly/monthly window into real
+  `backup.archive` tasks via paneld (archives, verification and retention pruning are unchanged).
+  A window marker (`storage/app/private/backup-schedule.json`) means a day / ISO week / month produces
+  exactly **one** real pass, however often cron fires or how long the server was down; a cache lock
+  keeps ticks from overlapping; accounts that already have a queued/running archive task are skipped
+  (a slow agent can never make daily backups pile up); the WHM → Backup User Selection list scopes the
+  run when it has rows, otherwise every active account is backed up. `--dry-run` lists targets,
+  `--force` runs once without consuming the window. The WHM Backup Config page shows last run + counts,
+  the next window and the marker path. A foreign file already sitting at the cron path is preserved as
+  `*.bak-<stamp>` instead of being overwritten.
+  Tests: panel **414/0 (6 wasm-skip)**, update-sim **200/200** (incl. the new cron checks + U7
+  foreign-cron-file case), provision-sim **94/94**, backup-tar-sim **PASS**.
 - **S10 safe home restore — File and Directory Restoration (3 Oct)** — panel **0.67.0**, agent **0.60.0**.
   `backup.extract` (destructive, needs `_confirm`) restores a previously published, checksum-verified
   home archive back into the account: manifest + SHA-256 are re-verified first, every tar entry is

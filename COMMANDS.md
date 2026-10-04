@@ -12,25 +12,41 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ Abhi chalani hai (NEXT STEP) — 3 Oct 2026
+## ✅ Abhi chalani hai (NEXT STEP) — 4 Oct 2026
+
+### panel-update 0.68.0 — S10: scheduled backups (cron)
+```bash
+sudo alphacp-sync get 337516473d108f7c40e19cbce7b0c168aafe59fb installer/panel-update.sh /tmp/acp-panel-update-0.68.0.sh d3cb42257ac05e4fc7e1596962ac8059f6355a177fe1efef3f4044768e624071 && sudo bash /tmp/acp-panel-update-0.68.0.sh
+```
+- Updater SHA-256: `d3cb42257ac05e4fc7e1596962ac8059f6355a177fe1efef3f4044768e624071`.
+- Expected: banner `updater 0.68.0` → panel **0.68.0** + agent **0.60.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Naya kya:** WHM → Backup Config ka schedule ab **sach me chalta hai**. Updater ek cron entry
+  install karta hai (`/etc/cron.d/alphacp-panel` → har minute `php artisan schedule:run`), panel har
+  ghante `alphacp:scheduled-backups` chalata hai, aur daily/weekly/monthly window me **har active account
+  ka verified home archive** queue karta hai (purane archives retention se agent khud prune karta hai).
+  Ek window (din / ISO week / mahina) me sirf **ek** asli pass — marker file se, chahe cron kitni baar
+  chale ya server band tha (same din catch-up ho jaata hai). Jis account ka backup already queued/running
+  hai wo skip hota hai (disk pile-up nahi), aur WHM → Backup User Selection me rows ho to sirf wahi users.
+  Cron file pehle se koi aur ho to wo `*.bak-<stamp>` me safe rakh kar hamara install hota hai.
+- Optional manual check: `sudo -u alphacp php /usr/local/alphacp/panel/artisan schedule:list`
+  (line dikhni chahiye: `0 * * * * php artisan alphacp:scheduled-backups`).
+- Tests: panel **415/0 (6 wasm-skip)**, update-sim **200/200**, provision-sim **94/94**, GNU tar round-trip PASS,
+  `schedule:list` + `schedule:run` smoke PASS.
+- Ye 0.67.0 (safe restore) + 0.66.0 (symlink security fix) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
+
+## ✅ Latest deployment (4 Oct 2026; already completed)
 
 ### panel-update 0.67.0 — S10: safe home restore (File and Directory Restoration)
 ```bash
 sudo alphacp-sync get 4d99491e867e020ec23f9615fe8e2d6c5801e58c installer/panel-update.sh /tmp/acp-panel-update-0.67.0.sh df33d7b26908af2a17d73c224646f3892cdeee5163c39fa71c83a19b1debaf6c && sudo bash /tmp/acp-panel-update-0.67.0.sh
 ```
+- **Live result:** server snapshot 2026-10-04 02:04Z → panel **0.67.0**, agent **0.60.0**, HTTP **200**.
 - Updater SHA-256: `df33d7b26908af2a17d73c224646f3892cdeee5163c39fa71c83a19b1debaf6c`.
-- Expected: banner `updater 0.67.0` → agent **0.60.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Naya kya:** customer Backup page par "Restore a home archive" card — apne hi completed archive me se
-  chun kar (ya sirf ek folder, jaise `public_html`) restore kar sakte hain. Agent pehle manifest + SHA-256
-  verify karta hai, poore tar ko inspect karta hai (path escape / hardlink / device node reject), root ke
-  staging dir me `--no-same-owner` se extract karta hai, aur swap se pehle **purani files ko
-  `~/.acp-prerestore-<user>-<stamp>` me** bacha leta hai (aakhri copy per account). Failure par rollback.
-- Panel 0.66.0 par security fix (symlink escape) already live hai; ye usi lineage ke upar baithta hai.
-- Tests: panel **405/0 (6 wasm-skip)**, provision-sim **94/94**, update-sim **187/187** + asli GNU tar round-trip PASS.
+- Customer Backup page par "Restore a home archive" card: verified archive se poora home ya ek subtree
+  restore, pre-restore copy `~/.acp-prerestore-<user>-<stamp>` me; hostile archive/path fail closed.
 
-## ✅ Latest deployment (3 Oct 2026; already completed)
 
-### panel-update 0.65.0 — S10: verified home archive + account-scoped download
+### panel-update 0.65.0 — S10: verified home archive + account-scoped download (history)
 ```bash
 sudo alphacp-sync get 491c62966025ba8a251a9bb0a72a5c7071abed2d installer/panel-update.sh /tmp/acp-panel-update-0.65.0.sh 2e77e8f9ee58e5ab9c58595edbe3d7193b63dc8d6125432b019ec12cf879aec5 && sudo bash /tmp/acp-panel-update-0.65.0.sh
 ```
@@ -38,12 +54,13 @@ sudo alphacp-sync get 491c62966025ba8a251a9bb0a72a5c7071abed2d installer/panel-u
 - Updater SHA-256: `2e77e8f9ee58e5ab9c58595edbe3d7193b63dc8d6125432b019ec12cf879aec5`.
 - Bundles pinned to commit `8b1ca1e3ac735dcd5ff103d7f07b8344489ca3b7`: panel SHA-256 `2e0310c4eb946353401bbb992ed39e987a4f10e8986ec5621f6b828f699cbf0e`; agent SHA-256 `b30f340806b1eed18ed0e58a50bc1ff0f39b612f6762851f772f350e916b1083`.
 - This updated the server directly from **0.63.0 / 0.56.0**; the 0.64 changes are included, so no separate 0.64 update was needed. The command is retained for audit; **do not rerun unless intentionally redeploying**.
-- S10 remains partial: only home files are archived. Mail/MySQL exports, safe restore, schedules, remote storage, real cPanel transfer/import, and transfer/restore history remain incomplete. A live customer archive/download has not yet been end-to-end exercised.
+- Us waqt (0.65.0) S10 partial tha: only home files are archived. Mail/MySQL exports, safe restore, schedules, remote storage, real cPanel transfer/import, and transfer/restore history remain incomplete. A live customer archive/download has not yet been end-to-end exercised.
 - Tests: panel **401 pass / 0 fail / 6 wasm-skip**, provision-sim **91/91**, update-sim **185/185**, GNU tar round-trip/symlink smoke test PASS.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
 |---|---|---|
+| panel-update 0.67.0 (`4d99491…`) → panel 0.67.0 + agent 0.60.0 | 4 Oct | ✅ UPDATE COMPLETE (snapshot 02:04Z), HTTP 200; safe home restore live |
 | panel-update 0.66.0 (`039efb9…`) → panel 0.66.0 + agent 0.59.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200; symlink root-write escape fix live |
 | panel-update 0.65.0 (`491c629…`) → panel 0.65.0 + agent 0.58.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200; home archive slice deployed |
 | panel-update 0.63.0 (`4c1195b…`) → panel 0.63.0 + agent 0.56.0 | 3 Oct | ✅ UPDATE COMPLETE, HTTP 200, Transfer or Restore a cPanel Account |

@@ -295,9 +295,9 @@
 ### Backup / Clusters / Reboot / Status
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 176 | Backup Configuration (schedule, remote, retention) | S10 | 🟡 (JSON schedule/retention only; scheduler + remote destinations pending) |
-| 177 | Backup Restoration (full/partial/per-account) | S10 | 🟡 (JSON request only; safe restore engine pending) |
-| 178 | Backup User Selection | S10 | 🟡 (JSON usernames only; scheduler/execution pending) |
+| 176 | Backup Configuration (schedule, remote, retention) | S10 | 🟡 (schedule+retention now execute via cron `alphacp:scheduled-backups`; remote destinations pending) |
+| 177 | Backup Restoration (full/partial/per-account) | S10 | 🟡 (real `backup.extract` whole-home/subtree restore live; scheduled + remote sources pending) |
+| 178 | Backup User Selection | S10 | 🟡 (list now scopes the scheduled run; per-user bulk restore still pending) |
 | 179 | File and Directory Restoration | S10 | 🟡 (real restore: verified `backup.extract` whole-home/subtree swap + pre-restore copy; scheduled/remote sources pending) |
 | 180 | Configuration Cluster / DNS Cluster | S15 | ⏳ S15 |
 | 181 | Graceful / Forceful Server Reboot | S2B | 🟡 2B |
