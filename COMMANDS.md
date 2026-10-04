@@ -16,9 +16,9 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ### 1) panel-update 0.71.0 — S10: cpmove MySQL restore
 ```bash
-sudo alphacp-sync get c99850df533d2ab0df178a7ec3d1c857927d41a3 installer/panel-update.sh /tmp/acp-panel-update-0.71.0.sh 8ff13cf29bea9ebb5ff943daf64535c6e7a14903245f385e263aad8dd46a4aa1 && sudo bash /tmp/acp-panel-update-0.71.0.sh
+sudo alphacp-sync get ff8e7079f173f2ab78422de84c33ed5717bf7677 installer/panel-update.sh /tmp/acp-panel-update-0.71.0.sh b744348c82239f0bd255bee5648bdc0230da4a9b76b1c9e23f0b724c11200640 && sudo bash /tmp/acp-panel-update-0.71.0.sh
 ```
-- Updater SHA-256: `8ff13cf29bea9ebb5ff943daf64535c6e7a14903245f385e263aad8dd46a4aa1`.
+- Updater SHA-256: `b744348c82239f0bd255bee5648bdc0230da4a9b76b1c9e23f0b724c11200640`.
 - Expected: banner `updater 0.71.0` → panel **0.71.0** + agent **0.64.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
 - **Naya kya:** cPanel import ka doosra hissa — pehle archive se sirf **home** aata tha, ab
   `cpmove-<user>/mysql/*.sql` dumps bhi **asli MariaDB** databases me restore hote hain
