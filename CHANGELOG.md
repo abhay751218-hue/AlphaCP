@@ -15,7 +15,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   create/grant/login/reset/refuse/drop sab verify karti hai, aur panel me account na ho to khud ek
   temp account (`acpvXXXXXX`) bana kar ant me hata deti hai. Offline sim uske liye:
   `tools/sim/s8-live-check-sim.sh` (10/0; ek deliberately broken run included).
-  Tests: panel **434/0 (6 wasm-skip)**, update-sim **—/—**, provision-sim **107/107**, mysql-sim **PASS**.
+  Tests: panel **434/0 (6 wasm-skip)**, update-sim **225/225** (naya check: GECOS marker colon-free),
+  provision-sim **107/107**, mysql-sim **PASS**, s8-live-check-sim **10/0**, commands-check **10/0**.
 
 - **S8 real MySQL/MariaDB provisioning — Databases, Wizard, MySQL Users (4 Oct)** — panel **0.70.0**,
   agent **0.62.0**. The S8 pages stop writing JSON stubs: creating a database now really creates a

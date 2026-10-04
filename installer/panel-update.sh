@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.70.0  ·  default panel bundle 0.70.0  ·  agent 0.62.0  ·  alphacp-sync v1.2
+# updater 0.70.1  ·  default panel bundle 0.70.0  ·  agent 0.63.0  ·  alphacp-sync v1.2
 #
+# 0.70.1: agent fix — useradd GECOS comment me colon (“Create Account” asli host par fail hota tha)
 # 0.70.0: S8 — real MariaDB databases/users/GRANTs (socket-auth client, SQL on stdin) + MySQL Users page
 # 0.69.0: S10 — real cPanel account import (cpmove/legacy/nested, sha256-verified, home swap,
 #         pre-restore copy) + transfer/restore job history + import drop dir (FPM read allowlist)
@@ -152,17 +153,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.70.0"
+UPDATER_VERSION="0.70.1"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.70.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
 BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-a5e557fd443b411d27d33f9a0bdbed25e2ee73cc}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
 BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-50166a6aa5144b334c1961b4b83015b378f6ac2276d95f92304e63eaeefdb586}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.62.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-a5e557fd443b411d27d33f9a0bdbed25e2ee73cc}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.63.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-3589c61cf7d100ac95b6c5f3deb4109085204347}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-fd9f2721d2c2461e0ce7f610c88151319aa4597026f0d1afeefc7f4f4205dce6}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-66fd2c793cb5d40c1443ab9fef88a95463cee7514b04292f8ad8a5c2f9314f67}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
