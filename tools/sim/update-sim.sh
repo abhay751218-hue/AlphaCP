@@ -11,6 +11,7 @@
 #  U3 health fail -> auto rollback       U4 backups prune (KEEP=1) + sync-tool checksum fail
 #  U1 me alphacp-sync v1.0 -> v1.2 upgrade + sync hook bhi
 #  U5 private repo (raw 404) + sync v1.2 -> get      U6 private + purana sync -> saaf error
+#  U7 panel scheduler cron (S10): file banta hai, mode 644, bahar ka file .bak me safe
 # =============================================================================
 set -uo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -90,6 +91,7 @@ chmod 0755 "${U}/bin/"*
 run_update() {  # $1 = label, rest = env overrides
   local label="$1"; shift
   ( cd /root && env PATH="${U}/bin:/tmp/acpsim/bin:${PATH}" ACP_PANEL_BUNDLE_SHA256="${SHA}" ACP_PANEL_VERSION="${ART_VER}" ACP_SKIP_EXTRA_PACKAGES=1 \
+    ACP_PANEL_CRON_FILE="${U}/etc/cron.d/alphacp-panel" \
     SYNC_REPO_URL="file://${U}/remote.git" SYNC_CONF_DIR="${U}/conf" SYNC_WORK_DIR="${U}/syncwork" "$@" bash "${UPDATER}" ) \
     > "${U}/update-${label}.out" 2>&1
   local rc=$?; sed 's/^/    | /' "${U}/update-${label}.out"; return ${rc}
@@ -112,7 +114,7 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.67.0'" grep -q "updater 0.67.0" "${U}/update-U1.out"
+chk "banner 'updater 0.68.0'" grep -q "updater 0.68.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -194,6 +196,13 @@ chk "BackupController has archive download endpoint (0.65.0)" grep -q "function 
 chk "agent 0.60.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.60.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
 chk "backup.extract task shipped (0.67.0)" grep -q "'backup.extract' =>" "${ACP_HOME}/agent/config/tasks.php"
 chk "symlink guard shipped (0.66.0)" grep -q "assertNoSymlink" "${ACP_HOME}/agent/src/PathGuard.php"
+chk "scheduler command shipped (0.68.0)" test -f "${PANEL}/app/Console/Commands/ScheduledBackupsCommand.php"
+chk "scheduler window support shipped (0.68.0)" test -f "${PANEL}/app/Support/BackupSchedule.php"
+chk "schedule:run hourly registered" grep -q "alphacp:scheduled-backups" "${PANEL}/routes/console.php"
+chk "cron file installed (har minute schedule:run)" grep -q "schedule:run" "${U}/etc/cron.d/alphacp-panel"
+chk "cron line panel user ke naam" grep -qE "^\* \* \* \* \* alphacp " "${U}/etc/cron.d/alphacp-panel"
+chk "cron file 0644 root" test "$(stat -c '%a %U' "${U}/etc/cron.d/alphacp-panel")" = "644 root"
+chk "'scheduler cron installed' dikha" grep -q "panel scheduler cron installed" "${U}/update-U1.out"
 chk "real backup archive handler installed" test -f "${ACP_HOME}/agent/src/BackupArchiveStore.php"
 chk "account.create in paneld allowlist" grep -q "account.create" "${ACP_HOME}/agent/config/tasks.php"
 chk "domain.add in paneld allowlist" grep -q "domain.add" "${ACP_HOME}/agent/config/tasks.php"
@@ -330,5 +339,17 @@ chk "koi naya backup/swap nahi" test "$(nbackups)" -eq "${B6}"
 chk "HTTP 200 abhi bhi" test "$(http_now)" = 200
 rm -f "${U}/state/private"
 
-echo; echo "=== UPDATE-SIM: ${PASS} pass, ${FAIL} fail ==="
+# ================================================================= U7
+echo; echo "=== U7: bahar ka cron file -> .bak me safe + hamara cron dobara install (idempotent) ==="
+sleep 1
+printf '0 4 * * * root /usr/local/bin/legacy-backup.sh\n' > "${U}/etc/cron.d/alphacp-panel"
+run_update U7; rc=$?
+chk "exit 0" test ${rc} -eq 0
+chk "bahar ka file .bak me safe hua" bash -c "grep -q legacy-backup \"${U}/etc/cron.d/alphacp-panel.bak-*\""
+chk "hamara cron wapas install hua" grep -q "schedule:run" "${U}/etc/cron.d/alphacp-panel"
+chk "warn message dikha" grep -q "hamara nahi" "${U}/update-U7.out"
+chk "UPDATE COMPLETE" grep -q "UPDATE COMPLETE" "${U}/update-U7.out"
+chk "HTTP 200" test "$(http_now)" = 200
+
+echo; echo "=== UPDATE-SIM: ${PASS} pass, ${FAIL} fail ===" 
 [[ ${FAIL} -eq 0 ]]

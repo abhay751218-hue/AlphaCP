@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.67.0  ·  default panel bundle 0.67.0  ·  agent 0.60.0  ·  alphacp-sync v1.2
+# updater 0.68.0  ·  default panel bundle 0.68.0  ·  agent 0.60.0  ·  alphacp-sync v1.2
 #
+# 0.68.0: S10 — scheduled backups: cron (schedule:run) + hourly alphacp:scheduled-backups, window marker
 # 0.67.0: S10 — safe home restore (whole home or one subtree, pre-restore copy); panel 0.67.0 + agent 0.60.0
 # 0.66.0: Security — symlink root-write escape fix (agent files.set/list/usage); panel 0.66.0 + agent 0.59.0
 # 0.65.0: S10 — real, verified home tar.gz archive + account-scoped download; backup storage open_basedir
@@ -148,15 +149,15 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.67.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.67.0}"
+UPDATER_VERSION="0.68.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.68.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-3b1bd72847a6465facdc04e71b1f27efff844c72}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-a8c4db8a5cd89f30684623a6114185fd7d00af18}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-f8b6c73daab11863087e0bc26eb385c3a679c1eff2e18cd11bd6153ce0bf100f}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-f6d67ae4eef9ccb470ca3fe6e9a26b4f206e6fc87092bfd64e4021fedb696a2d}"
 AGENT_VERSION="${ACP_AGENT_VERSION:-0.60.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-3b1bd72847a6465facdc04e71b1f27efff844c72}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-a8c4db8a5cd89f30684623a6114185fd7d00af18}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
 AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-9c0d4302f81b73217dd6929e8f67b7e6456094bbfca1ee1774c343ae5864ae4e}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
@@ -164,6 +165,7 @@ SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
 SYNC_TOOL_SHA256="${ACP_SYNC_TOOL_SHA256:-c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852}"
 SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
+CRON_FILE="${ACP_PANEL_CRON_FILE:-/etc/cron.d/alphacp-panel}"
 
 # repo file laao: $1 commit  $2 path  $3 out  $4 sha256
 # 1) alphacp-sync get (deploy key — private repo me bhi)  2) public raw URL (fallback)
@@ -500,6 +502,51 @@ if [[ "${CODE}" != "200" ]]; then
 fi
 
 ok "new panel health HTTP 200"
+
+# ---------------------------------------------------------------------------
+# S10 scheduled backups: cron tick for Laravel's scheduler.
+#
+# `* * * * *` runs `artisan schedule:run`; the hourly `alphacp:scheduled-backups`
+# entry then decides (from the WHM backup config + window marker) whether real
+# archives are due. Without this file scheduled backups simply never fire, so it
+# is installed with the update — idempotent, and any foreign file at that path is
+# kept as a .bak instead of being silently dropped.
+# ---------------------------------------------------------------------------
+install -d -m 0755 "${ACP_HOME}/logs"
+if [[ -n "${CRON_FILE}" ]]; then
+  CRON_DIR="$(dirname "${CRON_FILE}")"
+  CRON_CONTENT="# AlphaCP panel scheduler — S10 scheduled backups (panel ${PANEL_VERSION}). Managed by panel-update; do not edit.
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+* * * * * ${PANEL_USER} cd ${PANEL_ROOT} && env ACP_HOME=${ACP_HOME} ${PHP_BIN} artisan schedule:run >> ${PANEL_ROOT}/storage/logs/panel-schedule.log 2>&1"
+  if [[ -f "${CRON_FILE}" ]] && ! grep -q '^# AlphaCP panel scheduler' "${CRON_FILE}"; then
+    mv "${CRON_FILE}" "${CRON_FILE}.bak-${STAMP}" \
+      && warn "${CRON_FILE} pehle se maujood tha (hamara nahi) — backup: ${CRON_FILE}.bak-${STAMP}"
+  fi
+  if install -d "${CRON_DIR}" 2>/dev/null && printf '%s\n' "${CRON_CONTENT}" > "${CRON_FILE}" 2>/dev/null; then
+    chmod 0644 "${CRON_FILE}"
+    chown root:root "${CRON_FILE}" 2>/dev/null || true
+    ok "panel scheduler cron installed → ${CRON_FILE} (har minute schedule:run)"
+  else
+    rm -f "${CRON_FILE}" 2>/dev/null || true
+    warn "cron file likha nahi ja saka (${CRON_FILE}) — scheduled backups tab tak nahi chalenge; root se dobara run karein"
+  fi
+  # cron daemon? (Ubuntu par 'cron' package; nahi ho to scheduled backups chup-chaap band rahenge)
+  if ! command -v crontab >/dev/null 2>&1 && command -v apt-get >/dev/null 2>&1 && [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
+    info "cron package install ho raha hai (scheduled backups ke liye)"
+    DEBIAN_FRONTEND=noninteractive apt-get install -y -qq cron >>"${LOG_FILE}" 2>&1 \
+      && ok "cron package installed" || warn "cron package install fail — scheduled backups manually check karein"
+  fi
+  if [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; then
+    systemctl enable --now cron >>"${LOG_FILE}" 2>&1 || warn "systemctl enable --now cron fail"
+    if systemctl is-active --quiet cron; then
+      ok "cron daemon active"
+    else
+      warn "cron daemon active nahi hai — scheduled backups nahi chalenge"
+    fi
+  fi
+fi
+
 say ""
 say "${C_GREEN}${C_BOLD}==> UPDATE COMPLETE ✅${C_RESET}"
 say "New panel: ${PANEL_VERSION}"
