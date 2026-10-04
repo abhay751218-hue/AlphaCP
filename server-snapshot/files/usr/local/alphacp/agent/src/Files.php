@@ -16,8 +16,10 @@ final class Files
 
     public static function normalizeRel(string $rel): string
     {
+        if (str_contains($rel, "\0")) {
+            throw new TaskRejectedException('null byte in path is not allowed');
+        }
         $rel = str_replace('\\', '/', $rel);
-        $rel = str_replace("\0", '', $rel);
         $rel = trim($rel);
         $rel = ltrim($rel, '/');
         if ($rel === '' || $rel === '.') {

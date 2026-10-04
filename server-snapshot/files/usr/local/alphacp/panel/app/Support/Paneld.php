@@ -93,6 +93,26 @@ final class Paneld
         return null;
     }
 
+    /**
+     * Recent tasks of the given types (WHM transfer/restore job history).
+     *
+     * @param  list<string> $types
+     * @return \Illuminate\Support\Collection<int, object>
+     */
+    public static function recentJobs(array $types, int $limit = 25)
+    {
+        if ($types === []) {
+            return collect();
+        }
+
+        return DB::table('tasks')
+            ->where('server_id', Panel::serverId())
+            ->whereIn('type', $types)
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+    }
+
     /** @return \Illuminate\Support\Collection<int, object> */
     public static function recentTasks(int $limit = 12)
     {

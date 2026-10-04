@@ -98,6 +98,27 @@ class BackupConfigTest extends TestCase
             ->assertDontSee('Create Account');
     }
 
+    public function test_scheduler_state_is_shown_to_the_whm_admin(): void
+    {
+        $root = $this->userWithRole('root');
+
+        // Nothing configured yet → the card must say so, not pretend backups run.
+        $this->asPanelUser($root)->get('/backup-config')
+            ->assertOk()
+            ->assertSee('Scheduled backups (cron)')
+            ->assertSee('backup-schedule.json')
+            ->assertSee('disabled');
+
+        BackupConfig::query()->create(['schedule' => 'weekly', 'retention' => 21]);
+        $this->asPanelUser($root)->get('/backup-config')
+            ->assertOk()
+            ->assertSee('Scheduled backups (cron)')
+            ->assertSee('weekly')
+            ->assertSee('retention 21 days')
+            ->assertSee('next run')
+            ->assertSee('Backup User Selection rows');
+    }
+
     public function test_customer_and_mail_cannot_open_backup_config(): void
     {
         $customer = $this->userWithRole('user');

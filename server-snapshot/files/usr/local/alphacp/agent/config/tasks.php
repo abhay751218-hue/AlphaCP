@@ -1355,6 +1355,26 @@ return [
         ],
     ],
 
+    'backup.extract' => [
+        'handler'     => Tasks\BackupExtract::class,
+        'safety'      => 'destructive',
+        'timeout'     => 3600,
+        'confirm'     => 'backup.extract',
+        'description' => 'Restore a verified home archive into the account (pre-restore copy kept).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'archive_id', '_confirm'],
+            'properties'           => [
+                'username'   => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'archive_id' => ['type' => 'string', 'pattern' => '^[a-f0-9]{32}$', 'maxLength' => 32],
+                'path'       => ['type' => 'string', 'maxLength' => 240],
+                '_confirm'   => ['type' => 'string', 'enum' => ['backup.extract']],
+            ],
+        ],
+    ],
+
     'backup.wizard' => [
         'handler'     => Tasks\BackupWizard::class,
         'safety'      => 'mutating',
@@ -1481,34 +1501,42 @@ return [
 
     'backup.transfer' => [
         'handler'     => Tasks\BackupTransfer::class,
-        'safety'      => 'mutating',
-        'timeout'     => 20,
-        'description' => 'Write WHM cPanel→AlphaCP transfer (JSON; no tar/rsync/shell).',
-        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'safety'      => 'destructive',
+        'timeout'     => 3600,
+        'confirm'     => 'backup.transfer',
+        'description' => 'Import a local cPanel archive into an account (WHM transfer; source FQDN recorded).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
         'schema'      => [
             'type'                 => 'object',
             'additionalProperties' => false,
-            'required'             => ['username', 'source'],
+            'required'             => ['username', 'source', 'archive_path', '_confirm'],
             'properties'           => [
-                'username' => ['type' => 'string', 'maxLength' => 16],
-                'source'   => ['type' => 'string', 'maxLength' => 190],
+                'username'     => ['type' => 'string', 'maxLength' => 16],
+                'source'       => ['type' => 'string', 'maxLength' => 190],
+                'archive_path' => ['type' => 'string', 'maxLength' => 255],
+                'sha256'       => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$', 'maxLength' => 64],
+                '_confirm'     => ['type' => 'string', 'enum' => ['backup.transfer']],
             ],
         ],
     ],
 
     'backup.cpanel' => [
         'handler'     => Tasks\BackupCpanel::class,
-        'safety'      => 'mutating',
-        'timeout'     => 20,
-        'description' => 'Write WHM transfer/restore a cPanel account (JSON; no tar/rsync/shell).',
-        'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
+        'safety'      => 'destructive',
+        'timeout'     => 3600,
+        'confirm'     => 'backup.cpanel',
+        'description' => 'Import a local cPanel account archive into an account (home only; pre-restore copy kept).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
         'schema'      => [
             'type'                 => 'object',
             'additionalProperties' => false,
-            'required'             => ['username', 'action'],
+            'required'             => ['username', 'action', 'archive_path', '_confirm'],
             'properties'           => [
-                'username' => ['type' => 'string', 'maxLength' => 16],
-                'action'   => ['type' => 'string', 'maxLength' => 16],
+                'username'     => ['type' => 'string', 'maxLength' => 16],
+                'action'       => ['type' => 'string', 'maxLength' => 16],
+                'archive_path' => ['type' => 'string', 'maxLength' => 255],
+                'sha256'       => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$', 'maxLength' => 64],
+                '_confirm'     => ['type' => 'string', 'enum' => ['backup.cpanel']],
             ],
         ],
     ],

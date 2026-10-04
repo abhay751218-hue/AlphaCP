@@ -55,14 +55,71 @@ final class PathGuard
         }
 
         $canonical = self::canonicalize($path);
+        $this->rootFor($canonical);
 
-        foreach ($this->roots as $root) {
-            if ($canonical === $root || str_starts_with($canonical, $root . '/')) {
-                return $canonical;
+        return $canonical;
+    }
+
+    /**
+     * Like assert(), but ALSO refuses symlinks anywhere in the path (including
+     * the last component).
+     *
+     * Why this exists: canonicalize() is lexical, so `~/loot` -> `/etc` (a
+     * symlink a hosting customer can create themselves) would pass the lexical
+     * check while the kernel follows it — and every agent write happens as
+     * ROOT. That is a root file-write escape. Callers that touch the
+     * filesystem must use this method (SafeFs does).
+     */
+    public function assertNoSymlink(string $path): string
+    {
+        return $this->assertChain($path, true);
+    }
+
+    /**
+     * Like assertNoSymlink(), but only the parent components are checked, so
+     * the caller may operate on a symlink itself (e.g. unlink/replace it).
+     */
+    public function assertNoSymlinkParents(string $path): string
+    {
+        return $this->assertChain($path, false);
+    }
+
+    private function assertChain(string $path, bool $includeLast): string
+    {
+        $canonical = $this->assert($path);
+        $root = $this->rootFor($canonical);
+        $relative = substr($canonical, strlen($root));
+        if ($relative === '' || $relative === '/') {
+            return $canonical; // the root itself was realpath()'d in the constructor
+        }
+        $segments = explode('/', ltrim($relative, '/'));
+        $last = count($segments) - 1;
+        $current = $root;
+        foreach ($segments as $index => $segment) {
+            if ($segment === '') {
+                continue;
+            }
+            $current .= '/' . $segment;
+            if (! $includeLast && $index === $last) {
+                break;
+            }
+            if (is_link($current)) {
+                throw new PathGuardException("symlink not allowed in path: {$current}");
             }
         }
 
-        throw new PathGuardException("path outside allowlisted roots: {$path}");
+        return $canonical;
+    }
+
+    private function rootFor(string $canonical): string
+    {
+        foreach ($this->roots as $root) {
+            if ($canonical === $root || str_starts_with($canonical, $root . '/')) {
+                return $root;
+            }
+        }
+
+        throw new PathGuardException("path outside allowlisted roots: {$canonical}");
     }
 
     /** Lexical normalization — works for paths that do not exist yet. */

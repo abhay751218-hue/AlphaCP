@@ -30,6 +30,7 @@ class BackupController extends Controller
             'rows' => $account?->backupJobs()->orderBy('id')->get() ?? collect(),
             'kinds' => Backup::KINDS,
             'archiveTasks' => $this->archiveTasks($account),
+            'restoreTasks' => $this->restoreTasks($account),
             'panelMode' => ModuleCatalog::modeFor($request->user()),
         ]);
     }
@@ -98,6 +99,70 @@ class BackupController extends Controller
         ]);
 
         return redirect()->route('backup.index')->with('success', 'Home archive queued (task #' . $taskId . '). It will appear below when ready.');
+    }
+
+    /** Restore a verified home archive (destructive — keeps a pre-restore copy on the server). */
+    public function restore(Request $request): RedirectResponse
+    {
+        $account = $this->requireAccount($request);
+        if ($account->isTerminated() || $account->isSuspended()) {
+            return back()->withErrors(['restore' => 'Cannot restore on a suspended/terminated account.']);
+        }
+        $data = $request->validate([
+            'archive_id' => ['required', 'string', 'max:32'],
+            'path' => ['nullable', 'string', 'max:240'],
+            'confirm' => ['required', 'accepted'],
+        ]);
+        $archiveId = strtolower(trim($data['archive_id']));
+        if (preg_match('/^[a-f0-9]{32}$/', $archiveId) !== 1 || ! $this->ownsArchive($account, $archiveId)) {
+            return back()->withErrors(['archive_id' => 'Pick one of this account\'s completed archives.'])->withInput();
+        }
+        $path = Files::tryRel((string) ($data['path'] ?? ''));
+        if ($path === null) {
+            return back()->withErrors(['path' => 'Invalid path. Relative under home, no pipe/path escape.'])->withInput();
+        }
+        $taskId = BackupProvisioner::enqueueExtract($account, $archiveId, $path);
+        $account->recordEvent('backup.extract.queued', $archiveId . ($path !== '' ? ':' . $path : ''));
+        Audit::log('backup.extract', 'warning', 'account', $account->id, [
+            'task_id' => $taskId,
+            'archive_id' => $archiveId,
+            'path' => $path,
+        ]);
+
+        return redirect()->route('backup.index')
+            ->with('success', 'Restore queued (task #' . $taskId . '). The previous files stay on the server as a pre-restore copy.');
+    }
+
+    /**
+     * Strict ownership check: the archive id must be the `archive_id` field of one
+     * of this account's own successful archive tasks. A `LIKE` prefilter is used
+     * only to cut rows down; the decode below is what actually decides (a LIKE on
+     * a JSON blob can otherwise match a checksum or any other substring).
+     */
+    private function ownsArchive(Account $account, string $archiveId): bool
+    {
+        $tasks = DB::table('tasks')
+            ->where('server_id', Panel::serverId())
+            ->where('account_id', $account->id)
+            ->where('type', 'backup.archive')
+            ->where('status', 'success')
+            ->where('result', 'like', '%' . $archiveId . '%')
+            ->orderByDesc('id')
+            ->limit(50)
+            ->get();
+
+        foreach ($tasks as $task) {
+            $result = json_decode((string) ($task->result ?? ''), true);
+            if (is_array($result)
+                && ($result['archive_id'] ?? null) === $archiveId
+                && ($result['username'] ?? null) === $account->username
+                && ($result['scope'] ?? null) === 'home'
+                && ($result['filename'] ?? null) === $archiveId . '.tar.gz') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function download(Request $request, string $archiveId): BinaryFileResponse
@@ -189,6 +254,39 @@ class BackupController extends Controller
                     'filename' => $downloadable ? (string) $result['filename'] : null,
                     'size_bytes' => $downloadable ? (int) $result['size_bytes'] : null,
                     'downloadable' => $downloadable,
+                ];
+            })
+            ->all();
+    }
+
+    /** @return list<array{id:int,status:string,created_at:string,archive_id:?string,path:?string,error:?string}> */
+    private function restoreTasks(?Account $account): array
+    {
+        if ($account === null) {
+            return [];
+        }
+
+        return DB::table('tasks')
+            ->where('server_id', Panel::serverId())
+            ->where('account_id', $account->id)
+            ->where('type', 'backup.extract')
+            ->orderByDesc('id')
+            ->limit(10)
+            ->get()
+            ->map(static function (object $task): array {
+                $payload = json_decode((string) ($task->payload ?? ''), true);
+                $result = json_decode((string) ($task->result ?? ''), true);
+                $archiveId = is_array($result) && is_string($result['archive_id'] ?? null)
+                    ? $result['archive_id']
+                    : (is_array($payload) && is_string($payload['archive_id'] ?? null) ? $payload['archive_id'] : null);
+
+                return [
+                    'id' => (int) $task->id,
+                    'status' => (string) $task->status,
+                    'created_at' => (string) $task->created_at,
+                    'archive_id' => $archiveId,
+                    'path' => is_array($result) && is_string($result['path'] ?? null) ? $result['path'] : null,
+                    'error' => $task->error !== null ? (string) $task->error : null,
                 ];
             })
             ->all();

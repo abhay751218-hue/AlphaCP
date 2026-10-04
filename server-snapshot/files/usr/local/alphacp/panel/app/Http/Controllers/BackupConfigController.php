@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\BackupConfig;
+use App\Models\BackupUserSelection;
 use App\Support\Audit;
 use App\Support\Backup;
 use App\Support\BackupProvisioner;
+use App\Support\BackupSchedule;
 use App\Support\ModuleCatalog;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
 /** WHM Backup Config — schedule/retention via paneld backup.config. No tar, no shell, no pipe. */
@@ -20,9 +23,15 @@ class BackupConfigController extends Controller
     {
         $this->requireWhm($request);
 
+        $row = BackupConfig::query()->orderByDesc('id')->first();
+
         return view('backup-config.index', [
-            'row' => BackupConfig::query()->orderByDesc('id')->first(),
+            'row' => $row,
             'schedules' => Backup::SCHEDULES,
+            // Cron-driven scheduler state: which window ran last, what it queued
+            // and when the next window opens (see alphacp:scheduled-backups).
+            'scheduler' => BackupSchedule::state($row?->schedule, $row?->retention === null ? null : (int) $row->retention, Carbon::now()),
+            'selectedUsers' => BackupUserSelection::query()->count(),
             'panelMode' => 'whm',
         ]);
     }

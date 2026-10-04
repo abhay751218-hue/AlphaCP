@@ -9,6 +9,7 @@ use App\Models\BackupJob;
 use App\Models\BackupRestore;
 use App\Models\BackupUserSelection;
 use App\Models\BackupWizard;
+use App\Support\Files;
 
 final class BackupProvisioner
 {
@@ -25,7 +26,8 @@ final class BackupProvisioner
         ]);
     }
 
-    public static function enqueueArchive(Account $account, string $archiveId): int
+    /** `$source` is 'panel' for a customer click, 'scheduler' for cron (WHM backup schedule). */
+    public static function enqueueArchive(Account $account, string $archiveId, string $source = 'panel'): int
     {
         if (preg_match('/^[a-f0-9]{32}$/', $archiveId) !== 1) {
             throw new \InvalidArgumentException('Invalid backup archive id.');
@@ -34,7 +36,29 @@ final class BackupProvisioner
         return Paneld::enqueue('backup.archive', [
             'username' => $account->username,
             'archive_id' => $archiveId,
-        ], 'panel', $account->id);
+        ], $source, $account->id);
+    }
+
+    /** Destructive: restoring an archive replaces current files, so it carries `_confirm`. */
+    public static function enqueueExtract(Account $account, string $archiveId, string $path = ''): int
+    {
+        if (preg_match('/^[a-f0-9]{32}$/', $archiveId) !== 1) {
+            throw new \InvalidArgumentException('Invalid backup archive id.');
+        }
+        if ($path !== '' && Files::tryRel($path) === null) {
+            throw new \InvalidArgumentException('Invalid restore path.');
+        }
+
+        $payload = [
+            'username' => $account->username,
+            'archive_id' => $archiveId,
+            '_confirm' => 'backup.extract',
+        ];
+        if ($path !== '') {
+            $payload['path'] = $path;
+        }
+
+        return Paneld::enqueue('backup.extract', $payload, 'panel', $account->id);
     }
 
     public static function limitReached(Account $account): bool
@@ -114,20 +138,40 @@ final class BackupProvisioner
         ]);
     }
 
-    public static function enqueueTransfer(string $username, string $source): int
+    /**
+     * WHM Transfer Tool: import a cPanel archive that already sits on this
+     * server. Destructive (it replaces the account home) → `_confirm` is sent;
+     * the agent engine keeps an `/home/.acp-prerestore-*` copy.
+     */
+    public static function enqueueTransfer(string $username, string $source, string $archivePath, string $sha256 = ''): int
     {
-        return Paneld::enqueue('backup.transfer', [
+        $payload = [
             'username' => $username,
             'source' => $source,
-        ]);
+            'archive_path' => $archivePath,
+            '_confirm' => 'backup.transfer',
+        ];
+        if ($sha256 !== '') {
+            $payload['sha256'] = $sha256;
+        }
+
+        return Paneld::enqueue('backup.transfer', $payload);
     }
 
-    public static function enqueueCpanel(string $username, string $action): int
+    /** Import a cPanel archive into an existing account (WHM Transfer or Restore). */
+    public static function enqueueCpanel(string $username, string $action, string $archivePath, string $sha256 = ''): int
     {
-        return Paneld::enqueue('backup.cpanel', [
+        $payload = [
             'username' => $username,
             'action' => $action,
-        ]);
+            'archive_path' => $archivePath,
+            '_confirm' => 'backup.cpanel',
+        ];
+        if ($sha256 !== '') {
+            $payload['sha256'] = $sha256;
+        }
+
+        return Paneld::enqueue('backup.cpanel', $payload);
     }
 
     public static function enqueueReview(string $username, string $status): int
