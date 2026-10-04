@@ -9,6 +9,7 @@ Prefix inside the tar: agent/
 from __future__ import annotations
 
 import gzip
+import sys
 import hashlib
 import io
 import pathlib
@@ -23,7 +24,12 @@ if not match:
     raise SystemExit("ACP_AGENT_VERSION missing in agent/src/Bootstrap.php")
 VERSION = match.group(1)
 OUTPUT = ROOT / "artifacts" / f"agent-{VERSION}.tar.gz"
+ALLOW_OVERWRITE = "--force" in sys.argv[1:]
 EXCLUDED = {".phpunit.result.cache"}
+
+
+def sha256(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
 
 
 def build() -> tuple[bytes, int]:
@@ -54,6 +60,21 @@ def build() -> tuple[bytes, int]:
 def main() -> None:
     payload, count = build()
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
+
+    # Guard: ek hi version ke do alag-byte artifacts history me na banein
+    # (0.62.0 ke saath exactly yeh hua tha). Rebuild jaan-boojhkar chahiye to --force.
+    if OUTPUT.exists():
+        existing = OUTPUT.read_bytes()
+        if existing != payload and not ALLOW_OVERWRITE:
+            raise SystemExit(
+                f"refusing to overwrite {OUTPUT.relative_to(ROOT)}: bytes badal rahe hain "
+                f"({sha256(existing)[:12]}… -> {sha256(payload)[:12]}…). "
+                "Version bump karo ya --force do."
+            )
+        if existing == payload:
+            print(f"{OUTPUT.relative_to(ROOT)} already up to date ({sha256(payload)[:16]}…)")
+            return
+
     OUTPUT.write_bytes(payload)
     print(f"built {OUTPUT.relative_to(ROOT)}")
     print(f"  files  : {count}")
