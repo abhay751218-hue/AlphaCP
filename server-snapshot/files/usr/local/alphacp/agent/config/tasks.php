@@ -461,6 +461,140 @@ return [
         ],
     ],
 
+    'db.create' => [
+        'handler'     => Tasks\DbCreate::class,
+        'safety'      => 'mutating',
+        'timeout'     => 60,
+        'description' => 'Create the real MariaDB database <account>_<name> (utf8mb4).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'name'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'name'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+            ],
+        ],
+    ],
+
+    'db.user.create' => [
+        'handler'     => Tasks\DbUserCreate::class,
+        'safety'      => 'mutating',
+        'timeout'     => 60,
+        'description' => 'Create a MariaDB user <account>_<user> and grant it the listed databases.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'user', 'password', 'databases'],
+            'properties'           => [
+                'username'  => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'user'      => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+                'password'  => ['type' => 'string', 'minLength' => 10, 'maxLength' => 64],
+                'host'      => ['type' => 'string', 'maxLength' => 190],
+                'databases' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => ['type' => 'string', 'maxLength' => 16],
+                ],
+            ],
+        ],
+    ],
+
+    'db.user.grant' => [
+        'handler'     => Tasks\DbUserGrant::class,
+        'safety'      => 'mutating',
+        'timeout'     => 60,
+        'description' => 'Add User To Database: grant an account MariaDB user ALL PRIVILEGES on one database.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'user', 'database'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'user'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+                'database' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+                'host'     => ['type' => 'string', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
+    'db.user.password' => [
+        'handler'     => Tasks\DbUserPassword::class,
+        'safety'      => 'mutating',
+        'timeout'     => 60,
+        'description' => 'Set a new password for an existing account MariaDB user (password via stdin).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'user', 'password'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'user'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+                'password' => ['type' => 'string', 'minLength' => 10, 'maxLength' => 64],
+                'host'     => ['type' => 'string', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
+    'db.list' => [
+        'handler'     => Tasks\DbList::class,
+        'safety'      => 'readonly',
+        'timeout'     => 60,
+        'description' => 'List the real MariaDB databases/users an account owns (verification task).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+            ],
+        ],
+    ],
+
+    'db.drop' => [
+        'handler'     => Tasks\DbDrop::class,
+        'safety'      => 'destructive',
+        'timeout'     => 120,
+        'confirm'     => 'db.drop',
+        'description' => 'Drop a MariaDB database and revoke account users\' privileges on it.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'name', '_confirm'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'name'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+                '_confirm' => ['type' => 'string', 'enum' => ['db.drop']],
+            ],
+        ],
+    ],
+
+    'db.user.drop' => [
+        'handler'     => Tasks\DbUserDrop::class,
+        'safety'      => 'destructive',
+        'timeout'     => 120,
+        'confirm'     => 'db.user.drop',
+        'description' => 'Remove a MariaDB user (every host row of this account for that name).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'user', '_confirm'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'user'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+                'host'     => ['type' => 'string', 'maxLength' => 190],
+                '_confirm' => ['type' => 'string', 'enum' => ['db.user.drop']],
+            ],
+        ],
+    ],
+
     'db.set' => [
         'handler'     => Tasks\MysqlSet::class,
         'safety'      => 'mutating',

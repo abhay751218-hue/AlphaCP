@@ -14,7 +14,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** cPanel MySQL Databases — prefixed names via paneld db.set. No mysql binary. */
+/**
+ * cPanel MySQL Databases (S8, panel 0.70.0) — real MariaDB via paneld
+ * `db.create` / `db.drop` / `db.list`. The panel books the intent, the root
+ * agent runs the SQL (socket auth, stdin scripts, no password in argv).
+ */
 class MysqlDatabasesController extends Controller
 {
     public function index(Request $request): View
@@ -49,15 +53,15 @@ class MysqlDatabasesController extends Controller
         if ($exists) {
             return back()->withErrors(['name' => 'This database already exists.'])->withInput();
         }
-        MysqlDatabase::query()->create([
+        $database = MysqlDatabase::query()->create([
             'account_id' => $account->id,
             'name' => $name,
         ]);
-        DatabaseProvisioner::enqueue($account);
-        $account->recordEvent('db.set.queued', $account->username . '_' . $name);
+        DatabaseProvisioner::enqueueCreate($account, $database);
+        $account->recordEvent('db.queued', $account->username . '_' . $name);
         Audit::log('db.add', 'info', 'account', $account->id, ['name' => $account->username . '_' . $name]);
 
-        return redirect()->route('mysql.index')->with('success', 'Database is queued.');
+        return redirect()->route('mysql.index')->with('success', 'MariaDB database is queued.');
     }
 
     public function destroy(Request $request, MysqlDatabase $mysql_database): RedirectResponse
@@ -67,11 +71,14 @@ class MysqlDatabasesController extends Controller
             abort(403);
         }
         $full = $account->username . '_' . $mysql_database->name;
+        foreach ($account->mysqlUsers()->with('databases')->get() as $user) {
+            $user->databases()->detach($mysql_database->id);
+        }
+        DatabaseProvisioner::enqueueDrop($account, $mysql_database->name);
         $mysql_database->delete();
-        DatabaseProvisioner::enqueue($account);
         Audit::log('db.remove', 'warning', 'account', $account->id, ['name' => $full]);
 
-        return redirect()->route('mysql.index')->with('success', 'Database is queued for removal.');
+        return redirect()->route('mysql.index')->with('success', 'MariaDB database drop is queued (privileges revoke honge).');
     }
 
     private function accountFor(Request $request): ?Account

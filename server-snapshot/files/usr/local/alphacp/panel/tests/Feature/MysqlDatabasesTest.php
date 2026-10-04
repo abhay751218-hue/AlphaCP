@@ -61,7 +61,7 @@ class MysqlDatabasesTest extends TestCase
         $this->asPanelUser($customer)->get('/mysql')
             ->assertOk()
             ->assertSee('MySQL Databases')
-            ->assertSee('databases.json');
+            ->assertSee('db.create');
 
         $this->asPanelUser($customer)->post('/mysql', [
             'name' => 'shop',
@@ -70,10 +70,10 @@ class MysqlDatabasesTest extends TestCase
         $row = $account->fresh()->mysqlDatabases()->first();
         $this->assertNotNull($row);
         $this->assertSame('shop', $row->name);
-        $task = DB::table('tasks')->where('account_id', $account->id)->where('type', 'db.set')->first();
+        $task = DB::table('tasks')->where('account_id', $account->id)->where('type', 'db.create')->first();
         $this->assertNotNull($task);
         $payload = json_decode((string) $task->payload, true);
-        $this->assertSame('shop', $payload['databases'][0]['name']);
+        $this->assertSame('shop', $payload['name']);
         $this->assertSame('custhost', $payload['username']);
         $this->assertStringNotContainsString('|', (string) $task->payload);
         $this->asPanelUser($customer)->get('/mysql')
@@ -88,7 +88,7 @@ class MysqlDatabasesTest extends TestCase
             'name' => '|/bin/sh',
         ])->assertRedirect();
         $this->assertSame(0, $account->fresh()->mysqlDatabases()->count());
-        $this->assertNull(DB::table('tasks')->where('type', 'db.set')->first());
+        $this->assertNull(DB::table('tasks')->where('type', 'db.create')->first());
     }
 
     public function test_path_escape_name_is_rejected(): void
@@ -98,7 +98,7 @@ class MysqlDatabasesTest extends TestCase
             'name' => '../etc',
         ])->assertRedirect();
         $this->assertSame(0, $account->fresh()->mysqlDatabases()->count());
-        $this->assertNull(DB::table('tasks')->where('type', 'db.set')->first());
+        $this->assertNull(DB::table('tasks')->where('type', 'db.create')->first());
     }
 
     public function test_customer_dashboard_has_mysql_not_create_account(): void
