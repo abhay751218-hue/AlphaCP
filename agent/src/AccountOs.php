@@ -1002,13 +1002,24 @@ final class AccountOs
         return $result->ok();
     }
 
+    /**
+     * Marker we put in the GECOS field so AlphaCP-created Linux users stay
+     * recognisable (and are the only ones we will delete).
+     *
+     * NOTE: `useradd` rejects ANY comment containing a colon ("invalid
+     * comment"), so the marker uses a space. Legacy 'AlphaCP:' users are still
+     * recognised for backward compatibility.
+     */
+    public const GECOS_MARKER = 'AlphaCP';
+
     public function isOurUser(string $username): bool
     {
         $result = $this->cmd->run(['/usr/bin/getent', 'passwd', $username], 10);
         if (!$result->ok()) {
             return false;
         }
-        return str_contains($result->stdout, 'AlphaCP:');
+        return str_contains($result->stdout, self::GECOS_MARKER . ' ')
+            || str_contains($result->stdout, self::GECOS_MARKER . ':');
     }
 
     public function createUser(string $username, string $domain, string $shadowHash): void
@@ -1028,7 +1039,8 @@ final class AccountOs
             '-m',
             '-d', $home,
             '-s', $this->paths->nologin,
-            '-c', 'AlphaCP:' . $domain,
+            // useradd rejects a colon in the comment (GECOS) field.
+            '-c', self::GECOS_MARKER . ' ' . $domain,
             '-p', $shadowHash,
             $username,
         ];

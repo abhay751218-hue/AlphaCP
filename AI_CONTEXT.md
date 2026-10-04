@@ -4,7 +4,7 @@
 
 > **Purpose:** This file gives ANY AI assistant (or new developer) complete context to work on
 > this project safely. Keep it updated whenever architecture, conventions, or status change.
-> **Last updated:** 2026-10-04 (S8 real MariaDB provisioning — panel 0.70.0 / agent 0.62.0)
+> **Last updated:** 2026-10-04 (S8 live-verified; agent 0.63.0 fix — real MariaDB provisioning + `useradd` GECOS colon)
 
 ---
 
@@ -26,11 +26,11 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **S10 in progress** — panel 0.69.0 / agent 0.61.0 live 4 Oct (snapshot 03:30Z, HTTP 200; real cPanel account import). 0.70.0 real MariaDB databases/users/GRANT tested + ready to deploy |
-| Next task | Deploy 0.70.0 (S8 real MariaDB), then close the remaining pre-S10 gaps (S5 per-domain PHP; S7 Exim/Dovecot; S8 phpMyAdmin SSO + remote-host auto-grant; S9 BIND) and finish S10: MySQL/mail/DNS parts of an imported cpmove archive + remote pull + remote backup destinations (safe restore, cron schedule, local cpmove import and transfer job history are live) |
+| Phase | **S10 in progress** — panel **0.70.0 live** 4 Oct (snapshot 14:55Z, HTTP 200; real MariaDB databases/users/GRANT + MySQL Users page). Agent **0.63.0** (0.70.1) me asli host ka `useradd` GECOS colon bug fix + live-verify script |
+| Next task | Deploy 0.70.1 (agent 0.63.0 useradd fix), phir `tools/verify/s8-live-check.sh` se S8 live-verify, phir close the remaining pre-S10 gaps (S5 per-domain PHP; S7 Exim/Dovecot; S8 phpMyAdmin SSO + remote-host auto-grant; S9 BIND) and finish S10: MySQL/mail/DNS parts of an imported cpmove archive + remote pull + remote backup destinations (safe restore, cron schedule, local cpmove import and transfer job history are live) |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
-| Code written so far | paneld + Laravel 13 panel; S10 real SHA-256-verified home archive + download + safe restore + cron-scheduled backups + real cpmove/legacy/nested cPanel archive import (`backup.cpanel` / `backup.transfer`) with transfer job history; S8 real MariaDB databases/users/GRANTs (`db.create` / `db.user.create` / `db.user.grant` / `db.user.password` (reset) / `db.drop` / `db.user.drop` / `db.list` via socket-auth client, SQL on stdin; stored task passwords are scrubbed after success) |
-| Blocking issues | S5 per-domain PHP; S7 real Exim/Dovecot mailflow; S9 BIND write/reload remain incomplete. S8 real provisioning is written + tested (0.70.0, deploy command pending: panel 434/0 + 6 wasm-skip, update-sim pending, provision-sim 106/0, mysql-sim PASS); phpMyAdmin SSO, per-database size limits and remote-host auto-grant remain. S10 still misses MySQL/mail/DNS import from a cpmove archive, authenticated remote pull, remote backup destinations, and live customer acceptance. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
+| Code written so far | paneld + Laravel 13 panel; S8 live-verify tooling (`tools/verify/s8-live-check.sh` + `tools/sim/s8-live-check-sim.sh`) aur release guard (`tools/sim/commands-check.sh`); S10 real SHA-256-verified home archive + download + safe restore + cron-scheduled backups + real cpmove/legacy/nested cPanel archive import (`backup.cpanel` / `backup.transfer`) with transfer job history; S8 real MariaDB databases/users/GRANTs (`db.create` / `db.user.create` / `db.user.grant` / `db.user.password` (reset) / `db.drop` / `db.user.drop` / `db.list` via socket-auth client, SQL on stdin; stored task passwords are scrubbed after success) |
+| Blocking issues | Panel account create ka asli-host bug (useradd comment me colon) 0.70.1 me fix hua par abhi live-verify hona baaki hai; S5 per-domain PHP; S7 real Exim/Dovecot mailflow; S9 BIND write/reload remain incomplete. S8 real provisioning panel 0.70.0 par LIVE hai (snapshot 14:55Z, HTTP 200); agent 0.63.0 (updater 0.70.1) me live-verify pakda gaya account-create bug fix hua hai aur uski live-verify baaki hai (panel 434/0 + 6 wasm-skip, provision-sim 107/107, mysql-sim PASS, s8-live-check-sim 10/0); phpMyAdmin SSO, per-database size limits and remote-host auto-grant remain. S10 still misses MySQL/mail/DNS import from a cpmove archive, authenticated remote pull, remote backup destinations, and live customer acceptance. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 

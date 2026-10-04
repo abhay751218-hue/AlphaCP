@@ -108,7 +108,7 @@ final class FakeCommandExecutor implements CommandExecutor
     private function useradd(array $argv): CommandResult
     {
         $user = $argv[array_key_last($argv)] ?? '';
-        $gecos = 'AlphaCP:unknown';
+        $gecos = 'AlphaCP unknown';
         foreach ($argv as $i => $arg) {
             if ($arg === '-c' && isset($argv[$i + 1])) {
                 $gecos = $argv[$i + 1];

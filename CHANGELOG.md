@@ -5,6 +5,18 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **0.70.1 — live-verify fix: `useradd` GECOS colon (4 Oct)** — panel **0.70.0**, agent **0.63.0**.
+  Asli server par S8 live-check ne pakda ki **panel ka "Create Account" kabhi kaam nahi karta tha**:
+  `AccountOs::createUser()` `-c 'AlphaCP:<domain>'` bhejta tha, aur `useradd` kisi bhi comment me
+  colon reject karta hai (`useradd: invalid comment 'AlphaCP:acpvXXXXXX.verify.local'`). Ab marker
+  `AlphaCP <domain>` hai (colon-free) — `isOurUser()` naya format aur purana `AlphaCP:` dono pehchanta
+  hai, isliye purane users bhi manage hote rahenge. Regression test: `useradd` ke argv me colon na ho.
+  Live-check script (`tools/verify/s8-live-check.sh`) bhi isi release me aa gayi: real MariaDB par
+  create/grant/login/reset/refuse/drop sab verify karti hai, aur panel me account na ho to khud ek
+  temp account (`acpvXXXXXX`) bana kar ant me hata deti hai. Offline sim uske liye:
+  `tools/sim/s8-live-check-sim.sh` (10/0; ek deliberately broken run included).
+  Tests: panel **434/0 (6 wasm-skip)**, update-sim **—/—**, provision-sim **107/107**, mysql-sim **PASS**.
+
 - **S8 real MySQL/MariaDB provisioning — Databases, Wizard, MySQL Users (4 Oct)** — panel **0.70.0**,
   agent **0.62.0**. The S8 pages stop writing JSON stubs: creating a database now really creates a
   MariaDB database, creating a user really creates the MariaDB user with `GRANT ALL PRIVILEGES` on the

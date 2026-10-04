@@ -20,7 +20,7 @@
 | Path | Kya |
 |---|---|
 | **`refs/panel-2b-bundle/`** | ⭐ **Panel ka SOURCE (Laravel 13.33.0)** — login, RBAC, 2FA, **license + 15-day trial** (`app/Support/License/`, design: `docs/modules/license.md`), `PasswordGenerator`. Panel badalna ho to yahin badlo. |
-| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Latest source: **0.70.0** (agent 0.62.0, real MySQL/MariaDB databases + users); server par abhi **0.69.0** (agent 0.61.0; HTTP 200). |
+| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Latest source: **0.70.0** (agent **0.63.0** — real MySQL/MariaDB databases + users, aur `useradd` GECOS colon fix); server par **0.70.0** live (HTTP 200), agent fix ka update **0.70.1** ready. |
 | `artifacts/panel-bundle-0.3.0.tar.gz` | Purana bundle **vendor/ ke saath** — sandbox tests isi ka vendor use karte hain (composer.lock same). |
 | `server-snapshot/files/usr/local/alphacp/…` | **Server par jo ABHI deployed hai** (alphacp-sync se). Source se mismatch ho to server = sach; farq samjho phir source theek karo. |
 | `server-snapshot/files/etc/...`, `server-snapshot/db-schema.sql` | nginx vhost, php-fpm pool, systemd drop-ins; DB structure (data nahi) |
@@ -60,7 +60,7 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 | `bash tools/sim/mysql-sim.sh` | Asli `db.*` handlers (php-wasm) se generated MariaDB SQL ka lint: statement verbs, balanced quoting, backticked account-prefixed identifiers, argv me kabhi identifier/password nahi, hostile input se **koi SQL nahi** (v0.70.0) | **PASS** |
 | `bash tools/sim/cpanel-import-sim.sh` | Real GNU tar (cpmove / legacy / nested layout) + asli `CpanelArchive` class (php-wasm): genuine archive accept, path-escape / hardlink / symlink-traversal reject (v0.69.0) | **PASS** |
 | `bash tools/sim/cpanel-import-e2e.sh` | Asli `BackupArchiveStore` + real `CommandRunner` + real tar, throwaway accounts root: home swap + `.acp-prerestore-*` copy + symlink preserved + staging cleanup, aur 7 hostile archives (escape / write-through / hardlink / doosra account / galat sha256 / missing / not-a-tar) fail closed (v0.69.0) | **PASS** |
-| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.70.0: panel 0.70.0 + agent 0.62.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)**, **cron + import drop dir (U8)**, **S8 MySQL tasks (U9)** | **224/224** |
+| `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.70.1: panel 0.70.0 + agent 0.63.0, pinned SHA, open_basedir, mismatch abort, rollback, pruning, sync-tool, **private repo (get)**, **cron + import drop dir (U8)**, **S8 MySQL tasks (U9)** | **224/224** |
 | `bash tools/sim/s8-live-check-sim.sh` | Offline sim (fake paneld + fake MariaDB) for `tools/verify/s8-live-check.sh`: run 1 me 21/0 pass (temp account auto-create + terminate ke saath), run 2 me `db.create` ko chup-chaap todkar dekhna ki script sach me FAIL deti hai (v0.70.0) | **10/0** |
 | `bash tools/sim/commands-check.sh` | COMMANDS.md ka NEXT command (offline, root-free): pinned commit par file maujood hai, byte-sha match karta hai, updater banner/version sahi hai, aur andar ke BUNDLE/AGENT artifact pins us commit ke artifacts se match karte hain | **10/0** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
