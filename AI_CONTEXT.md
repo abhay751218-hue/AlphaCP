@@ -4,7 +4,7 @@
 
 > **Purpose:** This file gives ANY AI assistant (or new developer) complete context to work on
 > this project safely. Keep it updated whenever architecture, conventions, or status change.
-> **Last updated:** 2026-10-03 (S10 audit + verified archive and updater simulations)
+> **Last updated:** 2026-10-04 (S10 real cPanel account import — panel 0.69.0 / agent 0.61.0)
 
 ---
 
@@ -26,11 +26,11 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **S10 in progress** — panel 0.67.0 / agent 0.60.0 deployed 4 Oct (snapshot 02:04Z, HTTP 200); 0.68.0 scheduled backups ready to deploy |
-| Next task | Close pre-S10 real-service gaps (S5 per-domain PHP; S7 Exim/Dovecot; S8 MariaDB provisioning/SSO; S9 BIND), then finish S10 remote destinations + transfer/import/history (safe restore + cron schedule are live); do not advance to later steps before those gates pass |
+| Phase | **S10 in progress** — panel 0.68.0 / agent 0.60.0 deployed 4 Oct (snapshot 02:44Z, HTTP 200); 0.69.0 real cPanel account import ready to deploy |
+| Next task | Close pre-S10 real-service gaps (S5 per-domain PHP; S7 Exim/Dovecot; S8 MariaDB provisioning/SSO; S9 BIND), then finish S10: MySQL/mail/DNS parts of an imported cpmove archive + remote pull from the old server + remote backup destinations (safe restore + cron schedule live; local cpmove import + transfer job history **0.69.0 me ready, deploy pending**); do not advance to later steps before those gates pass |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
-| Code written so far | paneld + Laravel 13 panel; S10 real SHA-256-verified home archive + account-scoped download + safe restore (`backup.extract`) + cron-scheduled backups (`alphacp:scheduled-backups`) |
-| Blocking issues | S5 per-domain PHP; S7 real Exim/Dovecot mailflow; S8 MariaDB provisioning/SSO; S9 BIND write/reload remain incomplete. S10 remote destinations + cPanel transfer/import and live customer acceptance remain pending. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
+| Code written so far | paneld + Laravel 13 panel; S10 real SHA-256-verified home archive + account-scoped download + safe restore (`backup.extract`) + cron-scheduled backups (`alphacp:scheduled-backups`) + real cpmove/legacy/nested cPanel archive import (`backup.cpanel` / `backup.transfer`) with transfer job history |
+| Blocking issues | S5 per-domain PHP; S7 real Exim/Dovecot mailflow; S8 MariaDB provisioning/SSO; S9 BIND write/reload remain incomplete. S10 still misses MySQL/mail/DNS import from a cpmove archive, authenticated remote pull, remote backup destinations, and live customer acceptance. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 

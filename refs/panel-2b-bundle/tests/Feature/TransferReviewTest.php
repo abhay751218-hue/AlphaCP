@@ -40,7 +40,7 @@ class TransferReviewTest extends TestCase
         $root = $this->userWithRole('root');
         $this->asPanelUser($root)->get('/transfer-review')
             ->assertOk()
-            ->assertSee('Review transfers and restores')
+            ->assertSee('Transfer / restore jobs')
             ->assertSee('review.json');
 
         $this->asPanelUser($root)->post('/transfer-review', [
@@ -77,6 +77,39 @@ class TransferReviewTest extends TestCase
         ])->assertRedirect();
         $this->assertSame(0, TransferReview::query()->count());
         $this->assertNull(DB::table('tasks')->where('type', 'backup.review')->first());
+    }
+
+    public function test_review_page_shows_the_real_cpanel_import_history(): void
+    {
+        $root = $this->userWithRole('root');
+        DB::table('tasks')->insert([
+            'server_id' => 1,
+            'type' => 'backup.cpanel',
+            'safety' => 'destructive',
+            'payload' => json_encode([
+                'username' => 'alicehost',
+                'action' => 'restore',
+                'archive_path' => '/home/cpmove-alicehost.tar.gz',
+            ]),
+            'status' => 'success',
+            'requested_src' => 'panel',
+            'result' => json_encode([
+                'files' => 42,
+                'dirs' => 7,
+                'bytes' => 1048576,
+                'sections' => ['mysql', 'userdata'],
+                'status' => 'imported',
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->asPanelUser($root)->get('/transfer-review')
+            ->assertOk()
+            ->assertSee('alicehost')
+            ->assertSee('42 files')
+            ->assertSee('mysql, userdata')
+            ->assertSee('success');
     }
 
     public function test_root_dashboard_has_transfer_review_and_create_account(): void

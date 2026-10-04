@@ -9,11 +9,19 @@ use App\Support\Audit;
 use App\Support\Backup;
 use App\Support\BackupProvisioner;
 use App\Support\ModuleCatalog;
+use App\Support\Paneld;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** WHM Review Transfers and Restores via paneld backup.review. No tar, no rsync, no shell, no pipe. */
+/**
+ * WHM Review Transfers and Restores — the REAL job history of every cpmove
+ * import (paneld `backup.cpanel` / `backup.transfer`) with the agent's result:
+ * file/dir counts, skipped sections (mysql/mail/dns) and errors.
+ *
+ * The manual review-note form below it stays (audit trail), but the table is
+ * the source of truth for transfer status.
+ */
 class TransferReviewController extends Controller
 {
     public function index(Request $request): View
@@ -23,6 +31,7 @@ class TransferReviewController extends Controller
         return view('transfer-review.index', [
             'row' => TransferReview::query()->orderByDesc('id')->first(),
             'statuses' => Backup::REVIEW_STATUSES,
+            'jobs' => $this->jobs(),
             'panelMode' => 'whm',
         ]);
     }
@@ -55,6 +64,38 @@ class TransferReviewController extends Controller
         Audit::log('backup.review', 'info', 'system', null, ['username' => $username, 'status' => $status]);
 
         return redirect()->route('transfer-review.index')->with('success', 'Review job is queued.');
+    }
+
+    /**
+     * @return list<array{id:int,type:string,status:string,username:string,archive:string,source:string,files:int,bytes:int,sections:string,error:string,created_at:string}>
+     */
+    private function jobs(): array
+    {
+        return Paneld::recentJobs(['backup.cpanel', 'backup.transfer'], 25)
+            ->map(static function (object $task): array {
+                $payload = json_decode((string) $task->payload, true);
+                $result = json_decode((string) ($task->result ?? ''), true);
+                $payload = is_array($payload) ? $payload : [];
+                $result = is_array($result) ? $result : [];
+                $sections = $result['sections'] ?? [];
+                $sections = is_array($sections) ? implode(', ', array_map('strval', $sections)) : '';
+
+                return [
+                    'id' => (int) $task->id,
+                    'type' => (string) $task->type,
+                    'status' => (string) $task->status,
+                    'username' => (string) ($payload['username'] ?? ''),
+                    'archive' => (string) ($payload['archive_path'] ?? ''),
+                    'source' => (string) ($result['source'] ?? $payload['source'] ?? ''),
+                    'files' => (int) ($result['files'] ?? 0),
+                    'bytes' => (int) ($result['bytes'] ?? 0),
+                    'sections' => $sections,
+                    'error' => trim((string) ($task->error ?? '')),
+                    'created_at' => (string) ($task->created_at ?? ''),
+                ];
+            })
+            ->values()
+            ->all();
     }
 
     private function requireWhm(Request $request): void

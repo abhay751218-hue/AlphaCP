@@ -36,7 +36,7 @@
 | Step 7 | Email suite (Exim/Dovecot/SpamAssassin/ClamAV) | 🟡 **UI/config through Webmail; real Exim/Dovecot mailflow + service integration pending** |
 | Step 8 | Databases (MySQL management) | 🟡 **UI/config through Remote MySQL; actual DB/users/GRANT + phpMyAdmin SSO pending** |
 | Step 9 | DNS management + nameservers | 🟡 **JSON/config through Nameserver Selection; BIND write/reload/dig validation + cluster pending** |
-| Step 10 | Backup / Restore / Migration | 🟡 **0.67.0 / agent 0.60.0 live 4 Oct (snapshot 02:04Z, HTTP 200). Verified home archive + download + safe restore (`backup.extract`) live; 0.68.0 adds cron-scheduled backups; mail/DB backup, remote destinations, transfer/import still incomplete.** |
+| Step 10 | Backup / Restore / Migration | 🟡 **0.68.0 / agent 0.60.0 live 4 Oct (snapshot 02:44Z, HTTP 200). Verified home archive + download + safe restore (`backup.extract`) + cron-scheduled backups live; 0.69.0 adds real cpmove/legacy/nested cPanel archive import (`backup.cpanel` / `backup.transfer`) + transfer job history; MySQL/mail/DNS import, remote pull and remote destinations still incomplete.** |
 | Step 11 | Monitoring, stats, resource limits | ⏳ |
 | Step 12 | 💳 Billing API layer (WHM API 1 + native REST) | ⏳ |
 | Step 13 | Security suite + WAF | ⏳ |

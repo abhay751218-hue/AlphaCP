@@ -5,6 +5,27 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **S10 real cPanel account import — Transfer Tool + Transfer or Restore (4 Oct)** — panel **0.69.0**,
+  agent **0.61.0**. The three WHM transfer pages stop writing JSON stubs and import a real cPanel
+  archive into an existing account home. Layouts understood: `cpmove-<user>.tar.gz` (`/scripts/pkgacct`),
+  the legacy `backup-*.tar.gz` full backup, and the older nested `homedir/homedir.tar` form; compression
+  is auto-detected (`.tar`, `.tar.gz`, `.tgz`, no compression flag passed). The archive stays server-side
+  (a real cpmove file is far bigger than any PHP upload limit): the panel queues the absolute path plus an
+  optional SHA-256, and the root agent re-validates everything — path inside allowlisted roots, regular
+  file, checksum match — before a byte is read. Entry-by-entry inspection refuses `..`/absolute paths,
+  hardlinks/device nodes/FIFOs and archives that **write through a symlink** (`link -> /etc` followed by
+  `link/pwned`); only the `homedir` subtree is extracted, into a staging dir with `--no-same-owner
+  --one-file-system`, then chowned and swapped in with same-filesystem renames while the replaced home is
+  kept as `/home/.acp-prerestore-<user>-<stamp>` (failure rolls back). `backup.cpanel` and
+  `backup.transfer` are now `destructive` tasks (`_confirm`, 3600 s); the transfer task also records the
+  source FQDN. MySQL dumps, mail, DNS zones and cPanel userdata present in the archive are **reported**
+  (`sections`, `section_entries`) and never touched — importing them is the next S10 slice. **Review
+  Transfers and Restores** now shows the real job history from the task queue (status, account,
+  files/bytes, skipped sections, agent error) with the legacy JSON note kept below it. Transfer pages
+  scan well-known drop paths (`/home`, `<ACP home>/incoming`) and offer detected archives.
+  Tests: panel **425/0 (6 wasm-skip)**, update-sim **—/—**, provision-sim **98/98**, cpanel-import-sim **PASS**
+  (real GNU tar + real `CpanelArchive`), cpanel-import-e2e **PASS** (real `BackupArchiveStore` +
+  real tar: home swap, pre-restore copy, 7 hostile archives refused), backup-tar-sim **PASS**.
 - **S10 scheduled backups — cron scheduler (3 Oct)** — panel **0.68.0** (agent unchanged **0.60.0**).
   The WHM Backup Configuration schedule now *runs*: the updater installs `/etc/cron.d/alphacp-panel`
   (`* * * * * <panel user> … artisan schedule:run`), `routes/console.php` schedules
@@ -18,7 +39,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `--force` runs once without consuming the window. The WHM Backup Config page shows last run + counts,
   the next window and the marker path. A foreign file already sitting at the cron path is preserved as
   `*.bak-<stamp>` instead of being overwritten.
-  Tests: panel **414/0 (6 wasm-skip)**, update-sim **200/200** (incl. the new cron checks + U7
+  Tests: panel **415/0 (6 wasm-skip)**, update-sim **200/200** (incl. the new cron checks + U7
   foreign-cron-file case), provision-sim **94/94**, backup-tar-sim **PASS**.
 - **S10 safe home restore — File and Directory Restoration (3 Oct)** — panel **0.67.0**, agent **0.60.0**.
   `backup.extract` (destructive, needs `_confirm`) restores a previously published, checksum-verified

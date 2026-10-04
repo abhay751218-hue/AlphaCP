@@ -304,10 +304,10 @@
 | 182 | Server Information / Service Status / Apache Status | S11 | ⏳ S11 |
 | 183 | Daily Process Log | S11 | ⏳ S11 |
 | 184 | **Task Queue Monitor** (hamara paneld queue) | S2B | 🟡 2B-1 |
-| 185 | Transfer Tool (cPanel→AlphaCP migration) | S10 | 🟡 (JSON username+source FQDN only; authenticated transfer/copy pending) |
-| 186 | Transfer or Restore a cPanel Account | S10 | 🟡 (JSON username+action only; cPanel archive import/copy pending) |
+| 185 | Transfer Tool (cPanel→AlphaCP migration) | S10 | 🟡 (real local cpmove import via `backup.transfer` + source FQDN recorded; authenticated remote pull pending) |
+| 186 | Transfer or Restore a cPanel Account | S10 | 🟡 (real cpmove/legacy/nested archive import via `backup.cpanel`: verified sha256, home swap, pre-restore copy; MySQL/mail/DNS sections still pending) |
 | 187 | Convert Addon Domain to Account | S15 | ⏳ S15 |
-| 188 | Review Transfers and Restores | S10 | 🟡 (JSON username+status only; real transfer/restore job history pending) |
+| 188 | Review Transfers and Restores | S10 | 🟡 (real `backup.cpanel`/`backup.transfer` job history from the task queue + legacy JSON note; per-account bulk actions pending) |
 | 189 | IP Functions (assign/show IPs) | S15 | ⏳ S15 |
 | 190 | Change Hostname / Resolver Configuration | S15 | ⏳ S15 |
 | 191 | Locales (add/edit/import language) | S2B | 🟡 2B |
@@ -325,7 +325,7 @@
 | 196 | cPanel license (paid) | **AlphaCP license system** (Ed25519 signed, our own) |S2C|🟡 S2C|
 | 197 | cPanel updates (one-click + auto) | One-click update + rollback + `alphacp update` | S15 | ⏳ S15 |
 | 198 | Multi-server / link nodes | Central + nodes, per-node tasks | S15 | ⏳ S15 |
-| 199 | cPanel backup import (hosting migrations) | `.tar.gz` cPanel backup import | S10 | ⏳ S10 |
+| 199 | cPanel backup import (hosting migrations) | `.tar.gz` cPanel backup import | S10 | 🟡 (cpmove/legacy/nested `.tar.gz`/.tar import live into an existing account; MySQL/mail/DNS import + account creation from archive pending) |
 | 200 | Root task engine (internal) | **paneld** (allowlist, audit, rollback-safe) | S2A | ✅ |
 | 201 | CLI (`/usr/local/cpanel/*` scripts) | `alphacp` CLI (status/doctor/task/agent/logs) | S1·S2A | ✅ |
 | 202 | cPHulk/audit trail for everything | `audit_logs` immutable trail | S2A | ✅ |

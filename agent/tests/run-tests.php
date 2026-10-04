@@ -2018,7 +2018,10 @@ test('backup.extract restores a subtree and rejects hostile archives', function 
 
     // hardlink entry (would land /etc/shadow inside the home)
     $harness['cmd']->tarListLines = ['alicehost/', 'alicehost/shadow'];
-    $harness['cmd']->tarVerboseLines = ['hrw-r--r-- 1500/1500 0 2026-10-03 16:00 alicehost/shadow link to /etc/shadow'];
+    $harness['cmd']->tarVerboseLines = [
+        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 alicehost/',
+        'hrw-r--r-- 1500/1500 0 2026-10-03 16:00 alicehost/shadow link to /etc/shadow',
+    ];
     $threwLink = false;
     try {
         (new BackupExtract())->handle(['username' => 'alicehost', 'archive_id' => $id, '_confirm' => 'backup.extract'], $harness['ctx']);
@@ -2035,6 +2038,283 @@ test('backup.extract restores a subtree and rejects hostile archives', function 
         $threwMissing = str_contains($e->getMessage(), 'not found');
     }
     assert_true($threwMissing, 'restoring an unknown archive must fail closed');
+    acp_account_cleanup($harness);
+});
+
+test('cpanel import restores a cpmove home, keeps a pre-restore copy and reports skipped sections', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    $archive = $harness['root'] . '/home/cpmove-alicehost.tar.gz';
+    file_put_contents($archive, str_repeat('cpmove-archive-bytes', 8));
+    $sha = (string) hash_file('sha256', $archive);
+
+    $harness['cmd']->tarListLines = [
+        'cpmove-alicehost/',
+        'cpmove-alicehost/homedir/',
+        'cpmove-alicehost/homedir/public_html/',
+        'cpmove-alicehost/homedir/public_html/index.php',
+        'cpmove-alicehost/mysql/',
+        'cpmove-alicehost/mysql/alicehost_wp.sql',
+        'cpmove-alicehost/userdata/main',
+    ];
+    $harness['cmd']->tarMemberList['cpmove-alicehost/homedir'] = [
+        'cpmove-alicehost/homedir/',
+        'cpmove-alicehost/homedir/public_html/',
+        'cpmove-alicehost/homedir/public_html/index.php',
+    ];
+    $harness['cmd']->tarMemberVerbose['cpmove-alicehost/homedir'] = [
+        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 cpmove-alicehost/homedir/',
+        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 cpmove-alicehost/homedir/public_html/',
+        '-rw-r--r-- 1500/1500 21 2026-10-03 16:00 cpmove-alicehost/homedir/public_html/index.php',
+    ];
+    $harness['cmd']->tarExtractPaths = ['cpmove-alicehost/homedir/public_html/index.php' => 'imported from cpanel'];
+
+    $result = (new BackupCpanel())->handle([
+        'username' => 'alicehost',
+        'action' => 'restore',
+        'archive_path' => $archive,
+        'sha256' => $sha,
+        '_confirm' => 'backup.cpanel',
+    ], $harness['ctx']);
+
+    assert_true($result['status'] === 'imported', 'import must report success');
+    assert_true($result['layout'] === 'direct', 'cpmove layout must be detected');
+    assert_true($result['files'] === 1 && $result['dirs'] === 2, 'home counts must come from the home listing');
+    assert_true($result['bytes'] === 21, 'home bytes must be summed from the verbose listing');
+    assert_true(in_array('mysql', $result['sections'], true), 'skipped sections must be reported');
+    assert_true(($result['section_entries']['mysql'] ?? 0) === 2, 'section entry counts must be reported');
+    assert_true(str_contains((string) file_get_contents($home . '/public_html/index.php'), 'imported from cpanel'), 'imported home must be in place');
+    assert_true(!is_file($home . '/public_html/index.html'), 'old home files must be replaced by the swap');
+    $pre = glob($harness['root'] . '/home/.acp-prerestore-alicehost-*');
+    assert_true(is_array($pre) && count($pre) === 1, 'exactly one pre-restore copy must be kept');
+    assert_true(str_contains((string) file_get_contents($pre[0] . '/public_html/index.html'), 'shop.example.com'), 'pre-restore copy must hold the replaced home');
+    $staging = glob($harness['root'] . '/home/.acp-import-alicehost-*');
+    assert_true($staging === [] || $staging === false, 'import staging dir must be cleaned up');
+    acp_account_cleanup($harness);
+});
+
+test('cpanel import fails closed on a bad checksum, a foreign archive, hostile entries and symlinks', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    $archive = $harness['root'] . '/home/cpmove-alicehost.tar.gz';
+    file_put_contents($archive, str_repeat('cpmove-archive-bytes', 8));
+    $sha = (string) hash_file('sha256', $archive);
+    $handler = new BackupCpanel();
+    $payload = [
+        'username' => 'alicehost',
+        'action' => 'restore',
+        'archive_path' => $archive,
+        'sha256' => $sha,
+        '_confirm' => 'backup.cpanel',
+    ];
+
+    $harness['cmd']->tarListLines = ['cpmove-alicehost/', 'cpmove-alicehost/homedir/', 'cpmove-alicehost/homedir/public_html/index.php'];
+    $harness['cmd']->tarMemberVerbose['cpmove-alicehost/homedir'] = ['-rw-r--r-- 1500/1500 3 2026-10-03 16:00 cpmove-alicehost/homedir/public_html/index.php'];
+
+    $badChecksum = false;
+    try {
+        $handler->handle(['sha256' => str_repeat('0', 64)] + $payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $badChecksum = str_contains($e->getMessage(), 'checksum mismatch');
+    }
+    assert_true($badChecksum, 'a wrong sha256 must refuse the import');
+
+    $foreign = false;
+    $harness['cmd']->tarListLines = ['cpmove-bobhost/', 'cpmove-bobhost/homedir/public_html/index.php'];
+    try {
+        $handler->handle($payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $foreign = str_contains($e->getMessage(), 'another account');
+    }
+    assert_true($foreign, 'an archive for another username must be refused');
+
+    $escape = false;
+    $harness['cmd']->tarListLines = ['cpmove-alicehost/', 'cpmove-alicehost/homedir/../../etc/passwd'];
+    try {
+        $handler->handle($payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $escape = str_contains($e->getMessage(), 'escape') || str_contains($e->getMessage(), 'outside');
+    }
+    assert_true($escape, 'a path escape must be refused');
+
+    $hardlink = false;
+    $harness['cmd']->tarListLines = ['cpmove-alicehost/', 'cpmove-alicehost/homedir/', 'cpmove-alicehost/homedir/shadow'];
+    $harness['cmd']->tarMemberList['cpmove-alicehost/homedir'] = ['cpmove-alicehost/homedir/shadow'];
+    $harness['cmd']->tarMemberVerbose['cpmove-alicehost/homedir'] = ['hrw-r--r-- 1500/1500 0 2026-10-03 16:00 cpmove-alicehost/homedir/shadow link to /etc/shadow'];
+    try {
+        $handler->handle($payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $hardlink = str_contains($e->getMessage(), 'hardlink') || str_contains($e->getMessage(), 'special');
+    }
+    assert_true($hardlink, 'hardlink entries must never be imported');
+
+    $symlink = false;
+    $harness['cmd']->tarListLines = ['cpmove-alicehost/', 'cpmove-alicehost/homedir/link', 'cpmove-alicehost/homedir/link/passwd'];
+    $harness['cmd']->tarMemberList['cpmove-alicehost/homedir'] = ['cpmove-alicehost/homedir/link', 'cpmove-alicehost/homedir/link/passwd'];
+    $harness['cmd']->tarMemberVerbose['cpmove-alicehost/homedir'] = [
+        'lrwxrwxrwx 1500/1500 4 2026-10-03 16:00 cpmove-alicehost/homedir/link -> /etc',
+        '-rw-r--r-- 1500/1500 3 2026-10-03 16:00 cpmove-alicehost/homedir/link/passwd',
+    ];
+    try {
+        $handler->handle($payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $symlink = str_contains($e->getMessage(), 'symlink');
+    }
+    assert_true($symlink, 'an archive that writes through a symlink must be refused');
+
+    assert_true(is_file($home . '/public_html/index.html'), 'a refused import must leave the home untouched');
+    assert_true((glob($harness['root'] . '/home/.acp-prerestore-alicehost-*') ?: []) === [], 'a refused import must not leave a pre-restore copy');
+    acp_account_cleanup($harness);
+});
+
+test('cpanel import supports the legacy root layout and the nested homedir.tar layout', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost';
+    $handler = new BackupCpanel();
+
+    $legacy = $harness['root'] . '/home/backup-10.03.2026_16-00-00_alicehost.tar.gz';
+    file_put_contents($legacy, str_repeat('legacy-bytes', 8));
+    $harness['cmd']->tarListLines = ['homedir/', 'homedir/public_html/', 'homedir/public_html/index.php', 'mysql/alicehost_wp.sql'];
+    $harness['cmd']->tarMemberList['homedir'] = ['homedir/', 'homedir/public_html/', 'homedir/public_html/index.php'];
+    $harness['cmd']->tarMemberVerbose['homedir'] = [
+        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 homedir/',
+        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 homedir/public_html/',
+        '-rw-r--r-- 1500/1500 12 2026-10-03 16:00 homedir/public_html/index.php',
+    ];
+    $harness['cmd']->tarExtractPaths = ['homedir/public_html/index.php' => 'legacy import'];
+    $result = $handler->handle([
+        'username' => 'alicehost',
+        'action' => 'restore',
+        'archive_path' => $legacy,
+        'sha256' => (string) hash_file('sha256', $legacy),
+        '_confirm' => 'backup.cpanel',
+    ], $harness['ctx']);
+    assert_true($result['layout'] === 'direct' && $result['root'] === '', 'a legacy backup must import without a cpmove root');
+    assert_true(str_contains((string) file_get_contents($home . '/public_html/index.php'), 'legacy import'), 'legacy home must be imported');
+
+    $nested = $harness['root'] . '/home/cpmove-alicehost.tar.gz';
+    file_put_contents($nested, str_repeat('nested-cpmove-bytes', 8));
+    $harness['cmd']->tarListLines = ['cpmove-alicehost/', 'cpmove-alicehost/homedir/', 'cpmove-alicehost/homedir/homedir.tar'];
+    $harness['cmd']->tarMemberList['cpmove-alicehost/homedir'] = ['cpmove-alicehost/homedir/', 'cpmove-alicehost/homedir/homedir.tar'];
+    $harness['cmd']->tarMemberVerbose['cpmove-alicehost/homedir'] = [
+        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 cpmove-alicehost/homedir/',
+        '-rw-r--r-- 1500/1500 10240 2026-10-03 16:00 cpmove-alicehost/homedir/homedir.tar',
+    ];
+    $harness['cmd']->tarExtractPaths = ['cpmove-alicehost/homedir/homedir.tar' => 'fake nested tar bytes'];
+    $harness['cmd']->tarNestedList = ['./', './public_html/', './public_html/index.php'];
+    $harness['cmd']->tarNestedVerbose = [
+        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 ./',
+        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 ./public_html/',
+        '-rw-r--r-- 1500/1500 14 2026-10-03 16:00 ./public_html/index.php',
+    ];
+    $harness['cmd']->tarNestedExtractPaths = ['./public_html/index.php' => 'nested import'];
+    $result = $handler->handle([
+        'username' => 'alicehost',
+        'action' => 'restore',
+        'archive_path' => $nested,
+        'sha256' => (string) hash_file('sha256', $nested),
+        '_confirm' => 'backup.cpanel',
+    ], $harness['ctx']);
+    assert_true($result['layout'] === 'nested', 'a nested homedir.tar must be detected');
+    assert_true(str_contains((string) file_get_contents($home . '/public_html/index.php'), 'nested import'), 'nested home must be imported');
+    acp_account_cleanup($harness);
+});
+
+test('cpanel import refuses unknown files, missing accounts and empty listings', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $handler = new BackupCpanel();
+    $payload = [
+        'username' => 'alicehost',
+        'action' => 'restore',
+        'archive_path' => $harness['root'] . '/home/cpmove-alicehost.tar.gz',
+        '_confirm' => 'backup.cpanel',
+    ];
+
+    $missing = false;
+    try {
+        $handler->handle($payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $missing = str_contains($e->getMessage(), 'not found');
+    }
+    assert_true($missing, 'a missing archive file must be refused');
+
+    $wrongName = $harness['root'] . '/home/cpmove-alicehost.zip';
+    file_put_contents($wrongName, 'not a tar');
+    $wrongExtension = false;
+    try {
+        $handler->handle(['archive_path' => $wrongName] + $payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $wrongExtension = str_contains($e->getMessage(), 'tar');
+    }
+    assert_true($wrongExtension, 'only .tar/.tar.gz/.tgz files may be imported');
+
+    $outside = sys_get_temp_dir() . '/acp-outside-' . bin2hex(random_bytes(4)) . '.tar.gz';
+    file_put_contents($outside, str_repeat('outside-bytes', 8));
+    $outsideRefused = false;
+    try {
+        $handler->handle(['archive_path' => $outside] + $payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $outsideRefused = str_contains($e->getMessage(), 'outside the allowlisted roots');
+    }
+    assert_true($outsideRefused, 'an archive outside the allowlisted roots must be refused');
+
+    $smuggle = $harness['root'] . '/home/cpmove-smuggle.tar.gz';
+    @symlink($outside, $smuggle);
+    $smuggleRefused = false;
+    try {
+        $handler->handle(['archive_path' => $smuggle] + $payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $smuggleRefused = str_contains($e->getMessage(), 'outside the allowlisted roots');
+    }
+    assert_true($smuggleRefused, 'a symlink pointing outside the roots must not smuggle an archive in');
+    @unlink($smuggle);
+    @unlink($outside);
+
+    $archive = $harness['root'] . '/home/cpmove-alicehost.tar.gz';
+    file_put_contents($archive, str_repeat('cpmove-archive-bytes', 8));
+    $noAccount = false;
+    try {
+        $handler->handle(['username' => 'bobhost'] + $payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $noAccount = str_contains($e->getMessage(), 'not an AlphaCP account');
+    }
+    assert_true($noAccount, 'the account must exist before an import');
+
+    $harness['cmd']->tarListLines = ['cpmove-alicehost/', 'cpmove-alicehost/homedir/'];
+    $harness['cmd']->tarMemberList['cpmove-alicehost/homedir'] = ['cpmove-alicehost/homedir/'];
+    $harness['cmd']->tarMemberVerbose['cpmove-alicehost/homedir'] = [];
+    $empty = false;
+    try {
+        $handler->handle($payload, $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $empty = str_contains($e->getMessage(), 'empty');
+    }
+    assert_true($empty, 'an archive without home content must be refused');
+    acp_account_cleanup($harness);
+});
+
+test('backup.transfer imports the same archive and records the source host', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $archive = $harness['root'] . '/home/cpmove-alicehost.tar.gz';
+    file_put_contents($archive, str_repeat('cpmove-archive-bytes', 8));
+    $harness['cmd']->tarListLines = ['cpmove-alicehost/', 'cpmove-alicehost/homedir/', 'cpmove-alicehost/homedir/public_html/index.php'];
+    $harness['cmd']->tarMemberList['cpmove-alicehost/homedir'] = ['cpmove-alicehost/homedir/public_html/index.php'];
+    $harness['cmd']->tarMemberVerbose['cpmove-alicehost/homedir'] = ['-rw-r--r-- 1500/1500 9 2026-10-03 16:00 cpmove-alicehost/homedir/public_html/index.php'];
+    $harness['cmd']->tarExtractPaths = ['cpmove-alicehost/homedir/public_html/index.php' => 'transferred'];
+
+    $result = (new BackupTransfer())->handle([
+        'username' => 'alicehost',
+        'source' => 'old.example.com',
+        'archive_path' => $archive,
+        '_confirm' => 'backup.transfer',
+    ], $harness['ctx']);
+    assert_true($result['status'] === 'imported', 'transfer must import the archive');
+    assert_true($result['action'] === 'transfer' && $result['source'] === 'old.example.com', 'the source host must be recorded in the result');
     acp_account_cleanup($harness);
 });
 
@@ -2298,76 +2578,72 @@ test('backup.filedir writes json and rejects hostile path', function (): void {
     assert_true($threwPath, 'hostile filedir escape must fail closed');
     acp_account_cleanup($harness);
 });
-test('backup.transfer writes json and rejects hostile source', function (): void {
+test('backup.transfer and backup.cpanel reject hostile metadata before touching the archive', function (): void {
     $harness = acp_account_harness();
-    $out = (new BackupTransfer())->handle([
-        'username' => 'alicehost',
-        'source' => 'source.example.com',
-    ], $harness['ctx']);
-    assert_true($out['username'] === 'alicehost');
-    assert_true($out['source'] === 'source.example.com');
-    $file = $harness['root'] . '/alphacp/etc/backup/transfer.json';
-    assert_true(is_file($file));
-    $body = (string) file_get_contents($file);
-    assert_true(str_contains($body, 'alicehost'));
-    assert_true(str_contains($body, 'source.example.com'));
-    assert_true(!str_contains($body, '|'));
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $archive = $harness['root'] . '/home/cpmove-alicehost.tar.gz';
+    file_put_contents($archive, str_repeat('cpmove-archive-bytes', 8));
+
     $threwPipe = false;
     try {
         (new BackupTransfer())->handle([
             'username' => 'alicehost',
             'source' => '|/bin/sh',
+            'archive_path' => $archive,
         ], $harness['ctx']);
     } catch (TaskRejectedException $e) {
         $threwPipe = str_contains($e->getMessage(), 'domain') || str_contains($e->getMessage(), 'invalid') || str_contains($e->getMessage(), 'FQDN');
     }
     assert_true($threwPipe, 'hostile transfer source must fail closed');
-    $threwPath = false;
+
+    $threwSourcePath = false;
     try {
         (new BackupTransfer())->handle([
             'username' => 'alicehost',
             'source' => '../etc',
+            'archive_path' => $archive,
         ], $harness['ctx']);
     } catch (TaskRejectedException $e) {
-        $threwPath = str_contains($e->getMessage(), 'domain') || str_contains($e->getMessage(), 'invalid') || str_contains($e->getMessage(), 'FQDN');
+        $threwSourcePath = str_contains($e->getMessage(), 'domain') || str_contains($e->getMessage(), 'invalid') || str_contains($e->getMessage(), 'FQDN');
     }
-    assert_true($threwPath, 'hostile transfer source path must fail closed');
-    acp_account_cleanup($harness);
-});
-test('backup.cpanel writes json and rejects hostile action', function (): void {
-    $harness = acp_account_harness();
-    $out = (new BackupCpanel())->handle([
-        'username' => 'alicehost',
-        'action' => 'restore',
-    ], $harness['ctx']);
-    assert_true($out['username'] === 'alicehost');
-    assert_true($out['action'] === 'restore');
-    $file = $harness['root'] . '/alphacp/etc/backup/cpanel-account.json';
-    assert_true(is_file($file));
-    $body = (string) file_get_contents($file);
-    assert_true(str_contains($body, 'alicehost'));
-    assert_true(str_contains($body, 'restore'));
-    assert_true(!str_contains($body, '|'));
-    $threwPipe = false;
+    assert_true($threwSourcePath, 'hostile transfer source path must fail closed');
+
+    $threwAction = false;
     try {
         (new BackupCpanel())->handle([
             'username' => 'alicehost',
             'action' => '|/bin/sh',
+            'archive_path' => $archive,
         ], $harness['ctx']);
     } catch (TaskRejectedException $e) {
-        $threwPipe = str_contains($e->getMessage(), 'action') || str_contains($e->getMessage(), 'invalid');
+        $threwAction = str_contains($e->getMessage(), 'action') || str_contains($e->getMessage(), 'invalid');
     }
-    assert_true($threwPipe, 'hostile cpanel action must fail closed');
-    $threwPath = false;
+    assert_true($threwAction, 'hostile cpanel action must fail closed');
+
+    $threwUsername = false;
     try {
         (new BackupCpanel())->handle([
             'username' => '../etc',
             'action' => 'restore',
+            'archive_path' => $archive,
         ], $harness['ctx']);
     } catch (TaskRejectedException $e) {
-        $threwPath = str_contains($e->getMessage(), 'username') || str_contains($e->getMessage(), 'invalid');
+        $threwUsername = str_contains($e->getMessage(), 'username') || str_contains($e->getMessage(), 'invalid');
     }
-    assert_true($threwPath, 'hostile cpanel username path must fail closed');
+    assert_true($threwUsername, 'hostile cpanel username path must fail closed');
+
+    $threwNoArchive = false;
+    try {
+        (new BackupTransfer())->handle([
+            'username' => 'alicehost',
+            'source' => 'source.example.com',
+        ], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threwNoArchive = str_contains($e->getMessage(), 'archive');
+    }
+    assert_true($threwNoArchive, 'an import without an archive path must fail closed');
+    assert_true(!is_file($harness['root'] . '/alphacp/etc/backup/cpanel-account.json'), 'the old JSON stub file must no longer be written');
+    assert_true(!is_file($harness['root'] . '/alphacp/etc/backup/transfer.json'), 'the old JSON stub file must no longer be written');
     acp_account_cleanup($harness);
 });
 test('backup.review writes JSON and rejects hostile status/username', function (): void {

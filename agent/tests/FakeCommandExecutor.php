@@ -34,6 +34,21 @@ final class FakeCommandExecutor implements CommandExecutor
     /** @var list<string>|null files materialised on `tar --extract` (relative to --directory) */
     public ?array $tarExtractPaths = null;
 
+    /** @var array<string, list<string>> member name => plain `tar --list <member>` output */
+    public array $tarMemberList = [];
+
+    /** @var array<string, list<string>> member name => verbose `tar --list --verbose <member>` output */
+    public array $tarMemberVerbose = [];
+
+    /** @var list<string>|null `tar --list` output when the archive is a nested homedir.tar */
+    public ?array $tarNestedList = null;
+
+    /** @var list<string>|null verbose output when the archive is a nested homedir.tar */
+    public ?array $tarNestedVerbose = null;
+
+    /** @var list<string>|null files materialised when a nested homedir.tar is extracted */
+    public ?array $tarNestedExtractPaths = null;
+
     public ?string $failWhenContains = null;
 
     public function run(array $argv, ?int $timeout = null, ?string $stdin = null): CommandResult
@@ -128,6 +143,12 @@ final class FakeCommandExecutor implements CommandExecutor
         if ($path === '') {
             return new CommandResult($argv, 2, '', 'tar: missing --file', 1);
         }
+        $nested = str_ends_with($path, '/homedir.tar') || str_ends_with($path, '/homedir');
+        $member = null;
+        $dashIndex = array_search('--', $argv, true);
+        if (is_int($dashIndex) && isset($argv[$dashIndex + 1])) {
+            $member = (string) $argv[$dashIndex + 1];
+        }
         if (in_array('--create', $argv, true)) {
             if (@file_put_contents($path, "fake-gzip-tar-archive\n") === false) {
                 return new CommandResult($argv, 2, '', 'tar: cannot create archive', 1);
@@ -136,14 +157,29 @@ final class FakeCommandExecutor implements CommandExecutor
         }
         if (in_array('--list', $argv, true) && is_file($path)) {
             if (in_array('--verbose', $argv, true)) {
-                $lines = $this->tarVerboseLines ?? [
-                    'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 alicehost/',
-                    'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 alicehost/public_html/',
-                    '-rw-r--r-- 1500/1500 21 2026-10-03 16:00 alicehost/public_html/index.php',
-                ];
+                if ($member !== null && isset($this->tarMemberVerbose[$member])) {
+                    $lines = $this->tarMemberVerbose[$member];
+                } elseif ($nested) {
+                    $lines = $this->tarNestedVerbose ?? [
+                        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 ./public_html/',
+                        '-rw-r--r-- 1500/1500 14 2026-10-03 16:00 ./public_html/index.php',
+                    ];
+                } else {
+                    $lines = $this->tarVerboseLines ?? [
+                        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 alicehost/',
+                        'drwxr-xr-x 1500/1500 0 2026-10-03 16:00 alicehost/public_html/',
+                        '-rw-r--r-- 1500/1500 21 2026-10-03 16:00 alicehost/public_html/index.php',
+                    ];
+                }
                 return new CommandResult($argv, 0, implode("\n", $lines) . "\n", '', 1);
             }
-            $lines = $this->tarListLines ?? ['alicehost/', 'alicehost/public_html/index.php'];
+            if ($member !== null && isset($this->tarMemberList[$member])) {
+                $lines = $this->tarMemberList[$member];
+            } elseif ($nested) {
+                $lines = $this->tarNestedList ?? ['./public_html/', './public_html/index.php'];
+            } else {
+                $lines = $this->tarListLines ?? ['alicehost/', 'alicehost/public_html/', 'alicehost/public_html/index.php'];
+            }
             return new CommandResult($argv, 0, implode("\n", $lines) . "\n", '', 1);
         }
         if (in_array('--extract', $argv, true)) {
@@ -152,10 +188,14 @@ final class FakeCommandExecutor implements CommandExecutor
             if ($target === '' || !is_dir($target)) {
                 return new CommandResult($argv, 2, '', 'tar: cannot chdir', 1);
             }
-            $paths = $this->tarExtractPaths ?? [
-                'alicehost/public_html/index.php' => '<?php echo "restored";',
-                'alicehost/public_html/restored.txt' => 'restored file',
-            ];
+            if ($nested) {
+                $paths = $this->tarNestedExtractPaths ?? ['./public_html/index.php' => 'nested import'];
+            } else {
+                $paths = $this->tarExtractPaths ?? [
+                    'alicehost/public_html/index.php' => '<?php echo "restored";',
+                    'alicehost/public_html/restored.txt' => 'restored file',
+                ];
+            }
             foreach ($paths as $key => $rel) {
                 $file = $target . '/' . (is_int($key) ? $rel : $key);
                 if (!is_dir(dirname($file)) && !@mkdir(dirname($file), 0755, true) && !is_dir(dirname($file))) {
