@@ -116,7 +116,7 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.70.1'" grep -q "updater 0.70.1" "${U}/update-U1.out"
+chk "banner 'updater 0.71.0'" grep -q "updater 0.71.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -195,7 +195,7 @@ chk "TransferToolController present (0.62.0)" test -f "${PANEL}/app/Http/Control
 chk "TransferRestoreController present (0.63.0)" test -f "${PANEL}/app/Http/Controllers/TransferRestoreController.php"
 chk "TransferReviewController present (0.64.0)" test -f "${PANEL}/app/Http/Controllers/TransferReviewController.php"
 chk "BackupController has archive download endpoint (0.65.0)" grep -q "function download" "${PANEL}/app/Http/Controllers/BackupController.php"
-chk "agent 0.63.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.63.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
+chk "agent 0.64.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.64.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
 chk "backup.extract task shipped (0.67.0)" grep -q "'backup.extract' =>" "${ACP_HOME}/agent/config/tasks.php"
 chk "symlink guard shipped (0.66.0)" grep -q "assertNoSymlink" "${ACP_HOME}/agent/src/PathGuard.php"
 chk "scheduler command shipped (0.68.0)" test -f "${PANEL}/app/Console/Commands/ScheduledBackupsCommand.php"
@@ -266,7 +266,7 @@ chk "backup.archive in paneld allowlist" grep -q "backup.archive" "${ACP_HOME}/a
 chk "tar binary allowlisted" grep -q "'/usr/bin/tar'" "${ACP_HOME}/agent/src/CommandRunner.php"
 chk "issueLetsEncrypt in agent" grep -q "issueLetsEncrypt" "${ACP_HOME}/agent/src/AccountOs.php"
 chk "suspended page installed" test -f "${ACP_HOME}/share/suspended/index.html"
-chk ".env ACP_AGENT_VERSION=0.63.0" grep -q "^ACP_AGENT_VERSION=0.63.0$" "${PANEL}/.env"
+chk ".env ACP_AGENT_VERSION=0.64.0" grep -q "^ACP_AGENT_VERSION=0.64.0$" "${PANEL}/.env"
 FPM_POOL="/etc/php/8.4/fpm/pool.d/alphacp.conf"
 chk "PHP-FPM open_basedir includes the dedicated backup subtree" grep -Fq "${ACP_HOME}/backups" "${FPM_POOL}"
 chk "PHP-FPM open_basedir does not expose the ACP_HOME root" bash -c "! grep -Fq '${ACP_HOME}:' '${FPM_POOL}'"
@@ -373,7 +373,7 @@ chk "panel me transfer job history" test -f "${PANEL}/app/Support/CpanelArchives
 chk "HTTP 200" test "$(http_now)" = 200
 
 # ================================================================= U9
-echo; echo "=== U9: S8 MySQL provisioning (panel 0.70.0 / agent 0.63.0) ==="
+echo; echo "=== U9: S8 MySQL provisioning (panel 0.71.0 / agent 0.64.0) ==="
 chk "agent MysqlServer shipped" test -f "${ACP_HOME}/agent/src/MysqlServer.php"
 chk "agent db.create task registered" grep -q "'db[.]create'" "${ACP_HOME}/agent/config/tasks.php"
 chk "agent db.user.create task registered" grep -q "'db[.]user[.]create'" "${ACP_HOME}/agent/config/tasks.php"
@@ -386,6 +386,17 @@ chk "panel MySQL Users controller shipped" test -f "${PANEL}/app/Http/Controller
 chk "panel mysql_users table migration shipped" test -f "${PANEL}/database/migrations/2026_10_04_000054_create_mysql_user_tables.php"
 chk "panel real db.create wired" grep -q "enqueueCreate" "${PANEL}/app/Support/DatabaseProvisioner.php"
 chk "S8 preflight pass (ship-check die nahi hua)" bash -c "! grep -q 'agent S8 MariaDB tasks missing' '${U}/update-U8.out'"
+chk "HTTP 200" test "$(http_now)" = 200
+
+echo; echo "=== U10: S10 MySQL restore from a cPanel archive (panel 0.71.0 / agent 0.64.0) ==="
+chk "agent db.restore task registered" grep -q "'db[.]restore'" "${ACP_HOME}/agent/config/tasks.php"
+chk "agent CpanelMysql shipped" test -f "${ACP_HOME}/agent/src/CpanelMysql.php"
+chk "agent streams SQL dumps (stdinFile)" grep -q "stdinFile" "${ACP_HOME}/agent/src/CommandRunner.php"
+chk "agent MySQL import refuses other databases" grep -q "another database" "${ACP_HOME}/agent/src/CpanelMysql.php"
+chk "panel MySQL restore wired" grep -q "db[.]restore" "${PANEL}/app/Support/BackupProvisioner.php"
+chk "panel transfer page has the mysql option" grep -q "mysql_only" "${PANEL}/resources/views/transfer-restore/index.blade.php"
+chk "panel migration adds the mysql column" grep -rq "transfer_restores" "${PANEL}/database/migrations/2026_10_04_000055_add_mysql_restore_to_transfer_restores.php"
+chk "job history lists db.restore" grep -q "db[.]restore" "${PANEL}/app/Http/Controllers/TransferReviewController.php"
 chk "HTTP 200" test "$(http_now)" = 200
 
 echo; echo "=== UPDATE-SIM: ${PASS} pass, ${FAIL} fail ===" 

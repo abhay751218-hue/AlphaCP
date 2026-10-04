@@ -107,6 +107,79 @@ class TransferRestoreTest extends TestCase
         $this->assertSame(0, DB::table('tasks')->count());
     }
 
+    public function test_mysql_restore_is_queued_after_the_home_import(): void
+    {
+        $root = $this->userWithRole('root');
+        $this->account();
+        $sha = str_repeat('b', 64);
+
+        $this->asPanelUser($root)->post('/transfer-restore', [
+            'username' => 'alicehost',
+            'action' => 'restore',
+            'archive_path' => '/home/cpmove-alicehost.tar.gz',
+            'sha256' => $sha,
+            'mysql' => '1',
+            'mysql_only' => 'wp, shop',
+        ])->assertRedirect(route('transfer-restore.index'));
+
+        $row = TransferRestore::query()->first();
+        $this->assertTrue($row->mysql);
+        $this->assertSame('wp,shop', $row->mysql_only);
+        $this->assertSame(['wp', 'shop'], $row->mysqlOnlyList());
+
+        $this->assertSame(1, (int) DB::table('tasks')->where('type', 'backup.cpanel')->count());
+        $task = DB::table('tasks')->where('type', 'db.restore')->first();
+        $this->assertNotNull($task);
+        $this->assertSame('destructive', $task->safety);
+        $payload = json_decode((string) $task->payload, true);
+        $this->assertSame('/home/cpmove-alicehost.tar.gz', $payload['archive_path']);
+        $this->assertSame($sha, $payload['sha256']);
+        $this->assertSame('db.restore', $payload['_confirm']);
+        $this->assertSame(['wp', 'shop'], $payload['only']);
+    }
+
+    public function test_mysql_restore_option_off_queues_only_the_home_import(): void
+    {
+        $root = $this->userWithRole('root');
+        $this->account();
+
+        $this->asPanelUser($root)->post('/transfer-restore', [
+            'username' => 'alicehost',
+            'action' => 'restore',
+            'archive_path' => '/home/cpmove-alicehost.tar.gz',
+        ])->assertRedirect();
+
+        $this->assertSame(0, (int) DB::table('tasks')->where('type', 'db.restore')->count());
+        $this->assertFalse(TransferRestore::query()->first()->mysql);
+    }
+
+    public function test_mysql_only_list_is_validated(): void
+    {
+        $root = $this->userWithRole('root');
+        $this->account();
+
+        $this->asPanelUser($root)->post('/transfer-restore', [
+            'username' => 'alicehost',
+            'action' => 'restore',
+            'archive_path' => '/home/cpmove-alicehost.tar.gz',
+            'mysql' => '1',
+            'mysql_only' => '1bad;drop',
+        ])->assertSessionHasErrors('mysql_only');
+
+        $this->assertSame(0, DB::table('tasks')->count());
+        $this->assertNull(TransferRestore::query()->first());
+
+        $this->asPanelUser($root)->post('/transfer-restore', [
+            'username' => 'alicehost',
+            'action' => 'restore',
+            'archive_path' => '/home/cpmove-alicehost.tar.gz',
+            'mysql' => '1',
+            'mysql_only' => 'Wp, WP ,shop',
+        ])->assertRedirect();
+        $payload = json_decode((string) DB::table('tasks')->where('type', 'db.restore')->value('payload'), true);
+        $this->assertSame(['wp', 'shop'], $payload['only'], 'duplicates collapse and names lowercase hote hain');
+    }
+
     public function test_pipe_action_is_rejected(): void
     {
         $root = $this->userWithRole('root');

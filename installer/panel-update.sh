@@ -380,6 +380,8 @@ if [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; then
 fi
 grep -q 'issueLetsEncrypt' "${AGENT_ROOT}/src/AccountOs.php" || die "agent AutoSSL (issueLetsEncrypt) missing"
 grep -q "'db.user.create'" "${AGENT_ROOT}/config/tasks.php" || die "agent S8 MariaDB tasks missing"
+grep -q "'db.restore'" "${AGENT_ROOT}/config/tasks.php" || die "agent S10 MySQL restore task missing"
+grep -q "db[.]restore" "${NEW_PANEL}/app/Support/BackupProvisioner.php" || die "panel db.restore wiring missing"
 
 # S8: the agent talks to MariaDB through the client binary (socket auth, SQL on
 # stdin). Install it when it is missing; the admin MariaDB server is assumed to

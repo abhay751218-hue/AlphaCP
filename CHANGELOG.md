@@ -5,6 +5,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **S10 — MySQL dumps from a cPanel archive (4 Oct)** — panel **0.71.0**, agent **0.64.0**.
+  WHM Transfer or Restore page ka naya checkbox (**default on**) archive ke `mysql/<user>_<db>.sql`
+  (`.sql.gz` bhi) dumps ko **asli MariaDB** me restore karta hai — `<account>_<db>` database banta hai
+  (utf8mb4), aur optional "sirf ye databases" list se selection hoti hai. Naya agent task
+  `db.restore` (destructive, `_confirm`, 3600 s) wahi archive guards dobara lagata hai (allowlisted
+  path, sha256, hostile member scan) aur:
+    - **two-phase** chalta hai: pehle saare dumps stage + sanitise, phir MariaDB ko chhua jata hai —
+      hostile archive se aadhe-adhure databases nahi bante;
+    - sanitiser apne database ke `USE` / `DROP|CREATE DATABASE` lines drop karta hai
+      (mysqldump `--add-drop-database` normal hai) par **doosre database ka naam**, `INTO OUTFILE`,
+      `LOAD DATA`, `LOAD_FILE`, `GRANT`, `CREATE/DROP USER`, `SET GLOBAL` wala dump poora refuse;
+    - dumps **stream** hote hain (chunked stdin; GB-size dump PHP memory me nahi aata), staging
+      `/home/.acp-mysql-<user>-<stamp>` hamesha delete hoti hai;
+    - result me per-database report (bytes, created?, dump name) + skipped reasons; Review Transfers
+      page ab `db.restore` jobs bhi dikhata hai.
+  Migration `2026_10_04_000055` (`transfer_restores.mysql`, `.mysql_only`). Updater me S10 ship-check.
+  Tests: panel **—** , update-sim **—/—**, provision-sim **109/109**, mysql-sim PASS (S8), commands-check 10/0.
+
 - **0.70.1 — live-verify fix: `useradd` GECOS colon (4 Oct)** — panel **0.70.0**, agent **0.63.0**.
   Asli server par S8 live-check ne pakda ki **panel ka "Create Account" kabhi kaam nahi karta tha**:
   `AccountOs::createUser()` `-c 'AlphaCP:<domain>'` bhejta tha, aur `useradd` kisi bhi comment me

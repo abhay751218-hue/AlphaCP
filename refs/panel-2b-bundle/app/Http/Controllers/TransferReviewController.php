@@ -71,7 +71,7 @@ class TransferReviewController extends Controller
      */
     private function jobs(): array
     {
-        return Paneld::recentJobs(['backup.cpanel', 'backup.transfer'], 25)
+        return Paneld::recentJobs(['backup.cpanel', 'backup.transfer', 'db.restore'], 25)
             ->map(static function (object $task): array {
                 $payload = json_decode((string) $task->payload, true);
                 $result = json_decode((string) ($task->result ?? ''), true);

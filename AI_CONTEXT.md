@@ -4,7 +4,7 @@
 
 > **Purpose:** This file gives ANY AI assistant (or new developer) complete context to work on
 > this project safely. Keep it updated whenever architecture, conventions, or status change.
-> **Last updated:** 2026-10-04 (S8 live-verified; agent 0.63.0 fix — real MariaDB provisioning + `useradd` GECOS colon)
+> **Last updated:** 2026-10-04 (S10 MySQL restore written — panel 0.71.0 / agent 0.64.0; S8 live-verified 21/0)
 
 ---
 
@@ -27,10 +27,10 @@ reseller/OEM deals).
 | Item | State |
 |---|---|
 | Phase | **S10 in progress** — panel **0.70.0** + agent **0.63.0** live 4 Oct (snapshot 15:14Z, HTTP 200). S8 real MariaDB provisioning **live-verified 21/0** (`tools/verify/s8-live-check.sh`, tasks #184–#191). Next slice: S10 cpmove **MySQL restore** |
-| Next task | S10 cpmove archive se `mysql/*.sql` dumps ko asli MariaDB me restore karna (agent `db.restore` + panel wiring), phir close the remaining pre-S10 gaps (S5 per-domain PHP; S7 Exim/Dovecot; S8 phpMyAdmin SSO + remote-host auto-grant; S9 BIND) and finish S10: MySQL/mail/DNS parts of an imported cpmove archive + remote pull + remote backup destinations (safe restore, cron schedule, local cpmove import and transfer job history are live) |
+| Next task | Deploy 0.71.0 (cpmove MySQL restore), phir S10 ka mail/DNS hissa ya remote pull, phir close the remaining pre-S10 gaps (S5 per-domain PHP; S7 Exim/Dovecot; S8 phpMyAdmin SSO + remote-host auto-grant; S9 BIND) and finish S10: MySQL/mail/DNS parts of an imported cpmove archive + remote pull + remote backup destinations (safe restore, cron schedule, local cpmove import and transfer job history are live) |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
 | Code written so far | paneld + Laravel 13 panel; S8 live-verify tooling (`tools/verify/s8-live-check.sh` + `tools/sim/s8-live-check-sim.sh`) aur release guard (`tools/sim/commands-check.sh`); S10 real SHA-256-verified home archive + download + safe restore + cron-scheduled backups + real cpmove/legacy/nested cPanel archive import (`backup.cpanel` / `backup.transfer`) with transfer job history; S8 real MariaDB databases/users/GRANTs (`db.create` / `db.user.create` / `db.user.grant` / `db.user.password` (reset) / `db.drop` / `db.user.drop` / `db.list` via socket-auth client, SQL on stdin; stored task passwords are scrubbed after success) |
-| Blocking issues | Panel ka account-create bug (useradd comment me colon) 0.70.1 me fix + live-verified (21/0). S5 per-domain PHP; S7 real Exim/Dovecot mailflow; S9 BIND write/reload remain incomplete. S8 real provisioning panel 0.70.0 par LIVE hai (snapshot 14:55Z, HTTP 200); agent 0.63.0 (updater 0.70.1) me live-verify pakda gaya account-create bug fix hua hai aur uski live-verify baaki hai (panel 434/0 + 6 wasm-skip, provision-sim 107/107, mysql-sim PASS, s8-live-check-sim 10/0); phpMyAdmin SSO, per-database size limits and remote-host auto-grant remain. S10 still misses MySQL/mail/DNS import from a cpmove archive, authenticated remote pull, remote backup destinations, and live customer acceptance. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
+| Blocking issues | Panel ka account-create bug (useradd comment me colon) 0.70.1 me fix + live-verified (21/0). S5 per-domain PHP; S7 real Exim/Dovecot mailflow; S9 BIND write/reload remain incomplete. S10 MySQL restore (panel 0.71.0 / agent 0.64.0) code+tests ready, deploy pending. S8 real provisioning panel 0.70.0 + agent 0.63.0 par LIVE + live-verified hai (snapshot 15:14Z, HTTP 200; s8-live-check 21/0, tasks #184-#191). Panel 434/0 + 6 wasm-skip, provision-sim 109/109, mysql-sim PASS, s8-live-check-sim 10/0, update-sim 225/225, commands-check 10/0; phpMyAdmin SSO, per-database size limits and remote-host auto-grant remain. S10 still misses MySQL/mail/DNS import from a cpmove archive, authenticated remote pull, remote backup destinations, and live customer acceptance. Full cPanel parity is not achieved. PHP tests use php-wasm sandbox. |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 

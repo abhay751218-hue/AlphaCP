@@ -49,8 +49,9 @@ never passes a compression flag, so both compressed and plain archives import.
    members below it) are refused. Symlinks themselves are kept as links and
    never followed — an absolute target is fine as long as nothing is extracted
    under it.
-6. Only the `homedir` subtree is extracted. `mysql/`, `dnszones/`, `cp/`,
-   `userdata/`, `sslkeys/`, `logs/`, … are **reported**, never extracted.
+6. Only the `homedir` subtree is extracted. `dnszones/`, `cp/`, `userdata/`,
+   `sslkeys/`, `logs/`, … are **reported**, never extracted. `mysql/` ko `db.restore`
+   alag task me import karta hai (neeche "MySQL dumps" dekho).
 7. Extraction happens into a fresh staging dir under the accounts root with
    `--no-same-owner --one-file-system`; the staged tree is chowned to the
    account, then swapped in with same-filesystem renames.
@@ -71,6 +72,30 @@ Both are `destructive` (they replace a home) with a 3600 s timeout and keep the
 pre-restore copy. `backup.transfer` additionally records the source host in the
 job result — an authenticated pull straight from the old server (SSH/API) is
 still a later S10 step.
+
+## MySQL dumps (`mysql/` section) — task `db.restore`
+
+cPanel ka `mysql/<user>_<suffix>.sql` (ya `.sql.gz`) ab **asli MariaDB** me import hota hai
+(`<account>_<suffix>` database banta hai, utf8mb4). Transfer or Restore page par checkbox
+"MySQL dumps bhi restore karo" (default on) — home import queue hone ke **baad** wahi archive
+`db.restore` task se dobara padha jata hai, aur optional "sirf ye databases" list se selection
+hoti hai.
+
+Guards (sab fail closed):
+
+| Check | Behaviour |
+|---|---|
+| archive path / sha256 / hostile members | wahi guards jo home import me hain (allowlist, sha256 verify, `..`/absolute/NUL refuse) |
+| dump ka naam | `<user>_<suffix>.sql` hi chalta hai; non-`.sql`, duplicate ya doosre account ka dump **skip** hota hai |
+| apne database ke `USE` / `DROP|CREATE DATABASE` | line drop (mysqldump `--add-drop-database` normal hai); DB agent khud banata hai |
+| doosre database ka naam, `INTO OUTFILE/DUMPFILE`, `LOAD DATA`, `LOAD_FILE`, `GRANT`, `CREATE/DROP USER`, `SET GLOBAL` | poora dump refuse — **ek bhi statement chalta nahi** |
+| atomicity | pehle *saare* dumps stage + sanitise, phir MariaDB ko chhua jata hai |
+| dumps ka size | 4 GiB per dump; content PHP memory me load nahi hota (chunked stdin stream) |
+| staging | `/home/.acp-mysql-<user>-<stamp>` hamesha delete (failure par bhi) |
+
+`db.restore` bhi `destructive` hai (`_confirm='db.restore'`, 3600 s). Result me per-database
+report aati hai: `database`, `dump`, `bytes`, `statements_lines`, `database_created`, `status`
+— aur `skipped` me wo dumps jinhe chhoda gaya (reason ke saath).
 
 ## Result (stored in `tasks.result`, shown on Review Transfers)
 ```json

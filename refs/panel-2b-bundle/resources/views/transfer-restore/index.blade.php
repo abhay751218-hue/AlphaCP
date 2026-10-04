@@ -26,7 +26,7 @@
         <span class="mono">cpmove-&lt;user&gt;.tar.gz</span> ya legacy
         <span class="mono">backup-*.tar.gz</span> ko pehle server par rakho (SFTP/root), phir yahan poora path do —
         e.g. <span class="mono">/home/cpmove-alicehost.tar.gz</span>. Import se sirf <strong>home</strong> aata hai;
-        MySQL dumps / mail / DNS userdata job result me list honge (uske baad ke S10 steps).
+        MySQL dumps chaaho to neeche checkbox se <strong>asli MariaDB</strong> me restore karo; mail / DNS userdata abhi job result me list hote hain (agle S10 steps).
     </p>
     <form method="post" action="{{ route('transfer-restore.store') }}" class="stack">
         @csrf
@@ -60,8 +60,17 @@
         </label>
         @error('action')<p class="error">{{ $message }}</p>@enderror
         @error('username')<p class="error">{{ $message }}</p>@enderror
+        @error('mysql_only')<p class="error">{{ $message }}</p>@enderror
+        <label class="check">
+            <input type="checkbox" name="mysql" value="1" @checked(old('mysql', $row?->mysql ?? true))>
+            MySQL dumps bhi restore karo (<span class="mono">&lt;account&gt;_&lt;db&gt;</span> naam se, utf8mb4)
+        </label>
+        <label>
+            Sirf ye databases (optional, comma se alag)
+            <input name="mysql_only" value="{{ old('mysql_only', $row?->mysql_only ?? '') }}" maxlength="255" placeholder="wp, shop">
+        </label>
         <button class="btn" type="submit">Queue import</button>
-        <p class="help">Destructive: account ka current home replace hota hai, aur <span class="mono">/home/.acp-prerestore-&lt;user&gt;-&lt;stamp&gt;</span> copy bach jaati hai.</p>
+        <p class="help">Destructive: account ka current home replace hota hai, aur <span class="mono">/home/.acp-prerestore-&lt;user&gt;-&lt;stamp&gt;</span> copy bach jaati hai. MySQL restore archive ke dumps ko ek-ek karke import karta hai (dump me doosre database ka naam ho to poora restore refuse hota hai).</p>
     </form>
 </div>
 

@@ -93,6 +93,7 @@
 |---|---|---|---|---|
 | 37 | MySQL® Databases | DB + users + privileges | S8 | 🟡 (real `db.create`/`db.drop` MariaDB provisioning via socket-auth client + stdin SQL; per-database size limits + phpMyAdmin SSO pending) |
 | 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | 🟡 (session wizard now queues the real `db.create`; step-3 user/privilege step ab MySQL Users page par) |
+| 38b | cPanel archive → MySQL dumps | cpmove ke `mysql/*.sql` restore | S10 | ✅ (real `db.restore`: per-account DB, sanitiser, two-phase, streamed import — panel checkbox + `only` selection; mail/DNS sections pending) |
 | 39 | phpMyAdmin | DB GUI (SSO login) | S8 | 🟡 (JSON/config only: real MariaDB database/user/GRANT provisioning and phpMyAdmin SSO pending; (enabled JSON; no phpMyAdmin install; SSO later)) |
 | 40 | Remote MySQL | Remote access hosts | S8 | 🟡 (host list still JSON + `db.user.create --host` se real `user@host` grant ho sakta hai; hosts auto-grant pending) |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
