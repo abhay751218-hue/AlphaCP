@@ -14,32 +14,36 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 4 Oct 2026
 
-### panel-update 0.70.0 — S8: real MySQL/MariaDB databases + users + privileges
+### panel-update 0.70.1 — agent 0.63.0: "Create Account" asli host par theek + S8 live-verify
+```bash
+sudo alphacp-sync get 6fe360aba5d55b970aebf85995ead92124ebf547 installer/panel-update.sh /tmp/acp-panel-update-0.70.1.sh f2870f78225a53d821d0808f95c69e351fa98b5b7a44479594952e46ca2c8c64 && sudo bash /tmp/acp-panel-update-0.70.1.sh
+```
+- Updater SHA-256: `f2870f78225a53d821d0808f95c69e351fa98b5b7a44479594952e46ca2c8c64`.
+- Expected: banner `updater 0.70.1` → panel **0.70.0** (wahi bundle) + agent **0.63.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Kya fix hua:** `useradd` kisi bhi comment (GECOS) me colon allow nahi karta, aur agent
+  `-c 'AlphaCP:<domain>'` bhej raha tha — isliye **panel ka "Create Account" har asli server par fail hota tha**
+  (`useradd: invalid comment 'AlphaCP:...'`). Ab marker `AlphaCP <domain>` hai; purane `AlphaCP:` users bhi
+  manage hote rahenge.
+- **Uske baad (recommended, ek hi command):** panel se ek account banao (Create Account) — ab chalna chahiye.
+  Ya S8 live-verify chalaiye jo khud temp account bana kar asli MariaDB par sab kuch test karta hai:
+```bash
+sudo alphacp-sync get b5864536acd98e06ad97a9eae49913e7c088d892 tools/verify/s8-live-check.sh /tmp/acp-s8-live-check.sh 7f9a6a46d6aab26337d939ca22dbb364f64101de769e97b940e791afca0a5605 && sudo bash /tmp/acp-s8-live-check.sh
+```
+  Expected last line: `=== S8 LIVE CHECK: 21 pass, 0 fail ===` (ek `db.drop` jaan-boojhkar `rejected` — guard proof).
+- Tests: panel **434/0 (6 wasm-skip)**, update-sim **225/225**, provision-sim **107/107**, mysql-sim **PASS**,
+  s8-live-check-sim **10/0**, commands-check **10/0**.
+- Ye 0.70.0 ke upar sirf agent fix hai — 0.69.0/0.70.0 commands dobara chalane ki zaroorat nahi.
+
+## ✅ Latest deployment (4 Oct 2026; already completed)
+
+### panel-update 0.70.0 — S8: real MySQL/MariaDB databases + users (deployed 4 Oct, 14:55Z)
 ```bash
 sudo alphacp-sync get 683e8b6a48d6b62373d405e5e0c5e3f43bf14889 installer/panel-update.sh /tmp/acp-panel-update-0.70.0.sh 010b0a3379a226c58aa055a2fed4bac646600db7ec37ce040f1df0d2c82ca098 && sudo bash /tmp/acp-panel-update-0.70.0.sh
 ```
-- Updater SHA-256: `010b0a3379a226c58aa055a2fed4bac646600db7ec37ce040f1df0d2c82ca098`.
-- Expected: banner `updater 0.70.0` → panel **0.70.0** + agent **0.62.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Naya kya:** Databases ka JSON stub khatam. Ab **asli MariaDB** chalti hai —
-  `Create Database` sach me database banata hai, nayi **MySQL Users** page se user banta hai
-  (host `localhost`/`%`, checkbox se kaunse databases par `ALL PRIVILEGES`), "Add User To
-  Database" sach me GRANT karta hai, aur remove/drop sach me DROP karte hain (pehle privileges
-  revoke). Agent MariaDB **client** ko `--protocol=socket --batch` ke saath chalata hai aur SQL
-  script **stdin** se deta hai — isliye koi database/user naam ya password kabhi process list
-  (argv) me nahi jaata; identifiers backtick-quoted aur literals escape hote hain. Password panel
-  generate karta hai (20 chars), **sirf ek baar** dikhta hai, kahin store nahi hota. `db.drop` /
-  `db.user.drop` destructive tasks hain (`_confirm`), aur database drop se uske saare grants bhi
-  hat jaate hain. Updater `mariadb-client` missing ho to install karta hai.
-- **Optional manual check (recommended):** panel me **MySQL Databases** page kholo → ek database
-  banao → **Task Queue** me `db.create` success dikhna chahiye; phir **MySQL Users** → user banao
-  (password turant copy kar lo) + database checkbox tick karo → Task Queue me `db.user.create`.
-  Server par verify: `sudo mariadb -e "SHOW DATABASES LIKE 'USERNAME_%'"` aur
-  `sudo mariadb -e "SHOW GRANTS FOR 'USERNAME_wp_admin'@'localhost'"`.
-- Tests: panel **434/0**, update-sim **224/224**, provision-sim **106/106**, mysql-sim **PASS**
-  (asli handlers + generated SQL ka lint), cpanel-import-sim/cpanel-import-e2e **PASS**, backup-tar-sim **PASS**.
-- Ye 0.69.0 (real cPanel account import) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
-
-## ✅ Latest deployment (4 Oct 2026; already completed)
+- **Live result:** panel **0.70.0** + agent 0.62.0, HTTP **200**, Ghunghar ``server-snapshot``
+  (``mysql_users`` / ``mysql_user_grants`` tables live hain).
+- Databases/Wizard/MySQL Users ab asli MariaDB objects banate hain (SQL stdin se, password sirf ek baar).
+- Isi release ne asli host ka pehla account-create bug bhi ujagar kiya — fix 0.70.1 me hai.
 
 ### panel-update 0.69.0 — S10: real cPanel account import + transfer job history
 ```bash
