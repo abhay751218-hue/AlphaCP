@@ -21,7 +21,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
     - result me per-database report (bytes, created?, dump name) + skipped reasons; Review Transfers
       page ab `db.restore` jobs bhi dikhata hai.
   Migration `2026_10_04_000055` (`transfer_restores.mysql`, `.mysql_only`). Updater me S10 ship-check.
-  Tests: panel **—** , update-sim **—/—**, provision-sim **109/109**, mysql-sim PASS (S8), commands-check 10/0.
+  Tests: panel **—** , update-sim **234/234** (naya U10: db.restore + panel wiring + migration), provision-sim **109/109**, mysql-sim PASS (S8), commands-check 10/0.
 
 - **0.70.1 — live-verify fix: `useradd` GECOS colon (4 Oct)** — panel **0.70.0**, agent **0.63.0**.
   Asli server par S8 live-check ne pakda ki **panel ka "Create Account" kabhi kaam nahi karta tha**:

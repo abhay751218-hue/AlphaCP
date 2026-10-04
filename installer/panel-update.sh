@@ -382,7 +382,6 @@ fi
 grep -q 'issueLetsEncrypt' "${AGENT_ROOT}/src/AccountOs.php" || die "agent AutoSSL (issueLetsEncrypt) missing"
 grep -q "'db.user.create'" "${AGENT_ROOT}/config/tasks.php" || die "agent S8 MariaDB tasks missing"
 grep -q "'db.restore'" "${AGENT_ROOT}/config/tasks.php" || die "agent S10 MySQL restore task missing"
-grep -q "db[.]restore" "${NEW_PANEL}/app/Support/BackupProvisioner.php" || die "panel db.restore wiring missing"
 
 # S8: the agent talks to MariaDB through the client binary (socket auth, SQL on
 # stdin). Install it when it is missing; the admin MariaDB server is assumed to
@@ -419,6 +418,13 @@ NEW_PANEL="${RELEASES}/panel-${STAMP}"
 mkdir -p "${NEW_PANEL}"
 tar xzf "${TMP_DIR}/panel-code.tar.gz" -C "${NEW_PANEL}" --strip-components=1
 [[ -f "${NEW_PANEL}/artisan" ]] || die "new artisan missing"
+# Panel ship-checks (artifact ke andar hi — NEW_PANEL ab set hai):
+grep -q "MysqlUsersController" "${NEW_PANEL}/app/Http/Controllers/MysqlUsersController.php" \
+  || die "panel MySQL Users page missing"
+grep -q "db[.]restore" "${NEW_PANEL}/app/Support/BackupProvisioner.php" \
+  || die "panel db.restore wiring missing"
+grep -q "mysql_only" "${NEW_PANEL}/resources/views/transfer-restore/index.blade.php" \
+  || die "panel cPanel MySQL restore option missing"
 grep -q '"laravel/framework": "\^13' "${NEW_PANEL}/composer.json" \
   || die "new artifact Laravel 13 nahi hai"
 

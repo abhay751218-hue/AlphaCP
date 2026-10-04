@@ -14,27 +14,46 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 4 Oct 2026
 
-### panel-update 0.70.1 — agent 0.63.0: "Create Account" asli host par theek + S8 live-verify
+### 1) panel-update 0.71.0 — S10: cpmove MySQL restore
+```bash
+sudo alphacp-sync get c99850df533d2ab0df178a7ec3d1c857927d41a3 installer/panel-update.sh /tmp/acp-panel-update-0.71.0.sh 8ff13cf29bea9ebb5ff943daf64535c6e7a14903245f385e263aad8dd46a4aa1 && sudo bash /tmp/acp-panel-update-0.71.0.sh
+```
+- Updater SHA-256: `8ff13cf29bea9ebb5ff943daf64535c6e7a14903245f385e263aad8dd46a4aa1`.
+- Expected: banner `updater 0.71.0` → panel **0.71.0** + agent **0.64.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Naya kya:** cPanel import ka doosra hissa — pehle archive se sirf **home** aata tha, ab
+  `cpmove-<user>/mysql/*.sql` dumps bhi **asli MariaDB** databases me restore hote hain
+  (`<acct>_<suffix>`, utf8mb4). Panel me **Transfer Tool** aur **Transfer or Restore** dono pages par
+  naya option **"MySQL databases bhi restore karo"** (+ chaho to sirf kuch databases: `mysql_only`).
+  Pehle sab dumps **stage + sanitise** hote hain, phir MariaDB ko chhua jata hai — hostile archive se
+  aadhe-adhure databases nahi bante. Apne database ke `USE`/`DROP|CREATE DATABASE` lines strip hote
+  hain (mysqldump ka normal shape); **doosre database ka naam, `INTO OUTFILE`, `LOAD DATA`, `GRANT`,
+  `CREATE/DROP USER`, `SET GLOBAL` → poora dump refuse**. Dumps client ko **stream** hote hain (RAM me
+  nahi), staging hamesha delete. S8 ka sab kuch (Databases/MySQL Users) waise hi kaam karta rahega.
+
+### 2) S10 live verification (recommended — ek hi command, sab khud saaf karta hai)
+```bash
+sudo alphacp-sync get e1df33775f05fe0c6df39a941834d0a9cf41080f tools/verify/s10-mysql-restore-check.sh /tmp/acp-s10-mysql-restore-check.sh 977cadc041d33d155b0cc22de33cd4148e8af311216ee781a229e99c582e9f97 && sudo bash /tmp/acp-s10-mysql-restore-check.sh
+```
+- Server par **asli tar.gz** archive banata hai (homedir + `mysql/<acct>_acpverify.sql`), `db.restore`
+  se import karta hai, aur **asli MariaDB** se verify karta hai — database bana? table bani? rows gine?
+  row content sahi? koi MariaDB **user** na bane? Phir ek **hostile** archive (doosre database ka naam)
+  refuse hone par koi database na bane — ye bhi check hota hai. Ant me sab saaf (dono database drop,
+  archive dir delete, temp account terminate — `trap` me bhi).
+- Expected last line: `=== S10 MYSQL RESTORE LIVE CHECK: 17 pass, 0 fail ===`.
+- Chaaho to ye step skip karo — update khud-tested hai (panel **437/0** + 6 wasm-skip, update-sim
+  **232/232**, provision-sim **109/109**, mysql-sim **PASS**, s10-mysql-restore-sim **8/0**).
+
+- Ye 0.70.1 (agent useradd fix) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
+
+## ✅ Latest deployment (4 Oct 2026; already completed)
+
+### panel-update 0.70.1 — agent 0.63.0: useradd GECOS fix (deployed 4 Oct, 15:14Z)
 ```bash
 sudo alphacp-sync get 6fe360aba5d55b970aebf85995ead92124ebf547 installer/panel-update.sh /tmp/acp-panel-update-0.70.1.sh f2870f78225a53d821d0808f95c69e351fa98b5b7a44479594952e46ca2c8c64 && sudo bash /tmp/acp-panel-update-0.70.1.sh
 ```
-- Updater SHA-256: `f2870f78225a53d821d0808f95c69e351fa98b5b7a44479594952e46ca2c8c64`.
-- Expected: banner `updater 0.70.1` → panel **0.70.0** (wahi bundle) + agent **0.63.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Kya fix hua:** `useradd` kisi bhi comment (GECOS) me colon allow nahi karta, aur agent
-  `-c 'AlphaCP:<domain>'` bhej raha tha — isliye **panel ka "Create Account" har asli server par fail hota tha**
-  (`useradd: invalid comment 'AlphaCP:...'`). Ab marker `AlphaCP <domain>` hai; purane `AlphaCP:` users bhi
-  manage hote rahenge.
-- **Uske baad (recommended, ek hi command):** panel se ek account banao (Create Account) — ab chalna chahiye.
-  Ya S8 live-verify chalaiye jo khud temp account bana kar asli MariaDB par sab kuch test karta hai:
-```bash
-sudo alphacp-sync get b5864536acd98e06ad97a9eae49913e7c088d892 tools/verify/s8-live-check.sh /tmp/acp-s8-live-check.sh 7f9a6a46d6aab26337d939ca22dbb364f64101de769e97b940e791afca0a5605 && sudo bash /tmp/acp-s8-live-check.sh
-```
-  Expected last line: `=== S8 LIVE CHECK: 21 pass, 0 fail ===` (ek `db.drop` jaan-boojhkar `rejected` — guard proof).
-- Tests: panel **434/0 (6 wasm-skip)**, update-sim **225/225**, provision-sim **107/107**, mysql-sim **PASS**,
-  s8-live-check-sim **10/0**, commands-check **10/0**.
-- Ye 0.70.0 ke upar sirf agent fix hai — 0.69.0/0.70.0 commands dobara chalane ki zaroorat nahi.
-
-## ✅ Latest deployment (4 Oct 2026; already completed)
+- **Live result:** agent **0.63.0**, HTTP 200; `tools/verify/s8-live-check.sh` → **21 pass / 0 fail**
+  (tasks #184–#191) — yahi script ne pakda tha ki panel ka Create Account colon-wale GECOS ki wajah se
+  har asli host par fail hota tha.
 
 ### panel-update 0.70.0 — S8: real MySQL/MariaDB databases + users (deployed 4 Oct, 14:55Z)
 ```bash
