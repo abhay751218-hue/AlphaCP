@@ -18,6 +18,9 @@
 #   4. Aakhir me summary: kitne PASS/FAIL + kaun se task ids.
 #
 # Test objects: <acct>_acpverify  (database AUR user dono) — end me hat jate hain.
+# Account: ACP_VERIFY_ACCOUNT=<user> se do; na do aur panel DB me koi account na ho to
+# script khud ek temp account (acpvXXXXXX) banata hai aur ant me terminate kar deta hai.
+# ACP_VERIFY_NO_CREATE=1 se auto-create band (tab account pehle se hona chahiye).
 # =============================================================================
 set -uo pipefail
 
@@ -46,12 +49,19 @@ DBN="$(sed -n 's/^ACP_DB_NAME=//p' "${ENVFILE}" | head -1)"; DBN="${DBN:-alphacp
 sql()  { "${CLIENT}" -N -B -e "$1" 2>&1; }
 sqlq() { MYSQL_PWD="$2" "${CLIENT}" -u "$1" --protocol=socket -e "$3" 2>&1; }  # password env se (argv me nahi)
 
-ACCT="${ACP_VERIFY_ACCOUNT:-}"
+ACCT="${ACP_VERIFY_ACCOUNT:-}"; TEMP_ACCOUNT=0
 if [[ -z "${ACCT}" ]]; then
   ACCT="$(sql "SELECT username FROM ${DBN}.accounts WHERE status='active' ORDER BY id LIMIT 1")"
   if [[ -z "${ACCT}" || "${ACCT}" == *ERROR* ]]; then
     ACCT="$(sql "SELECT username FROM ${DBN}.accounts ORDER BY id DESC LIMIT 1")"
   fi
+fi
+if [[ -z "${ACCT}" || "${ACCT}" == *ERROR* ]]; then
+  if [[ "${ACP_VERIFY_NO_CREATE:-0}" == "1" ]]; then
+    die "panel DB me koi account nahi mila (${DBN}.accounts khaali) — panel se ek account banao, ya ACP_VERIFY_NO_CREATE=1 hata do taaki script khud temp account bana le"
+  fi
+  ACCT="acpv$(head -c 400 /dev/urandom | tr -dc 'a-z0-9' | head -c 6)"
+  TEMP_ACCOUNT=1
 fi
 if [[ ! "${ACCT}" =~ ^[a-z][a-z0-9]{2,15}$ ]]; then
   die "account username '${ACCT}' invalid — ACP_VERIFY_ACCOUNT=<valid> ke saath chalao"
@@ -75,6 +85,10 @@ cleanup() {
       "{\"username\":\"${ACCT}\",\"user\":\"acpverify\",\"_confirm\":\"db.user.drop\"}" >/dev/null 2>&1
     "${PHP_BIN}" "${PANELD}" --run db.drop \
       "{\"username\":\"${ACCT}\",\"name\":\"acpverify\",\"_confirm\":\"db.drop\"}" >/dev/null 2>&1
+    if [[ "${TEMP_ACCOUNT}" == "1" ]]; then
+      "${PHP_BIN}" "${PANELD}" --run account.terminate \
+        "{\"username\":\"${ACCT}\",\"_confirm\":\"account.terminate\"}" >/dev/null 2>&1
+    fi
   fi
 }
 trap cleanup EXIT
@@ -96,6 +110,21 @@ run_task() {  # type payload -> 0 success / 1 fail; LAST_TASK_ID + LAST_ERR set
 # ---------------------------------------------------------------- start -------
 [[ -z "$(sql "SHOW DATABASES LIKE '${DB}'")" ]] || die "${DB} pehle se maujood hai — pehle hatao"
 [[ -z "$(sql "SELECT User FROM mysql.user WHERE User='${USER}'")" ]] || die "user ${USER} pehle se maujood hai — pehle hatao"
+
+if [[ "${TEMP_ACCOUNT}" == "1" ]]; then
+  info "panel DB me koi account nahi mila — temp account '${ACCT}' banaya ja raha hai (ant me terminate ho jayega)"
+  # shadow hash: openssl (SHA-512 crypt) — php crypt() par depend nahi karte
+  HASH="$(openssl passwd -6 "AcpVerifyTemp-$(date +%s)-$$" 2>/dev/null || true)"
+  if [[ ! "${HASH}" =~ ^\$6\$. ]]; then
+    HASH="$("${PHP_BIN}" -r 'echo crypt("AcpVerifyTemp-" . bin2hex(random_bytes(4)), "\$6\$" . bin2hex(random_bytes(8)));' 2>/dev/null | tail -1)"
+  fi
+  [[ "${HASH}" =~ ^\$6\$. ]] || die "shadow hash generate nahi hua (openssl/php crypt dono fail)"
+  if run_task account.create "{\"username\":\"${ACCT}\",\"domain\":\"${ACCT}.verify.local\",\"shadow_hash\":\"${HASH}\"}"; then
+    ok "temp account ${ACCT} ban gaya (task #${LAST_TASK_ID})"
+  else
+    die "temp account create fail: ${LAST_ERR:-unknown}"
+  fi
+fi
 
 info "1/7 db.create — asli CREATE DATABASE"
 if run_task db.create "{\"username\":\"${ACCT}\",\"name\":\"acpverify\"}"; then
@@ -211,6 +240,16 @@ if [[ -z "$(sql "SELECT Db FROM mysql.db WHERE Db='${DB}'")" ]]; then
   ok "koi leftover grant row nahi bachi"
 else
   bad "mysql.db me leftover grant hai"
+fi
+
+if [[ "${TEMP_ACCOUNT}" == "1" ]]; then
+  info "temp account ${ACCT} terminate kar rahe hain"
+  if run_task account.terminate "{\"username\":\"${ACCT}\",\"_confirm\":\"account.terminate\"}"; then
+    ok "temp account ${ACCT} hat gaya (task #${LAST_TASK_ID})"
+    TEMP_ACCOUNT=0
+  else
+    bad "temp account terminate fail: ${LAST_ERR:-unknown} — manually chalao: paneld --run account.terminate '{\"username\":\"${ACCT}\",\"_confirm\":\"account.terminate\"}'"
+  fi
 fi
 
 DONE=1

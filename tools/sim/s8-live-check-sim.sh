@@ -53,9 +53,11 @@ m = re.search(r"SCHEMA_NAME FROM information_schema\.SCHEMATA WHERE SCHEMA_NAME=
 if m: print(m.group(1) if m.group(1) in dbs else ''); sys.exit(0)
 m = re.search(r"DEFAULT_CHARACTER_SET_NAME FROM information_schema\.SCHEMATA WHERE SCHEMA_NAME='([^']+)'", sql)
 if m: print(dbs.get(m.group(1), {}).get('charset', '')); sys.exit(0)
-if re.search(r"FROM `alphacp`\.accounts", sql):
-    active = [a for a in state.get('accounts', ['alicehost']) if state.get('account_status', {}).get(a) == 'active']
-    print((active or state.get('accounts', ['alicehost']))[0]); sys.exit(0)
+if 'FROM alphacp.accounts' in sql:
+    accs = list(state.get('accounts', {}).items())          # [{name: status}, ...]
+    active = [a for a, st in accs if st == 'active']
+    pick = (active or [a for a, _ in accs])
+    print(pick[0] if pick else ''); sys.exit(0)
 m = re.search(r"SELECT User FROM mysql\.user WHERE User='([^']+)'", sql)
 if m: print(m.group(1) if m.group(1) in users else ''); sys.exit(0)
 m = re.search(r"SELECT Host FROM mysql\.user WHERE User='([^']+)'", sql)
@@ -116,6 +118,10 @@ db, user = f"{acct}_{suffix}", f"{acct}_{suffix}"
 if type_ in ('db.drop', 'db.user.drop') and payload.get('_confirm') != type_:
     emit('failed', error=f"destructive task '{type_}' requires _confirm='{type_}'", code=1)
 
+if type_ == 'account.create':
+    state.setdefault('accounts', {})[payload['username']] = 'active'; emit('success')
+if type_ == 'account.terminate':
+    state.get('accounts', {}).pop(payload['username'], None); emit('success')
 if type_ == 'db.create':
     if break_mode != 'create': state['databases'][db] = {'charset': 'utf8mb4'}
     emit('success')
@@ -147,7 +153,6 @@ chmod 0755 "${W}/bin/mariadb" "${W}/home/agent/bin/paneld"
 
 export ACP_HOME="${W}/home" ACP_PHP=/bin/bash ACP_VERIFY_ALLOW_NONROOT=1
 export ACP_VERIFY_PANELD="${W}/home/agent/bin/paneld" ACP_VERIFY_CLIENT="${W}/bin/mariadb"
-export ACP_VERIFY_ACCOUNT=alicehost
 
 PASS=0; FAIL=0
 chk() { if eval "$2" >/dev/null 2>&1; then PASS=$((PASS+1)); printf '  ok   %s\n' "$1"; else FAIL=$((FAIL+1)); printf '  FAIL %s\n' "$1"; fi; }
@@ -163,6 +168,8 @@ chk "run 1 exit 0" "[[ ${RC1} -eq 0 ]]"
 chk "run 1 me '0 fail'" "grep -q 'S8 LIVE CHECK: .* 0 fail' <<<\"\${OUT1}\""
 chk "run 1 me login proof" "grep -q 'ASLI login kar raha hai' <<<\"\${OUT1}\""
 chk "run 1 me scrub proof" "grep -q 'password scrub (\\*\\*\\*) ho gaya' <<<\"\${OUT1}\""
+chk "run 1 me temp account auto-create" "grep -q 'temp account acpv' <<<\"\${OUT1}\""
+chk "run 1 me temp account terminate" "grep -q 'hat gaya (task' <<<\"\${OUT1}\""
 chk "run 1 end me objects saaf" "[[ \"\$(python3 -c \"import json,os; s=json.load(open(os.environ['ACP_FAKE_STATE'])); print(len(s['databases']), len(s['users']))\")\" == \"0 0\" ]]"
 
 # ------------------------------------------------------------------ run 2 -----
@@ -174,7 +181,7 @@ OUT2="$(ACP_FAKE_BREAK=create bash tools/verify/s8-live-check.sh 2>&1)"; RC2=$?
 set -e
 echo "${OUT2}" | grep -E 'ok|FAIL|LIVE CHECK' | sed 's/^/     /'
 chk "run 2 exit != 0" "[[ ${RC2} -ne 0 ]]"
-chk "run 2 me 'database nahi bana' FAIL" "grep -q 'database alicehost_acpverify nahi bana' <<<\"\${OUT2}\""
+chk "run 2 me 'database nahi bana' FAIL" "grep -qE 'database acpv.*_acpverify nahi bana' <<<\"\${OUT2}\""
 chk "run 2 me fail count > 0" "! grep -q 'S8 LIVE CHECK: .* 0 fail' <<<\"\${OUT2}\""
 
 echo

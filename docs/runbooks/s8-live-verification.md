@@ -9,6 +9,9 @@ sudo alphacp-sync get <COMMIT> tools/verify/s8-live-check.sh /tmp/acp-s8-live-ch
 
 ## Ye kya karta hai
 1. Panel DB (default `alphacp`) se ek **active account** chunta hai (`ACP_VERIFY_ACCOUNT=<user>` se override).
+   Panel me koi account na ho to script khud ek **temp account** (`acpvXXXXXX`) banata hai — `account.create`
+   se, asli Linux user/home ke saath — aur ant me `account.terminate` se hata deta hai.
+   Sirf tab auto-create band hota hai jab `ACP_VERIFY_NO_CREATE=1` set ho.
 2. `paneld --run` se ASLI tasks chalata hai: `db.create` → `db.user.create` → `db.user.password` → `db.user.drop` → `db.drop`.
 3. Har step MariaDB se verify karta hai:
    - database utf8mb4 ke saath bana (`information_schema.SCHEMATA`),
@@ -28,5 +31,5 @@ sudo alphacp-sync get <COMMIT> tools/verify/s8-live-check.sh /tmp/acp-s8-live-ch
 
 ## Offline pehle test karo (root nahi chahiye)
 ```bash
-bash tools/sim/s8-live-check-sim.sh    # fake paneld + fake MariaDB: 8/0, aur ek broken run jo FAIL dena hi hoga
+bash tools/sim/s8-live-check-sim.sh    # fake paneld + fake MariaDB: 10/0, aur ek broken run jo FAIL dena hi hoga
 ```
