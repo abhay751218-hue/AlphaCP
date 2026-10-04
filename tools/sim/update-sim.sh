@@ -345,7 +345,7 @@ sleep 1
 printf '0 4 * * * root /usr/local/bin/legacy-backup.sh\n' > "${U}/etc/cron.d/alphacp-panel"
 run_update U7; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "bahar ka file .bak me safe hua" bash -c "grep -q legacy-backup \"${U}/etc/cron.d/alphacp-panel.bak-*\""
+chk "bahar ka file .bak me safe hua" grep -q legacy-backup "${U}"/etc/cron.d/alphacp-panel.bak-*
 chk "hamara cron wapas install hua" grep -q "schedule:run" "${U}/etc/cron.d/alphacp-panel"
 chk "warn message dikha" grep -q "hamara nahi" "${U}/update-U7.out"
 chk "UPDATE COMPLETE" grep -q "UPDATE COMPLETE" "${U}/update-U7.out"
