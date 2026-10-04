@@ -99,6 +99,100 @@ class BackupTest extends TestCase
         $this->assertMatchesRegularExpression('/^[a-f0-9]{32}$/', $payload['archive_id']);
     }
 
+    public function test_customer_can_queue_a_restore_of_own_verified_archive(): void
+    {
+        [$customer, $account] = $this->customerWithAccount();
+        $archiveId = str_repeat('d', 32);
+        $this->archiveTask($account, $archiveId);
+
+        $response = $this->asPanelUser($customer)->post('/backup/restore', [
+            'archive_id' => $archiveId,
+            'path' => 'public_html',
+            'confirm' => '1',
+        ]);
+        $response->assertRedirect(route('backup.index'));
+
+        $task = DB::table('tasks')->where('account_id', $account->id)->where('type', 'backup.extract')->first();
+        $this->assertNotNull($task);
+        $this->assertSame('queued', $task->status);
+        $this->assertSame('destructive', $task->safety);
+        $payload = json_decode((string) $task->payload, true);
+        $this->assertSame('custhost', $payload['username']);
+        $this->assertSame($archiveId, $payload['archive_id']);
+        $this->assertSame('public_html', $payload['path']);
+        $this->assertSame('backup.extract', $payload['_confirm']);
+    }
+
+    public function test_restore_refuses_unknown_archive_hostile_path_and_missing_confirmation(): void
+    {
+        [$customer, $account] = $this->customerWithAccount();
+        $ownId = str_repeat('e', 32);
+        $this->archiveTask($account, $ownId);
+        $foreignId = str_repeat('f', 32);
+
+        // another account's archive id (verified task, different username/account)
+        $foreign = Account::query()->create([
+            'server_id' => 1,
+            'package_id' => $account->package_id,
+            'username' => 'otherhost',
+            'main_domain' => 'other.example.com',
+            'contact_email' => 'o@example.com',
+            'home_path' => '/home/otherhost',
+            'php_version' => '8.4',
+            'quota_mb' => 1024,
+            'status' => 'active',
+        ]);
+        $this->archiveTask($foreign, $foreignId);
+
+        $this->asPanelUser($customer)
+            ->post('/backup/restore', ['archive_id' => $foreignId, 'confirm' => '1'])
+            ->assertSessionHasErrors('archive_id');
+        $this->asPanelUser($customer)
+            ->post('/backup/restore', ['archive_id' => str_repeat('a', 32), 'confirm' => '1'])
+            ->assertSessionHasErrors('archive_id');
+        $this->asPanelUser($customer)
+            ->post('/backup/restore', ['archive_id' => $ownId, 'path' => '../etc', 'confirm' => '1'])
+            ->assertSessionHasErrors('path');
+        $this->asPanelUser($customer)
+            ->post('/backup/restore', ['archive_id' => $ownId])
+            ->assertSessionHasErrors('confirm');
+
+        $this->assertSame(0, DB::table('tasks')->where('type', 'backup.extract')->count());
+    }
+
+    public function test_mail_login_cannot_queue_a_restore(): void
+    {
+        $mail = $this->userWithRole('mail');
+        $this->asPanelUser($mail)->post('/backup/restore', [
+            'archive_id' => str_repeat('d', 32),
+            'confirm' => '1',
+        ])->assertForbidden();
+    }
+
+    private function archiveTask(Account $account, string $archiveId): void
+    {
+        DB::table('tasks')->insert([
+            'server_id' => 1,
+            'account_id' => $account->id,
+            'type' => 'backup.archive',
+            'safety' => 'mutating',
+            'payload' => json_encode(['username' => $account->username, 'archive_id' => $archiveId]),
+            'status' => 'success',
+            'result' => json_encode([
+                'archive_id' => $archiveId,
+                'username' => $account->username,
+                'scope' => 'home',
+                'filename' => $archiveId . '.tar.gz',
+                'size_bytes' => 4096,
+                'sha256' => hash('sha256', 'archive-' . $archiveId),
+                'created_at' => now()->toISOString(),
+                'status' => 'ready',
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
     public function test_customer_can_download_only_a_checksum_verified_own_archive(): void
     {
         [$customer, $account] = $this->customerWithAccount();

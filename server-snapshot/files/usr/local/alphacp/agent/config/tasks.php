@@ -1355,6 +1355,26 @@ return [
         ],
     ],
 
+    'backup.extract' => [
+        'handler'     => Tasks\BackupExtract::class,
+        'safety'      => 'destructive',
+        'timeout'     => 3600,
+        'confirm'     => 'backup.extract',
+        'description' => 'Restore a verified home archive into the account (pre-restore copy kept).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'archive_id', '_confirm'],
+            'properties'           => [
+                'username'   => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'archive_id' => ['type' => 'string', 'pattern' => '^[a-f0-9]{32}$', 'maxLength' => 32],
+                'path'       => ['type' => 'string', 'maxLength' => 240],
+                '_confirm'   => ['type' => 'string', 'enum' => ['backup.extract']],
+            ],
+        ],
+    ],
+
     'backup.wizard' => [
         'handler'     => Tasks\BackupWizard::class,
         'safety'      => 'mutating',

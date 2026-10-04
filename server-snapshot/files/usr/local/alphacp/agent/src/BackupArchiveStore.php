@@ -19,6 +19,8 @@ final class BackupArchiveStore
     private const FORMAT_VERSION = 1;
     private const MIN_FREE_BYTES = 67_108_864; // 64 MiB safety reserve
     private const TAR_TIMEOUT = 3600;
+    private const PRERESTORE_KEEP = 1;
+    private const MAX_ENTRIES = 500_000;
     private const TAR_BIN = '/usr/bin/tar';
 
     public function __construct(
@@ -167,6 +169,390 @@ final class BackupArchiveStore
             }
             throw $e;
         }
+    }
+
+    /**
+     * Restore a previously published, checksum-verified home archive back into
+     * the account home — safely:
+     *
+     *   1. the manifest is re-verified (sha256 + size) before anything moves,
+     *   2. every tar entry is inspected: it must live under `<username>/`, may not
+     *      contain `..` or absolute paths, and hardlinks / device nodes / FIFOs /
+     *      sockets are refused (a hardlink to /etc/shadow would otherwise land in
+     *      a customer home as root),
+     *   3. the archive is extracted into a fresh staging dir OUTSIDE the account,
+     *      with `--no-same-owner`, then chowned to the account (symlinks skipped,
+     *      never followed),
+     *   4. the swap is done with same-filesystem renames: the current tree is
+     *      moved to `.acp-prerestore-<user>-<stamp>` first, then the staged tree
+     *      moves into place; any failure rolls the old tree back.
+     *
+     * `$subPath` ('' = whole home) restores a single subtree, like cPanel's
+     * File and Directory Restoration.
+     *
+     * @return array{archive_id:string,username:string,scope:string,path:string,files:int,dirs:int,bytes:int,replaced:bool,prerestore:?string,status:string}
+     */
+    public function restoreHome(string $username, string $archiveId, string $subPath = ''): array
+    {
+        $this->assertUsername($username);
+        $archiveId = self::normalizeId($archiveId);
+        $subPath = self::normalizeSubPath($subPath);
+
+        $accountsRoot = $this->paths->accountsRoot;
+        $home = $this->paths->home($username);
+        $stateRoot = rtrim($this->stateRoot, '/');
+        if ($stateRoot === '' || $stateRoot === '/' || is_link($stateRoot)) {
+            throw new TaskRejectedException('invalid backup state root');
+        }
+        $this->assertDirectory($accountsRoot, 'account root');
+        $this->assertDirectory($home, 'account home');
+        $this->assertDirectory($stateRoot, 'state root');
+
+        $accountDir = $stateRoot . '/backups/accounts/' . $username;
+        $this->assertDirectory($accountDir, 'backup account storage');
+        $archive = $accountDir . '/' . $archiveId . '.tar.gz';
+        $manifest = $accountDir . '/' . $archiveId . '.json';
+
+        // Verifies manifest fields, size and sha256 before any filesystem change.
+        $record = $this->loadExisting($archive, $manifest, $username, $archiveId);
+        if ($record === null) {
+            throw new TaskRejectedException('backup archive not found');
+        }
+
+        $lock = $this->acquireLock($username);
+        $staging = $accountsRoot . '/.acp-restore-' . $archiveId . '-' . gmdate('YmdHis');
+        $pre = $accountsRoot . '/.acp-prerestore-' . $username . '-' . gmdate('YmdHis');
+        $movedOld = false;
+        $movedNew = false;
+        $replaced = false;
+
+        try {
+            $inspected = $this->inspectArchive($archive, $username, $subPath);
+            $this->assertFreeSpace($accountsRoot, $inspected['bytes']);
+
+            $this->ensureDirectory($staging, 0700);
+            $result = $this->cmd->run([
+                self::TAR_BIN,
+                '--extract',
+                '--gzip',
+                '--file', $archive,
+                '--directory', $staging,
+                '--no-same-owner',
+                '--one-file-system',
+                '--',
+                $subPath === '' ? $username : $username . '/' . $subPath,
+            ], self::TAR_TIMEOUT);
+            if (!$result->ok()) {
+                throw new TaskRejectedException('home archive extraction failed (tar exit ' . $result->exitCode . ')');
+            }
+
+            $stagedRoot = $subPath === '' ? $staging . '/' . $username : $staging . '/' . $username . '/' . $subPath;
+            if (is_link($stagedRoot) || (!is_dir($stagedRoot) && !is_file($stagedRoot))) {
+                throw new TaskRejectedException('archive does not contain the requested path');
+            }
+
+            $this->chownTree($stagedRoot, $username);
+            $target = $subPath === '' ? $home : $home . '/' . $subPath;
+
+            if ($subPath === '') {
+                if (is_link($home) || !is_dir($home)) {
+                    throw new TaskRejectedException('account home changed while restoring');
+                }
+                $this->fs->rename($home, $pre);
+                $movedOld = true;
+            } else {
+                $this->ensureDirectory($pre, 0700);
+                $parent = dirname($target);
+                if (!is_dir($parent)) {
+                    $this->fs->mkdir($parent, 0755);
+                }
+                if (file_exists($target) || is_link($target)) {
+                    $replaced = true;
+                    $this->fs->mkdir($pre . '/old/' . dirname($subPath), 0700);
+                    $this->fs->rename($target, $pre . '/old/' . $subPath);
+                    $movedOld = true;
+                }
+            }
+
+            try {
+                $this->fs->rename($stagedRoot, $target);
+                $movedNew = true;
+                if ($subPath !== '' && $movedOld) {
+                    // keep the pre-restore tree for the whole subtree swap too
+                    $this->fs->chownName($pre, 'root', $this->panelGroup());
+                }
+            } catch (Throwable $e) {
+                if ($movedOld) {
+                    $this->fs->rename($subPath === '' ? $pre : $pre . '/old/' . $subPath, $target);
+                    $movedOld = false;
+                }
+                throw new TaskRejectedException('restore swap failed; previous files were put back: ' . $e->getMessage());
+            }
+
+            $kept = null;
+            if ($movedOld) {
+                $this->fs->chownName($pre, 'root', $this->panelGroup());
+                $kept = basename($pre);
+            }
+            $this->prunePrerestore($accountsRoot, $username, $pre);
+
+            $this->log->info("home archive {$archiveId} restored for {$username}" . ($subPath === '' ? '' : " ({$subPath})"));
+
+            return [
+                'archive_id' => $archiveId,
+                'username' => $username,
+                'scope' => 'home',
+                'path' => $subPath,
+                'files' => $inspected['files'],
+                'dirs' => $inspected['dirs'],
+                'bytes' => $inspected['bytes'],
+                'replaced' => $replaced,
+                'prerestore' => $kept,
+                'status' => 'restored',
+            ];
+        } finally {
+            if (is_dir($staging) && !is_link($staging)) {
+                $this->removeTree($staging);
+            }
+            $this->releaseLock($lock);
+            if ($movedNew && $movedOld && $subPath === '') {
+                // success path: `$pre` intentionally kept (pre-restore copy)
+            } elseif ($movedOld && !$movedNew && $subPath === '' && is_dir($pre)) {
+                // swap never completed — put the home back
+                $this->fs->rename($pre, $home);
+            }
+        }
+    }
+
+    public static function normalizeSubPath(string $subPath): string
+    {
+        if (trim($subPath) === '') {
+            return '';
+        }
+
+        return Files::normalizeRel($subPath);
+    }
+
+    /**
+     * @return array{files:int,dirs:int,bytes:int}
+     */
+    private function inspectArchive(string $archive, string $username, string $subPath): array
+    {
+        $names = $this->cmd->run([
+            self::TAR_BIN,
+            '--list',
+            '--gzip',
+            '--file', $archive,
+            '--quoting-style=literal',
+        ], 300);
+        if (!$names->ok()) {
+            throw new TaskRejectedException('home archive is unreadable');
+        }
+        $prefix = $username . '/';
+        $files = 0;
+        $dirs = 0;
+        $lines = 0;
+        $sawRoot = false;
+        $sawRequested = $subPath === '';
+        foreach (preg_split('/\r?\n/', rtrim($names->stdout, "\n")) ?: [] as $line) {
+            if ($line === '') {
+                continue;
+            }
+            $lines++;
+            if ($lines > self::MAX_ENTRIES) {
+                throw new TaskRejectedException('home archive has too many entries');
+            }
+            if ($line === $username) {
+                $sawRoot = true;
+                $dirs++;
+                continue;
+            }
+            if (!str_starts_with($line, $prefix)) {
+                throw new TaskRejectedException('home archive contains an entry outside the account home');
+            }
+            $rel = substr($line, strlen($prefix));
+            if ($rel === '') {   // the top-level `username/` entry itself
+                $sawRoot = true;
+                $dirs++;
+                continue;
+            }
+            if (str_contains($rel, "\0") || str_contains($rel, '\\')) {
+                throw new TaskRejectedException('home archive contains an unsafe path');
+            }
+            $isDir = str_ends_with($rel, '/');
+            $clean = $isDir ? substr($rel, 0, -1) : $rel;
+            if ($clean === '') {
+                throw new TaskRejectedException('home archive contains an unsafe path');
+            }
+            foreach (explode('/', $clean) as $segment) {
+                if ($segment === '' || $segment === '.' || $segment === '..') {
+                    throw new TaskRejectedException('home archive contains a path escape');
+                }
+            }
+            if ($subPath !== '' && ($clean === $subPath || str_starts_with($clean, $subPath . '/'))) {
+                $sawRequested = true;
+            }
+            if ($isDir) {
+                $dirs++;
+            } else {
+                $files++;
+            }
+        }
+        if ($lines === 0 || (!$sawRoot && $subPath === '')) {
+            throw new TaskRejectedException('home archive is empty');
+        }
+        if (!$sawRequested) {
+            throw new TaskRejectedException("archive does not contain '{$subPath}'");
+        }
+
+        $verbose = $this->cmd->run([
+            self::TAR_BIN,
+            '--list',
+            '--verbose',
+            '--numeric-owner',
+            '--gzip',
+            '--file', $archive,
+            '--quoting-style=literal',
+        ], 300);
+        if (!$verbose->ok()) {
+            throw new TaskRejectedException('home archive entry types could not be verified');
+        }
+        $bytes = 0;
+        foreach (preg_split('/\r?\n/', rtrim($verbose->stdout, "\n")) ?: [] as $line) {
+            if ($line === '') {
+                continue;
+            }
+            $type = $line[0];
+            if (in_array($type, ['h', 'b', 'c', 'p', 's'], true)) {
+                throw new TaskRejectedException('home archive contains a hardlink or special file; refusing to restore');
+            }
+            if (!in_array($type, ['-', 'd', 'l'], true)) {
+                throw new TaskRejectedException('home archive contains an unexpected entry type');
+            }
+            $tokens = preg_split('/\s+/', trim($line)) ?: [];
+            $size = $tokens[2] ?? null;
+            if (is_string($size) && ctype_digit($size)) {
+                $value = (int) $size;
+                if ($value > PHP_INT_MAX - $bytes) {
+                    throw new TaskRejectedException('home archive size cannot be summed safely');
+                }
+                $bytes += $value;
+            }
+        }
+
+        return ['files' => $files, 'dirs' => $dirs, 'bytes' => $bytes];
+    }
+
+    private function chownTree(string $root, string $owner): void
+    {
+        if (is_link($root)) {
+            return; // never follow or touch symlinks
+        }
+        $nodes = 0;
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::SELF_FIRST,
+        );
+        foreach ($iterator as $entry) {
+            $path = $entry->getPathname();
+            if ($nodes++ > self::MAX_ENTRIES) {
+                throw new TaskRejectedException('restored tree is too large to chown safely');
+            }
+            if (is_link($path)) {
+                continue; // lchown is unavailable in PHP; leaving the link root-owned is safe
+            }
+            $this->fs->chownName($path, $owner);
+        }
+        if (!is_link($root)) {
+            $this->fs->chownName($root, $owner);
+        }
+    }
+
+    private function prunePrerestore(string $accountsRoot, string $username, string $keepPath): void
+    {
+        $prefix = '.acp-prerestore-' . $username . '-';
+        $names = @scandir($accountsRoot) ?: [];
+        $found = [];
+        foreach ($names as $name) {
+            if ($name === '.' || $name === '..' || !str_starts_with($name, $prefix)) {
+                continue;
+            }
+            $path = $accountsRoot . '/' . $name;
+            if (is_dir($path) && !is_link($path)) {
+                $found[] = $name;
+            }
+        }
+        if (count($found) <= self::PRERESTORE_KEEP) {
+            return;
+        }
+        rsort($found);
+        $drop = array_slice($found, self::PRERESTORE_KEEP);
+        foreach ($drop as $name) {
+            $path = $accountsRoot . '/' . $name;
+            if ($path === $keepPath) {
+                continue;
+            }
+            try {
+                $this->removeTree($path);
+            } catch (Throwable $e) {
+                $this->log->warning('pre-restore cleanup failed: ' . $e->getMessage());
+            }
+        }
+    }
+
+    private function removeTree(string $root): void
+    {
+        $this->fs->assert($root);
+        if (is_link($root)) {
+            $this->fs->unlink($root);
+
+            return;
+        }
+        if (!is_dir($root)) {
+            if (is_file($root)) {
+                $this->fs->unlink($root);
+            }
+
+            return;
+        }
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS),
+            RecursiveIteratorIterator::CHILD_FIRST,
+        );
+        foreach ($iterator as $entry) {
+            $path = $entry->getPathname();
+            $this->fs->assert($path);
+            if (is_link($path) || $entry->isFile()) {
+                $this->fs->unlink($path);
+                continue;
+            }
+            $this->fs->rmdir($path);
+        }
+        $this->fs->rmdir($root);
+    }
+
+    /** @return resource */
+    private function acquireLock(string $username)
+    {
+        $dir = rtrim($this->stateRoot, '/') . '/backups/locks';
+        $this->ensureDirectory($dir, 0750);
+        $handle = @fopen($dir . '/' . $username . '.lock', 'c');
+        if ($handle === false) {
+            throw new TaskRejectedException('cannot open restore lock file');
+        }
+        if (!flock($handle, LOCK_EX | LOCK_NB)) {
+            fclose($handle);
+            throw new TaskRejectedException('another restore is already running for this account');
+        }
+
+        return $handle;
+    }
+
+    /** @param resource $handle */
+    private function releaseLock($handle): void
+    {
+        @flock($handle, LOCK_UN);
+        @fclose($handle);
     }
 
     public static function normalizeId(string $archiveId): string
