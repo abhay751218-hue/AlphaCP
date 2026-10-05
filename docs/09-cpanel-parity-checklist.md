@@ -63,9 +63,9 @@
 | 16 | Autoresponders | Vacation/auto reply | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (JSON vacation file; no pipe/shell)) |
 | 17 | Default Address | Catch-all | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (`*@domain` → email; no pipe/shell)) |
 | 18 | Mailing Lists | Mailman lists | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (list+owner JSON; no mailman daemon)) |
-| 19 | Track Delivery | Delivery trace | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (jailed track.json search; no Exim log)) |
-| 20 | Global Email Filters | Server-side filters | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (account-wide contains-match JSON; no pipe)) |
-| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (contains-match JSON; discard/folder; no pipe)) |
+| 19 | Track Delivery | Delivery trace | S7 | 🟡 (0.78.0 me asli ho gaya: `mail.track` ab ASLI exim mainlog se delivery trace (aayi/pahunchi/deferred/failed) — live verify pending) |
+| 20 | Global Email Filters | Server-side filters | S7 | 🟡 (0.78.0 me asli ho gaya: account-wide Exim filter file — sabhi mailboxes par, user rule se pehle — live verify pending) |
+| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.78.0 me asli ho gaya: per-mailbox ASLI Exim filter file (`exim -bf` validate): folder save / forward / discard — live verify pending) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (SPF/DMARC copy records; DNS/DKIM keys later)) |
 | 23 | Address Importer | Bulk CSV import | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (CSV local,domain,password → mail.set; no pipe)) |
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (score 1–10 + lists JSON; no daemon)) |

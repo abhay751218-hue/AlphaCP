@@ -14,58 +14,48 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-> **0.77.0 = 0.76.3 (Dovecot `doveadm user` fix) + S7 server-wide features.**
-> Agar aapne 0.76.3 abhi chalaya bhi hai to koi farq nahi — 0.77.0 wahi fix + naye features lekar aata hai.
-> **Seedha 0.77.0 chalao** (0.76.0/0.76.1/0.76.2/0.76.3 sab supersede).
+> **0.78.0** — S7 ke Email Filters ab **asli Exim filter files** hain, aur Track Delivery
+> asli exim log se jawab deta hai. `0.77.0` (jisme 54 pass / 0 fail aaya) isme shamil hai.
 
-### 🐛 0.76.2 ka akela fail — wajah mil gayi, fix ho gaya
-```
-auth-worker: Error: passwd-file scheme=BLF-CRYPT /etc/dovecot/alphacp-users:
-             open(scheme=BLF-CRYPT /etc/dovecot/alphacp-users) failed: No such file or directory
-```
-Dovecot 2.3 ke **official docs** me likha hai: *"**scheme=** … **This is available only for passdb.**"*
-Hamara rendered `userdb` block bhi `args = scheme=BLF-CRYPT /etc/dovecot/alphacp-users` likh raha tha →
-Dovecot us **poore string ko filename** samajh baitha → userdb dead → `Auth USER lookup failed`.
-**Fix:** `userdb` me se `scheme=` hata diya (hash me `{BLF-CRYPT}` prefix pehle se hai).
-
-### 🆕 0.77.0 — S7 server-wide, ab asli daemons ke saath
-| cPanel # | Tool | Kya ab asli hai |
+### 🆕 0.78.0 — kya naya (cPanel #19 / #20 / #21)
+| cPanel # | Tool | Ab kya asli hai |
 |---|---|---|
-| **#141** | Mail Queue Manager | `mail.server action=queue` — `exim -bp` parse; `deliver/remove/freeze/thaw/flush` (`exim -M/-Mrm/-Mf/-Mt/-qf`); galat id reject |
-| **#142** | Mail Delivery Reports | `action=reports` — asli `/var/log/exim4/mainlog` se ginati (aayi / pahunchi / deferred / failed / rejected / completed) + top senders |
-| **#143** | Exim Configuration Manager | `action=eximconf` — 11 options (size limit, banner, queue, parallel, spam score…) panel se set; template dobara likha + `exim4 -bV` validate |
-| **#144** | Mailserver Configuration (Dovecot) | `action=dovecotconf` — 8 options; `doveconf -n` validate |
-| **#146** | Email Disk Usage (server view) | `action=diskusage` — har account/mailbox ki asli bytes |
+| **#21** | Email Filters (per-mailbox) | Panel ka JSON → **ASLI Exim filter file** (`exim -bf` se validate). `save` → mail sidhi `.Folder/` me (IMAP me dikhegi) · `deliver` → forward · `seen finish` → discard — **mail inbox me aati hi nahi** |
+| **#20** | Global Email Filters (account-wide) | Account ke **sabhi** mailboxes par lagu; ye rule user rule se pehle chalta hai |
+| **#19** | Track Delivery | Ab sirf JSON nahi — `mail.track` **asli `/var/log/exim4/mainlog`** se trace: kab aayi, kahan pahunchi, deferred/failed |
 
-**Fail-closed:** har option apne type ke regex se validate (size/int/number/duration/bool/text),
-`#` aur multi-line reject. Galat value par options file likhi hi nahi jati, config ek byte nahi badalti.
+**Fail-closed:** har filter file `exim -bf` se validate hoti hai; exim mana kare to filter
+install hota hi nahi (**mail delivery bina filter ke chalti rahegi**). Pipe/command kabhi
+nahi — needle charset + action allowlist; khud ko forward = loop → rule chhod diya jata hai.
+Folder pehle se ban jata hai (Maildir++ `create_directory`) to IMAP me turant dikhega.
 
 **Ek hi command (updater + verification):**
 ```bash
-sudo alphacp-sync get 3a04b3f0d61044aa3870b176cdfbbfeb05478e38 installer/panel-update.sh /tmp/acp-panel-update-0.77.0.sh 21f5ab9941f20392fe184757d01a35e214f9b154b4f001c5bb93271293f8e8c2 && sudo bash /tmp/acp-panel-update-0.77.0.sh && sudo alphacp-sync get 1e7238c71ba0eea9ccd501a489eff00845f37bb9 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 580a0a8cc57d2b3cfd1e242726cff266c68fc3a515eb2d763b8532e0a4cfbff6 && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get 222a113863cd3e1426cb816f76f5e5aca693e43a installer/panel-update.sh /tmp/acp-panel-update-0.78.0.sh 53b775235f1e9531a26d26f3e06c5a48649173865b9dd3f0da2ed7955de92aa8 && sudo bash /tmp/acp-panel-update-0.78.0.sh && sudo alphacp-sync get 327bad971df8bcf6daa2971904b0b20a7d941b3b tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh a8bf36e40f10e4ec12731383f85af215901c30884e5fceb3669ef4df827bfd91 && sudo bash /tmp/s7-mail-check.sh
 ```
 
-### 1) panel-update 0.77.0
+### 1) panel-update 0.78.0
 ```bash
-sudo alphacp-sync get 3a04b3f0d61044aa3870b176cdfbbfeb05478e38 installer/panel-update.sh /tmp/acp-panel-update-0.77.0.sh 21f5ab9941f20392fe184757d01a35e214f9b154b4f001c5bb93271293f8e8c2 && sudo bash /tmp/acp-panel-update-0.77.0.sh
+sudo alphacp-sync get 222a113863cd3e1426cb816f76f5e5aca693e43a installer/panel-update.sh /tmp/acp-panel-update-0.78.0.sh 53b775235f1e9531a26d26f3e06c5a48649173865b9dd3f0da2ed7955de92aa8 && sudo bash /tmp/acp-panel-update-0.78.0.sh
 ```
-- Updater SHA-256: `21f5ab9941f20392fe184757d01a35e214f9b154b4f001c5bb93271293f8e8c2` · banner **`updater 0.77.0`**.
+- Updater SHA-256: `53b775235f1e9531a26d26f3e06c5a48649173865b9dd3f0da2ed7955de92aa8` · banner **`updater 0.78.0`**.
 
 ### 2) Verification
 ```bash
-sudo alphacp-sync get 1e7238c71ba0eea9ccd501a489eff00845f37bb9 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 580a0a8cc57d2b3cfd1e242726cff266c68fc3a515eb2d763b8532e0a4cfbff6 && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get 327bad971df8bcf6daa2971904b0b20a7d941b3b tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh a8bf36e40f10e4ec12731383f85af215901c30884e5fceb3669ef4df827bfd91 && sudo bash /tmp/s7-mail-check.sh
 ```
-- Verifier SHA-256: `580a0a8cc57d2b3cfd1e242726cff266c68fc3a515eb2d763b8532e0a4cfbff6`.
-- Expected: **54 pass / 0 fail** — `doveadm user` **ok** · `ASLI MAIL PAHUNCH GAYI` ·
-  naya **part H**: queue 0-fail · delivery reports · `eximconf: message_size_limit=100M ASLI exim template me likha` ·
-  `eximconf: galat value reject` · `dovecotconf: value ASLI 99-alphacp.conf me likhi` · `email disk usage` ·
-  ant me **`ASLI MAIL DELIVERY:VERIFIED`**.
-- Kuch bhi fail ho to poora dump `ACP_HOME/verify-reports/s7-diag.txt` me likha jata hai —
-  wo hourly sync se main branch par aa jata hai, **main khud padh kar agla fix dunga**.
+- Verifier SHA-256: `a8bf36e40f10e4ec12731383f85af215901c30884e5fceb3669ef4df827bfd91`.
+- Expected: **62 pass / 0 fail** · naya **part I**:
+  `FILTER KAAM KAR GAYA (#21): 'acpfilter' wali mail …/.filtered/new me (0 se 1)` ·
+  `DISCARD KAAM KAR GAYA (#21): 'acpdiscard' wali mail inbox me nahi aayi` ·
+  `mail.track (#19): ASLI exim mainlog se trace` · `test filters hat gaye` ·
+  ant me `ASLI MAIL DELIVERY:VERIFIED`.
+- Kuch bhi fail ho to poora dump `ACP_HOME/verify-reports/s7-diag.txt` me — hourly sync se
+  main branch par aa jata hai, **main khud padh kar agla fix dunga**.
 
-### ✅ Pichla result (aapka 0.76.2 run)
-`43 pass / 1 fail / 0 skip` · **`ASLI MAIL DELIVERY:VERIFIED`** 🎉 — asli mail Maildir me pahunchi,
-catch-all redirect, autoresponder, spam list, `dig TXT` SPF + `_dmarc` + `default._domainkey` sab green.
+### ✅ Pichla result (aapka 0.77.0 run)
+**54 pass / 0 fail / 0 skip** — `doveadm user` ok, part H (queue / delivery reports /
+exim+dovecot config / disk usage) sab green, `ASLI MAIL DELIVERY:VERIFIED`.
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 
