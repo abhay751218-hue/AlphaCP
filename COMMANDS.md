@@ -14,60 +14,61 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-> **0.79.0 = 0.78.0 ka FIX.** 0.78.0 chalane ke baad verification `58 pass / 4 fail` aaya aur
-> **`ASLI MAIL DELIVERY:NOT-VERIFIED`** — naye email filters ne **mail delivery hi tod di** thi:
-> har address `Failed to find user "}" from expanded string` ke saath **defer** ho gaya, mail
-> Maildir tak pahunchi hi nahi. Is liye **pehle 0.79.0 chalao** — naya feature nahi, pehle wali
-> delivery wapas lane ka fix hai. (Mail aane me 1-2 min lag sakte hain; queue `exim -bp` se dekh sakte hain.)
+> **0.80.0 = mail delivery ka ASLI fix.** 0.79.0 chalane ke baad `exim -bV` hi reject ho gaya
+> (`"user" or "check_local_user" must be set with allow_filter`) → setup fail → purani config
+> wapas → `exim -bt` **R: nonlocal** (mail abhi bhi band hai). Is baar maine andaza nahi lagaya:
+> **sandbox me asli exim 4.97 build kiya** (PCRE2 + gcc, source GitHub se) aur har hypothesis
+> test kiya. Chaar asli galtiyan mili — chaaron fix. Ab **10/10 real-exim test green** hain.
 
-### 🛠 0.79.0 — do asli wajahein, dono theek
-| # | Kya toota tha (0.78.0) | Asli wajah | Ab kya hai |
+### 🛠 0.80.0 — asli exim se pakdi gayi 4 galtiyan
+| # | Kya toota tha | Asli wajah (exim 4.97 ne khud bataya) | Ab |
 |---|---|---|---|
-| **1** | `sync ne Exim filter banaya (0 mailbox ke liye)` → `filters=0` | Exim spec ke hisaab se filter file ka **pehla text `# Exim filter`** hona chahiye. Hamari file `# AlphaCP managed filter …` se shuru hoti thi, to exim use **`.forward`** samjha → `exim -bf` ne sab reject kar diya | Header ab: `# Exim filter  <<== YE LINE HATAANA NAHI` (pehli line) |
-| **2** | `exim -bt` → `Failed to find user "}"` → **har address defer, poora mail ruk gaya** | `alphacp_userfilter` router par `user =`/`group =` me galat brace nesting (`{$value}{}`) — exim ne `"}"` ko user samjha | Router par **koi uid/gid nahi**, sirf `condition` guard (jiska filter hai wahi chale); uid/gid **transport `address_directory`** par — wahi idiom jo `alphacp_maildir` me kaam kar raha hai |
+| **1** | 0.79.0: `exim -bV` reject → setup fail → mail `nonlocal` | `allow_filter` ke saath `user` (ya `check_local_user`) **hona hi chahiye**. 0.78.0 ke "Failed to find user }" se bachne ke liye `user` hata diya tha | Router par `user`/`group` wahi SAFE extract idiom se (0.78.0 wali `{$value}{}` nesting ke bina) |
+| **2** | filter chalu tha par mail `.filtered/` ki jagah **inbox** me ja rahi thi (`=> <maildir> R=alphacp_userfilter T=address_directory`) | transport `address_directory` par `directory`/`user`/`group` set karne se filter ke `save` ka path **override** ho jata hai | Transport sirf `maildir_format + create_directory`; path aur uid/gid filter/router se milte hain |
+| **3** | lookup file missing → har mail par **PANIC log** | `${lookup … lsearch{file}}` file missing par *defer-like* fail karta hai, decline nahi | `require_files = <filters file>` pehle check (static path, kabhi fail nahi) |
+| **4** | `require_files` akela → `defer (-1): "" is not an absolute path` → **mail queue me atak gayi** | file maujood par is address ka filter na ho to `file = ""` ho jata hai | `require_files` **+** `condition` dono |
 
-**Naya fail-closed net (sabse zaroori):** `mail.server setup` ke baad ab **asli `exim -bt <mailbox>`**
-smoke test chalta hai. `exim4 -bV` sirf *syntax* pakadta hai — 0.78.0 ka bug usme pakda hi nahi gaya.
-Ab PANIC / `Failed to find user` / `cannot be resolved` aaye to **purani config wapas** aur setup
-**reject** → *aage kabhi bhi mail delivery nahi rukegi, sirf filter chhut jayega.*
-Aur filter reject hone par `syncFiles()`/`setup()` me naya key **`filter_errors`** (kaunsa address,
-kyun) — verifier fail par wo dump karta hai, andha fail nahi rahega.
+**Aur ek safety:** config reject hone par ab **PRISTINE (distro) template wapas nahi** aati —
+`.acp-prev` (aakhri kaam karne wali AlphaCP config) wapas aati hai, warna hi `.acp-orig`.
+0.79.0 me pristine wapas aane se exim me alphacp routers hi nahi bache the.
 
-### 1) panel-update 0.79.0
+**Version display fix (aapka sawal):** panel ab **`0.80.0`** dikhayega — `ACP_AGENT_VERSION`
+ab release ke sath chalta hai (0.65.0 → 0.80.0) aur updater `.env` me `ACP_VERSION` = release
+version likhta hai. (Panel *code bundle* 0.74.0 hi hai — wo tabhi badalta hai jab panel ka code
+badle; UI me ab release number dikhta hai.)
+
+### 1) panel-update 0.80.0
 ```bash
-sudo alphacp-sync get 4ee552a3135233d9614afe234733db1fc76c6b62 installer/panel-update.sh /tmp/acp-panel-update-0.79.0.sh bb749fc072c90aad82161171c94134b094b963c457e7070c9965cc204468a9e3 && sudo bash /tmp/acp-panel-update-0.79.0.sh
+sudo alphacp-sync get a309bf5db2557e8b2058569aefff3298a633e779 installer/panel-update.sh /tmp/acp-panel-update-0.80.0.sh 9c5f8d1c2c8205130ab49e2709a88b831736b42b5d8f12443360f88815ff8a82 && sudo bash /tmp/acp-panel-update-0.80.0.sh
 ```
-- Updater SHA-256: `bb749fc072c90aad82161171c94134b094b963c457e7070c9965cc204468a9e3` · banner **`updater 0.79.0`**.
-- Updater khud `mail.server setup` chalata hai → exim template dobara likha jayega, filter router
-  theek hoga, `exim -bt` smoke test pass hoga, `/etc/exim4/alphacp-filters` banega, exim4+dovecot restart.
-- **Agar setup smoke test fail bhi ho jaye** to updater purani config wapas rakh kar services **band**
-  kar deta hai (adha-configured mail server public port 25 par nahi chhodta) — tab log
-  `/var/log/alphacp-panel-update.log` dekhein aur mujhe bhejein.
+- Updater SHA-256: `9c5f8d1c2c8205130ab49e2709a88b831736b42b5d8f12443360f88815ff8a82` · banner **`updater 0.80.0`** · `Panel bundle: 0.74.0 · agent: 0.80.0`.
+- Updater `mail.server setup` chalata hai: purani template ki jagah nayi (router + transport theek),
+  `exim4 -bV` → **`exim -bt` smoke test** → restart. Ab wapas pristine nahi.
 
 ### 2) Verification
 ```bash
-sudo alphacp-sync get d65b186ffca69bcfb96a80ff1cb28dfc0ba04019 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 2e20f1430ded828097cc548d9fd8df409cda4389df16f50fcb4242c2b6011af9 && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get a261f757ecb61aac56ff1ee999e844627d361fd8 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 2e20f1430ded828097cc548d9fd8df409cda4389df16f50fcb4242c2b6011af9 && sudo bash /tmp/s7-mail-check.sh
 ```
 - Verifier SHA-256: `2e20f1430ded828097cc548d9fd8df409cda4389df16f50fcb4242c2b6011af9`.
-- Expected: **62 pass / 0 fail** · ant me **`ASLI MAIL DELIVERY:VERIFIED`**. Part I me ye lines
-  green honi chahiye (0.78.0 me fail hui thin):
+- Expected: **62 pass / 0 fail** · ant me **`ASLI MAIL DELIVERY:VERIFIED`**. Part I me:
   1. `sync ne Exim filter banaya (N mailbox ke liye)` — N ≥ 1
   2. `Exim filter file mili (lookup: /etc/exim4/alphacp-filters)`
-  3. `exim -bt <addr>: Maildir tak pahunch rahi hai` (koi PANIC/defer nahi)
+  3. `exim -bt <addr>: Maildir tak pahunch rahi hai` (koi PANIC/defer/nonlocal nahi)
   4. `FILTER KAAM KAR GAYA (#21): 'acpfilter' wali mail …/.filtered/new me (0 se 1)` +
      `DISCARD KAAM KAR GAYA (#21)` + `mail.track (#19): ASLI exim mainlog se trace`
-- Kuch bhi fail ho to poora dump (aur ab **`filter_errors`**) `ACP_HOME/verify-reports/s7-diag.txt`
-  me — hourly sync se main branch par aa jata hai, **main khud padh kar agla fix dunga**.
+- Fail ho to poora dump (`filter_errors` ke saath) `ACP_HOME/verify-reports/s7-diag.txt` me —
+  hourly sync se aa jata hai, main khud padh kar fix dunga.
 
-### 3) Ya dono ek hi command me (updater + verification)
+### 3) Ya dono ek hi command me
 ```bash
-sudo alphacp-sync get 4ee552a3135233d9614afe234733db1fc76c6b62 installer/panel-update.sh /tmp/acp-panel-update-0.79.0.sh bb749fc072c90aad82161171c94134b094b963c457e7070c9965cc204468a9e3 && sudo bash /tmp/acp-panel-update-0.79.0.sh && sudo alphacp-sync get d65b186ffca69bcfb96a80ff1cb28dfc0ba04019 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 2e20f1430ded828097cc548d9fd8df409cda4389df16f50fcb4242c2b6011af9 && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get a309bf5db2557e8b2058569aefff3298a633e779 installer/panel-update.sh /tmp/acp-panel-update-0.80.0.sh 9c5f8d1c2c8205130ab49e2709a88b831736b42b5d8f12443360f88815ff8a82 && sudo bash /tmp/acp-panel-update-0.80.0.sh && sudo alphacp-sync get a261f757ecb61aac56ff1ee999e844627d361fd8 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 2e20f1430ded828097cc548d9fd8df409cda4389df16f50fcb4242c2b6011af9 && sudo bash /tmp/s7-mail-check.sh
 ```
 
-### ✅ Pichla result (aapka 0.78.0 run)
-**58 pass / 4 fail** — `ASLI MAIL DELIVERY:NOT-VERIFIED`. Fail: `exim -bt` PANIC (Failed to find user),
-`filters=0`, `alphacp-filters` nahi mila, `.filtered/new` khali. **Yahi 4 is release me fix hain.**
-Isse pehle 0.77.0: **54 pass / 0 fail**.
+### ✅ Pichle results
+- **0.79.0: 50 pass / 8 fail** — `ASLI MAIL DELIVERY:NOT-VERIFIED` (`exim -bV` reject → purani
+  config wapas → exim me alphacp routers hi nahi bache → har address `nonlocal`). Yahi 0.80.0 me fix.
+- **0.78.0: 58/4** (filters ne delivery tod di: `Failed to find user "}"`) — 0.79.0/0.80.0 me fix.
+- **0.77.0: 54/0** (aakhri baar delivery green thi).
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 
@@ -280,6 +281,11 @@ Har naye feature/fix ke saath yahan ek nayi row aayegi:
 `curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/<COMMIT>/<script> -o /tmp/<name>-<version>.sh && sudo bash /tmp/<name>-<version>.sh`
 
 ## ❌ Superseded — mat chalao
+
+### ❌ 0.79.0 — MAT CHALAO (config reject -> mail nonlocal)
+`… get 4ee552a3135233d9614afe234733db1fc76c6b62 installer/panel-update.sh … bb749fc072c90aad…`
+— isme `allow_filter` se `user` hata diya gaya tha, jisse `exim -bV` hi reject ho gaya.
+**0.80.0 chalao** (upar NEXT STEP). 0.78.0/0.79.0 ab sirf history me hain.
 
 ### ❌ 0.78.0 — MAT CHALAO (mail delivery todtata hai)
 `alphacp-sync get 222a113863cd3e1426cb816f76f5e5aca693e43a installer/panel-update.sh /tmp/acp-panel-update-0.78.0.sh 53b775235f1e9531a26d26f3e06c5a48649173865b9dd3f0da2ed7955de92aa8`

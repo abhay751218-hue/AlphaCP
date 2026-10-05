@@ -63,9 +63,9 @@
 | 16 | Autoresponders | Vacation/auto reply | S7 | ✅ (autoresponders live verified: vacation file + autoreply transport) |
 | 17 | Default Address | Catch-all | S7 | ✅ (catch-all live verified: unknown@ -> mailbox redirect chain) |
 | 18 | Mailing Lists | Mailman lists | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (list+owner JSON; no mailman daemon)) |
-| 19 | Track Delivery | Delivery trace | S7 | 🟡 (0.78.0 code + **0.79.0 fix**: `mail.track` ASLI exim mainlog se trace — 0.78.0 live par delivery hi ruk gayi thi (`exim -bt` PANIC); 0.79.0 ke baad live verify pending) |
-| 20 | Global Email Filters | Server-side filters | S7 | 🟡 (0.78.0 code + **0.79.0 fix**: account-wide ASLI Exim filter file (pehli line `# Exim filter`, warna exim use .forward samajhta hai) — live verify pending) |
-| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.78.0 code + **0.79.0 fix**: per-mailbox ASLI Exim filter file (`exim -bf` validate; reject par `filter_errors`) + setup ke baad `exim -bt` smoke test — live verify pending) |
+| 19 | Track Delivery | Delivery trace | S7 | 🟡 (0.78.0 code + **0.80.0 fix**: `mail.track` ASLI exim mainlog se trace — 0.78.0/0.79.0 live par delivery ruk gayi thi; **asli exim 4.97 sandbox test 10/10 green**, live verify pending) |
+| 20 | Global Email Filters | Server-side filters | S7 | 🟡 (0.78.0 code + **0.80.0 fix**: account-wide ASLI Exim filter file (pehli line `# Exim filter`, warna exim use .forward samajhta hai) — asli exim se 10/10 verified, live verify pending) |
+| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.78.0 code + **0.80.0 fix**: per-mailbox ASLI Exim filter file (`exim -bf` validate; reject par `filter_errors`) + `require_files`+`condition` guard + `exim -bt` smoke test — asli exim 4.97 par save/discard verified, live verify pending) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF + DMARC + DKIM live verified: `dig TXT`, `_dmarc`, `default._domainkey` sab green) |
 | 23 | Address Importer | Bulk CSV import | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (CSV local,domain,password → mail.set; no pipe)) |
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (SpamAssassin score + blacklist/whitelist files live (0.77.0)) |
@@ -366,6 +366,12 @@
 > (2) filter router par uid/gid ki galat brace-nesting expansion. Ab uid/gid transport
 > par, router par `condition` guard, aur setup ke baad asli `exim -bt` smoke test
 > (fail → purani config wapas + reject) to delivery aage kabhi nahi rukegi.
+>
+> **0.80.0 (5 Oct, asli fix):** 0.79.0 me `allow_filter` se `user` hatane par `exim -bV`
+> hi reject (live 50/8, mail `nonlocal`). Sandbox me **asli exim 4.97** build karke chaar
+> bug pakde: router `user`/`group`, `address_directory` transport se directory/user/group
+> hataya (save path override ho raha tha), `require_files` + `condition` dono guard, aur
+> rollback ab pristine ki jagah `.acp-prev`. `tools/dev/exim-sandbox-test.sh` = **10/10**.
 
 > Note: ✅ = row ke stated behavior ke liye implementation + test proof; 🟡 = partial/JSON/config-only ya host-service integration pending. Counts 208 numbered rows ko parse karke reconcile kiye gaye hain; server deployment status hamesha `server-snapshot/STATE.md` se alag verify karein.
 > JSON settings save hona, apne aap me, mail/DNS/database/backup ka real service operation nahi maana jayega.
