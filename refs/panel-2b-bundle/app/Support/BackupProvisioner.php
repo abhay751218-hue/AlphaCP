@@ -106,6 +106,24 @@ final class BackupProvisioner
         ]);
     }
 
+    /**
+     * Remote backup destination (S10) — save / test / push / browse / remove.
+     *
+     * NEVER pass a private key or password here from any stored value: the
+     * agent owns those. The panel only ever sends the description (plus a key
+     * or password the operator typed into the form right now).
+     *
+     * @param  array<string, mixed> $payload
+     */
+    public static function enqueueDestination(string $action, array $payload = []): int
+    {
+        if (! in_array($action, ['list', 'save', 'test', 'push', 'browse', 'remove'], true)) {
+            throw new \InvalidArgumentException('Invalid backup destination action.');
+        }
+
+        return Paneld::enqueue('backup.destination', ['action' => $action] + $payload, 'panel');
+    }
+
     public static function enqueueRestoration(string $mode, string $username): int
     {
         return Paneld::enqueue('backup.restoration', [

@@ -178,6 +178,7 @@ final class ModuleCatalog
                     ['name' => 'Nameserver Selection', 'step' => 'S9',  'status' => 'live', 'route' => 'nameserver-selection.index'],
                     ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'step'],
                     ['name' => 'Backup Config',       'step' => 'S10', 'status' => 'live', 'route' => 'backup-config.index'],
+                    ['name' => 'Backup Destinations', 'step' => 'S10', 'status' => 'live', 'route' => 'backup-destinations.index'],
                     ['name' => 'Backup Restoration',  'step' => 'S10', 'status' => 'live', 'route' => 'backup-restoration.index'],
                     ['name' => 'Backup User Selection', 'step' => 'S10', 'status' => 'live', 'route' => 'backup-user-selection.index'],
                     ['name' => 'File and Directory Restoration', 'step' => 'S10', 'status' => 'live', 'route' => 'file-directory-restoration.index'],

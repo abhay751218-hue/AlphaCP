@@ -33,6 +33,7 @@ use Alphacp\Agent\Tasks\AccountSuspend;
 use Alphacp\Agent\Tasks\AccountTerminate;
 use Alphacp\Agent\Tasks\AccountUnsuspend;
 use Alphacp\Agent\Tasks\BackupPull;
+use Alphacp\Agent\Tasks\BackupDestination;
 use Alphacp\Agent\Tasks\CronSet;
 use Alphacp\Agent\Tasks\DomainAdd;
 use Alphacp\Agent\Tasks\DomainRemove;
@@ -3538,6 +3539,280 @@ test('backup.pull: auth ki kami network se pehle pakdi jaye (keyscan call hi na 
     assert_true(str_contains($msg, 'password'), 'error password ke bare me ho: ' . $msg);
     assert_true($h['cmd']->keyscanCalls === 0, 'network (keyscan) call hi nahi hua (password case)');
     acp_pull_cleanup($h);
+});
+
+// ---------------------------------------------------------------------------
+// S10 — remote backup destinations (backup.destination): apne archives doosre
+// server par bhejna. Yahan bhi asli network nahi chalta — FakeCommandExecutor
+// ssh / scp / ssh-keygen / ssh-keyscan / sshpass ko intercept karta hai.
+// ---------------------------------------------------------------------------
+
+/** @return array{root: string, cmd: FakeCommandExecutor, ctx: TaskContext, saves: string} */
+function acp_dest_harness(): array
+{
+    $root = sys_get_temp_dir() . '/acp-dest-' . bin2hex(random_bytes(4));
+    $saves = $root . '/backups/accounts/alicehost';
+    mkdir($saves, 0777, true);
+    putenv('ACP_STATE_ROOT=' . $root);
+    putenv('ACP_SSH_KEYSCAN=/usr/bin/ssh-keyscan');
+    putenv('ACP_SSH_KEYGEN=/usr/bin/ssh-keygen');
+    putenv('ACP_SSH_SCP=/usr/bin/scp');
+    putenv('ACP_SSH_BIN=/usr/bin/ssh');
+    putenv('ACP_SSH_SSHPASS=/usr/bin/sshpass');
+
+    $cmd = new FakeCommandExecutor();
+    $cmd->hostKeys = [
+        ['pubkey' => 'backup.example.com ssh-ed25519 AAAAED', 'fingerprint' => 'SHA256:ED25519keyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'type' => 'ED25519'],
+        ['pubkey' => 'backup.example.com ssh-rsa AAAARSA', 'fingerprint' => 'SHA256:RSAkeyBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB', 'type' => 'RSA'],
+    ];
+    $log = new TaskLogger(new PDO('sqlite::memory:'), null, false);
+    $ctx = new TaskContext(log: $log, cmd: $cmd, paths: null, taskId: null, taskRow: null);
+
+    return ['root' => $root, 'saves' => $saves, 'cmd' => $cmd, 'ctx' => $ctx];
+}
+
+/** @param array{root: string} $harness */
+function acp_dest_cleanup(array $harness): void
+{
+    $root = $harness['root'];
+    if (is_dir($root)) {
+        $it = new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $file) {
+            $file->isDir() ? @rmdir($file->getPathname()) : @unlink($file->getPathname());
+        }
+        @rmdir($root);
+    }
+    foreach (['ACP_STATE_ROOT', 'ACP_SSH_KEYSCAN', 'ACP_SSH_KEYGEN', 'ACP_SSH_SCP', 'ACP_SSH_BIN', 'ACP_SSH_SSHPASS'] as $name) {
+        putenv($name);
+    }
+}
+
+/** @param array{cmd: FakeCommandExecutor, ctx: TaskContext} $h */
+function acp_dest_save(array $h, array $extra = []): array
+{
+    return (new BackupDestination())->handle(array_merge([
+        'action'           => 'save',
+        'name'             => 'offsite1',
+        'host'             => 'backup.example.com',
+        'user'             => 'backup',
+        'path'             => '/srv/backups/alphacp',
+        'host_fingerprint' => 'SHA256:ED25519keyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+        '_confirm'         => 'backup.destination',
+    ], $extra), $h['ctx']);
+}
+
+test('backup.destination save: config + naya ed25519 key, result me koi secret nahi', function (): void {
+    $h = acp_dest_harness();
+    $out = acp_dest_save($h);
+
+    assert_true(($out['action'] ?? '') === 'save', 'action save');
+    $cfg = $out['destination'];
+    assert_true(($cfg['name'] ?? '') === 'offsite1', 'name wapas mila');
+    assert_true(($cfg['host'] ?? '') === 'backup.example.com', 'host wapas mila');
+    assert_true(($cfg['host_fingerprint'] ?? '') === 'SHA256:ED25519keyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'host key pin saved');
+    assert_true(str_contains((string) ($cfg['public_key'] ?? ''), 'ssh-ed25519'), 'public key mila (admin backup server par dale)');
+    assert_true(($cfg['has_key'] ?? false) === true, 'key file ban gayi');
+
+    $json = json_encode($out);
+    assert_true(!str_contains((string) $json, 'PRIVATE KEY'), 'result me private key nahi: ' . (string) $json);
+    assert_true(!array_key_exists('password', $cfg) && !array_key_exists('private_key', $cfg) && !array_key_exists('key_path', $cfg), 'result me koi secret field nahi');
+    assert_true(($cfg['has_password'] ?? false) === false, 'key auth me password stored nahi');
+
+    $file = $h['root'] . '/etc/backup-destinations/offsite1.json';
+    assert_true(is_file($file), 'config file likhi gayi');
+    assert_true((fileperms($file) & 0777) === 0600, 'config 0600 hai');
+    $key = $h['root'] . '/etc/backup-keys/offsite1';
+    assert_true(is_file($key), 'key file bani');
+    assert_true((fileperms($key) & 0777) === 0600, 'key 0600 hai');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination save: bina host key pin ke refuse', function (): void {
+    $h = acp_dest_harness();
+    $msg = '';
+    try {
+        acp_dest_save($h, ['host_fingerprint' => '', 'accept_host_key' => false]);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true(str_contains($msg, 'host key pin'), 'pin maanga: ' . $msg);
+    assert_true(!is_file($h['root'] . '/etc/backup-destinations/offsite1.json'), 'config nahi bani');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination save: galat naam (path escape / space) refuse', function (): void {
+    $h = acp_dest_harness();
+    foreach (['../evil', 'bad name', '-flag', 'toolongdestinationnameaaaaaaaaaaaaaaaaa'] as $bad) {
+        $msg = '';
+        try {
+            acp_dest_save($h, ['name' => $bad]);
+        } catch (TaskRejectedException $e) {
+            $msg = $e->getMessage();
+        }
+        assert_true($msg !== '', "naam '{$bad}' refuse hona chahiye");
+    }
+    assert_true(($h['cmd']->keyscanCalls ?? 0) === 0, 'validation me koi network call nahi');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination list: saved destinations dikhti hain, secret nahi', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h);
+    $out = (new BackupDestination())->handle(['action' => 'list', '_confirm' => 'backup.destination'], $h['ctx']);
+
+    assert_true(($out['count'] ?? 0) === 1, 'ek destination: ' . json_encode($out));
+    assert_true(($out['destinations'][0]['name'] ?? '') === 'offsite1', 'naam sahi');
+    assert_true(!str_contains(json_encode($out), 'PRIVATE KEY'), 'list me key nahi');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination test: ssh ek baar chala, pin verify hua', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h);
+    $h['cmd']->sshStdout = "ACP-OK\n";
+    $out = (new BackupDestination())->handle([
+        'action' => 'test', 'name' => 'offsite1', '_confirm' => 'backup.destination',
+    ], $h['ctx']);
+
+    assert_true(($out['ok'] ?? false) === true, 'test ok: ' . json_encode($out));
+    assert_true($h['cmd']->sshCalls === 1, 'ssh ek baar chala');
+    $argv = implode(' ', $h['cmd']->sshArgv ?? []);
+    assert_true(str_contains($argv, 'backup@backup.example.com'), 'ssh target sahi: ' . $argv);
+    assert_true(str_contains($argv, '/srv/backups/alphacp'), 'remote path sahi: ' . $argv);
+    assert_true(str_contains($argv, 'ACP-OK'), 'probe command gaya');
+    assert_true(str_contains($argv, 'StrictHostKeyChecking=yes'), 'host key strict');
+    assert_true(!str_contains($argv, 'PRIVATE KEY'), 'argv me key nahi');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination test: host key badal gayi (MITM) to MISMATCH', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h);
+    $h['cmd']->hostKeys = [['pubkey' => 'backup.example.com ssh-ed25519 AAAANEW', 'fingerprint' => 'SHA256:NEWkeyCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC', 'type' => 'ED25519']];
+    $msg = '';
+    try {
+        (new BackupDestination())->handle(['action' => 'test', 'name' => 'offsite1', '_confirm' => 'backup.destination'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true(str_contains($msg, 'MISMATCH'), 'MISMATCH pakda: ' . $msg);
+    assert_true($h['cmd']->sshCalls === 0, 'ssh call hi nahi hui');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination push: .part se upload + remote sha256 verify', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h);
+    $archive = $h['saves'] . '/abc123.tar.gz';
+    file_put_contents($archive, 'real-archive-bytes-0123456789');
+    $sha = hash_file('sha256', $archive);
+    $h['cmd']->sshStdout = $sha . "  /srv/backups/alphacp/abc123.tar.gz\n";
+
+    $out = (new BackupDestination())->handle([
+        'action' => 'push', 'name' => 'offsite1', 'archive_path' => $archive, '_confirm' => 'backup.destination',
+    ], $h['ctx']);
+
+    assert_true(($out['verified'] ?? false) === true, 'push verified: ' . json_encode($out));
+    assert_true(($out['sha256'] ?? '') === $sha, 'sha256 match');
+    assert_true(($out['file'] ?? '') === 'abc123.tar.gz', 'file naam');
+    assert_true(($out['remote_path'] ?? '') === '/srv/backups/alphacp/abc123.tar.gz', 'remote path');
+    $scp = implode(' ', $h['cmd']->scpArgv ?? []);
+    assert_true(str_contains($scp, $archive), 'scp source archive: ' . $scp);
+    assert_true(str_contains($scp, 'backup@backup.example.com:/srv/backups/alphacp/abc123.tar.gz.part'), 'scp .part par gaya: ' . $scp);
+    $ssh = implode(' ', $h['cmd']->sshArgv ?? []);
+    assert_true(str_contains($ssh, 'mv -f'), 'atomic rename hua');
+    assert_true(str_contains($ssh, 'sha256sum'), 'remote checksum hua');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination push: checksum mismatch par remote file hat gayi', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h);
+    $archive = $h['saves'] . '/abc123.tar.gz';
+    file_put_contents($archive, 'real-archive-bytes-0123456789');
+    $h['cmd']->sshStdout = str_repeat('f', 64) . "  /srv/backups/alphacp/abc123.tar.gz\n";
+    $msg = '';
+    try {
+        (new BackupDestination())->handle([
+            'action' => 'push', 'name' => 'offsite1', 'archive_path' => $archive, '_confirm' => 'backup.destination',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true(str_contains($msg, 'checksum mismatch'), 'mismatch pakda: ' . $msg);
+    $ssh = implode(' ', $h['cmd']->sshArgv ?? []);
+    assert_true(str_contains($ssh, 'rm -f'), 'remote se file hatayi: ' . $ssh);
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination push: backup store ke BAHAR wali file refuse', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h);
+    $outside = $h['root'] . '/etc/passwd.tar.gz';
+    file_put_contents($outside, 'nope');
+    $msg = '';
+    try {
+        (new BackupDestination())->handle([
+            'action' => 'push', 'name' => 'offsite1', 'archive_path' => $outside, '_confirm' => 'backup.destination',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true(str_contains($msg, 'backup store'), 'store ke bahar refuse: ' . $msg);
+    assert_true(($h['cmd']->scpArgv ?? null) === null, 'scp chala hi nahi');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination browse: sirf tarball naam, ajeeb entry nahi', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h);
+    $h['cmd']->sshStdout = "abc123.tar.gz\n../evil\nrandom.txt\ndef456.tar.gz\n";
+    $out = (new BackupDestination())->handle(['action' => 'browse', 'name' => 'offsite1', '_confirm' => 'backup.destination'], $h['ctx']);
+
+    assert_true(($out['files'] ?? []) === ['abc123.tar.gz', 'def456.tar.gz'], 'sirf archives: ' . json_encode($out));
+    assert_true(($out['count'] ?? 0) === 2, 'count 2');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination remove: config + key dono gayab', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h);
+    $out = (new BackupDestination())->handle(['action' => 'remove', 'name' => 'offsite1', '_confirm' => 'backup.destination'], $h['ctx']);
+
+    assert_true(($out['removed'] ?? false) === true, 'remove hua');
+    assert_true(!is_file($h['root'] . '/etc/backup-destinations/offsite1.json'), 'config gayi');
+    assert_true(!is_file($h['root'] . '/etc/backup-keys/offsite1'), 'key gayi');
+    $list = (new BackupDestination())->handle(['action' => 'list', '_confirm' => 'backup.destination'], $h['ctx']);
+    assert_true(($list['count'] ?? -1) === 0, 'list khaali');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination password auth: sshpass wrapper chala, password argv me nahi', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h, ['auth' => 'password', 'password' => 'SuperSecret123']);
+    $h['cmd']->sshStdout = "ACP-OK\n";
+    $out = (new BackupDestination())->handle(['action' => 'test', 'name' => 'offsite1', '_confirm' => 'backup.destination'], $h['ctx']);
+
+    assert_true(($out['ok'] ?? false) === true, 'password auth se test chala');
+    assert_true(is_file($h['root'] . '/etc/backup-keys/offsite1.password'), 'password file bani');
+    assert_true((fileperms($h['root'] . '/etc/backup-keys/offsite1.password') & 0777) === 0600, 'password file 0600');
+    $argv = implode(' ', $h['cmd']->sshArgv ?? []);
+    assert_true(!str_contains($argv, 'SuperSecret123'), 'argv me password nahi: ' . $argv);
+    assert_true(str_contains($argv, 'PubkeyAuthentication=no'), 'password-only auth');
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination: unknown action refuse', function (): void {
+    $h = acp_dest_harness();
+    $msg = '';
+    try {
+        (new BackupDestination())->handle(['action' => 'destroy', '_confirm' => 'backup.destination'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true(str_contains($msg, 'nahi chalega'), 'unknown action refuse: ' . $msg);
+    acp_dest_cleanup($h);
 });
 
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");

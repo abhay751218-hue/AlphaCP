@@ -21,3 +21,13 @@ Schedule::command('alphacp:scheduled-backups')
     ->hourly()
     ->withoutOverlapping(180)
     ->description('Queue scheduled home backups (S10)');
+
+/*
+ * S10 remote destinations. Runs right after the archive command: the hourly
+ * tick first creates the archives, then this one uploads them to every enabled
+ * destination (once per archive — the ledger makes it idempotent).
+ */
+Schedule::command('alphacp:backup-destination-push')
+    ->hourlyAt(30)
+    ->withoutOverlapping(180)
+    ->description('Push home archives to remote backup destinations (S10)');

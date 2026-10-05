@@ -47,7 +47,7 @@
 | 5 | Web Disk | WebDAV drive | S6 | ⏳ S6 |
 | 6 | FTP Accounts | FTP users | S6 | ⏳ S6 |
 | 7 | FTP Connections | FTP session logs | S6 | ⏳ S6 |
-| 8 | Backup | Manual backup download | S10 | 🟡 (real SHA-256-verified home tar.gz + authenticated download; mail/MySQL/schedule/remote pending) |
+| 8 | Backup | Manual backup download | S10 | 🟡 (real SHA-256-verified home tar.gz + authenticated download + remote destination push; mail/MySQL pending) |
 | 9 | Backup Wizard | Step-by-step backup/restore | S10 | 🟡 (JSON action/scope only; restore workflow pending) |
 | 10 | File & Directory Restoration | Deleted file wapas | S10 | 🟡 (request JSON only; safe extraction/copy pending) |
 | 11 | Git™ Version Control | Git deploy/repo | S6 | ⏳ S6 |
@@ -296,8 +296,8 @@
 ### Backup / Clusters / Reboot / Status
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 176 | Backup Configuration (schedule, remote, retention) | S10 | 🟡 (schedule+retention now execute via cron `alphacp:scheduled-backups`; remote destinations pending) |
-| 177 | Backup Restoration (full/partial/per-account) | S10 | 🟡 (real `backup.extract` whole-home/subtree restore live; scheduled + remote sources pending) |
+| 176 | Backup Configuration (schedule, remote, retention) | S10 | ✅ (schedule + retention via cron `alphacp:scheduled-backups`; **remote SSH destinations live** — pinned host key, key/password auth, test, atomic scp push + remote sha256 verify, browse, hourly `alphacp:backup-destination-push`) |
+| 177 | Backup Restoration (full/partial/per-account) | S10 | 🟡 (real `backup.extract` whole-home/subtree restore live; destination browse live, seedha remote-source restore pending) |
 | 178 | Backup User Selection | S10 | 🟡 (list now scopes the scheduled run; per-user bulk restore still pending) |
 | 179 | File and Directory Restoration | S10 | 🟡 (real restore: verified `backup.extract` whole-home/subtree swap + pre-restore copy; scheduled/remote sources pending) |
 | 180 | Configuration Cluster / DNS Cluster | S15 | ⏳ S15 |

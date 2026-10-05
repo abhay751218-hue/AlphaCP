@@ -20,7 +20,7 @@
 | Path | Kya |
 |---|---|
 | **`refs/panel-2b-bundle/`** | ⭐ **Panel ka SOURCE (Laravel 13.33.0)** — login, RBAC, 2FA, **license + 15-day trial** (`app/Support/License/`, design: `docs/modules/license.md`), `PasswordGenerator`. Panel badalna ho to yahin badlo. |
-| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Latest source: **0.71.0** (agent **0.64.0** — real MySQL/MariaDB databases + users, `useradd` GECOS colon fix, aur cpmove `mysql/*.sql` ka real restore); server par **0.70.0 + agent 0.63.0** live (HTTP 200), **0.71.0 update pending**. |
+| `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Latest source: **0.73.0** (agent **0.65.0** — S10 remote backup destinations: pinned host key, atomic scp push + remote sha256 verify, hourly cron push; aur remote pull ka multi-host-key fix); server par **0.72.0 + agent 0.65.0** live (HTTP 200), **0.73.0 update pending**. |
 | `artifacts/panel-bundle-0.3.0.tar.gz` | Purana bundle **vendor/ ke saath** — sandbox tests isi ka vendor use karte hain (composer.lock same). |
 | `server-snapshot/files/usr/local/alphacp/…` | **Server par jo ABHI deployed hai** (alphacp-sync se). Source se mismatch ho to server = sach; farq samjho phir source theek karo. |
 | `server-snapshot/files/etc/...`, `server-snapshot/db-schema.sql` | nginx vhost, php-fpm pool, systemd drop-ins; DB structure (data nahi) |

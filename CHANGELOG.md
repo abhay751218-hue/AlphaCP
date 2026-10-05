@@ -5,6 +5,38 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **S10 — remote backup destinations: apne archives doosre server par bhejo (5 Oct)** — panel **0.73.0**, agent **0.65.0**.
+  cPanel me backup ka aakhri kadam hota hai: archive sirf isi server par nahi, **door ke server** par bhi
+  jaye (off-site). Ab WHM → **Backup Destinations** se wo ho jata hai — naya agent task `backup.destination`
+  (`list / save / test / push / browse / remove`, mutating, `_confirm`):
+    - **host key pin zaroori**: bina pin ke destination save hi nahi hoti; har test/push par pin dobara
+      check hota hai, badle to (MITM / server reinstall) `MISMATCH` par refuse — TOFU kabhi silent nahi.
+    - **secrets panel ke DB me nahi**: private key / password agent ke paas
+      `/usr/local/alphacp/etc/backup-keys/` me **0600** file me rehte hain; config JSON (bhi 0600) sirf
+      unka pointer rakhta hai. Task result / argv / log me kabhi nahi aate.
+    - **key auth me agent khud naya ed25519 key banata hai** aur public key wapas deta hai — admin use
+      backup server ke `authorized_keys` me daal deta hai. Password auth bhi (sshpass se).
+    - **atomic upload + remote verify**: bytes `<name>.part` me jate hain, phir remote `mv` +
+      `sha256sum` — checksum match na ho to remote file hata di jati hai (adhoora backup kabhi nahi banta).
+    - **sirf hamare backup store se push**: `archive_path` ko `${ACP_HOME}/backups` ke andar hona hi
+      padta hai (`..`, symlink, bahar ki file → refuse), to `/etc/shadow` jaisa kuch upload ho hi nahi sakta.
+    - **cron**: `alphacp:backup-destination-push` har ghante (hour+30) chal kar har naya archive har
+      enabled destination par **ek hi baar** bhejta hai (`backup_destination_pushes` ledger).
+  Panel: destinations table (test/list/delete), "Install this key" public-key card, push-now form,
+  ledger + job history. Naye panel DB tables: `backup_destinations`, `backup_destination_pushes`.
+  Tests: agent **137/0** (+13), panel me **9** naye destinations tests,
+  s10-backup-destination-sim **21/0** (4 runs: sab theek / pin ignore / checksum mismatch / keyscan order),
+  `tools/verify/s10-backup-destination-check.sh` live check (**25** checks).
+
+### Fixed
+- **S10 remote pull: `host key MISMATCH` har baar (5 Oct, live server par 14 pass / 4 fail)** —
+  asli server ek saath 3 SSH keys (ed25519 + ecdsa + rsa) advertise karta hai aur `ssh-keyscan` unka
+  **order har call par badal deta hai**. Agent sirf *pehli line* ka fingerprint leta tha, isliye
+  "Fingerprint lao" aur "Archive lao" alag key pin karte the → pull hamesha MISMATCH par ruk jata tha.
+  Ab `RemotePull::probe()` **saari** keys ke fingerprint laata hai (strongest pehle) aur pin kisi bhi
+  presented key se match hota hai (OpenSSH jaisa). Saath hi key/password ab network call se **pehle**
+  check hote hain — "host nahi mila" jaisa galat error band.
+
 - **S10 — remote pull: cpmove archive purane server se SSH se (5 Oct)** — panel **0.72.0**, agent **0.65.0**.
   Migration ka pehla kadam abhi haath se tha: admin `cpmove-<user>.tar.gz` purane server se copy karke
   aisi jagah rakhta tha jahan agent padh sake (allowlist = `/home` + `/usr/local/alphacp`), jabki cPanel

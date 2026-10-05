@@ -74,6 +74,15 @@ final class FakeCommandExecutor implements CommandExecutor
     /** '-f <file>' value seen by sshpass on the last call */
     public ?string $sshpassFile = null;
 
+    // ---- S10 remote backup destinations (backup.destination) ----
+    public int $sshCalls = 0;
+    /** last ssh argv (sshpass prefix stripped) */
+    public ?array $sshArgv = null;
+    /** stdout the fake `ssh` returns (test -> 'ACP-OK', push -> '<sha>  <path>') */
+    public string $sshStdout = '';
+    public string $sshStderr = '';
+    public bool $sshFails = false;
+
     /** @var list<string> databases that exist in the fake MariaDB */
     public array $mysqlDatabases = [];
 
@@ -121,6 +130,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'ssh-keyscan' => $this->handleKeyscan($argv),
             'ssh-keygen' => $this->handleKeygen($argv),
             'scp' => $this->handleScp($argv),
+            'ssh' => $this->handleSsh($argv),
             'sshpass' => $this->handleSshpass($argv),
             default => new CommandResult($argv, 0, '', '', 1),
         };
@@ -446,10 +456,21 @@ final class FakeCommandExecutor implements CommandExecutor
     private function handleKeygen(array $argv): CommandResult
     {
         $file = '';
+        $generate = false;
         foreach ($argv as $i => $a) {
             if ($a === '-f' && isset($argv[$i + 1])) {
                 $file = (string) $argv[$i + 1];
             }
+            if ($a === '-t') {
+                $generate = true;      // ssh-keygen -t ed25519 -f <file>  => naya key banao
+            }
+        }
+        if ($generate && $file !== '') {
+            @file_put_contents($file, "-----BEGIN OPENSSH PRIVATE KEY-----\nfake-key-material\n-----END OPENSSH PRIVATE KEY-----\n");
+            @chmod($file, 0600);
+            @file_put_contents($file . '.pub', 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIfakekeyforbackup alphacp-backup');
+
+            return new CommandResult($argv, 0, '', '', 1);
         }
         $raw = @file_get_contents($file);
         $lines = array_values(array_filter(array_map('trim', preg_split('/\R/', (string) $raw) ?: [])));
@@ -472,6 +493,18 @@ final class FakeCommandExecutor implements CommandExecutor
     }
 
     /** @param list<string> $argv */
+    private function handleSsh(array $argv): CommandResult
+    {
+        $this->sshCalls++;
+        $this->sshArgv = $argv;
+        if ($this->sshFails) {
+            return new CommandResult($argv, 1, '', $this->sshStderr !== '' ? $this->sshStderr : 'ssh: connect to host failed', 1);
+        }
+
+        return new CommandResult($argv, 0, $this->sshStdout, '', 1);
+    }
+
+    /** @param list<string> $argv */
     private function handleScp(array $argv): CommandResult
     {
         $this->scpArgv = $argv;
@@ -481,6 +514,11 @@ final class FakeCommandExecutor implements CommandExecutor
         $dest = (string) (count($argv) >= 2 ? $argv[count($argv) - 1] : '');
         if ($dest === '') {
             return new CommandResult($argv, 2, '', 'scp: no destination', 1);
+        }
+        // PUSH: destination door ke server par hai (user@host:/path) — local disk
+        // par kuch likhne ki zaroorat nahi, bas argv record karo.
+        if (str_contains($dest, '@') && str_contains($dest, ':')) {
+            return new CommandResult($argv, 0, '', '', 1);
         }
         if (@file_put_contents($dest, (string) $this->scpContent) === false) {
             return new CommandResult($argv, 1, '', "scp: cannot write {$dest}", 1);
@@ -495,7 +533,7 @@ final class FakeCommandExecutor implements CommandExecutor
         if (!$this->sshpassInstalled) {
             return new CommandResult($argv, 127, '', 'sshpass: command not found', 1);
         }
-        // sshpass -f <file> scp ...
+        // sshpass -f <file> (scp|ssh) ...
         $rest = $argv;
         array_shift($rest);                    // /usr/bin/sshpass
         if (($rest[0] ?? '') === '-f') {
@@ -504,6 +542,8 @@ final class FakeCommandExecutor implements CommandExecutor
             array_shift($rest);
         }
 
-        return $this->handleScp($rest);
+        return basename((string) ($rest[0] ?? '')) === 'ssh'
+            ? $this->handleSsh($rest)
+            : $this->handleScp($rest);
     }
 }
