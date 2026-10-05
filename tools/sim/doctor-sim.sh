@@ -28,7 +28,7 @@ t_fail() { echo "  FAIL: $*"; FAIL=$((FAIL+1)); }
 if [[ ! -f "${PHPWASM_DIR}/node_modules/@php-wasm/cli/php-wasm.js" ]]; then
   mkdir -p "${PHPWASM_DIR}"; (cd "${PHPWASM_DIR}" && npm init -y >/dev/null && npm i @php-wasm/cli >/dev/null)
 fi
-chmod -R a+rX "${PHPWASM_DIR}"
+chmod -R a+rwX "${PHPWASM_DIR}"   # php-wasm CLI runtime me ca-bundle.crt likhta hai; wo `runuser -u alphacp` ke roop me chalta hai, isliye write bhi chahiye
 cat > /usr/bin/php8.4 <<EOF
 #!/bin/sh
 PHP=8.4 exec /usr/local/bin/node ${PHPWASM_DIR}/node_modules/@php-wasm/cli/php-wasm.js "\$@"

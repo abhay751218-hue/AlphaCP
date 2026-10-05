@@ -32,16 +32,16 @@ sudo alphacp-sync get ff8e7079f173f2ab78422de84c33ed5717bf7677 installer/panel-u
 
 ### 2) S10 live verification (recommended — ek hi command, sab khud saaf karta hai)
 ```bash
-sudo alphacp-sync get e1df33775f05fe0c6df39a941834d0a9cf41080f tools/verify/s10-mysql-restore-check.sh /tmp/acp-s10-mysql-restore-check.sh 977cadc041d33d155b0cc22de33cd4148e8af311216ee781a229e99c582e9f97 && sudo bash /tmp/acp-s10-mysql-restore-check.sh
+sudo alphacp-sync get 118ebbbe76c4f296b502e7831c7671c2fce15ec5 tools/verify/s10-mysql-restore-check.sh /tmp/acp-s10-mysql-restore-check.sh 0ed2e584bc53969407b7498cd977430d57779fcbded6e24cc71267cc1e15a3f2 && sudo bash /tmp/acp-s10-mysql-restore-check.sh
 ```
 - Server par **asli tar.gz** archive banata hai (homedir + `mysql/<acct>_acpverify.sql`), `db.restore`
   se import karta hai, aur **asli MariaDB** se verify karta hai — database bana? table bani? rows gine?
   row content sahi? koi MariaDB **user** na bane? Phir ek **hostile** archive (doosre database ka naam)
   refuse hone par koi database na bane — ye bhi check hota hai. Ant me sab saaf (dono database drop,
   archive dir delete, temp account terminate — `trap` me bhi).
-- Expected last line: `=== S10 MYSQL RESTORE LIVE CHECK: 17 pass, 0 fail ===`.
+- Expected last line: `=== S10 MYSQL RESTORE LIVE CHECK: 18 pass, 0 fail ===`.
 - Chaaho to ye step skip karo — update khud-tested hai (panel **437/0** + 6 wasm-skip, update-sim
-  **234/234**, provision-sim **109/109**, mysql-sim **PASS**, s10-mysql-restore-sim **8/0**).
+  **234/234**, provision-sim **109/109**, mysql-sim **PASS**, s10-mysql-restore-sim **12/0**).
 
 - Ye 0.70.1 (agent useradd fix) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
 
