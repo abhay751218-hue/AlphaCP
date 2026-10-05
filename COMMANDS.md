@@ -14,42 +14,40 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-> **0.75.0 iske baad supersede ho gaya** — 0.76.0 me wahi sab hai + mail extras.
-> Agar aapne 0.75.0 abhi tak nahi chalaya to seedha yahi chalao (ek hi command).
+> Aapne 0.75.0 chalaya (29 pass / 2 fail) — **dono fail ka fix 0.76.1 me hai**.
+> 0.76.0 bhi 0.75.0 ko supersede karta hai: ab ek hi command me sab kuch.
 
-### panel-update 0.76.0 — S7 Email POORA (Exim4 + Dovecot + mail extras)
+**Ek hi command (updater + verification):**
 ```bash
-sudo alphacp-sync get 1b730c6c701e606c53a254f2fdb675def7a9c903 installer/panel-update.sh /tmp/acp-panel-update-0.76.0.sh 950ceae4d5631e5f43a416bc53ec95b7613e921d4deaccd9a64090a571783fac && sudo bash /tmp/acp-panel-update-0.76.0.sh
+sudo alphacp-sync get 21f9bc52629915e2376caa1fefe0de7c41a1a51c installer/panel-update.sh /tmp/acp-panel-update-0.76.1.sh 4cd32a11aeebf89ff028321248e8414c68cd81c3528d141de741c731cfeda52f && sudo bash /tmp/acp-panel-update-0.76.1.sh && sudo alphacp-sync get V21f9bc52629915e2376caa1fefe0de7c41a1a51c tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh bf8faedeaa189dc0a4a0e89a635735ca8fca9c53db07cf2132043ce00c39fbda && sudo bash /tmp/s7-mail-check.sh
 ```
-- Updater SHA-256: `950ceae4d5631e5f43a416bc53ec95b7613e921d4deaccd9a64090a571783fac`.
-- Expected: banner **`updater 0.76.0`** → `exim4 + dovecot install ho rahe hain` →
-  `mail.server setup ho gaya — exim4 + dovecot asli mailboxes ke saath chal rahe hain` →
-  `exim4 service active` → `dovecot service active` →
-  `SPF/DMARC/DKIM records maujooda domains ke liye likhe gaye` → `UPDATE COMPLETE ✅`.
-- **Kya kya asli ho jata hai:** mailbox + forwarder (pehle se), catch-all (`*@domain`),
-  autoresponder/vacation, spam blacklist-whitelist + DNSBL header, aur har domain ke liye
-  SPF + DMARC + DKIM records (DNS me). Naya mailbox/forwarder ab **turant** kaam karta hai
-  (task ke baad auto-sync — alag se kuch chalane ki zarurat nahi).
 
-### Verification — ASLI mail bhej kar + DNS records `dig` se
+### 1) panel-update 0.76.1 — S7 Email: live fixes + mail extras
 ```bash
-sudo alphacp-sync get b724e048a0971a0da7c38ea3432ba84c69e19542 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 9e4126da5c5a5df5bf2dcfccd9e3ed707e11db0463f25a608e029eccfecd5c1e && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get 21f9bc52629915e2376caa1fefe0de7c41a1a51c installer/panel-update.sh /tmp/acp-panel-update-0.76.1.sh 4cd32a11aeebf89ff028321248e8414c68cd81c3528d141de741c731cfeda52f && sudo bash /tmp/acp-panel-update-0.76.1.sh
 ```
-- Verifier SHA-256: `9e4126da5c5a5df5bf2dcfccd9e3ed707e11db0463f25a608e029eccfecd5c1e`.
-- Expected: `exim4 -bV pass` · `doveconf -n pass` · `exim4/dovecot service active` ·
-  **`ASLI MAIL PAHUNCH GAYI → .../mail/<domain>/info/new`** ·
-  `exim -bt unknown@: router = alphacp_catchall` · `vacation file bana` ·
-  `dig TXT <domain> = v=spf1 a mx -all` · `dig TXT _dmarc = v=DMARC1...` ·
-  `dig TXT default._domainkey = v=DKIM1... (DKIM DNS me live)` ·
-  **`ASLI MAIL DELIVERY:VERIFIED`**.
-- Script khud kaccha account banati hai → mailbox → mail bhejti hai → Maildir me dhoondhti
-  hai → catch-all/autoresponder/spam/SPF-DKIM check karti hai → ant me sab saaf kar deti hai.
-- Result `${ACP_HOME}/verify-reports/s7-mail-check.txt` me bhi (hourly sync se main padh lunga).
+- Updater SHA-256: `4cd32a11aeebf89ff028321248e8414c68cd81c3528d141de741c731cfeda52f` · banner **`updater 0.76.1`**.
+- **Aapke 2 fail ke theek fix:**
+  1. *Maildir parent root:root 0700* (exim `Permission denied: stat()`): ab har sync par
+     mailbox + `~/mail` + `~/mail/<domain>` apne user ke ho jate hain (self-healing, 0700).
+  2. *`doveadm user` fail*: setup ke baad Dovecot se khud poochha jata hai; auth worker ko
+     file na padhne mile to mode relax karke dobara check (result me `dovecot_userdb`).
+- Saath hi: exim template me `deliver_drop_privilege = false` + (zarurat pade to) systemd
+  drop-in `User=root` — mailbox ki uid se delivery tabhi hoti hai (cPanel bhi yahi karta hai).
+- Naye features bhi isi me hain: catch-all, autoresponder, spam lists + DNSBL, SPF/DMARC/DKIM.
 
-**Ek hi command me dono (recommended):**
+### 2) Verification — ASLI mail + diagnostics
 ```bash
-sudo alphacp-sync get 1b730c6c701e606c53a254f2fdb675def7a9c903 installer/panel-update.sh /tmp/acp-panel-update-0.76.0.sh 950ceae4d5631e5f43a416bc53ec95b7613e921d4deaccd9a64090a571783fac && sudo bash /tmp/acp-panel-update-0.76.0.sh && sudo alphacp-sync get b724e048a0971a0da7c38ea3432ba84c69e19542 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 9e4126da5c5a5df5bf2dcfccd9e3ed707e11db0463f25a608e029eccfecd5c1e && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get V21f9bc52629915e2376caa1fefe0de7c41a1a51c tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh bf8faedeaa189dc0a4a0e89a635735ca8fca9c53db07cf2132043ce00c39fbda && sudo bash /tmp/s7-mail-check.sh
 ```
+- Verifier SHA-256: `bf8faedeaa189dc0a4a0e89a635735ca8fca9c53db07cf2132043ce00c39fbda`.
+- Expected ab: **`ASLI MAIL PAHUNCH GAYI`** · **`doveadm user` ok** ·
+  `exim -bt unknown@ -> alphacp_catchall` · `vacation file bana` ·
+  `dig TXT = v=spf1 a mx -all` · `dig TXT _dmarc = v=DMARC1...` · `ASLI MAIL DELIVERY:VERIFIED`.
+- Kuch bhi fail ho to script **`${ACP_HOME}/verify-reports/s7-diag.txt`** me poora dump
+  likhta hai (doveconf, file perms, dovecot log, exim unit user/setuid, mailbox vs
+  Debian-exim write probe, mainlog) — wo hourly sync se main branch par aa jata hai,
+  **main khud padh kar agla fix de dunga** (aapko paste karne ki zarurat nahi).
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 
