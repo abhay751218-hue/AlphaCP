@@ -313,6 +313,10 @@ final class Mail
             if ($action === 'folder') {
                 $folder = self::normalizeLocal((string) ($row['folder'] ?? ''));
             }
+            $dest = '';
+            if ($action === 'forward') {
+                $dest = self::normalizeDest((string) ($row['dest'] ?? ''));
+            }
             $out[] = [
                 'local' => $local,
                 'domain' => $domain,
@@ -320,6 +324,7 @@ final class Mail
                 'needle' => $needle,
                 'action' => $action,
                 'folder' => $folder,
+                'dest' => $dest,
             ];
         }
         usort($out, static function (array $a, array $b): int {
@@ -358,8 +363,8 @@ final class Mail
     public static function normalizeFilterAction(string $action): string
     {
         $action = strtolower(trim($action));
-        if (!in_array($action, ['discard', 'folder'], true)) {
-            throw new TaskRejectedException('filter action must be discard or folder');
+        if (!in_array($action, ['discard', 'folder', 'forward'], true)) {
+            throw new TaskRejectedException('filter action must be discard, folder or forward');
         }
 
         return $action;
@@ -649,12 +654,17 @@ final class Mail
             if ($action === 'folder') {
                 $folder = self::normalizeLocal((string) ($row['folder'] ?? ''));
             }
+            $dest = '';
+            if ($action === 'forward') {
+                $dest = self::normalizeDest((string) ($row['dest'] ?? ''));
+            }
             $out[] = [
                 'domain' => $domain,
                 'field' => $field,
                 'needle' => $needle,
                 'action' => $action,
                 'folder' => $folder,
+                'dest' => $dest,
             ];
         }
         usort($out, static function (array $a, array $b): int {
