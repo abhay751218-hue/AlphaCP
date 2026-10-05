@@ -5,7 +5,7 @@
 > Jo step poora hoga, uske items ✅ ho jaayenge. **Project tab complete maana jayega jab ye file 100% ✅ ho.**
 
 **Banaya:** 28 Sep 2026 · **Base:** cPanel 138 (Meridian, Jul 2026) + WHM full tool list
-**Updated:** 3 Oct 2026 · item numbering and status counts reconciled; JSON/config-only rows reclassified as 🟡 until the real host service is wired and verified.
+**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail) — Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
 
 ---
 
@@ -84,8 +84,8 @@
 | 32 | Addon Domains | Extra domain, alag site | S5 | ✅ |
 | 33 | Aliases (Parked) | Domain aliases | S5 | ✅ |
 | 34 | Redirects | 301/302 redirect | S5 | ✅ |
-| 35 | Zone Editor | A/CNAME/MX/TXT/… records | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (JSON records; no BIND rewrite; NS later)) |
-| 36 | Dynamic DNS | Dynamic IP clients | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (hosts+tokens JSON; no BIND rewrite; public updater later)) |
+| 35 | Zone Editor | A/CNAME/MX/TXT/… records | S9 | ✅ record add/delete -> asli BIND zone: named-checkzone gate -> rndc reconfig/reload -> `dig @127.0.0.1` se verify (live 38 pass / 0 fail, 5 Oct 2026) |
+| 36 | Dynamic DNS | Dynamic IP clients | S9 | 🟡 (zone ab asli BIND me likhi jati hai, par dynamic update abhi JSON hai — nsupdate/HTTP updater + token auth baaki) |
 
 ### 🗄️ Databases
 
@@ -152,7 +152,7 @@
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
 | 76 | Cron Jobs | Scheduled tasks | S5 | ✅ |
-| 77 | Track DNS | DNS trace/debug | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (zone/dynamic JSON search; no dig/BIND)) |
+| 77 | Track DNS | DNS trace/debug | S9 | 🟡 (`dns.bind verify` se asli dig SOA/A/NS jawab milta hai; Track DNS page abhi JSON search karta hai — page ko asli dig se jodna baaki) |
 | 78 | Indexes | Directory listing control | S5 | ✅ (account-level off/simple/fancy) |
 | 79 | Error Pages | Custom 404/500 etc. | S5 | ✅ (account-level 4xx/5xx HTML) |
 | 80 | MIME Types | Custom MIME | S5 | ✅ (account-level AddType; PHP/CGI/SSI blocked) |
@@ -228,18 +228,18 @@
 ### DNS Functions
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 128 | DNS Zone Manager | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM list + dns.zone sync; no BIND rewrite)) |
-| 129 | Add / Delete a DNS Zone | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM parked add/delete; domain.add/remove + dns.zone; no BIND)) |
-| 130 | Add an A Entry for Your Hostname | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM hostname A JSON; no BIND rewrite)) |
-| 131 | Edit Zone Templates | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM templates JSON; no BIND rewrite)) |
-| 132 | Email Routing Configuration (global) | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM global MX JSON; no Exim rewrite)) |
+| 128 | DNS Zone Manager | S9 | ✅ zone list/add/delete/sync -> asli BIND zone: named-checkzone gate -> rndc reconfig/reload -> `dig @127.0.0.1` se verify (live 38 pass / 0 fail, 5 Oct 2026) |
+| 129 | Add / Delete a DNS Zone | S9 | ✅ zone add = `dns.bind write` (nayi zone file + zone clause + serve), delete = `dns.bind remove` (file + clause + named se bhulana) — live verify 38/0 |
+| 130 | Add an A Entry for Your Hostname | S9 | 🟡 (hostname JSON me hai; hostname ki zone ko `dns.bind sync` me BIND tak pahunchana baaki) |
+| 131 | Edit Zone Templates | S9 | 🟡 (templates JSON me save hote hain; naya zone banate waqt template se records seed karna baaki — uske baad BIND tak khud pahunchenge) |
+| 132 | Email Routing Configuration (global) | S9 | 🟡 (global MX routing abhi JSON; Exim routing config S7 ke saath aayega) |
 | 133 | Enable DKIM/SPF Globally | S7 | ⏳ S7 |
-| 134 | Nameserver Record Report | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM NS report JSON; no BIND rewrite)) |
-| 135 | Park a Domain | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM park JSON; no BIND rewrite)) |
-| 136 | Perform a DNS Cleanup | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM cleanup JSON; no BIND rewrite)) |
-| 137 | Set Zone TTL | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM zone TTL JSON; no BIND rewrite)) |
-| 138 | Setup/Edit Domain Forwarding | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM forward JSON; no BIND rewrite)) |
-| 139 | Synchronize DNS Records | S9 | 🟡 (JSON/config only: BIND zone write/reload and dig validation pending; (WHM sync JSON; no BIND rewrite)) |
+| 134 | Nameserver Record Report | S9 | 🟡 (report abhi JSON; asli zone files ke NS ko configured nameservers se compare karna baaki) |
+| 135 | Park a Domain | S9 | ✅ parked domain = Apache vhost + asli BIND zone: named-checkzone gate -> rndc reconfig/reload -> `dig @127.0.0.1` se verify (live 38 pass / 0 fail, 5 Oct 2026) |
+| 136 | Perform a DNS Cleanup | S9 | 🟡 (cleanup list abhi JSON; jo account/domain mit chuke hain unki zone files asli me hatani baaki) |
+| 137 | Set Zone TTL | S9 | ✅ zone TTL zone file me `$TTL <n>` ke roop me likha jata hai (sirf JSON nahi) |
+| 138 | Setup/Edit Domain Forwarding | S9 | 🟡 (forward JSON me hai; redirect Apache vhost me lagu karna baaki) |
+| 139 | Synchronize DNS Records | S9 | ✅ `dns.bind sync` = har account ke zone.json se saari zones dobara likhna (ek zone fail ho to doosre nahi rukte) — live verify 38/0 |
 | 140 | DNS Cluster | S15 | ⏳ S15 |
 
 ### Email (server-wide)
@@ -348,11 +348,11 @@
 
 | Hissa | Total items | ✅ Done | 🟡 Building | ⏳ Planned | 🔵 Optional |
 |---|---|---|---|---|---|
-| Client panel (cPanel) | 93 | 19 | 36 | 32 | 6 |
-| Admin/Reseller (WHM) | 99 | 7 | 32 | 60 | 0 |
-| System/Business | 10 | **4** | 1 | 5 | 0 |
+| Client panel (cPanel) | 93 | 20 | 35 | 32 | 6 |
+| Admin/Reseller (WHM) | 99 | 13 | 26 | 59 | 1 |
+| System/Business | 10 | **4** | 2 | 4 | 0 |
 | cPanel 138 naye features | 6 | 0 | 1 | 2 | 3 |
-| **TOTAL** | **208** | **30** | **70** | **99** | **9** |
+| **TOTAL** | **208** | **37** | **64** | **97** | **10** |
 
 > Note: ✅ = row ke stated behavior ke liye implementation + test proof; 🟡 = partial/JSON/config-only ya host-service integration pending. Counts 208 numbered rows ko parse karke reconcile kiye gaye hain; server deployment status hamesha `server-snapshot/STATE.md` se alag verify karein.
 > JSON settings save hona, apne aap me, mail/DNS/database/backup ka real service operation nahi maana jayega.
