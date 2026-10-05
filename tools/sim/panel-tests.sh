@@ -18,7 +18,7 @@ set -uo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 ART="${1:-$(ls -1 "${REPO}"/artifacts/panel-code-*.tar.gz | sort -V | tail -1)}"
 VENDOR_ART="${REPO}/artifacts/panel-bundle-0.3.0.tar.gz"
-PHPWASM_DIR="${PHPWASM_DIR:-/tmp/phpw}"
+PHPWASM_DIR="${PHPWASM_DIR:-$HOME/.tools/phpw}"   # /tmp har turn par saaf ho jata hai
 W=/tmp/acp-paneltests
 if [[ ! -f "${PHPWASM_DIR}/node_modules/@php-wasm/cli/php-wasm.js" ]]; then
   mkdir -p "${PHPWASM_DIR}"; (cd "${PHPWASM_DIR}" && npm init -y >/dev/null && npm i @php-wasm/cli >/dev/null)
