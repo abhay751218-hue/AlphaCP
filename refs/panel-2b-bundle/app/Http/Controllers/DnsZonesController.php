@@ -18,7 +18,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** WHM DNS Zone Manager — list/add/delete account zones. No BIND rewrite. */
+/** WHM DNS Zone Manager — list/add/delete account zones (S9: real BIND rewrite). */
 class DnsZonesController extends Controller
 {
     public function index(Request $request): View
@@ -95,6 +95,7 @@ class DnsZonesController extends Controller
             'document_root' => $docroot,
         ]);
         DnsProvisioner::enqueue($account);
+        DnsProvisioner::enqueueBindZone($account, $fqdn);
         $account->recordEvent('dns.zone.add.queued', $fqdn);
         Audit::log('dns.zones.add', 'info', 'domain', $domain->id, ['domain' => $fqdn]);
 
@@ -130,6 +131,7 @@ class DnsZonesController extends Controller
             'domain' => $fqdn,
         ]);
         DnsProvisioner::enqueue($account);
+        DnsProvisioner::enqueueBindRemove($fqdn);
         $account->recordEvent('dns.zone.remove.queued', $fqdn);
         Audit::log('dns.zones.remove', 'warning', 'domain', $domain->id, ['domain' => $fqdn]);
 
@@ -143,6 +145,7 @@ class DnsZonesController extends Controller
             return back()->withErrors(['q' => 'Cannot sync DNS on a suspended/terminated account.']);
         }
         DnsProvisioner::enqueue($account);
+        DnsProvisioner::enqueueBindSync();
         $account->recordEvent('dns.zone.queued', 'whm-sync');
         Audit::log('dns.zones.sync', 'info', 'account', $account->id, ['username' => $account->username]);
 

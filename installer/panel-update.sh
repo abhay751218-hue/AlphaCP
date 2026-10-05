@@ -387,6 +387,7 @@ grep -q 'issueLetsEncrypt' "${AGENT_ROOT}/src/AccountOs.php" || die "agent AutoS
 grep -q "'db.user.create'" "${AGENT_ROOT}/config/tasks.php" || die "agent S8 MariaDB tasks missing"
 grep -q "'db.restore'" "${AGENT_ROOT}/config/tasks.php" || die "agent S10 MySQL restore task missing"
 grep -q "'backup.pull'" "${AGENT_ROOT}/config/tasks.php" || die "agent S10 remote pull task missing"
+grep -q "'dns.bind'" "${AGENT_ROOT}/config/tasks.php" || die "agent S9 BIND9 task missing"
 
 # S8: the agent talks to MariaDB through the client binary (socket auth, SQL on
 # stdin). Install it when it is missing; the admin MariaDB server is assumed to
@@ -424,6 +425,23 @@ if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
         warn "sshpass install nahi hua — remote pull sirf SSH key auth se chalega (theek hai)"
       fi
     fi
+  fi
+fi
+
+# S9 DNS: real authoritative zones. bina bind9 ke dns.bind task JSON likh kar
+# chhod deta hai — install hone ke baad hi named-checkzone/rndc/dig milte hain.
+if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
+  if [[ -x /usr/sbin/named-checkconf && -x /usr/sbin/named-checkzone && -x /usr/sbin/rndc ]]; then
+    ok "bind9 present"
+  elif command -v apt-get >/dev/null 2>&1; then
+    info "bind9 + bind9-utils + dnsutils install ho rahe hain (S9: asli DNS zones)"
+    if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq bind9 bind9-utils dnsutils >>"${LOG_FILE}" 2>&1; then
+      ok "bind9 installed"
+    else
+      warn "bind9 install fail — dns.bind task JSON-only rahega, zones nahi banenge"
+    fi
+  else
+    warn "bind9 missing (apt-get nahi) — dns.bind task JSON-only rahega"
   fi
 fi
 

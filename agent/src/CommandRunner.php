@@ -54,6 +54,11 @@ final class CommandRunner implements CommandExecutor
         '/usr/bin/ssh',
         '/bin/ssh',
         '/usr/bin/sshpass',
+        // S9 BIND9 (dns.bind): config check, zone check, reload aur asli dig jawab.
+        '/usr/sbin/named-checkconf',
+        '/usr/sbin/named-checkzone',
+        '/usr/sbin/rndc',
+        '/usr/bin/dig',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

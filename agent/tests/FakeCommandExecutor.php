@@ -83,6 +83,24 @@ final class FakeCommandExecutor implements CommandExecutor
     public string $sshStderr = '';
     public bool $sshFails = false;
 
+    // ---- S9 BIND9 (dns.bind) ----
+    /** `named-checkconf` fails when set (bad managed options block) */
+    public bool $bindCheckconfFails = false;
+    /** `named-checkzone` fails when set — the gate that must stop every bad zone */
+    public bool $bindCheckzoneFails = false;
+    public int $namedCheckzoneCalls = 0;
+    /** @var list<string>|null last `named-checkzone` argv (zone name + file) */
+    public ?array $namedCheckzoneArgv = null;
+    public int $rndcCalls = 0;
+    /** @var list<string>|null last `rndc` argv */
+    public ?array $rndcArgv = null;
+    /** stdout the fake `dig` returns (the real SOA/NS answer we verify against) */
+    public string $digStdout = '';
+    /** @var list<string>|null last `dig` argv */
+    public ?array $digArgv = null;
+    /** stdout of `hostname -I` — the server's own IPs for listen-on */
+    public string $hostnameI = '';
+
     /** @var list<string> databases that exist in the fake MariaDB */
     public array $mysqlDatabases = [];
 
@@ -132,6 +150,13 @@ final class FakeCommandExecutor implements CommandExecutor
             'scp' => $this->handleScp($argv),
             'ssh' => $this->handleSsh($argv),
             'sshpass' => $this->handleSshpass($argv),
+            'named-checkconf' => $this->bindCheckconfFails
+                ? new CommandResult($argv, 1, "", "/etc/bind/named.conf.options:9: missing ';' before '}'", 1)
+                : new CommandResult($argv, 0, '', '', 1),
+            'named-checkzone' => $this->handleNamedCheckzone($argv),
+            'rndc' => $this->handleRndc($argv),
+            'dig' => $this->handleDig($argv),
+            'hostname' => new CommandResult($argv, 0, $this->hostnameI, '', 1),
             default => new CommandResult($argv, 0, '', '', 1),
         };
     }
@@ -545,5 +570,33 @@ final class FakeCommandExecutor implements CommandExecutor
         return basename((string) ($rest[0] ?? '')) === 'ssh'
             ? $this->handleSsh($rest)
             : $this->handleScp($rest);
+    }
+
+    /** @param list<string> $argv */
+    private function handleNamedCheckzone(array $argv): CommandResult
+    {
+        $this->namedCheckzoneCalls++;
+        $this->namedCheckzoneArgv = $argv;
+
+        return $this->bindCheckzoneFails
+            ? new CommandResult($argv, 1, '', 'zone example.com/IN: bad A record at line 12', 1)
+            : new CommandResult($argv, 0, 'zone ' . (string) ($argv[1] ?? '') . '/IN: loaded serial 2025090100\nOK\n', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleRndc(array $argv): CommandResult
+    {
+        $this->rndcCalls++;
+        $this->rndcArgv = $argv;
+
+        return new CommandResult($argv, 0, 'server reload successful\n', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleDig(array $argv): CommandResult
+    {
+        $this->digArgv = $argv;
+
+        return new CommandResult($argv, 0, $this->digStdout, '', 1);
     }
 }

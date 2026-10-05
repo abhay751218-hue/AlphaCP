@@ -86,6 +86,8 @@ use Alphacp\Agent\Tasks\TtlSet;
 use Alphacp\Agent\Tasks\ForwardSet;
 use Alphacp\Agent\Tasks\SyncSet;
 use Alphacp\Agent\Tasks\NameserverSet;
+use Alphacp\Agent\BindServer;
+use Alphacp\Agent\Tasks\BindSetup;
 use Alphacp\Agent\Tasks\BackupCreate;
 use Alphacp\Agent\Tasks\BackupArchiveCreate;
 use Alphacp\Agent\Tasks\BackupExtract;
@@ -246,7 +248,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -3895,6 +3897,492 @@ test('agent source lint: jo file catch (Throwable kare wo use Throwable bhi kare
         }
     }
     assert_true($bad === [], 'in files me use Throwable missing hai: ' . implode(', ', $bad));
+});
+
+
+fwrite(STDOUT, "\nS9 BIND9 (dns.bind)\n");
+
+/** @return array{root:string,cmd:FakeCommandExecutor,ctx:TaskContext} */
+function acp_bind_harness(): array
+{
+    $root = sys_get_temp_dir() . '/acp-bind-' . bin2hex(random_bytes(4));
+    $dirs = [
+        $root . '/etc/bind',
+        $root . '/etc/bind/zones',
+        $root . '/home',
+        $root . '/alphacp',
+    ];
+    foreach ($dirs as $dir) {
+        mkdir($dir, 0755, true);
+    }
+    // distro jaisa named.conf + options (updater inhi par kaam karega)
+    file_put_contents(
+        $root . '/etc/bind/named.conf',
+        "include \"/etc/bind/named.conf.options\";\ninclude \"/etc/bind/named.conf.local\";\n"
+    );
+    file_put_contents(
+        $root . '/etc/bind/named.conf.options',
+        "options {\n    directory \"/var/cache/bind\";\n};\n"
+    );
+    putenv('ACP_BIND_CONF=' . $root . '/etc/bind/named.conf');
+    putenv('ACP_BIND_OPTIONS=' . $root . '/etc/bind/named.conf.options');
+    putenv('ACP_BIND_ZONES=' . $root . '/etc/bind/named.conf.alphacp');
+    putenv('ACP_BIND_ZONE_DIR=' . $root . '/etc/bind/zones');
+    // fake executor in bins ko intercept karta hai — absolute path hona kaafi hai
+    putenv('ACP_BIND_CHECKCONF=' . $root . '/bin/named-checkconf');
+    putenv('ACP_BIND_CHECKZONE=' . $root . '/bin/named-checkzone');
+    putenv('ACP_BIND_RNDC=' . $root . '/bin/rndc');
+    putenv('ACP_BIND_DIG=' . $root . '/bin/dig');
+    putenv('ACP_STATE_ROOT=' . $root . '/alphacp');
+    putenv('ACP_ACCOUNTS_ROOT=' . $root . '/home');
+
+    $cmd = new FakeCommandExecutor();
+    $cmd->hostnameI = "203.0.113.5 10.0.0.7\n";
+    $log = new TaskLogger(new PDO('sqlite::memory:'), null, false);
+    $ctx = new TaskContext(
+        log: $log,
+        cmd: $cmd,
+        paths: new PathGuard($dirs),
+        taskId: null,
+        taskRow: null,
+    );
+
+    return ['root' => $root, 'cmd' => $cmd, 'ctx' => $ctx];
+}
+
+/** @param array{root:string} $harness */
+function acp_bind_cleanup(array $harness): void
+{
+    $root = $harness['root'];
+    if (is_dir($root)) {
+        $it = new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $file) {
+            $file->isDir() ? @rmdir($file->getPathname()) : @unlink($file->getPathname());
+        }
+        @rmdir($root);
+    }
+    foreach ([
+        'ACP_BIND_CONF', 'ACP_BIND_OPTIONS', 'ACP_BIND_ZONES', 'ACP_BIND_ZONE_DIR',
+        'ACP_BIND_CHECKCONF', 'ACP_BIND_CHECKZONE', 'ACP_BIND_RNDC', 'ACP_BIND_DIG',
+    ] as $name) {
+        putenv($name);
+    }
+}
+
+/** @return list<array<string,string>> */
+function acp_bind_records(string $domain): array
+{
+    return [
+        ['domain' => $domain, 'name' => '@', 'type' => 'A', 'value' => '203.0.113.10'],
+        ['domain' => $domain, 'name' => 'www', 'type' => 'A', 'value' => '203.0.113.10'],
+        ['domain' => $domain, 'name' => 'mail', 'type' => 'A', 'value' => '203.0.113.11'],
+        ['domain' => $domain, 'name' => '@', 'type' => 'MX', 'value' => 'mail.' . $domain],
+        ['domain' => $domain, 'name' => '@', 'type' => 'TXT', 'value' => 'v=spf1 a mx -all'],
+        ['domain' => $domain, 'name' => 'shop', 'type' => 'CNAME', 'value' => $domain],
+    ];
+}
+
+test('dns.bind setup idempotent — do baar chalao to bhi ek hi include line', function (): void {
+    $h = acp_bind_harness();
+    $conf = $h['root'] . '/etc/bind/named.conf';
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $after1 = (string) file_get_contents($conf);
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $after2 = (string) file_get_contents($conf);
+    $include = 'include "' . $h['root'] . '/etc/bind/named.conf.alphacp";';
+    assert_true(substr_count($after2, $include) === 1, 'include line ek hi baar likhni chahiye');
+    assert_true(str_contains($after1, 'include "/etc/bind/named.conf.options";'), 'distro lines rehni chahiye');
+    // backup sirf pehli baar banta hai (doosri baar overwrite nahi hota)
+    assert_true(is_file($h['root'] . '/etc/bind/named.conf.options.acp-orig'));
+    $backup = (string) file_get_contents($h['root'] . '/etc/bind/named.conf.options.acp-orig');
+    assert_true(str_contains($backup, 'directory "/var/cache/bind"'), 'asli options backup me bacchi honi chahiye');
+    // managed options: loopback + server ka apna IP, recursion off
+    $options = (string) file_get_contents($h['root'] . '/etc/bind/named.conf.options');
+    assert_true(str_contains($options, 'listen-on { 127.0.0.1; 203.0.113.5; };'), 'listen-on ghalat: ' . $options);
+    assert_true(str_contains($options, 'recursion no;'));
+    assert_true(str_contains($options, 'allow-transfer { none; };'));
+    assert_true(is_dir($h['root'] . '/etc/bind/zones'));
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind setup named-checkconf fail ho to purani config wapas', function (): void {
+    $h = acp_bind_harness();
+    $options = $h['root'] . '/etc/bind/named.conf.options';
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $h['cmd']->bindCheckconfFails = true;
+    $threw = false;
+    try {
+        (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'named-checkconf fail');
+    }
+    assert_true($threw, 'checkconf fail par task reject hona chahiye');
+    $restored = (string) file_get_contents($options);
+    assert_true(str_contains($restored, 'directory "/var/cache/bind"'), 'purani options wapas aani chahiye');
+    assert_true(!str_contains($restored, 'AlphaCP managed'), 'managed block hatna chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — named-checkzone ke baad hi zone file likhi jati hai', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $h['cmd']->digStdout = "ns1.alice.test. hostmaster.alice.test. 2025090101 3600 600 1209600 300";
+    $out = (new BindSetup())->handle([
+        'action'  => 'write',
+        'domain'  => 'alice.test',
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    assert_true($out['ok'] === true);
+    assert_true($out['records'] === 6, '6 records likhne chahiye the, mile ' . (int) $out['records']);
+    assert_true(is_file($out['file']));
+    assert_true($h['cmd']->namedCheckzoneCalls >= 1, 'named-checkzone chalana hi padta hai');
+    assert_true(in_array('reload', (array) ($h['cmd']->rndcArgv ?? []), true), 'rndc reload hona chahiye');
+    assert_true($out['verified'] === true, 'dig se SOA milna chahiye');
+    $body = (string) file_get_contents($out['file']);
+    assert_true(str_contains($body, '$TTL 300'), 'TTL header chahiye');
+    assert_true(str_contains($body, '@ IN SOA ns1.alice.test. hostmaster.alice.test.'));
+    assert_true(str_contains($body, 'www IN A 203.0.113.10'));
+    assert_true(str_contains($body, '@ IN MX 10 mail.alice.test.'));
+    assert_true(str_contains($body, 'shop IN CNAME alice.test.'));
+    assert_true(str_contains($body, '@ IN TXT "v=spf1 a mx -all"'), 'TXT quoted hona chahiye: ' . $body);
+    assert_true(str_contains($body, 'ns1 IN A 203.0.113.5'), 'in-zone NS ka glue A chahiye');
+    // zone clause named.conf.alphacp me
+    $zones = (string) file_get_contents($h['root'] . '/etc/bind/named.conf.alphacp');
+    assert_true(str_contains($zones, 'zone "alice.test" { type master;'), 'zone clause chahiye: ' . $zones);
+    // koi temp file nahi chhutni chahiye
+    $leftovers = glob($h['root'] . '/etc/bind/zones/.db.*') ?: [];
+    assert_true($leftovers === [], 'temp files saf ho jani chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — named-checkzone reject kare to doosre domain ka record zone me nahi jata', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    (new BindSetup())->handle([
+        'action' => 'write',
+        'domain' => 'alice.test',
+        'records' => [
+            ['domain' => 'alice.test', 'name' => '@', 'type' => 'A', 'value' => '203.0.113.10'],
+            ['domain' => 'bob.test', 'name' => '@', 'type' => 'A', 'value' => '198.51.100.10'],
+        ],
+    ], $h['ctx']);
+    $file = $h['root'] . '/etc/bind/zones/db.alice.test';
+    $body = (string) file_get_contents($file);
+    assert_true(str_contains($body, '203.0.113.10'));
+    assert_true(!str_contains($body, '198.51.100.10'), 'doosre domain ka record is zone me nahi likhna chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — named-checkzone reject kare to kuch nahi likha jata (purani zone surakshit)', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $first = (new BindSetup())->handle([
+        'action'  => 'write',
+        'domain'  => 'alice.test',
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    $before = (string) file_get_contents($first['file']);
+
+    $h['cmd']->bindCheckzoneFails = true;
+    $threw = false;
+    try {
+        (new BindSetup())->handle([
+            'action' => 'write',
+            'domain' => 'alice.test',
+            'records' => [['domain' => 'alice.test', 'name' => 'bad', 'type' => 'A', 'value' => '203.0.113.99']],
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'named-checkzone');
+    }
+    assert_true($threw, 'checkzone fail par reject hona chahiye');
+    $after = (string) file_get_contents($first['file']);
+    assert_true($after === $before, 'purani zone bilkul waise hi rehni chahiye');
+    assert_true(!str_contains($after, '203.0.113.99'), 'reject hua record kabhi nahi likhna chahiye');
+    assert_true((glob($h['root'] . '/etc/bind/zones/.db.*') ?: []) === [], 'temp file hatni chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — hostile record reject, zone file banti hi nahi', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $threw = false;
+    try {
+        (new BindSetup())->handle([
+            'action' => 'write',
+            'domain' => 'alice.test',
+            'records' => [['domain' => 'alice.test', 'name' => '|/bin/sh', 'type' => 'A', 'value' => '203.0.113.10']],
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'hostile record reject hona chahiye');
+    assert_true(!is_file($h['root'] . '/etc/bind/zones/db.alice.test'));
+    // value me newline ho to bhi
+    $threw2 = false;
+    try {
+        (new BindSetup())->handle([
+            'action' => 'write',
+            'domain' => 'alice.test',
+            'records' => [['domain' => 'alice.test', 'name' => 'x', 'type' => 'TXT', 'value' => "ok\n@ IN NS evil.test."]],
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw2 = true;
+    }
+    assert_true($threw2, 'newline wala TXT reject hona chahiye (zone injection)');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — serial har baar badhta hai', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $a = (new BindSetup())->handle([
+        'action' => 'write',
+        'domain' => 'alice.test',
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    $b = (new BindSetup())->handle([
+        'action' => 'write',
+        'domain' => 'alice.test',
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    assert_true($b['serial'] > $a['serial'], 'naya serial purane se bada hona chahiye');
+    $body = (string) file_get_contents($b['file']);
+    assert_true(str_contains($body, (string) $b['serial']), 'zone me naya serial hona chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — nameserver.json ke hisaab se NS (glue A ke saath)', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    mkdir($h['root'] . '/alphacp/etc/dns', 0755, true);
+    file_put_contents(
+        $h['root'] . '/alphacp/etc/dns/nameserver.json',
+        json_encode(['software' => 'bind', 'ns1' => 'ns1.alice.test', 'ns2' => 'ns2.alice.test'])
+    );
+    $out = (new BindSetup())->handle([
+        'action' => 'write',
+        'domain' => 'alice.test',
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    $body = (string) file_get_contents($out['file']);
+    assert_true(str_contains($body, '@ IN NS ns1.alice.test.'));
+    assert_true(str_contains($body, '@ IN NS ns2.alice.test.'));
+    assert_true(str_contains($body, 'ns1 IN A 203.0.113.5'), 'ns1 ka glue A chahiye');
+    assert_true(str_contains($body, 'ns2 IN A 203.0.113.5'), 'ns2 ka glue A chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — account ke zone.json se records (panel wahi likhta hai)', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    mkdir($h['root'] . '/home/alicehost/etc/dns', 0755, true);
+    file_put_contents(
+        $h['root'] . '/home/alicehost/etc/dns/zone.json',
+        (string) json_encode(acp_bind_records('alice.test'))
+    );
+    $out = (new BindSetup())->handle([
+        'action'   => 'write',
+        'domain'   => 'alice.test',
+        'username' => 'alicehost',
+    ], $h['ctx']);
+    assert_true($out['records'] === 6, 'account zone.json ke 6 records aane chahiye');
+    $body = (string) file_get_contents($out['file']);
+    assert_true(str_contains($body, 'www IN A 203.0.113.10'));
+    // bina records aur bina username -> reject
+    $threw = false;
+    try {
+        (new BindSetup())->handle(['action' => 'write', 'domain' => 'bob.test'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'records/username ke bina likhna reject hona chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — TTL payload se zone me jata hai', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $out = (new BindSetup())->handle([
+        'action'  => 'write',
+        'domain'  => 'alice.test',
+        'ttl'     => 60,
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    $body = (string) file_get_contents($out['file']);
+    assert_true(str_contains($body, '$TTL 60'), 'TTL 60 hona chahiye: ' . $body);
+    $threw = false;
+    try {
+        (new BindSetup())->handle([
+            'action' => 'write',
+            'domain' => 'alice.test',
+            'ttl'    => 5,
+            'records' => acp_bind_records('alice.test'),
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'TTL 60 se kam reject hona chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind verify — dig ka asli jawab, khali ho to verified false', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $h['cmd']->digStdout = "ns1.alice.test. hostmaster.alice.test. 2025090101 3600 600 1209600 300";
+    $out = (new BindSetup())->handle(['action' => 'write', 'domain' => 'alice.test', 'records' => acp_bind_records('alice.test')], $h['ctx']);
+    assert_true($out['verified'] === true);
+    assert_true(str_contains((string) $out['dig_soa'], 'ns1.alice.test.'));
+
+    $v = (new BindSetup())->handle(['action' => 'verify', 'domain' => 'alice.test'], $h['ctx']);
+    assert_true(str_contains((string) $v['soa'], 'ns1.alice.test.'));
+    assert_true($v['a'] !== '');
+
+    // ab dig khamosh ho jaye — "verified" jhooth nahi bolna chahiye
+    $h['cmd']->digStdout = '';
+    $silent = (new BindSetup())->handle(['action' => 'write', 'domain' => 'alice.test', 'records' => acp_bind_records('alice.test')], $h['ctx']);
+    assert_true($silent['verified'] === false, 'dig khamosh ho to verified false hona chahiye');
+    assert_true($silent['dig_soa'] === '');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind remove — zone file hat ti hai aur zone clause bhi', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $out = (new BindSetup())->handle(['action' => 'write', 'domain' => 'alice.test', 'records' => acp_bind_records('alice.test')], $h['ctx']);
+    assert_true(is_file($out['file']));
+    $del = (new BindSetup())->handle(['action' => 'remove', 'domain' => 'alice.test'], $h['ctx']);
+    assert_true($del['removed'] === true);
+    assert_true(!is_file($out['file']), 'zone file hatni chahiye');
+    $zones = (string) file_get_contents($h['root'] . '/etc/bind/named.conf.alphacp');
+    assert_true(!str_contains($zones, 'zone "alice.test"'), 'zone clause bhi hatna chahiye: ' . $zones);
+    // dobara remove = shant, koi error nahi
+    $again = (new BindSetup())->handle(['action' => 'remove', 'domain' => 'alice.test'], $h['ctx']);
+    assert_true($again['removed'] === false && $again['ok'] === true);
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind list — zone files count', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    (new BindSetup())->handle(['action' => 'write', 'domain' => 'alice.test', 'records' => acp_bind_records('alice.test')], $h['ctx']);
+    (new BindSetup())->handle(['action' => 'write', 'domain' => 'bob.test', 'records' => [['domain' => 'bob.test', 'name' => '@', 'type' => 'A', 'value' => '198.51.100.10']], ], $h['ctx']);
+    $list = (new BindSetup())->handle(['action' => 'list'], $h['ctx']);
+    assert_true($list['count'] === 2, '2 zones hone chahiye, mile ' . (int) $list['count']);
+    assert_true(in_array('alice.test', $list['zones'], true));
+    assert_true(in_array('bob.test', $list['zones'], true));
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind status — installed aur checkconf ki sachchi report', function (): void {
+    $h = acp_bind_harness();
+    $st = (new BindSetup())->handle(['action' => 'status'], $h['ctx']);
+    assert_true($st['installed'] === true, 'env override ke saath installed true hona chahiye');
+    assert_true($st['checkconf'] === 'ok');
+    assert_true($st['zones'] === 0);
+    $h['cmd']->bindCheckconfFails = true;
+    $bad = (new BindSetup())->handle(['action' => 'status'], $h['ctx']);
+    assert_true($bad['checkconf'] !== 'ok', 'checkconf fail report hona chahiye');
+    // jab bind9 installed hi na ho (env hata do)
+    foreach (['ACP_BIND_CHECKCONF', 'ACP_BIND_CHECKZONE'] as $k) {
+        putenv($k);
+    }
+    $none = (new BindSetup())->handle(['action' => 'status'], $h['ctx']);
+    assert_true($none['installed'] === false, 'bina bind9 ke installed false hona chahiye');
+    assert_true(isset($none['error']));
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind — galat action aur galat domain reject', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $threw = false;
+    try {
+        (new BindSetup())->handle(['action' => 'nuclear'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'unknown action reject hona chahiye');
+    $threw2 = false;
+    try {
+        (new BindSetup())->handle(['action' => 'remove', 'domain' => '|/bin/sh'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw2 = true;
+    }
+    assert_true($threw2, 'hostile domain reject hona chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind sync — sab accounts ke zone.json se zones, ek fail to doosra nahi rukta', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    // do account + ek system dir (ignore hona chahiye)
+    foreach (['alicehost' => 'alice.test', 'bobhost' => 'bob.test'] as $user => $domain) {
+        mkdir($h['root'] . '/home/' . $user . '/etc/dns', 0755, true);
+        file_put_contents(
+            $h['root'] . '/home/' . $user . '/etc/dns/zone.json',
+            (string) json_encode(acp_bind_records($domain))
+        );
+    }
+    mkdir($h['root'] . '/home/ubuntu/etc', 0755, true);
+    $h['cmd']->digStdout = "ns1.alice.test. hostmaster.alice.test. 2025090101 3600 600 1209600 300";
+
+    $out = (new BindSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true($out['count'] === 2, '2 zones likhni chahiye, mili ' . (int) $out['count']);
+    assert_true($out['failed'] === [], 'koi zone fail nahi hona chahiye');
+    assert_true($out['ok'] === true);
+    assert_true(is_file($h['root'] . '/etc/bind/zones/db.alice.test'));
+    assert_true(is_file($h['root'] . '/etc/bind/zones/db.bob.test'));
+    $body = (string) file_get_contents($h['root'] . '/etc/bind/zones/db.bob.test');
+    assert_true(str_contains($body, 'www IN A 203.0.113.10'));
+    assert_true(!is_file($h['root'] . '/etc/bind/zones/db.ubuntu'), 'system dir zone nahi banni chahiye');
+
+    // ab bob ka zone kharaab kar do — alice phir bhi likhni chahiye
+    file_put_contents(
+        $h['root'] . '/home/bobhost/etc/dns/zone.json',
+        (string) json_encode([['domain' => 'bob.test', 'name' => '|/bin/sh', 'type' => 'A', 'value' => '198.51.100.10']])
+    );
+    @unlink($h['root'] . '/etc/bind/zones/db.alice.test');
+    @unlink($h['root'] . '/etc/bind/zones/db.bob.test');
+    $out2 = (new BindSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true($out2['ok'] === false, 'ek zone fail hone par ok false hona chahiye');
+    assert_true(count($out2['failed']) === 1, 'ek hi zone fail hona chahiye');
+    assert_true(is_file($h['root'] . '/etc/bind/zones/db.alice.test'), 'doosra account phir bhi likha jana chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind schema — payload fail-closed', function (): void {
+    $schema = acp_task_registry()['dns.bind']['schema'];
+    $good = [
+        'action' => 'write',
+        'domain' => 'alice.test',
+        'records' => [['domain' => 'alice.test', 'name' => 'www', 'type' => 'A', 'value' => '203.0.113.10']],
+    ];
+    assert_true(JsonSchema::validate($schema, $good) === [], 'valid payload pass hona chahiye');
+    assert_true(JsonSchema::validate($schema, $good + ['evil' => 1]) !== [], 'extra key reject');
+    // status/setup/list ko domain ki zaroorat nahi, par galat domain/TTL reject hona chahiye
+    assert_true(JsonSchema::validate($schema, ['action' => 'status']) === [], 'status ko domain ki zaroorat nahi');
+    assert_true(JsonSchema::validate($schema, ['action' => 'remove', 'domain' => '|/bin/sh']) !== [], 'hostile domain schema me reject');
+    assert_true(JsonSchema::validate($schema, ['action' => 'write', 'domain' => 'alice.test', 'ttl' => 5, 'records' => $good['records']]) !== [], 'TTL range ke bahar reject');
+    $bad = $good;
+    $bad['action'] = 'nuclear';
+    assert_true(JsonSchema::validate($schema, $bad) !== [], 'unknown action schema me reject');
+    $bad2 = $good;
+    $bad2['records'][0]['type'] = 'AAAA';
+    assert_true(JsonSchema::validate($schema, $bad2) !== [], 'AAAA abhi allow nahi (A/CNAME/MX/TXT)');
+});
+
+test('BindServer renderZone — zone injection impossible (quote/escape)', function (): void {
+    $body = BindServer::renderZone(
+        'alice.test',
+        [['domain' => 'alice.test', 'name' => 'x', 'type' => 'TXT', 'value' => 'say "hi" \\ ok']],
+        ['ns1.alice.test'],
+        '203.0.113.5',
+        2025090101,
+        300,
+    );
+    assert_true(str_contains($body, 'x IN TXT "say \\"hi\\" \\\\ ok"'), 'TXT me quote/backslash escape hone chahiye: ' . $body);
+    assert_true(substr_count($body, "\n") === 5, 'SOA + NS + glue A + 1 record + trailing newline');
 });
 
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");

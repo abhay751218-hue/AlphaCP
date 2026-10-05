@@ -71,6 +71,7 @@ class ZoneEditorController extends Controller
             'value' => $value,
         ]);
         DnsProvisioner::enqueue($account);
+        DnsProvisioner::enqueueBindZone($account, $domain);
         $account->recordEvent('dns.zone.queued', $name . '.' . $domain);
         Audit::log('dns.add', 'info', 'account', $account->id, ['name' => $name, 'domain' => $domain, 'type' => $type]);
 
@@ -84,8 +85,10 @@ class ZoneEditorController extends Controller
             abort(403);
         }
         $label = $dns_record->name . '.' . $dns_record->domain;
+        $zone = $dns_record->domain;
         $dns_record->delete();
         DnsProvisioner::enqueue($account);
+        DnsProvisioner::enqueueBindZone($account, $zone);
         Audit::log('dns.remove', 'warning', 'account', $account->id, ['name' => $label]);
 
         return redirect()->route('zone-editor.index')->with('success', 'DNS record is queued for removal.');
