@@ -116,6 +116,9 @@
 /usr/local/alphacp/agent/systemd/paneld.service
 /usr/local/alphacp/agent/tests/FakeCommandExecutor.php
 /usr/local/alphacp/agent/tests/run-tests.php
+/usr/local/alphacp/backups/locks/acpv5xodbb.lock
+/usr/local/alphacp/backups/locks/acpvjfyq4t.lock
+/usr/local/alphacp/backups/locks/acpvlyzljk.lock
 /usr/local/alphacp/bin/alphacp
 /usr/local/alphacp/bin/alphacp-sync
 /usr/local/alphacp/etc/check.token
@@ -6903,6 +6906,7 @@
 /usr/local/alphacp/var/install.state
 /usr/local/alphacp/var/panel-admin.txt
 /usr/local/alphacp/var/panel-appkey.txt
+/usr/local/alphacp/verify-reports/s10-20261005-022429.txt
 /var/www/alphacp-default/check.php
 /var/www/alphacp-default/index.html
 /var/www/alphacp-default/robots.txt
