@@ -530,6 +530,14 @@ else
       bad "Exim filter file nahi mili (lookup: ${EXIM_FILTERS})"
       diagsec "FILTER FILE diagnostics"
       diagcmd cat "${EXIM_FILTERS}"
+      # agent ab wajah bhi batata hai (exim -bf ka jawab) — andha fail nahi
+      if run_task mail.server '{"action":"sync"}'; then
+        diag "--- exim -bf ne kyun reject kiya (filter_errors) ---"
+        diag "$(grep -o '"filter_errors".*' <<<"${TASK_OUT}" | head -5)"
+      fi
+      for f in /home/*/etc/mail/filter.d/*.filter; do
+        [[ -f "$f" ]] && diag "--- ban chuka filter: $f ---" && diagcmd cat "$f"
+      done
     fi
 
     # ---- ASLI mail 1: filter wali mail .filtered folder me jaani chahiye ----

@@ -5377,6 +5377,28 @@ test('mail.server diskusage — account ki mail jagah asli bytes me', function (
 });
 
 
+test('mail.server setup — routing smoke test: expansion kharaab ho to purani template wapas', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    // jaise 0.78.0 me hua: `-bV` pass par `-bt` PANIC de (Failed to find user)
+    $h['cmd']->eximBtOutput = 'LOG: MAIN PANIC Failed to find user "}" from expanded string for the alphacp_userfilter router';
+    $before = "# distro exim template\n";
+    file_put_contents($h['root'] . '/etc/exim4/exim4.conf.template', $before);
+    $threw = false;
+    try {
+        (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'routing smoke test fail');
+    }
+    assert_true($threw, 'PANIC par setup reject hona chahiye (mail delivery bachani chahiye)');
+    assert_true(
+        (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template') === $before,
+        'purani template wapas aani chahiye',
+    );
+    acp_mail_cleanup($h);
+});
+
+
 fwrite(STDOUT, "\nS7 EMAIL FILTERS + TRACK (asli Exim filter files)\n");
 
 /** mailbox + filter JSON ke saath ek account (alicehost / info@alice.test). */
@@ -5414,6 +5436,14 @@ test('mail.server sync — email filters se ASLI Exim filter file ban ti hai', f
     assert_true(str_contains($lookup, 'info@alice.test: '), 'lookup file me address hona chahiye');
 
     $filter = (string) file_get_contents($home . '/etc/mail/filter.d/info@alice.test.filter');
+    // LIVE BUG (0.78.0): Exim spec ke hisaab se filter file ki PEHLI line '# Exim filter'
+    // honi hi chahiye — nahi to exim ise aam .forward file samajhta hai aur `exim -bf`
+    // reject kar deta hai (filter install hi nahi hota).
+    assert_true(
+        str_starts_with($filter, '# Exim filter'),
+        'PEHLI line "# Exim filter" honi chahiye (warna exim .forward samajhega), mili: '
+        . substr($filter, 0, 40),
+    );
     // Exim filter language — ye asli syntax hai jo exim chalaata hai
     assert_true(str_contains($filter, 'if error_message then finish endif'), 'bounce loop se bachav hona chahiye');
     assert_true(str_contains($filter, 'if $header_from: contains "boss" then'), 'account-wide (global) rule pehle');
@@ -5445,6 +5475,12 @@ test('mail.server sync — kharaab filter reject ho jaye to delivery chalti rahe
 
     $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
     assert_true(($out['filters'] ?? -1) === 0, 'kharaab filter install nahi hona chahiye, count=' . (int) ($out['filters'] ?? -1));
+    $errors = (array) ($out['filter_errors'] ?? []);
+    assert_true($errors !== [], 'kyun reject hua — wajah report me aani chahiye (andha fail nahi)');
+    assert_true(
+        str_contains((string) reset($errors), 'filter'),
+        'error me exim ka jawab hona chahiye, mila: ' . (string) reset($errors),
+    );
     assert_true(
         (string) file_get_contents($h['root'] . '/etc/exim4/alphacp-filters') === '',
         'lookup file khali rehni chahiye (mail delivery bina filter ke chalti rahe)',
@@ -5526,6 +5562,20 @@ test('mail.server setup — exim template me filter router + address_directory t
     assert_true(str_contains($tpl, 'directory_transport = address_directory'), 'filter ke save ke liye transport');
     assert_true(str_contains($tpl, 'address_directory:'), 'address_directory transport hona chahiye');
     assert_true(str_contains($tpl, 'create_directory'), 'folder khud ban jana chahiye');
+    // LIVE BUG (0.78.0): router par `user = ${extract{2}{ }{${lookup{...}}{$value}{}}}`
+    // galat brace-nesting thi -> "Failed to find user }" -> POORA mail delivery defer.
+    // uid/gid ab transport `address_directory` set karta hai (wahi idiom jo
+    // alphacp_maildir use karta hai), aur router `condition` se guard hai.
+    $router = substr($tpl, (int) strpos($tpl, 'alphacp_userfilter:'));
+    $router = substr($router, 0, (int) strpos($router, 'alphacp_autoreply:'));
+    assert_true(!str_contains($router, 'user ='), 'router par user= NAHI hona chahiye (defer ka kaaran)');
+    assert_true(!str_contains($router, 'group ='), 'router par group= NAHI hona chahiye');
+    assert_true(str_contains($router, 'condition = ${if !eq{'), 'condition guard hona chahiye');
+    assert_true(!str_contains($router, '{$value}'), '{$value} wali nesting galat hai (exim galat parse karta hai)');
+    $tdir = substr($tpl, (int) strpos($tpl, 'address_directory:'));
+    $tdir = substr($tdir, 0, 400);
+    assert_true(str_contains($tdir, 'user = ${extract{2}{ }'), 'address_directory uid set kare');
+    assert_true(str_contains($tdir, 'group = ${extract{3}{ }'), 'address_directory gid set kare');
     // filter router mailbox router se pehle aana chahiye
     assert_true(
         strpos($tpl, 'alphacp_userfilter:') < strpos($tpl, 'alphacp_mailbox:'),

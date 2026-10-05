@@ -740,8 +740,8 @@ def build_filters():
                                    and "%s@%s" % (r.get("local", ""), r.get("domain", "")) == addr]
             if not rules:
                 continue
-            lines = ["# AlphaCP managed filter (SIM)", "# mailbox: %s" % addr, "",
-                     "if error_message then finish endif", ""]
+            lines = ["# Exim filter  <<== YE LINE HATAANA NAHI (Exim filter file ki pehchaan)",
+                     "# AlphaCP managed (SIM)", "# mailbox: %s" % addr, "",                     "if error_message then finish endif", ""]
             n = 0
             for r in rules:
                 if not isinstance(r, dict):

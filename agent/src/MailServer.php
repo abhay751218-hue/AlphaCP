@@ -328,6 +328,15 @@ final class MailServer
             );
         }
 
+        // Sachchi routing tasdeeq: exim khud ek address route kare. Config syntax
+        // theek hone ke baawajood router ki expansion kharaab ho sakti hai
+        // (0.78.0 ka asli bug) — tab purani template wapas aur setup reject.
+        $smoke = $this->eximSmokeTest();
+        if ($smoke !== null) {
+            $this->restoreEximTemplate();
+            throw new TaskRejectedException('exim routing smoke test fail (purani config wapas): ' . $smoke);
+        }
+
         // Exim daemon ko root chahiye (mailbox ki uid se delivery ke liye).
         // Unit me User=Debian-exim ho to drop-in se root kar do — cPanel/Hestia
         // bhi exim ko root chalate hain, warna `user=` transport kaam nahi karta.
@@ -356,7 +365,9 @@ final class MailServer
             'mailboxes'   => $agg['mailboxes'],
             'aliases'     => $agg['aliases'],
             'filters'     => $agg['filters'],
+            'filter_errors' => $agg['filter_errors'],
             'exim_config' => $status['exim_config'] ?? null,
+            'exim_smoke'  => $smoke === null ? 'ok' : 'fail',
             'dovecot_config' => $status['dovecot_config'] ?? null,
             'dovecot_userdb' => $userdb,
             'services'    => $status['services'] ?? [],
@@ -676,6 +687,7 @@ final class MailServer
         $vacation = [];
         $spam = [];
         $filters = [];
+        $filterErrors = [];
 
         foreach (glob($root . '/*') ?: [] as $dir) {
             if (!is_dir($dir) || is_link($dir)) {
@@ -824,8 +836,12 @@ final class MailServer
                         }
                     }
                     $path = $home . '/etc/mail/filter.d/' . $addr . '.filter';
-                    if (!$this->writeFilterFile($path, $body, (string) $addr, $uid, $gid)) {
-                        continue;   // galat filter = delivery chalti rahegi, filter nahi lagega
+                    $why = $this->writeFilterFile($path, $body, (string) $addr, $uid, $gid);
+                    if ($why !== null) {
+                        // galat filter = delivery chalti rahegi, filter nahi lagega —
+                        // par wajah report me zaroor batao (andha fail nahi).
+                        $filterErrors[(string) $addr] = $why;
+                        continue;
                     }
                     $filters[(string) $addr] = $addr . ': ' . $path;
                 }
@@ -839,6 +855,7 @@ final class MailServer
         ksort($vacation);
         ksort($spam);
         ksort($filters);
+        ksort($filterErrors);
         $domainList = array_keys($domains);
         sort($domainList);
 
@@ -860,6 +877,7 @@ final class MailServer
             'responders'     => count($vacation),
             'spam_lists'     => count($spam),
             'filters'        => count($filters),
+            'filter_errors'  => $filterErrors,
             'maildirs_fixed' => $fixed,
         ];
     }
@@ -1176,7 +1194,10 @@ final class MailServer
     public function renderEximFilter(string $addr, string $maildir, array $globalRows, array $userRows): string
     {
         $out = [
-            '# AlphaCP managed filter — haath se edit mat karo',
+            // Exim spec: filter file ki PEHLI line '# Exim filter' honi hi chahiye.
+            // Nahi to exim ise aam .forward file samajhta hai (aur -bf reject kar deta hai).
+            '# Exim filter  <<== YE LINE HATAANA NAHI (Exim filter file ki pehchaan)',
+            '# AlphaCP managed — haath se edit mat karo',
             '# mailbox: ' . $addr,
             '# banaya gaya: panel ke Email Filters (#20 account-wide + #21 per-mailbox) se',
             '# har mail sync par dobara likha jata hai.',
@@ -1256,7 +1277,7 @@ final class MailServer
      * Galat filter se poora mail server nahi rukna chahiye: reject ho to
      * purani file wapas / naye filter ke bina delivery chalti rahe.
      */
-    private function writeFilterFile(string $path, string $body, string $addr, int $uid, int $gid): bool
+    private function writeFilterFile(string $path, string $body, string $addr, int $uid, int $gid): ?string
     {
         $dir = dirname($path);
         if (!is_dir($dir)) {
@@ -1265,33 +1286,29 @@ final class MailServer
         $tmp = $dir . '/.acp-filter-' . bin2hex(random_bytes(4)) . '.tmp';
         $this->tempFiles[] = $tmp;
         if (@file_put_contents($tmp, $body) === false) {
-            return false;
+            return 'filter file nahi likhi ja saki';
         }
-        @chmod($tmp, 0640);
-        if ($uid > 0) {
-            @chown($tmp, $uid);
-            if ($gid > 0) {
-                @chgrp($tmp, $gid);
-            }
-        }
+        // 0644 + root-owned: Exim ka router (Debian-exim) bhi filter file padh sake.
+        // Filter me koi secret nahi hota (sanitized rules), uid/gid delivery ke waqt
+        // transport set karta hai (address_directory).
+        @chmod($tmp, 0644);
         // Exim khud bole: `exim -bf <filter>` (galat syntax = non-zero exit)
         $probe = $this->cmd->run([$this->eximBin(), '-bf', $tmp, '-f', $addr], self::CMD_TIMEOUT, self::FILTER_TEST_MESSAGE);
         if (!$probe->ok()) {
             @unlink($tmp);
-            $this->log->warning(
-                'email filter reject (exim -bf): ' . $addr . ' -> ' . self::oneLine($probe->stderr . ' ' . $probe->stdout)
-            );
+            $why = self::oneLine($probe->stderr . ' ' . $probe->stdout);
+            $this->log->warning('email filter reject (exim -bf): ' . $addr . ' -> ' . $why);
 
-            return false;
+            return $why === '' ? 'exim -bf ne filter reject kar diya' : $why;
         }
         if (!@rename($tmp, $path)) {
             @unlink($tmp);
 
-            return false;
+            return 'filter file install nahi ho saki';
         }
-        @chmod($path, 0640);
+        @chmod($path, 0644);
 
-        return true;
+        return null;
     }
 
     /** Maildir subfolder pehle se bana do — IMAP me turant dikhe. */
@@ -1745,6 +1762,37 @@ final class MailServer
     }
 
     /**
+     * `exim4 -bV` sirf SYNTAX pakadta hai — runtime expansion error (jaise
+     * "Failed to find user" / "PANIC") tabhi dikhta hai jab exim sach-much kisi
+     * address ko route kare. 0.78.0 me yahi hua tha: config `-bV` pass kar gaya
+     * par poora mail delivery defer ho gaya. Ab setup ke baad ek asli `-bt`
+     * smoke test chalta hai — fail ho to purani template wapas.
+     *
+     * @return string|null  null = theek; string = wajah (reject kar do)
+     */
+    private function eximSmokeTest(): ?string
+    {
+        if (!$this->installed()) {
+            return null;
+        }
+        $boxes = $this->mailboxes();
+        if ($boxes === []) {
+            return null;   // koi mailbox nahi to smoke test ka matlab nahi
+        }
+        $addr = (string) $boxes[0];
+        $res = $this->cmd->run([$this->eximBin(), '-bt', $addr], self::CMD_TIMEOUT);
+        $text = trim($res->stdout . ' ' . $res->stderr);
+        if ($text === '') {
+            return null;   // chup binary (fake/test) — jhoothi reject nahi
+        }
+        if (preg_match('/PANIC|Failed to find user|cannot be resolved|configuration error|Failed to (open|find)/i', $text) === 1) {
+            return 'exim -bt ' . $addr . ' -> ' . self::oneLine($text);
+        }
+
+        return null;
+    }
+
+    /**
      * Managed Exim template dobara likho: backup (pehli baar) → likho → validate
      * (`update-exim4.conf` + `exim4 -bV`) → fail ho to purani wapas → restart.
      *
@@ -1766,6 +1814,11 @@ final class MailServer
             throw new TaskRejectedException(
                 'exim config reject (purani config wapas): ' . self::cleanError($generate) . ' / ' . self::cleanError($check)
             );
+        }
+        $smoke = $this->eximSmokeTest();
+        if ($smoke !== null) {
+            $this->restoreEximTemplate();
+            throw new TaskRejectedException('exim routing smoke test fail (purani config wapas): ' . $smoke);
         }
         $this->cmd->run(['/bin/systemctl', 'restart', 'exim4'], self::CMD_TIMEOUT);
 
@@ -2198,12 +2251,16 @@ final class MailServer
           allow_filter
           allow_defer
           allow_fail
+          # sirf un addresses par chalao jinke paas filter file hai
+          condition = \${if !eq{\${lookup{\$local_part@\$domain}lsearch{{$filtersFile}}}}{}{yes}{no}}
           file = \${lookup{\$local_part@\$domain}lsearch{{$filtersFile}}}
           directory_transport = address_directory
           file_transport = address_file
           pipe_transport = address_pipe
-          user = \${extract{2}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}{\$value}{}}}
-          group = \${extract{3}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}{\$value}{}}}
+          # uid/gid router par NAHI: yahan lookup fail ho to poora address defer ho jata hai
+          # (catch-all wale address ke paas koi entry hi nahi hoti). uid/gid transport
+          # `address_directory` set karta hai — wahan tabhi expand hota hai jab filter
+          # ne sach-much `save` kiya ho (tab address hamesha asli mailbox hi hota hai).
           no_verify
           no_expn
           check_ancestor
@@ -2318,6 +2375,9 @@ final class MailServer
           driver = appendfile
           maildir_format
           create_directory
+          directory = \${extract{1}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}}}
+          user = \${extract{2}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}}}
+          group = \${extract{3}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}}}
           delivery_date_add
           envelope_to_add
           return_path_add
