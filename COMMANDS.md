@@ -32,7 +32,7 @@ sudo alphacp-sync get ff8e7079f173f2ab78422de84c33ed5717bf7677 installer/panel-u
 
 ### 2) S10 live verification (recommended — ek hi command, sab khud saaf karta hai)
 ```bash
-sudo alphacp-sync get fb19113582c5ffadf570ec6f94a0e43775c70560 tools/verify/s10-mysql-restore-check.sh /tmp/acp-s10-mysql-restore-check.sh 9f2d0292587a964f48a46870a9a6153756e21ea611d8ffdefdc75f65912af6b0 && sudo bash /tmp/acp-s10-mysql-restore-check.sh
+sudo alphacp-sync get 439d59144799b83c6417ea8e9e6700c1037349b4 tools/verify/s10-mysql-restore-check.sh /tmp/acp-s10-mysql-restore-check.sh 613ff75a0ec4b089221323a573665a02758e7c04c3b076eee74c13f45a408068 && sudo bash /tmp/acp-s10-mysql-restore-check.sh
 ```
 - Server par **asli tar.gz** archive banata hai (homedir + `mysql/<acct>_acpverify.sql`), `db.restore`
   se import karta hai, aur **asli MariaDB** se verify karta hai — database bana? table bani? rows gine?
@@ -40,6 +40,9 @@ sudo alphacp-sync get fb19113582c5ffadf570ec6f94a0e43775c70560 tools/verify/s10-
   refuse hone par koi database na bane — ye bhi check hota hai. Ant me sab saaf (dono database drop,
   archive dir delete, temp account terminate — `trap` me bhi).
 - Expected last line: `=== S10 MYSQL RESTORE LIVE CHECK: 18 pass, 0 fail ===`.
+- **Kuch batane ki zaroorat nahi:** script apni poori report `/usr/local/alphacp/verify-reports/s10-<stamp>.txt`
+  me likh deti hai; `alphacp-sync` ka hourly snapshot use GitHub par le jata hai — to natija main khud
+  padh leta hoon (bas command chala do, chahe to phone band kar do).
 
 - **Agar isme koi FAIL aaye** to ye read-only diagnostic chalao (server par kuch nahi badalta) aur
   uska output bhej do — isme asli wajah likhi hoti hai (version, `db.restore` allowlist, archive dir,
@@ -48,7 +51,7 @@ sudo alphacp-sync get fb19113582c5ffadf570ec6f94a0e43775c70560 tools/verify/s10-
 sudo alphacp-sync get 1035d1e68d5bf1cfbe8e35e4b7b27d3a451a4727 tools/verify/s10-diag.sh /tmp/acp-s10-diag.sh 75e9f863b1afa189a67aac9f2e8bdddbc76088448f7cfed6bf93802ccf94dc7c && sudo bash /tmp/acp-s10-diag.sh
 ```
 - Chaaho to ye step skip karo — update khud-tested hai (panel **437/0** + 6 wasm-skip, update-sim
-  **234/234**, provision-sim **109/109**, mysql-sim **PASS**, s10-mysql-restore-sim **15/0**).
+  **234/234**, provision-sim **109/109**, mysql-sim **PASS**, s10-mysql-restore-sim **20/0**).
 
 - Ye 0.70.1 (agent useradd fix) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
 
