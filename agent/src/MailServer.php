@@ -50,6 +50,8 @@ final class MailServer
 
     // ---- config files (sab env-overridable: tests kabhi asli /etc ko nahi chhute) ----
     private const DEFAULT_EXIM_TEMPLATE = '/etc/exim4/exim4.conf.template';
+    /** Is text se pehchante hain ki template hamari (AlphaCP) hai ya distro wali. */
+    private const TEMPLATE_MARKER = 'AlphaCP managed exim4 configuration';
     private const DEFAULT_EXIM_DOMAINS = '/etc/exim4/alphacp-domains';
     private const DEFAULT_EXIM_RECIPIENTS = '/etc/exim4/alphacp-recipients';
     private const DEFAULT_EXIM_ALIASES = '/etc/exim4/alphacp-aliases';
@@ -137,6 +139,12 @@ final class MailServer
     public function eximTemplateBackup(): string
     {
         return $this->eximTemplate() . '.acp-orig';
+    }
+
+    /** Aakhri KAAM KARNE wali AlphaCP template (config reject hone par yahi wapas). */
+    public function eximTemplatePrev(): string
+    {
+        return $this->eximTemplate() . '.acp-prev';
     }
 
     public function domainsFile(): string
@@ -309,9 +317,7 @@ final class MailServer
         }
 
         // ---- Exim: template (backup ke saath) + generate + validate ----
-        if (is_file($this->eximTemplate()) && !is_file($this->eximTemplateBackup())) {
-            @copy($this->eximTemplate(), $this->eximTemplateBackup());
-        }
+        $this->snapshotEximTemplate();
         $this->writeManaged($this->eximTemplate(), $this->renderEximTemplate(), 0644);
         $generate = $this->cmd->run(
             [self::bin('ACP_MAIL_UPDATE_EXIM', self::UPDATE_EXIM, self::UPDATE_EXIM_PATHS)],
@@ -390,7 +396,14 @@ final class MailServer
     public function capabilities(): array
     {
         $bin = self::bin('ACP_MAIL_EXIM', self::EXIM, self::EXIM_PATHS);
-        $res = $this->cmd->run([$bin, '-bV'], self::CMD_TIMEOUT);
+        try {
+            $res = $this->cmd->run([$bin, '-bV'], self::CMD_TIMEOUT);
+        } catch (\RuntimeException) {
+            // exim installed hi nahi (ya allowlist me nahi) — sab features band
+            // (fail-closed): config me DKIM/spam likha hi nahi jayega, par poora
+            // render/STATUS kaam karta rahega (pehle yahan fatal throw hota tha).
+            return ['dkim' => false, 'content_scanning' => false, 'spamd' => false];
+        }
         $text = trim($res->stdout . ' ' . $res->stderr);
         if ($text === '') {
             return ['dkim' => false, 'content_scanning' => false, 'spamd' => false];
@@ -1800,9 +1813,7 @@ final class MailServer
      */
     private function applyEximTemplate(): array
     {
-        if (is_file($this->eximTemplate()) && !is_file($this->eximTemplateBackup())) {
-            @copy($this->eximTemplate(), $this->eximTemplateBackup());
-        }
+        $this->snapshotEximTemplate();
         $this->writeManaged($this->eximTemplate(), $this->renderEximTemplate(), 0644);
         $generate = $this->cmd->run(
             [self::bin('ACP_MAIL_UPDATE_EXIM', self::UPDATE_EXIM, self::UPDATE_EXIM_PATHS)],
@@ -2251,16 +2262,30 @@ final class MailServer
           allow_filter
           allow_defer
           allow_fail
-          # sirf un addresses par chalao jinke paas filter file hai
+          # (1) lookup file maujood NA ho to router seedha skip (defer nahi!) —
+          # (1) lookup file maujood NA ho to router seedha skip (defer nahi!).
+          #     (pehle `condition` me lookup thi — file missing par exim har mail
+          #     mail par PANIC log likhta tha (real exim 4.97 se verify kiya).
+          # (1) DONO zaroori hain (asli exim 4.97 se verify):
+          #     require_files  -> lookup file maujood NA ho to seedha skip
+          #                       (warna lookup har mail par PANIC/defer karta hai)
+          #     condition      -> file hai par is address ka koi filter nahi to skip
+          #                       (warna file = "" ho jata hai -> defer "" is not an
+          #                        absolute path -> MAIL QUEUE ME ATK JATI HAI)
+          require_files = {$filtersFile}
           condition = \${if !eq{\${lookup{\$local_part@\$domain}lsearch{{$filtersFile}}}}{}{yes}{no}}
           file = \${lookup{\$local_part@\$domain}lsearch{{$filtersFile}}}
+          # (2) `allow_filter` ke saath `user` HONA ZAROORI hai — Exim config-time
+          #     check: '"user" or "check_local_user" must be set with allow_filter'.
+          #     0.79.0 me ye hata diya to `exim -bV` hi reject ho gaya. uid yahan
+          #     MAILBOX KE HISAB SE — wahi extract idiom jo alphacp_maildir me chal
+          #     raha hai (0.78.0 ki nesting galat thi: "Failed to find
+          #     user"). condition false hone par ye line expand hoti hi nahi.
+          user = \${extract{2}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}}}
+          group = \${extract{3}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}}}
           directory_transport = address_directory
           file_transport = address_file
           pipe_transport = address_pipe
-          # uid/gid router par NAHI: yahan lookup fail ho to poora address defer ho jata hai
-          # (catch-all wale address ke paas koi entry hi nahi hoti). uid/gid transport
-          # `address_directory` set karta hai — wahan tabhi expand hota hai jab filter
-          # ne sach-much `save` kiya ho (tab address hamesha asli mailbox hi hota hai).
           no_verify
           no_expn
           check_ancestor
@@ -2371,13 +2396,16 @@ final class MailServer
         # Filter ke `save` command ke liye (redirect router ka directory_transport).
         # maildir_format + create_directory: .Folder/ khud ban jata hai, aur Dovecot
         # use IMAP me "Folder" ke naam se dikhata hai (Maildir++ layout).
+        # YAHAN `directory` / `user` / `group` KABHI NA LIKHEIN — filter ka `save`
+        # apna path khud laata hai (address hi path hota hai). Transport par ye set
+        # karne se wo filter ke folder ko override kar deta hai (0.79.0 me yahi hua:
+        # mail .filtered/ ki jagah inbox me chali gayi). uid/gid router se inherit
+        # hote hain (router par hi recipient ka local part aur domain milta hai;
+        # yahan address ek PATH hota hai, email address nahi).
         address_directory:
           driver = appendfile
           maildir_format
           create_directory
-          directory = \${extract{1}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}}}
-          user = \${extract{2}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}}}
-          group = \${extract{3}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}}}
           delivery_date_add
           envelope_to_add
           return_path_add
@@ -2466,12 +2494,39 @@ final class MailServer
 
     private function restoreEximTemplate(): void
     {
-        if (is_file($this->eximTemplateBackup())) {
-            @copy($this->eximTemplateBackup(), $this->eximTemplate());
+        // PEHLE pichli kaam karne wali AlphaCP template, warna distro wali asli.
+        // (0.79.0 me seedha .acp-orig wapas aayi to exim me alphacp routers hi nahi
+        //  rahe — har address "nonlocal" ho gaya aur poora mail band.)
+        foreach ([$this->eximTemplatePrev(), $this->eximTemplateBackup()] as $from) {
+            if (!is_file($from)) {
+                continue;
+            }
+            @copy($from, $this->eximTemplate());
             $this->cmd->run(
                 [self::bin('ACP_MAIL_UPDATE_EXIM', self::UPDATE_EXIM, self::UPDATE_EXIM_PATHS)],
                 self::CMD_TIMEOUT,
             );
+
+            return;
+        }
+    }
+
+    /**
+     * Distro wali asli template ki copy pehli baar (.acp-orig), aur har baar
+     * maujuda AlphaCP template ki copy (.acp-prev) — fail-safe rollback ke liye.
+     */
+    private function snapshotEximTemplate(): void
+    {
+        $tpl = $this->eximTemplate();
+        if (!is_file($tpl)) {
+            return;
+        }
+        if (!is_file($this->eximTemplateBackup())) {
+            @copy($tpl, $this->eximTemplateBackup());
+        }
+        $current = @file_get_contents($tpl);
+        if (is_string($current) && str_contains($current, self::TEMPLATE_MARKER)) {
+            @copy($tpl, $this->eximTemplatePrev());
         }
     }
 

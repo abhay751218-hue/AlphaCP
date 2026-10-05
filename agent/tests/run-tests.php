@@ -5562,20 +5562,27 @@ test('mail.server setup — exim template me filter router + address_directory t
     assert_true(str_contains($tpl, 'directory_transport = address_directory'), 'filter ke save ke liye transport');
     assert_true(str_contains($tpl, 'address_directory:'), 'address_directory transport hona chahiye');
     assert_true(str_contains($tpl, 'create_directory'), 'folder khud ban jana chahiye');
-    // LIVE BUG (0.78.0): router par `user = ${extract{2}{ }{${lookup{...}}{$value}{}}}`
+    // LIVE BUG 1 (0.78.0): router par `user = ${extract{2}{ }{${lookup{...}}{$value}{}}}`
     // galat brace-nesting thi -> "Failed to find user }" -> POORA mail delivery defer.
-    // uid/gid ab transport `address_directory` set karta hai (wahi idiom jo
-    // alphacp_maildir use karta hai), aur router `condition` se guard hai.
+    // Sahi idiom: bina `{$value}{}` ke, wahi jo alphacp_maildir use karta hai.
     $router = substr($tpl, (int) strpos($tpl, 'alphacp_userfilter:'));
     $router = substr($router, 0, (int) strpos($router, 'alphacp_autoreply:'));
-    assert_true(!str_contains($router, 'user ='), 'router par user= NAHI hona chahiye (defer ka kaaran)');
-    assert_true(!str_contains($router, 'group ='), 'router par group= NAHI hona chahiye');
-    assert_true(str_contains($router, 'condition = ${if !eq{'), 'condition guard hona chahiye');
-    assert_true(!str_contains($router, '{$value}'), '{$value} wali nesting galat hai (exim galat parse karta hai)');
+    assert_true(!str_contains($router, '{$value}'), '{$value} wali nesting galat hai (exim "Failed to find user" deta hai)');
+    // LIVE BUG 2 (0.79.0): `allow_filter` ke saath `user` HATANE par exim config
+    // hi reject kar deta hai ("user or check_local_user must be set with allow_filter").
+    assert_true(str_contains($router, 'user = ${extract{2}{ }'), 'allow_filter ke saath user= ZAROORI hai (warna exim -bV reject)');
+    assert_true(str_contains($router, 'group = ${extract{3}{ }'), 'group bhi wahi idiom');
+    // LIVE BUG 3: lookup file missing/empty par defer+PANIC na ho — dono guard chahiye.
+    assert_true(str_contains($router, 'require_files = '), 'require_files guard (lookup file missing par skip)');
+    assert_true(str_contains($router, 'condition = ${if !eq{'), 'condition guard (is address ka filter nahi to skip)');
+    // LIVE BUG 4 (0.79.0): transport par directory/user/group set karne se filter ka
+    // `save` path override ho jata hai (mail .filtered/ ki jagah inbox me chali gayi).
     $tdir = substr($tpl, (int) strpos($tpl, 'address_directory:'));
     $tdir = substr($tdir, 0, 400);
-    assert_true(str_contains($tdir, 'user = ${extract{2}{ }'), 'address_directory uid set kare');
-    assert_true(str_contains($tdir, 'group = ${extract{3}{ }'), 'address_directory gid set kare');
+    assert_true(!str_contains($tdir, 'directory ='), 'address_directory me directory= NAHI (filter ke save path ko override karta hai)');
+    assert_true(!str_contains($tdir, 'user ='), 'address_directory me user= NAHI (router se inherit hota hai)');
+    assert_true(!str_contains($tdir, 'group ='), 'address_directory me group= NAHI');
+    assert_true(str_contains($tdir, 'create_directory'), 'folder khud ban jana chahiye');
     // filter router mailbox router se pehle aana chahiye
     assert_true(
         strpos($tpl, 'alphacp_userfilter:') < strpos($tpl, 'alphacp_mailbox:'),
