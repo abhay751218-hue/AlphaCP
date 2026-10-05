@@ -1,46 +1,97 @@
-S7 mail diagnostics — 2026-10-05T15:00:40Z host=ip-172-26-4-65
+S7 mail diagnostics — 2026-10-05T15:28:21Z host=ip-172-26-4-65
 
-=== FILTER (folder) FAIL diagnostics ===
-$ cat /home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter
-    # Exim filter  <<== YE LINE HATAANA NAHI (Exim filter file ki pehchaan)
-    # AlphaCP managed — haath se edit mat karo
-    # mailbox: info@acp-mail-check.test
-    # banaya gaya: panel ke Email Filters (#20 account-wide + #21 per-mailbox) se
-    # har mail sync par dobara likha jata hai.
-    
-    if error_message then finish endif
-    
-    if $header_subject: contains "acpfilter" then
-      save "/home/acpmailchk/mail/acp-mail-check.test/info/.filtered/"
-      finish
-    endif
-    
-$ ls -la /home/acpmailchk/mail/acp-mail-check.test/info
-    total 24
-    drwx------ 6 acpmailchk acpmailchk 4096 Oct  5 15:00 .
-    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 15:00 ..
-    drwx------ 5 acpmailchk acpmailchk 4096 Oct  5 15:00 .filtered
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 15:00 cur
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 15:00 new
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 15:00 tmp
-$ tail -30 /var/log/exim4/mainlog
-    2026-10-05 15:00:46 1xDkBK-00000002fP3-0f0a <= root@ip-172-26-4-65 U=root P=local S=366
-    2026-10-05 15:00:46 1xDkBK-00000002fP3-0f0a => info <info@acp-mail-check.test> R=alphacp_mailbox T=alphacp_maildir
-    2026-10-05 15:00:46 1xDkBK-00000002fP3-0f0a Completed
-    2026-10-05 15:00:48 Warning: purging the environment.
-     Suggested action: use keep_environment.
-    2026-10-05 15:00:49 Warning: purging the environment.
-     Suggested action: use keep_environment.
-    2026-10-05 15:00:51 Warning: purging the environment.
-     Suggested action: use keep_environment.
-    2026-10-05 15:00:51 Warning: No server certificate defined; will use a selfsigned one.
-     Suggested action: either install a certificate or change tls_advertise_hosts option
-    2026-10-05 15:00:51 exim 4.97 daemon started: pid=636515, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
-    2026-10-05 15:00:52 Warning: purging the environment.
-     Suggested action: use keep_environment.
-    2026-10-05 15:00:52 Warning: No server certificate defined; will use a selfsigned one.
-     Suggested action: either install a certificate or change tls_advertise_hosts option
-    2026-10-05 15:00:52 exim 4.97 daemon started: pid=637021, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
-    2026-10-05 15:00:52 Start queue run: pid=637047
-    2026-10-05 15:00:52 1xDfcU-00000002S8n-3C1V == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-    2026-10-05 15:00:52 1xDj8H-00000002bpt-2Rp1 == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+=== FILTER delivery diagnostics ===
+synthetic subject: acpfilter-1791214113-29714
+Exim -v exit status: 0
+exim -v: LOG: MAIN
+exim -v:   Warning: purging the environment.
+exim -v:  Suggested action: use keep_environment.
+exim -v: LOG: MAIN
+exim -v:   <= root@ip-172-26-4-65 U=root P=local S=432
+exim -v: delivering 1xDkcD-00000002h69-1Yra
+exim -v: LOG: MAIN
+exim -v:   == info@acp-mail-check.test R=alphacp_userfilter defer (-1): failed to open /home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter: Permission denied (euid=1001 egid=1001)
+--- Exim -bf against the exact synthetic subject ---
+exim -bf: Return-path copied from sender
+exim -bf: Sender      = root@ip-172-26-4-65
+exim -bf: Recipient   = root@ip-172-26-4-65
+exim -bf: Testing Exim filter file "/home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter"
+exim -bf: 
+exim -bf: Save message to: /home/acpmailchk/mail/acp-mail-check.test/info/.filtered/
+exim -bf: Finish
+exim -bf: Filtering set up at least one significant delivery or other action.
+exim -bf: No other deliveries will occur.
+--- effective address_directory transport ---
+driver = appendfile
+group = 
+user = 
+create_directory
+directory = 
+directory_file = q${base62:$tod_epoch}-$inode
+directory_mode = 0700
+maildir_format
+mode = 0700
+--- Maildir ownership/modes ---
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/new
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/.filtered
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/.filtered/new
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/.filtered/cur
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/.filtered/tmp
+--- Exim mainlog lines added by this test ---
+mainlog: 2026-10-05 15:28:33 Warning: purging the environment.
+mainlog:  Suggested action: use keep_environment.
+mainlog: 2026-10-05 15:28:33 1xDkcD-00000002h69-1Yra <= root@ip-172-26-4-65 U=root P=local S=432
+mainlog: 2026-10-05 15:28:33 1xDkcD-00000002h69-1Yra == info@acp-mail-check.test R=alphacp_userfilter defer (-1): failed to open /home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter: Permission denied (euid=1001 egid=1001)
+--- Exim queue entries for test address ---
+queue:           info@acp-mail-check.test
+--- Maildir files (max depth 3) ---
+file: /home/acpmailchk/mail/acp-mail-check.test/info/new/1791214108.M400110P641007.ip-172-26-4-65
+
+=== FILTER delivery diagnostics ===
+synthetic subject: acpdiscard-1791214114-15019
+Exim -v exit status: 0
+exim -v: LOG: MAIN
+exim -v:   Warning: purging the environment.
+exim -v:  Suggested action: use keep_environment.
+exim -v: LOG: MAIN
+exim -v:   <= root@ip-172-26-4-65 U=root P=local S=426
+exim -v: delivering 1xDkcE-00000002h7K-2jUY
+exim -v: LOG: MAIN
+exim -v:   == info@acp-mail-check.test R=alphacp_userfilter defer (-1): failed to open /home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter: Permission denied (euid=1001 egid=1001)
+--- Exim -bf against the exact synthetic subject ---
+exim -bf: Return-path copied from sender
+exim -bf: Sender      = root@ip-172-26-4-65
+exim -bf: Recipient   = root@ip-172-26-4-65
+exim -bf: Testing Exim filter file "/home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter"
+exim -bf: 
+exim -bf: Seen finish
+exim -bf: Filtering set up at least one significant delivery or other action.
+exim -bf: No other deliveries will occur.
+--- effective address_directory transport ---
+driver = appendfile
+group = 
+user = 
+create_directory
+directory = 
+directory_file = q${base62:$tod_epoch}-$inode
+directory_mode = 0700
+maildir_format
+mode = 0700
+--- Maildir ownership/modes ---
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/new
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/.filtered
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/.filtered/new
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/.filtered/cur
+drwx------ acpmailchk:acpmailchk (1001:1001) /home/acpmailchk/mail/acp-mail-check.test/info/.filtered/tmp
+--- Exim mainlog lines added by this test ---
+mainlog: 2026-10-05 15:28:34 Warning: purging the environment.
+mainlog:  Suggested action: use keep_environment.
+mainlog: 2026-10-05 15:28:34 1xDkcE-00000002h7K-2jUY <= root@ip-172-26-4-65 U=root P=local S=426
+mainlog: 2026-10-05 15:28:34 1xDkcE-00000002h7K-2jUY == info@acp-mail-check.test R=alphacp_userfilter defer (-1): failed to open /home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter: Permission denied (euid=1001 egid=1001)
+--- Exim queue entries for test address ---
+queue:           info@acp-mail-check.test
+queue:           info@acp-mail-check.test
+--- Maildir files (max depth 3) ---
+file: /home/acpmailchk/mail/acp-mail-check.test/info/new/1791214108.M400110P641007.ip-172-26-4-65
