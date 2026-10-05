@@ -158,7 +158,7 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.75.0"
+UPDATER_VERSION="0.76.0"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.74.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
 BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-2654506a92e7f975d0d468afc16873803e992f3d}"
@@ -166,9 +166,9 @@ BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
 BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7396d88339f2d716889dc72058eded0e0e156f47668656b28a1c998dc479f4b5}"
 AGENT_VERSION="${ACP_AGENT_VERSION:-0.65.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-e1fc14d49fdbfb93c5a2e62f4d46b875679519df}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-b724e048a0971a0da7c38ea3432ba84c69e19542}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-a5ca132d2232f2e19df28b4fd0d949763cd0fe74d777fb698c85e8cb007e0a9c}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-f925bf9104d310fea551a24979dbf2ffc491d3b29039a28280571efaac5b124d}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -534,6 +534,12 @@ if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
         /usr/sbin/exim4 -bV >/dev/null 2>&1 || warn "exim4 -bV fail — config check karein"
         systemctl is-active --quiet exim4 && ok "exim4 service active" || warn "exim4 service active NAHI"
         systemctl is-active --quiet dovecot && ok "dovecot service active" || warn "dovecot service active NAHI"
+        # maujooda accounts ke liye SPF + DMARC + DKIM records (DNS me likhe jate hain)
+        if "${PHP_BIN}" "${ACP_HOME}/agent/bin/paneld" --run mail.server '{"action":"deliverability"}' >>"${LOG_FILE}" 2>&1; then
+          ok "SPF/DMARC/DKIM records maujooda domains ke liye likhe gaye (DNS zone me)"
+        else
+          warn "deliverability fail — SPF/DKIM/DMARC records nahi likhe gaye (email phir bhi chalega)"
+        fi
         info "verify: alphacp-sync get <commit> tools/verify/s7-mail-check.sh /tmp/s7.sh <sha> && sudo bash /tmp/s7.sh"
       else
         systemctl stop exim4 >/dev/null 2>&1 || true
