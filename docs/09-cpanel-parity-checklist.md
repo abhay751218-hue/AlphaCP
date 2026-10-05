@@ -5,7 +5,7 @@
 > Jo step poora hoga, uske items ✅ ho jaayenge. **Project tab complete maana jayega jab ye file 100% ✅ ho.**
 
 **Banaya:** 28 Sep 2026 · **Base:** cPanel 138 (Meridian, Jul 2026) + WHM full tool list
-**Updated:** 6 Oct 2026 · Checklist status is **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵** (199 required rows; 145 are not green). S9 BIND9 and S7 #20/#21 remain live-verified; #147 status check remains **8/0/0**. #18 static mailing-list fan-out is implemented locally in panel 0.75.0 but still lacks real Exim/subscriber-Maildir delivery proof, so its live command remains withheld. S7 #23 Address Importer hardening is implemented in local candidate panel 0.76.0: full panel suite **456/0/6 wasm-skip**, final importer feature file **10 tests / 55 assertions**; live Exim/Dovecot authentication and delivery remain unverified, so #23 stays 🟡. Server deployment has not been inferred from these local results.
+**Updated:** 6 Oct 2026 · Checklist status is **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵** (199 required rows; 145 are not green). S9 BIND9 and S7 #20/#21 remain live-verified; #147 status check remains **8/0/0**. #18 static mailing-list fan-out was introduced in panel 0.75.0 and is included in cumulative panel 0.76.0, but still lacks real Exim/subscriber-Maildir delivery proof, so its live command remains withheld. S7 #23 Address Importer hardening is implemented in local candidate panel 0.76.0: full panel suite **456/0/6 wasm-skip**, final importer feature file **10 tests / 55 assertions**; live Exim/Dovecot authentication and delivery remain unverified, so #23 stays 🟡. Server deployment has not been inferred from these local results.
 
 ---
 

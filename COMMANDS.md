@@ -17,12 +17,9 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 > #147 ka live status verifier aapne chalaya: **8 pass / 0 fail / 0 skip** (`STATUS-VERIFIED`).
 > #20/#21 ka live mail result **62/0/0** hai. Current required checklist status: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
 >
-> #18 now has customer CRUD, persisted subscriber addresses, validation, and static Exim fan-out.
-> Local checks: focused panel tests **8/8**, full panel suite **453/0/6 wasm-skip**, `provision-sim`
-> **209/0**, updated `s7-mail-sim` **14/0**, and full `update-sim` **247/0**. Candidate archives panel
-> **0.75.0** and agent **0.82.0** are pinned with checksum-matching defaults in updater **0.82.0**.
-> `tools/verify/s7-mailing-list-check.sh` passes only against its simulator so far; no real Exim route or
-> subscriber-Maildir delivery has been verified. Checklist #18 remains 🟡.
+> #18 has customer CRUD, persisted subscriber addresses, validation, and static Exim fan-out; real Exim route/subscriber-Maildir delivery is still unverified. Roadmap work continues on #23 rather than waiting at this blocker.
+> Current cumulative panel candidate: **0.76.0**, agent **0.82.0**, updater **0.82.1**. The updater pins panel artifact SHA-256 `e0394dd336863c54b6f2662d98a998aea8ca46f317d106eba1de4d655b276064` at commit `4f8de1943f3b53c4f71bc38647155d4d3305c0e6`; agent SHA-256 remains `b3cb65c694d28f7d0361baac616ea47e1308c87826079238d3582a8e32142b77` at commit `312f21cbc1a2cecde786f8ebbff6f9e814a25253`.
+> Local checks: full panel suite **456/0/6 wasm-skip** plus the final Address Importer feature file **10/10 (55 assertions)**; agent artifact suite **209/0**, `s7-mail-sim` **14/0**, and `update-sim` **247/0**. The dedicated `tools/verify/s7-mailing-list-check.sh` has only passed against its simulator; no real Exim route or subscriber-Maildir delivery has been verified. #18 remains 🟡; #23 also remains 🟡 until live mailbox authentication/delivery is proved.
 >
 > **NO LIVE SERVER COMMAND — live verification pending.** Keep the live command withheld until the release is pinned and the
 > dedicated verifier can prove real Exim fan-out and subscriber delivery. Do not manually update services.

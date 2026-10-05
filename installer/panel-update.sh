@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.82.0  ·  default panel bundle 0.75.0  ·  agent 0.82.0  ·  alphacp-sync v1.2
+# updater 0.82.1  ·  default panel bundle 0.76.0  ·  agent 0.82.0  ·  alphacp-sync v1.2
 #
+# 0.82.1: S7 #23 Address Importer hardening — bounded CSV file upload, reject normalized
+#         duplicate addresses, hash all passwords before atomic mailbox inserts, and never
+#         flash/render pasted passwords on error. Full panel suite 456/0/6 wasm-skip; final
+#         importer file 10/10 (55 assertions). Local candidate only; live mail auth/delivery
+#         is pending, and this release does not clear #18's real-Exim verification blocker.
 # 0.82.0: S7 #18 static mailing lists — panel subscribers persist in mailing_lists.members;
 #         agent syncs validated membership to Exim aliases for per-subscriber fan-out.
 #         Panel suite 453/0/6 wasm-skip, agent 209/0, S7 mail SIM 14/0. Real list delivery
@@ -187,13 +192,13 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.82.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.75.0}"
+UPDATER_VERSION="0.82.1"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.76.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-312f21cbc1a2cecde786f8ebbff6f9e814a25253}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-4f8de1943f3b53c4f71bc38647155d4d3305c0e6}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-53bcfb3b59add88bbad39df076b4e25a6f1164e0c0b8cc4331959b8780e5cc2c}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-e0394dd336863c54b6f2662d98a998aea8ca46f317d106eba1de4d655b276064}"
 AGENT_VERSION="${ACP_AGENT_VERSION:-0.82.0}"
 AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-312f21cbc1a2cecde786f8ebbff6f9e814a25253}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
@@ -648,7 +653,7 @@ mkdir -p "${NEW_PANEL}/storage/app/private" \
          "${NEW_PANEL}/bootstrap/cache"
 chown -R "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/storage" "${NEW_PANEL}/bootstrap/cache"
 # naye panel ki .env me version (rollback par purani .env wapas aati hai)
-# UI me RELEASE version dikhe (PANEL_VERSION = panel CODE bundle, wo 0.75.0 hi rahega
+# UI me RELEASE version dikhe (PANEL_VERSION = panel CODE bundle, wo 0.76.0 hi rahega
 # jab tak panel ka code nahi badalta — isse user ko har release ka number nazar aata hai).
 if grep -q '^ACP_VERSION=' "${NEW_PANEL}/.env"; then
   sed -i "s/^ACP_VERSION=.*/ACP_VERSION=${UPDATER_VERSION}/" "${NEW_PANEL}/.env"
