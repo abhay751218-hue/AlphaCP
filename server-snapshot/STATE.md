@@ -112,15 +112,16 @@ agent-backup-20261005073615
 agent-backup-20261005074509
 agent-backup-20261005075030
 agent-backup-20261005080305
-panel-backup-20261005074509
+agent-backup-20261005100057
 panel-backup-20261005075030
 panel-backup-20261005080305
+panel-backup-20261005100057
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -139,11 +140,16 @@ redis-server               active
 ## Listening ports
 ```
 22	sshd
+25	exim4
 53	named
 80	apache2
+110	dovecot
+143	dovecot
 443	apache2
 783	spamd
 953	named
+993	dovecot
+995	dovecot
 3306	mariadbd
 6379	redis-server
 8090	nginx
@@ -449,6 +455,7 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/etc/check.token  
 /usr/local/alphacp/etc/database.env  keys: ACP_DB_HOST ACP_DB_PORT ACP_DB_NAME ACP_DB_USER ACP_DB_PASS ACP_SERVER_ID 
 /usr/local/alphacp/etc/install.env  keys: ACP_INSTALLER_VERSION ACP_PROFILE ACP_INSTALLED_AT ACP_OS ACP_ARCH ACP_PHP_PRIMARY ACP_PHP_VERSIONS ACP_PANEL_INSTALLED ACP_LICENSE_STATUS 
+/usr/local/alphacp/etc/mail-server-configured  
 /usr/local/alphacp/etc/my.cnf  keys: user password host port database 
 /usr/local/alphacp/etc/panel.env  keys: ACP_DB_HOST ACP_DB_PORT ACP_DB_NAME ACP_DB_USER ACP_DB_PASS ACP_SERVER_ID ACP_HOME 
 /usr/local/alphacp/var/install.state  keys: preflight packages services 
