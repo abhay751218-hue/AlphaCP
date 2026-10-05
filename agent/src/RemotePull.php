@@ -271,6 +271,18 @@ final class RemotePull
         if (!is_dir($this->dropRoot) && !mkdir($this->dropRoot, 0750, true) && !is_dir($this->dropRoot)) {
             throw new TaskRejectedException("import drop dir {$this->dropRoot} could not be created");
         }
+        // destination: validate BEFORE we talk to the network, so a bad name costs
+        // nothing and can never leave a half-open connection behind
+        $destName = trim((string) ($spec['dest_name'] ?? ''));
+        if ($destName === '') {
+            $destName = basename($remotePath);      // /home/cpmove-alice.tar.gz -> cpmove-alice.tar.gz
+        }
+        $destName = self::assertDestName($destName);
+        $final = rtrim($this->dropRoot, '/') . '/' . $destName;
+        if (is_file($final) && ($spec['overwrite'] ?? false) !== true) {
+            throw new TaskRejectedException("{$final} already exists — overwrite=true do ya koi aur naam chuno");
+        }
+
         if (!self::have('ACP_SSH_SCP', self::SCP)) {
             throw new TaskRejectedException('openssh-client (scp) is not installed on this server');
         }
@@ -299,15 +311,6 @@ final class RemotePull
         file_put_contents($knownHosts, $probed['pubkey'] . "\n");
 
         // 2) destination — a .part file is only renamed once the bytes check out
-        $destName = trim((string) ($spec['dest_name'] ?? ''));
-        if ($destName === '') {
-            $destName = basename($remotePath);      // e.g. /home/cpmove-alice.tar.gz -> cpmove-alice.tar.gz
-        }
-        $destName = self::assertDestName($destName);
-        $final = rtrim($this->dropRoot, '/') . '/' . $destName;
-        if (is_file($final) && ($spec['overwrite'] ?? false) !== true) {
-            throw new TaskRejectedException("{$final} already exists — overwrite=true do ya koi aur naam chuno");
-        }
         $part = rtrim($this->dropRoot, '/') . '/.acp-pull-' . gmdate('YmdHis') . '-' . bin2hex(random_bytes(3)) . '.part';
         $this->tempFiles[] = $part;
 
