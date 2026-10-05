@@ -1655,6 +1655,41 @@ return [
         ],
     ],
 
+    // S10: authenticated remote pull — cpmove archive doosre server se SSH (scp) se lao.
+    // 'probe' sirf host key fingerprint laata hai (download nahi) — panel pehle wo dikhata
+    // hai, admin verify karta hai, phir host_fingerprint pin karke asli pull hoti hai.
+    'backup.pull' => [
+        'handler'     => Tasks\BackupPull::class,
+        'safety'      => 'mutating',
+        'timeout'     => 3600,
+        'confirm'     => 'backup.pull',
+        'description' => 'Fetch a cPanel archive from another server over SSH (scp) into the import drop dir.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['host', 'user', '_confirm'],
+            'properties'           => [
+                'host'             => ['type' => 'string', 'minLength' => 1, 'maxLength' => 253],
+                'port'             => ['type' => 'integer', 'minimum' => 1, 'maximum' => 65535],
+                'user'             => ['type' => 'string', 'pattern' => '^[a-z_][a-z0-9_-]{0,31}$'],
+                'remote_path'      => ['type' => 'string', 'pattern' => '^/[A-Za-z0-9._/-]+$', 'maxLength' => 4096],
+                'probe'            => ['type' => 'boolean'],
+                'auth'             => ['type' => 'string', 'enum' => ['key', 'password']],
+                'private_key'      => ['type' => 'string', 'maxLength' => 65536],
+                'key_path'         => ['type' => 'string', 'pattern' => '^/[A-Za-z0-9._/-]+$', 'maxLength' => 4096],
+                'password'         => ['type' => 'string', 'maxLength' => 1024],
+                'dest_name'        => ['type' => 'string', 'pattern' => '^[A-Za-z0-9][A-Za-z0-9._-]*$', 'maxLength' => 120],
+                'sha256'           => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$', 'maxLength' => 64],
+                'host_fingerprint' => ['type' => 'string', 'maxLength' => 128],
+                'accept_host_key'  => ['type' => 'boolean'],
+                'max_kbps'         => ['type' => 'integer', 'minimum' => 0, 'maximum' => 1000000],
+                'overwrite'        => ['type' => 'boolean'],
+                '_confirm'         => ['type' => 'string', 'enum' => ['backup.pull']],
+            ],
+        ],
+    ],
+
     'backup.transfer' => [
         'handler'     => Tasks\BackupTransfer::class,
         'safety'      => 'destructive',

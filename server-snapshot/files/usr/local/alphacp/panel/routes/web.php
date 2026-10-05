@@ -429,6 +429,11 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('transfer-tool.index');
     Route::post('/transfer-tool', [TransferToolController::class, 'store'])
         ->middleware('perm:accounts.view')->name('transfer-tool.store');
+    // S10 remote pull: 1) host key fingerprint lao (probe) 2) archive lao (pull)
+    Route::post('/transfer-tool/probe', [TransferToolController::class, 'probe'])
+        ->middleware('perm:accounts.view')->name('transfer-tool.probe');
+    Route::post('/transfer-tool/pull', [TransferToolController::class, 'pull'])
+        ->middleware('perm:accounts.view')->name('transfer-tool.pull');
 
     Route::get('/transfer-restore', [TransferRestoreController::class, 'index'])
         ->middleware('perm:accounts.view')->name('transfer-restore.index');

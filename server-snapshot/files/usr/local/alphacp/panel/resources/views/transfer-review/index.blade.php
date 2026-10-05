@@ -12,7 +12,7 @@
 @section('content')
 <div class="card">
     <h3>Transfer / restore jobs</h3>
-    <p class="help">Har row ek <span class="mono">backup.cpanel</span> / <span class="mono">backup.transfer</span> task hai — status aur agent result seedha task queue se aata hai.</p>
+    <p class="help">Har row ek <span class="mono">backup.cpanel</span> / <span class="mono">backup.transfer</span> / <span class="mono">db.restore</span> / <span class="mono">backup.pull</span> task hai — status aur agent result seedha task queue se aata hai.</p>
     <div class="table-wrap">
         <table>
             <tr><th>#</th><th>Type</th><th>Account</th><th>Status</th><th>Imported</th><th>Skipped sections</th><th>Source</th><th>When</th></tr>
@@ -22,8 +22,20 @@
                     <td class="mono">{{ $job['type'] }}</td>
                     <td class="mono">{{ $job['username'] !== '' ? $job['username'] : '—' }}</td>
                     <td><span class="badge {{ $job['status'] === 'success' ? 'green' : ($job['status'] === 'failed' ? 'red' : 'amber') }}">{{ $job['status'] }}</span></td>
-                    <td class="mono">{{ $job['status'] === 'success' ? $job['files'] . ' files · ' . number_format($job['bytes'] / 1048576, 1) . ' MB' : '—' }}</td>
-                    <td class="mono">{{ $job['sections'] !== '' ? $job['sections'] : '—' }}</td>
+                    <td class="mono">
+                        @if ($job['type'] === 'backup.pull')
+                            {{ $job['status'] === 'success' && $job['bytes'] > 0 ? number_format($job['bytes'] / 1048576, 1) . ' MB pull' : '—' }}
+                        @else
+                            {{ $job['status'] === 'success' ? $job['files'] . ' files · ' . number_format($job['bytes'] / 1048576, 1) . ' MB' : '—' }}
+                        @endif
+                    </td>
+                    <td class="mono">
+                        @if ($job['type'] === 'backup.pull' && $job['fingerprint'] !== '')
+                            host key {{ \Illuminate\Support\Str::limit($job['fingerprint'], 28) }}
+                        @else
+                            {{ $job['sections'] !== '' ? $job['sections'] : '—' }}
+                        @endif
+                    </td>
                     <td class="mono">{{ $job['source'] !== '' ? $job['source'] : '—' }}</td>
                     <td class="muted">{{ \App\Support\Panel::ago($job['created_at']) }}</td>
                 </tr>

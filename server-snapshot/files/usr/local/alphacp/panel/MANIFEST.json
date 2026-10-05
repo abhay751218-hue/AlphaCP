@@ -1,6 +1,6 @@
 {
   "name": "alphacp-panel",
-  "version": "0.71.0",
+  "version": "0.72.0",
   "step": "5",
   "php": ">=8.3",
   "built_at": "2026-10-04 00:00:00Z",

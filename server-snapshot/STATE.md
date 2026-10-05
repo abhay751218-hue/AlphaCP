@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.71.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.71.0   (.env)
-AGENT_VERSION : 0.64.0
+panel code    : 0.72.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.72.0   (.env)
+AGENT_VERSION : 0.65.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -103,9 +103,10 @@ agent-backup-20261004032958
 agent-backup-20261004145538
 agent-backup-20261004151423
 agent-backup-20261005014431
-panel-backup-20261004145538
+agent-backup-20261005030945
 panel-backup-20261004151423
 panel-backup-20261005014431
+panel-backup-20261005030945
 panel-failed-20260928223644
 ```
 
@@ -157,11 +158,11 @@ alphacp:scheduled-backups
   0001_01_01_000001_create_cache_table   [1] Ran
   0001_01_01_000002_create_jobs_table   [1] Ran
   2026_09_28_000001_create_panel_core_tables   [1] Ran
-  2026_09_28_000002_agent_side_tables_if_missing .. [1] Ran
+  2026_09_28_000002_agent_side_tables_if_missing   [1] Ran
   2026_09_29_000003_create_accounts_tables   [2] Ran
-  2026_09_29_000004_packages_feature_lists_and_limits  [3] Ran
+  2026_09_29_000004_packages_feature_lists_and_limits   [3] Ran
   2026_09_29_000005_create_domains_table   [4] Ran
-  2026_09_29_000006_create_cron_jobs_and_software_perms  [5] Ran
+  2026_09_29_000006_create_cron_jobs_and_software_perms   [5] Ran
   2026_09_29_000007_add_ssl_to_domains   [6] Ran
   2026_09_29_000008_add_autossl_to_domains   [7] Ran
   2026_09_29_000009_add_errorpages_permissions   [8] Ran
@@ -173,44 +174,44 @@ alphacp:scheduled-backups
   2026_09_29_000015_add_ssh_permissions   [14] Ran
   2026_09_29_000016_create_mailboxes_table   [15] Ran
   2026_09_29_000017_create_forwarders_table   [16] Ran
-  2026_09_29_000018_create_autoresponders_table .. [17] Ran
+  2026_09_29_000018_create_autoresponders_table   [17] Ran
   2026_09_29_000019_create_catchalls_table   [18] Ran
   2026_09_29_000020_create_mail_filters_table   [19] Ran
   2026_09_29_000021_create_spam_settings_table   [20] Ran
   2026_09_29_000022_create_mailing_lists_table   [21] Ran
   2026_09_29_000023_create_email_routes_table   [22] Ran
-  2026_09_29_000024_create_global_filters_table .. [23] Ran
-  2026_09_29_000025_create_encryption_keys_table . [24] Ran
-  2026_09_29_000026_create_boxtrapper_settings_table  [25] Ran
-  2026_09_29_000027_create_calendar_items_table .. [26] Ran
-  2026_09_29_000028_create_webmail_settings_table  [27] Ran
-  2026_09_29_000029_create_mysql_databases_table . [28] Ran
-  2026_09_29_000030_create_phpmyadmin_settings_table  [29] Ran
-  2026_09_29_000031_create_mysql_remote_hosts_table  [30] Ran
+  2026_09_29_000024_create_global_filters_table   [23] Ran
+  2026_09_29_000025_create_encryption_keys_table   [24] Ran
+  2026_09_29_000026_create_boxtrapper_settings_table   [25] Ran
+  2026_09_29_000027_create_calendar_items_table   [26] Ran
+  2026_09_29_000028_create_webmail_settings_table   [27] Ran
+  2026_09_29_000029_create_mysql_databases_table   [28] Ran
+  2026_09_29_000030_create_phpmyadmin_settings_table   [29] Ran
+  2026_09_29_000031_create_mysql_remote_hosts_table   [30] Ran
   2026_09_29_000032_create_dns_records_table   [31] Ran
-  2026_09_29_000033_create_dns_dynamic_hosts_table  [32] Ran
-  2026_09_29_000034_create_hostname_a_entries_table  [33] Ran
+  2026_09_29_000033_create_dns_dynamic_hosts_table   [32] Ran
+  2026_09_29_000034_create_hostname_a_entries_table   [33] Ran
   2026_09_29_000035_create_dns_templates_table   [34] Ran
-  2026_09_29_000036_create_global_email_routes_table  [35] Ran
+  2026_09_29_000036_create_global_email_routes_table   [35] Ran
   2026_09_29_000037_create_ns_records_table   [36] Ran
-  2026_09_29_000038_create_parked_domains_table .. [37] Ran
+  2026_09_29_000038_create_parked_domains_table   [37] Ran
   2026_09_29_000039_create_dns_cleanups_table   [38] Ran
   2026_09_29_000040_create_zone_ttls_table   [39] Ran
-  2026_09_29_000041_create_domain_forwards_table . [40] Ran
+  2026_09_29_000041_create_domain_forwards_table   [40] Ran
   2026_09_29_000042_create_dns_syncs_table   [41] Ran
-  2026_09_29_000043_create_nameserver_selections_table  [42] Ran
+  2026_09_29_000043_create_nameserver_selections_table   [42] Ran
   2026_09_29_000044_create_backup_jobs_table   [43] Ran
-  2026_09_29_000045_create_backup_wizards_table .. [44] Ran
-  2026_09_29_000046_create_backup_restores_table . [45] Ran
-  2026_09_29_000047_create_backup_configs_table .. [46] Ran
-  2026_09_29_000048_create_backup_restorations_table  [47] Ran
-  2026_09_29_000049_create_backup_user_selections_table  [48] Ran
-  2026_09_29_000050_create_file_directory_restorations_table  [49] Ran
-  2026_09_29_000051_create_transfer_tools_table .. [50] Ran
-  2026_09_29_000052_create_transfer_restores_table  [51] Ran
-  2026_09_29_000053_create_transfer_reviews_table  [52] Ran
+  2026_09_29_000045_create_backup_wizards_table   [44] Ran
+  2026_09_29_000046_create_backup_restores_table   [45] Ran
+  2026_09_29_000047_create_backup_configs_table   [46] Ran
+  2026_09_29_000048_create_backup_restorations_table   [47] Ran
+  2026_09_29_000049_create_backup_user_selections_table   [48] Ran
+  2026_09_29_000050_create_file_directory_restorations_table   [49] Ran
+  2026_09_29_000051_create_transfer_tools_table   [50] Ran
+  2026_09_29_000052_create_transfer_restores_table   [51] Ran
+  2026_09_29_000053_create_transfer_reviews_table   [52] Ran
   2026_10_04_000054_create_mysql_user_tables   [53] Ran
-  2026_10_04_000055_add_mysql_restore_to_transfer_restores  [54] Ran
+  2026_10_04_000055_add_mysql_restore_to_transfer_restores   [54] Ran
 ```
 
 ## Routes (web)
@@ -393,6 +394,8 @@ GET|HEAD           /transfer-review                              transfer-review
 POST               /transfer-review                              transfer-review.store
 GET|HEAD           /transfer-tool                                transfer-tool.index
 POST               /transfer-tool                                transfer-tool.store
+POST               /transfer-tool/probe                          transfer-tool.probe
+POST               /transfer-tool/pull                           transfer-tool.pull
 GET|HEAD           /two-factor                                   twofactor.challenge
 POST               /two-factor                                   twofactor.verify
 GET|HEAD           /up                                           
@@ -442,5 +445,8 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/agent/src/AccountOs.php  (secret jaisa pattern)
 /usr/local/alphacp/agent/src/MysqlServer.php  (binary)
 /usr/local/alphacp/agent/tests/FakeCommandExecutor.php  (secret jaisa pattern)
+/usr/local/alphacp/agent/tests/run-tests.php  (secret jaisa pattern)
+/usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php  (secret jaisa pattern)
 /usr/local/alphacp/panel/tests/Feature/SshTest.php  (secret jaisa pattern)
+/usr/local/alphacp/panel/tests/Feature/TransferToolTest.php  (secret jaisa pattern)
 ```
