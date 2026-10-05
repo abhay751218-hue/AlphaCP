@@ -5,7 +5,7 @@
 > Jo step poora hoga, uske items ✅ ho jaayenge. **Project tab complete maana jayega jab ye file 100% ✅ ho.**
 
 **Banaya:** 28 Sep 2026 · **Base:** cPanel 138 (Meridian, Jul 2026) + WHM full tool list
-**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail). **S7 #147 ka code + real Exim verify ho gaya** (0.81.0; 20 pass / 0 fail), live verify pending. Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
+**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail). **S7 #147 ka code + real Exim verify ho gaya** (0.81.0; 20 pass / 0 fail), live status check pending. Server par 0.81.0 deploy hua; mail verifier ne base delivery aur #19 tracking pass ki, lekin folder-filter test fail hua (61 pass / 1 fail; same failure 0.80.0 me bhi). #20/#21 abhi green nahi. Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
 
 ---
 
@@ -63,9 +63,9 @@
 | 16 | Autoresponders | Vacation/auto reply | S7 | ✅ (autoresponders live verified: vacation file + autoreply transport) |
 | 17 | Default Address | Catch-all | S7 | ✅ (catch-all live verified: unknown@ -> mailbox redirect chain) |
 | 18 | Mailing Lists | Mailman lists | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (list+owner JSON; no mailman daemon)) |
-| 19 | Track Delivery | Delivery trace | S7 | 🟡 (0.78.0 code + **0.80.0 fix**: `mail.track` ASLI exim mainlog se trace — 0.78.0/0.79.0 live par delivery ruk gayi thi; **asli exim 4.97 sandbox test 10/10 green**, live verify pending) |
+| 19 | Track Delivery | Delivery trace | S7 | ✅ (0.81.0 live: `mail.track` ne asli Exim mainlog se 24 entries trace ki; base inbox delivery bhi pass) |
 | 20 | Global Email Filters | Server-side filters | S7 | 🟡 (0.78.0 code + **0.80.0 fix**: account-wide ASLI Exim filter file (pehli line `# Exim filter`, warna exim use .forward samajhta hai) — asli exim se 10/10 verified, live verify pending) |
-| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.78.0 code + **0.80.0 fix**: per-mailbox ASLI Exim filter file (`exim -bf` validate; reject par `filter_errors`) + `require_files`+`condition` guard + `exim -bt` smoke test — asli exim 4.97 par save/discard verified, live verify pending) |
+| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.81.0 live check: `discard` test needs a stronger assertion; folder-save `.filtered/new` did **not** receive the test mail (same 1 failure reported after 0.80.0); fix/verbose live verification pending) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF + DMARC + DKIM live verified: `dig TXT`, `_dmarc`, `default._domainkey` sab green) |
 | 23 | Address Importer | Bulk CSV import | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (CSV local,domain,password → mail.set; no pipe)) |
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (SpamAssassin score + blacklist/whitelist files live (0.77.0)) |

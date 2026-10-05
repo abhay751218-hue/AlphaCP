@@ -72,6 +72,7 @@ DIG="$(find_bin dig ACP_VERIFY_DIG /usr/bin/dig)"
 DOVEADM="$(find_bin doveadm ACP_VERIFY_DOVEADM /usr/bin/doveadm)"
 DOVECOT_BIN="$(find_bin dovecot ACP_VERIFY_DOVECOT /usr/sbin/dovecot)"
 DOVECONF_BIN="$(find_bin doveconf ACP_VERIFY_DOVECONF /usr/sbin/doveconf)"
+MAINLOG="${ACP_MAIL_MAINLOG:-/var/log/exim4/mainlog}"
 
 cleanup() {
   if [[ "${DONE}" != "1" ]]; then info "cleanup (script beech me ruka)"; fi
@@ -105,6 +106,80 @@ run_task() {  # type payload -> 0/1 ; LAST_TASK_ID + LAST_ERR + TASK_OUT set
   LAST_ERR="$(grep -o '"error": *"[^"]*"' <<<"${out}" | head -1 | sed 's/.*"error": *"//; s/"$//')"
   [[ -z "${LAST_ERR}" ]] && LAST_ERR="$(tail -1 <<<"${out}")"
   return 1
+}
+
+maildir_new_count() {
+  find "$1" -mindepth 1 -maxdepth 1 -type f -print 2>/dev/null | wc -l | tr -d ' '
+}
+
+EXIM_TEST_OUT=""
+EXIM_TEST_RC=0
+EXIM_TEST_LOG_START=0
+FILTER_SENDER=""
+FILTER_TEST_SUBJECT=""
+run_filter_delivery() { # subject/body are synthetic; capture Exim -v + exit status
+  local subject="$1" body="$2" host message
+  host="$(hostname -f 2>/dev/null || hostname)"
+  FILTER_SENDER="root@${host}"
+  FILTER_TEST_SUBJECT="$subject"
+  EXIM_TEST_LOG_START="$(wc -l < "${MAINLOG}" 2>/dev/null || echo 0)"
+  message="$(printf 'Subject: %s
+From: %s
+To: %s
+
+%s
+' "$subject" "$FILTER_SENDER" "$TEST_ADDR" "$body")"
+  EXIM_TEST_OUT="$(printf '%s' "$message" | "${EXIM}" -odf -oem -v -f "$FILTER_SENDER" "$TEST_ADDR" 2>&1)"
+  EXIM_TEST_RC=$?
+}
+
+filter_failure_diagnostics() {
+  local line output message
+  diagsec "FILTER delivery diagnostics"
+  diag "synthetic subject: ${FILTER_TEST_SUBJECT:-unknown}"
+  diag "Exim -v exit status: ${EXIM_TEST_RC}"
+  if [[ -n "${EXIM_TEST_OUT}" ]]; then
+    while IFS= read -r line; do diag "exim -v: ${line}"; done <<<"${EXIM_TEST_OUT}"
+  else
+    diag "exim -v: no output"
+  fi
+  if [[ -n "${FILTER_PATH:-}" && -f "${FILTER_PATH}" ]]; then
+    message="$(printf 'Subject: %s
+From: %s
+To: %s
+
+filter dry-run
+' "${FILTER_TEST_SUBJECT:-acpfilter diagnostic}" "${FILTER_SENDER:-root@localhost}" "$TEST_ADDR")"
+    output="$(printf '%s' "$message" | "${EXIM}" -bf "$FILTER_PATH" -f "${FILTER_SENDER:-root@localhost}" 2>&1)"
+    diag "--- Exim -bf against the exact synthetic subject ---"
+    while IFS= read -r line; do diag "exim -bf: ${line}"; done <<<"${output}"
+  fi
+  diag "--- effective address_directory transport ---"
+  output="$("${EXIM}" -bP transport address_directory 2>&1 | grep -E '^(driver|maildir_format|create_directory|directory|user|group|mode|directory_mode)')"
+  [[ -n "${output}" ]] || output="(transport details unavailable)"
+  while IFS= read -r line; do diag "${line}"; done <<<"${output}"
+  diag "--- Maildir ownership/modes ---"
+  for path in "${MAILDIR}" "${MAILDIR}/new" "${MAILDIR}/.filtered" "${MAILDIR}/.filtered/new" "${MAILDIR}/.filtered/cur" "${MAILDIR}/.filtered/tmp"; do
+    if [[ -e "${path}" ]]; then
+      diag "$(stat -c '%A %U:%G (%u:%g) %n' "${path}" 2>&1)"
+    else
+      diag "MISSING: ${path}"
+    fi
+  done
+  if [[ -r "${MAINLOG}" ]]; then
+    diag "--- Exim mainlog lines added by this test ---"
+    output="$(tail -n +$((EXIM_TEST_LOG_START + 1)) "${MAINLOG}" 2>/dev/null | tail -60)"
+    [[ -n "${output}" ]] || output="(no new mainlog lines)"
+    while IFS= read -r line; do diag "mainlog: ${line}"; done <<<"${output}"
+  fi
+  output="$("${EXIM}" -bp 2>&1 | grep -F "$TEST_ADDR" | head -10)"
+  [[ -n "${output}" ]] || output="(no queued entry for ${TEST_ADDR})"
+  diag "--- Exim queue entries for test address ---"
+  while IFS= read -r line; do diag "queue: ${line}"; done <<<"${output}"
+  diag "--- Maildir files (max depth 3) ---"
+  output="$(find "$MAILDIR" -maxdepth 3 -type f -print 2>/dev/null | head -30)"
+  [[ -n "${output}" ]] || output="(no files)"
+  while IFS= read -r line; do diag "file: ${line}"; done <<<"${output}"
 }
 
 mkdir -p "${ACP_HOME}/verify-reports" 2>/dev/null || true
@@ -541,19 +616,18 @@ else
     fi
 
     # ---- ASLI mail 1: filter wali mail .filtered folder me jaani chahiye ----
-    BEFORE_FOLDER="$(ls -1 "${MAILDIR}/.filtered/new" 2>/dev/null | wc -l | tr -d ' ')"
-    printf 'Subject: acpfilter test\nFrom: root@%s\n\nFilter wali mail.\n' "$(hostname -f 2>/dev/null || hostname)" \
-      | "${EXIM}" -odf -oem "${TEST_ADDR}" >/dev/null 2>&1
+    BEFORE_FOLDER="$(maildir_new_count "${MAILDIR}/.filtered/new")"
+    BEFORE_INBOX="$(maildir_new_count "${MAILDIR}/new")"
+    FILTER_TEST_SUBJECT="acpfilter-$(date +%s)-${RANDOM}"
+    run_filter_delivery "${FILTER_TEST_SUBJECT}" "Filter folder delivery test ${FILTER_TEST_SUBJECT}."
     sleep 1
-    AFTER_FOLDER="$(ls -1 "${MAILDIR}/.filtered/new" 2>/dev/null | wc -l | tr -d ' ')"
-    if [[ "${AFTER_FOLDER}" -gt "${BEFORE_FOLDER}" ]]; then
-      ok "FILTER KAAM KAR GAYA (#21): 'acpfilter' wali mail ${MAILDIR}/.filtered/new me (${BEFORE_FOLDER} se ${AFTER_FOLDER})"
+    AFTER_FOLDER="$(maildir_new_count "${MAILDIR}/.filtered/new")"
+    AFTER_INBOX="$(maildir_new_count "${MAILDIR}/new")"
+    if [[ "${EXIM_TEST_RC}" == "0" && "${AFTER_FOLDER}" -gt "${BEFORE_FOLDER}" && "${AFTER_INBOX}" == "${BEFORE_INBOX}" && "${EXIM_TEST_OUT}" == *"${MAILDIR}/.filtered/"* && "${EXIM_TEST_OUT}" == *"Completed"* ]]; then
+      ok "FILTER KAAM KAR GAYA (#21): Exim confirmed folder transport; .filtered/new ${BEFORE_FOLDER} -> ${AFTER_FOLDER}, inbox ${BEFORE_INBOX} hi raha"
     else
-      bad "filter ne mail folder me nahi daali (.filtered/new: ${BEFORE_FOLDER} -> ${AFTER_FOLDER})"
-      diagsec "FILTER (folder) FAIL diagnostics"
-      diagcmd cat "${FILTER_PATH}"
-      diagcmd ls -la "${MAILDIR}"
-      diagcmd tail -30 /var/log/exim4/mainlog
+      bad "filter folder delivery fail: Exim rc=${EXIM_TEST_RC}, .filtered/new ${BEFORE_FOLDER} -> ${AFTER_FOLDER}, inbox ${BEFORE_INBOX} -> ${AFTER_INBOX}"
+      filter_failure_diagnostics
     fi
 
     # ---- cPanel #21: discard filter (mail inbox me nahi aani chahiye) ----
@@ -563,18 +637,16 @@ else
       bad "mail.filter (discard) fail: ${LAST_ERR:-unknown}"
     fi
     run_task mail.server '{"action":"sync"}' >/dev/null 2>&1
-    BEFORE_INBOX="$(ls -1 "${MAILDIR}/new" 2>/dev/null | wc -l | tr -d ' ')"
-    printf 'Subject: acpdiscard test\nFrom: root@%s\n\nYe mail discard honi chahiye.\n' "$(hostname -f 2>/dev/null || hostname)" \
-      | "${EXIM}" -odf -oem "${TEST_ADDR}" >/dev/null 2>&1
+    BEFORE_INBOX="$(maildir_new_count "${MAILDIR}/new")"
+    FILTER_TEST_SUBJECT="acpdiscard-$(date +%s)-${RANDOM}"
+    run_filter_delivery "${FILTER_TEST_SUBJECT}" "Filter discard test ${FILTER_TEST_SUBJECT}."
     sleep 1
-    AFTER_INBOX="$(ls -1 "${MAILDIR}/new" 2>/dev/null | wc -l | tr -d ' ')"
-    if [[ "${AFTER_INBOX}" == "${BEFORE_INBOX}" ]]; then
-      ok "DISCARD KAAM KAR GAYA (#21): 'acpdiscard' wali mail inbox me nahi aayi (${AFTER_INBOX} hi rahi)"
+    AFTER_INBOX="$(maildir_new_count "${MAILDIR}/new")"
+    if [[ "${EXIM_TEST_RC}" == "0" && "${AFTER_INBOX}" == "${BEFORE_INBOX}" && "${EXIM_TEST_OUT}" == *"=> discarded"* && "${EXIM_TEST_OUT}" == *"Completed"* ]]; then
+      ok "DISCARD KAAM KAR GAYA (#21): Exim ne message ko userfilter par discard kiya; inbox ${AFTER_INBOX} hi raha"
     else
-      bad "discard filter kaam nahi kiya (inbox ${BEFORE_INBOX} -> ${AFTER_INBOX})"
-      diagsec "FILTER (discard) FAIL diagnostics"
-      diagcmd cat "${FILTER_PATH}"
-      diagcmd tail -30 /var/log/exim4/mainlog
+      bad "discard filter not verified: Exim rc=${EXIM_TEST_RC}, inbox ${BEFORE_INBOX} -> ${AFTER_INBOX}"
+      filter_failure_diagnostics
     fi
 
     # ---- cPanel #19: Track Delivery (asli exim mainlog) ----
@@ -604,14 +676,16 @@ DONE=1
 echo
 echo "=== S7 MAIL SERVER LIVE CHECK: ${PASS} pass, ${FAIL} fail, ${SKIP} skip ==="
 info "tasks: ${TASK_IDS}"
-[[ "${LIVE_MAIL}" == "1" ]] && info "ASLI MAIL DELIVERY:VERIFIED" || info "ASLI MAIL DELIVERY:NOT-VERIFIED"
+[[ "${LIVE_MAIL}" == "1" ]] && info "BASE INBOX DELIVERY: VERIFIED" || info "BASE INBOX DELIVERY: NOT-VERIFIED"
+[[ "${FAIL}" == "0" ]] && info "FULL S7 MAIL CHECK: PASS" || info "FULL S7 MAIL CHECK: FAIL (${FAIL} failed check(s))"
 
 if mkdir -p "${REPORT_DIR}" 2>/dev/null; then
   {
     echo "=== S7 MAIL SERVER LIVE CHECK ($(date -u +%Y-%m-%dT%H:%M:%SZ)) ==="
     echo "pass=${PASS} fail=${FAIL} skip=${SKIP}"
+    echo "full_check=$([[ "${FAIL}" == "0" ]] && echo PASS || echo FAIL)"
     echo "tasks: ${TASK_IDS}"
-    echo "live_mail_delivery=$([[ "${LIVE_MAIL}" == "1" ]] && echo YES || echo NO)"
+    echo "base_inbox_delivery=$([[ "${LIVE_MAIL}" == "1" ]] && echo YES || echo NO)"
     echo "tools: exim=${EXIM} dovecot=${DOVECOT_BIN} doveadm=${DOVEADM}"
     echo "mailboxes: $(grep -c ':' "${DOVECONF_USERS}" 2>/dev/null || echo 0)"
     echo "domains: $(wc -l < "${EXIM_DOMAINS}" 2>/dev/null || echo 0)"

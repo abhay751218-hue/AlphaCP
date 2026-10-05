@@ -68,6 +68,8 @@ EOF
 cat > "$BIN/exim4" <<'EXIMEOF'
 #!/usr/bin/env bash
 RECIPIENTS="${ACP_MAIL_EXIM_RECIPIENTS:-/etc/exim4/alphacp-recipients}"
+VERBOSE=0
+for arg in "$@"; do [[ "$arg" == "-v" ]] && VERBOSE=1; done
 case "${1:-}" in
   -bV)
     if [[ "${SIM_BREAK_EXIM:-0}" == "1" ]]; then
@@ -139,10 +141,26 @@ for m in re.finditer(pat, text):
 PYEOF
 )"
         rm -f "$MSG_TMP"
+        if [[ "$RES" == FOLDER\ * && "${SIM_BREAK_FILTER:-0}" == "1" ]]; then
+          printf '%s\n' "$body" > "$dir/new/msg.$RANDOM.$RANDOM"
+          if [[ "$VERBOSE" == "1" ]]; then
+            printf 'delivering SIMULATED-ID\n  => %s R=alphacp_mailbox T=alphacp_maildir\n  Completed\n' "$addr"
+          fi
+          exit 0
+        fi
         case "$RES" in
-          DISCARD)    exit 0 ;;
-          FOLDER\ *)  d="${RES#FOLDER }"; mkdir -p "$d/new" "$d/cur" "$d/tmp"
-                      printf '%s\n' "$body" > "$d/new/msg.$RANDOM.$RANDOM"; exit 0 ;;
+          DISCARD)
+            if [[ "$VERBOSE" == "1" ]]; then
+              printf 'delivering SIMULATED-ID\n  => discarded <%s> R=alphacp_userfilter\n  Completed\n' "$addr"
+            fi
+            exit 0 ;;
+          FOLDER\ *)
+            d="${RES#FOLDER }"; mkdir -p "$d/new" "$d/cur" "$d/tmp"
+            printf '%s\n' "$body" > "$d/new/msg.$RANDOM.$RANDOM"
+            if [[ "$VERBOSE" == "1" ]]; then
+              printf 'delivering SIMULATED-ID\n  => %s <%s> R=alphacp_userfilter T=address_directory\n  Completed\n' "$d" "$addr"
+            fi
+            exit 0 ;;
           FORWARD\ *) exit 0 ;;
         esac
       fi
@@ -1012,13 +1030,14 @@ QEOF
     breakdelivery) SIM_BREAK_DELIVERY=1; export SIM_BREAK_DELIVERY ;;
     breakdns)      SIM_BREAK_DNS=1; export SIM_BREAK_DNS ;;
     breakcatchall) SIM_BREAK_CATCHALL=1; export SIM_BREAK_CATCHALL ;;
+    breakfilter)   SIM_BREAK_FILTER=1; export SIM_BREAK_FILTER ;;
   esac
 
   out="$(ACP_HOME="$ACP_HOME" bash "$(dirname "$0")/../verify/s7-mail-check.sh" 2>&1)"
   rc=$?
   if [[ "${SIM_DEBUG:-0}" == "1" ]]; then printf '%s\n' "$out"; fi
   # local vars must not leak into later modes
-  unset SIM_BREAK_EXIM SIM_BREAK_DELIVERY SIM_BREAK_DNS SIM_BREAK_CATCHALL
+  unset SIM_BREAK_EXIM SIM_BREAK_DELIVERY SIM_BREAK_DNS SIM_BREAK_CATCHALL SIM_BREAK_FILTER
   echo "$out"
   if grep -q "pass=${PASS}" <<<"out"; then :; fi
   return $rc
@@ -1037,7 +1056,7 @@ check() { # description, expected fail count (0 = bilkul zero, warna >=), actual
 }
 
 echo "== S7 mail server SIM =="
-for mode in good breakexim breakdelivery breakdns breakcatchall; do
+for mode in good breakexim breakdelivery breakdns breakcatchall breakfilter; do
   want=0
   [[ "$mode" != "good" ]] && want=1
   OUT="$(run_mode "$mode" "$want")"
@@ -1048,7 +1067,14 @@ for mode in good breakexim breakdelivery breakdns breakcatchall; do
   if [[ "$want" == "1" ]]; then
     grep -q "FAIL" <<<"$OUT" || { FAIL=$((FAIL+1)); echo "[FAIL] mode=$mode: koi FAIL line hi nahi aayi"; }
   fi
-  grep -q "ASLI MAIL DELIVERY:VERIFIED" <<<"$OUT" && echo "       -> live mail delivery: VERIFIED" || echo "       -> live mail delivery: NOT verified"
+  if [[ "$mode" == "breakfilter" ]]; then
+    if grep -q "FILTER delivery diagnostics" <<<"$OUT" && grep -q "Exim -v exit status" <<<"$OUT"; then
+      PASS=$((PASS+1)); echo "[ok]   breakfilter prints actionable Exim diagnostics"
+    else
+      FAIL=$((FAIL+1)); echo "[FAIL] breakfilter omitted actionable Exim diagnostics"
+    fi
+  fi
+  grep -q "BASE INBOX DELIVERY: VERIFIED" <<<"$OUT" && echo "       -> base inbox delivery: VERIFIED" || echo "       -> base inbox delivery: NOT verified"
   grep -q "cleanup" <<<"$OUT" && echo "       -> cleanup chal gaya"
 done
 

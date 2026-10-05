@@ -105,6 +105,12 @@ install_cfg "$SB/exim.conf.test"
 count() { ls "$1" 2>/dev/null | wc -l | tr -d ' '; }
 clean_boxes() { rm -f "$SB/home/info/Maildir/new/"* "$SB/home/info/Maildir/.filtered/new/"* 2>/dev/null; }
 deliver() { clean_boxes; "$ACP_EXIM" -odf -f sender@outside.test info@acp-sandbox.test < "$1" >/dev/null 2>&1; }
+DELIVERY_OUT=""; DELIVERY_RC=0
+deliver_verbose() {
+  clean_boxes
+  DELIVERY_OUT="$("$ACP_EXIM" -odf -f sender@outside.test -v info@acp-sandbox.test < "$1" 2>&1)"
+  DELIVERY_RC=$?
+}
 panics() { wc -l < /tmp/eximlog/paniclog 2>/dev/null | tr -d ' '; }
 
 echo "=== ASLI EXIM SANDBOX TEST (exim $("$ACP_EXIM" -bV 2>/dev/null | head -1 | awk '{print $3}')) ==="
@@ -131,11 +137,13 @@ if $header_subject: contains "acpfilter" then
 endif
 EOF
 sed -i "s|MAILDIR|$SB/home/info/Maildir|" "$FILTER_FILE"
-deliver "$SB/msg-filter"
+deliver_verbose "$SB/msg-filter"
 F=$(count "$SB/home/info/Maildir/.filtered/new"); I=$(count "$SB/home/info/Maildir/new")
-[[ "$F" == "1" && "$I" == "0" ]] \
-  && ok "filter folder: 'acpfilter' mail .filtered/new me gayi (inbox khali)" \
-  || bad "filter folder: .filtered/new=$F inbox/new=$I (1/0 hone chahiye)"
+if [[ "$DELIVERY_RC" == "0" && "$F" == "1" && "$I" == "0" && "$DELIVERY_OUT" == *"$SB/home/info/Maildir/.filtered/"* && "$DELIVERY_OUT" == *"Completed"* ]]; then
+  ok "filter folder: actual Exim -v + Maildir counts confirm .filtered delivery"
+else
+  bad "filter folder: rc=$DELIVERY_RC .filtered/new=$F inbox/new=$I; exim=$(tr '\n' ' ' <<<"$DELIVERY_OUT" | cut -c1-180)"
+fi
 
 # ------------------------------------------------------- 3. filter no-match ---
 deliver "$SB/msg-normal"
@@ -173,11 +181,13 @@ if $header_subject: contains "acpfilter" then
   seen finish
 endif
 EOF
-deliver "$SB/msg-filter"
+deliver_verbose "$SB/msg-filter"
 F=$(count "$SB/home/info/Maildir/.filtered/new"); I=$(count "$SB/home/info/Maildir/new")
-[[ "$F" == "0" && "$I" == "0" ]] \
-  && ok "filter discard: 'acpfilter' mail kahin nahi pahunchi" \
-  || bad "filter discard: .filtered/new=$F inbox/new=$I (0/0 hone chahiye)"
+if [[ "$DELIVERY_RC" == "0" && "$F" == "0" && "$I" == "0" && "$DELIVERY_OUT" == *"=> discarded"* && "$DELIVERY_OUT" == *"Completed"* ]]; then
+  ok "filter discard: Exim -v confirms userfilter discard; neither Maildir received it"
+else
+  bad "filter discard: rc=$DELIVERY_RC .filtered/new=$F inbox/new=$I; exim=$(tr '\n' ' ' <<<"$DELIVERY_OUT" | cut -c1-180)"
+fi
 
 # ------------------------------------------- 6. filter lookup file khali -----
 : > "$SB/etc/exim4/alphacp-filters"
