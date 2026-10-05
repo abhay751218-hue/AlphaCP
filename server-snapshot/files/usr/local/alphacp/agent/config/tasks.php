@@ -1690,6 +1690,41 @@ return [
         ],
     ],
 
+    // S10: remote backup destinations — apne archives doosre server par bhejo (scp).
+    // Host key PIN lagana zaroori hai (ya pehli key openly accept karni padti hai,
+    // jo log me loudly likhi jati hai). Key/password 0600 file me rehte hain —
+    // argv, log aur task result me kabhi nahi aate.
+    'backup.destination' => [
+        'handler'     => Tasks\BackupDestination::class,
+        'safety'      => 'mutating',
+        'timeout'     => 3600,
+        'confirm'     => 'backup.destination',
+        'description' => 'Manage remote backup destinations (SSH) — list/save/test/push/browse/remove.',
+        'paths'       => ['/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['action', '_confirm'],
+            'properties'           => [
+                'action'           => ['type' => 'string', 'enum' => ['list', 'save', 'test', 'push', 'browse', 'remove']],
+                'name'             => ['type' => 'string', 'pattern' => '^[a-z0-9][a-z0-9-]{0,31}$', 'maxLength' => 32],
+                'host'             => ['type' => 'string', 'minLength' => 1, 'maxLength' => 253],
+                'port'             => ['type' => 'integer', 'minimum' => 1, 'maximum' => 65535],
+                'user'             => ['type' => 'string', 'pattern' => '^[a-z_][a-z0-9_-]{0,31}$'],
+                'path'             => ['type' => 'string', 'pattern' => '^/[A-Za-z0-9._/-]+$', 'maxLength' => 4096],
+                'auth'             => ['type' => 'string', 'enum' => ['key', 'password']],
+                'private_key'      => ['type' => 'string', 'maxLength' => 65536],
+                'password'         => ['type' => 'string', 'maxLength' => 1024],
+                'host_fingerprint' => ['type' => 'string', 'maxLength' => 128],
+                'accept_host_key'  => ['type' => 'boolean'],
+                'retention_days'   => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365],
+                'enabled'          => ['type' => 'boolean'],
+                'archive_path'     => ['type' => 'string', 'pattern' => '^/[A-Za-z0-9._/-]+$', 'maxLength' => 4096],
+                '_confirm'         => ['type' => 'string', 'enum' => ['backup.destination']],
+            ],
+        ],
+    ],
+
     'backup.transfer' => [
         'handler'     => Tasks\BackupTransfer::class,
         'safety'      => 'destructive',

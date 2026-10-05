@@ -17,8 +17,8 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.72.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.72.0   (.env)
+panel code    : 0.73.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.73.0   (.env)
 AGENT_VERSION : 0.65.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
@@ -105,15 +105,16 @@ agent-backup-20261004151423
 agent-backup-20261005014431
 agent-backup-20261005030945
 agent-backup-20261005034027
-panel-backup-20261005014431
+agent-backup-20261005053943
 panel-backup-20261005030945
 panel-backup-20261005034027
+panel-backup-20261005053943
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -151,6 +152,7 @@ alphacp-sync.timer alphacp-sync.service
 ## Custom artisan commands (alphacp / license / trial)
 ```
 alphacp:admin-password
+alphacp:backup-destination-push
 alphacp:scheduled-backups
 ```
 
@@ -213,6 +215,8 @@ alphacp:scheduled-backups
   2026_09_29_000053_create_transfer_reviews_table   [52] Ran
   2026_10_04_000054_create_mysql_user_tables   [53] Ran
   2026_10_04_000055_add_mysql_restore_to_transfer_restores   [54] Ran
+  2026_10_05_000060_create_backup_destinations_table   [55] Ran
+  2026_10_05_000061_create_backup_destination_pushes_table   [55] Ran
 ```
 
 ## Routes (web)
@@ -238,6 +242,12 @@ GET|HEAD           /backup                                       backup.index
 POST               /backup                                       backup.store
 GET|HEAD           /backup-config                                backup-config.index
 POST               /backup-config                                backup-config.store
+GET|HEAD           /backup-destinations                          backup-destinations.index
+POST               /backup-destinations                          backup-destinations.store
+POST               /backup-destinations/browse                   backup-destinations.browse
+POST               /backup-destinations/push                     backup-destinations.push
+POST               /backup-destinations/test                     backup-destinations.test
+DELETE             /backup-destinations/{name}                   backup-destinations.destroy
 GET|HEAD           /backup-restoration                           backup-restoration.index
 POST               /backup-restoration                           backup-restoration.store
 GET|HEAD           /backup-user-selection                        backup-user-selection.index
@@ -447,6 +457,7 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/agent/src/MysqlServer.php  (binary)
 /usr/local/alphacp/agent/tests/FakeCommandExecutor.php  (secret jaisa pattern)
 /usr/local/alphacp/agent/tests/run-tests.php  (secret jaisa pattern)
+/usr/local/alphacp/panel/resources/views/backup-destinations/index.blade.php  (secret jaisa pattern)
 /usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php  (secret jaisa pattern)
 /usr/local/alphacp/panel/tests/Feature/SshTest.php  (secret jaisa pattern)
 /usr/local/alphacp/panel/tests/Feature/TransferToolTest.php  (secret jaisa pattern)

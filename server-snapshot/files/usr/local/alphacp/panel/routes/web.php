@@ -44,6 +44,7 @@ use App\Http\Controllers\ZoneTtlController;
 use App\Http\Controllers\DomainForwardController;
 use App\Http\Controllers\DnsSyncController;
 use App\Http\Controllers\BackupConfigController;
+use App\Http\Controllers\BackupDestinationController;
 use App\Http\Controllers\BackupRestorationController;
 use App\Http\Controllers\BackupUserSelectionController;
 use App\Http\Controllers\FileDirectoryRestorationController;
@@ -409,6 +410,19 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:accounts.view')->name('backup-config.index');
     Route::post('/backup-config', [BackupConfigController::class, 'store'])
         ->middleware('perm:accounts.view')->name('backup-config.store');
+
+    Route::get('/backup-destinations', [BackupDestinationController::class, 'index'])
+        ->middleware('perm:accounts.view')->name('backup-destinations.index');
+    Route::post('/backup-destinations', [BackupDestinationController::class, 'store'])
+        ->middleware('perm:accounts.manage')->name('backup-destinations.store');
+    Route::post('/backup-destinations/test', [BackupDestinationController::class, 'test'])
+        ->middleware('perm:accounts.manage')->name('backup-destinations.test');
+    Route::post('/backup-destinations/push', [BackupDestinationController::class, 'push'])
+        ->middleware('perm:accounts.manage')->name('backup-destinations.push');
+    Route::post('/backup-destinations/browse', [BackupDestinationController::class, 'browse'])
+        ->middleware('perm:accounts.view')->name('backup-destinations.browse');
+    Route::delete('/backup-destinations/{name}', [BackupDestinationController::class, 'destroy'])
+        ->middleware('perm:accounts.manage')->name('backup-destinations.destroy');
 
     Route::get('/backup-restoration', [BackupRestorationController::class, 'index'])
         ->middleware('perm:accounts.view')->name('backup-restoration.index');

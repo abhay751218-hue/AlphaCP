@@ -234,6 +234,20 @@ final class Backup
         return preg_match('/\.(tar|tar\.gz|tgz)$/i', $raw) === 1 ? $raw : null;
     }
 
+    /**
+     * Destination name for `backup.destination` — a slug, because the agent
+     * turns it into a file name under its own state directory.
+     */
+    public static function tryDestinationName(string $raw): ?string
+    {
+        $name = strtolower(trim($raw));
+        if ($name === '' || strlen($name) > 32) {
+            return null;
+        }
+
+        return preg_match('/^[a-z0-9][a-z0-9-]{0,31}$/', $name) === 1 ? $name : null;
+    }
+
     /** SSH host key fingerprint as printed by ssh-keygen (`SHA256:…`). */
     public static function tryFingerprint(string $raw): ?string
     {
