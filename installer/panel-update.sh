@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.72.0  ·  default panel bundle 0.72.0  ·  agent 0.65.0  ·  alphacp-sync v1.2
+# updater 0.79.0  ·  default panel bundle 0.74.0  ·  agent 0.65.0  ·  alphacp-sync v1.2
 #
+# 0.79.0: S7 FIX — 0.78.0 ke email filters ne live par mail delivery tod di thi (har address
+#         defer: `Failed to find user "}"`, aur `exim -bf` ne sab filter reject kiye). Do asli
+#         wajahein: (1) Exim filter file ka pehla text `# Exim filter` hona chahiye — warna exim
+#         use .forward samajhta hai; (2) filter router par galat brace nesting wali uid/gid
+#         expansion — ab uid/gid transport par, router par sirf `condition` guard. Naya net:
+#         setup ke baad asli `exim -bt` smoke test, fail par purani config wapas + reject, aur
+#         `filter_errors` (kaunsa address kyun reject) — mail delivery dobara kabhi nahi rukegi.
+# 0.78.0: S7 — email filters ab asli Exim filter files (`exim -bf` validate) + track delivery
+#         asli exim mainlog se (cPanel #19/#20/#21) — LIVE par delivery kharaab hui, 0.79.0 dekhein
 # 0.71.0: S10 — cpmove MySQL restore (`db.restore`: two-phase sanitised import, dumps streamed)
 # 0.70.1: agent fix — useradd GECOS comment me colon (“Create Account” asli host par fail hota tha)
 # 0.72.0: S10 — remote pull: cpmove archive purane server se SSH (scp) se lao (host key pinning,
