@@ -19,7 +19,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 **Ek hi command (updater + verification):**
 ```bash
-sudo alphacp-sync get 21f9bc52629915e2376caa1fefe0de7c41a1a51c installer/panel-update.sh /tmp/acp-panel-update-0.76.1.sh 4cd32a11aeebf89ff028321248e8414c68cd81c3528d141de741c731cfeda52f && sudo bash /tmp/acp-panel-update-0.76.1.sh && sudo alphacp-sync get V21f9bc52629915e2376caa1fefe0de7c41a1a51c tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh bf8faedeaa189dc0a4a0e89a635735ca8fca9c53db07cf2132043ce00c39fbda && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get 21f9bc52629915e2376caa1fefe0de7c41a1a51c installer/panel-update.sh /tmp/acp-panel-update-0.76.1.sh 4cd32a11aeebf89ff028321248e8414c68cd81c3528d141de741c731cfeda52f && sudo bash /tmp/acp-panel-update-0.76.1.sh && sudo alphacp-sync get f4dd75a3ee495c947604287cc1dbf4922aef9c23 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh bf8faedeaa189dc0a4a0e89a635735ca8fca9c53db07cf2132043ce00c39fbda && sudo bash /tmp/s7-mail-check.sh
 ```
 
 ### 1) panel-update 0.76.1 — S7 Email: live fixes + mail extras
@@ -38,7 +38,7 @@ sudo alphacp-sync get 21f9bc52629915e2376caa1fefe0de7c41a1a51c installer/panel-u
 
 ### 2) Verification — ASLI mail + diagnostics
 ```bash
-sudo alphacp-sync get V21f9bc52629915e2376caa1fefe0de7c41a1a51c tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh bf8faedeaa189dc0a4a0e89a635735ca8fca9c53db07cf2132043ce00c39fbda && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get f4dd75a3ee495c947604287cc1dbf4922aef9c23 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh bf8faedeaa189dc0a4a0e89a635735ca8fca9c53db07cf2132043ce00c39fbda && sudo bash /tmp/s7-mail-check.sh
 ```
 - Verifier SHA-256: `bf8faedeaa189dc0a4a0e89a635735ca8fca9c53db07cf2132043ce00c39fbda`.
 - Expected ab: **`ASLI MAIL PAHUNCH GAYI`** · **`doveadm user` ok** ·
