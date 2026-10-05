@@ -14,40 +14,45 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-### 1) panel-update 0.73.0 — S10: **remote backup destinations** (apne archives doosre server par)
+### 1) panel-update 0.73.1 — destinations ke LIVE fix (sirf agent badla hai)
+```bash
+sudo alphacp-sync get 884054a0dfe4c19d8bbd2b134bca7af4f3c242d4 installer/panel-update.sh /tmp/acp-panel-update-0.73.1.sh 04b7fee5c9d5f1a09d9182a00868a278e7598e31edf6b7d23b425b6431534890 && sudo bash /tmp/acp-panel-update-0.73.1.sh
+```
+- Updater SHA-256: `04b7fee5c9d5f1a09d9182a00868a278e7598e31edf6b7d23b425b6431534890`.
+- Expected: banner `updater 0.73.1` → panel **0.73.0** + agent **0.65.0** (naya bundle) → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Kya theek hua (aapke 6 fail):** 
+    1. `binary not in agent allowlist: /usr/bin/ssh` — `backup.pull` ko sirf `scp` chahiye tha, par
+       destination ka *Test / Push / List* door ke server par **command** bhi chalata hai (mkdir,
+       sha256sum, ls). `ssh` ab agent ki allowlist me hai (aur ek naya test hai jo aage aisi bhool rokta hai).
+    2. **adhoori `.part` file remote par reh gayi** — scp upload ke baad verify fail hone par door ke
+       server se `.part` hatani chahiye thi. Ab har failure par `rm -f` ki koshish hoti hai (best-effort).
+    3. (chhupi hui wajah) `RemoteDestination.php` me `use Throwable;` missing tha — namespace ke andar
+       `catch (Throwable)` tabhi match karta hai jab import ho; isliye upar wali saafai chup-chaap skip
+       ho rahi thi. Ab import hai + poore `agent/src` ke liye lint test hai.
+- Panel code 0.73.0 wahi rahega (badla hi nahi), sirf agent bundle.
+
+### 2) destinations ki live verification dobara (ab 0 fail aana chahiye)
+```bash
+sudo alphacp-sync get 884054a0dfe4c19d8bbd2b134bca7af4f3c242d4 tools/verify/s10-backup-destination-check.sh /tmp/acp-s10-dest-check.sh 6747ba69f797985c839d1a2c460104f431a6d3a09e8e68228718b1afe49f51e8 && sudo bash /tmp/acp-s10-dest-check.sh
+```
+- Expected last line: `=== S10 BACKUP DESTINATION LIVE CHECK: 25 pass, 0 fail, 0 skip ===`.
+- Offline proof (mere paas **22/0**): `bash tools/sim/s10-backup-destination-sim.sh`.
+
+### 3) (ek minat) kal wala remote-pull fix bhi confirm kar lo
+```bash
+sudo alphacp-sync get 884054a0dfe4c19d8bbd2b134bca7af4f3c242d4 tools/verify/s10-remote-pull-check.sh /tmp/acp-s10-remote-pull-check.sh 52e040400adb4fd5a5c94007c4320df4d87caf3946ee2c7a16f65f37e127133d && sudo bash /tmp/acp-s10-remote-pull-check.sh
+```
+- Expected: `=== S10 REMOTE PULL LIVE CHECK: ... pass, 0 fail, ... skip ===`.
+
+## ✅ Latest deployment (5 Oct 2026; already completed)
+
+### panel-update 0.73.0 — S10 remote backup destinations (deployed 5 Oct 05:39Z)
 ```bash
 sudo alphacp-sync get 1282907fa1ff8ec74caf7f2c071cb776a7622a5e installer/panel-update.sh /tmp/acp-panel-update-0.73.0.sh 9e28574d80f7c499772efb0fbc9968e4ad2b59a879be3423968c2febc62f761d && sudo bash /tmp/acp-panel-update-0.73.0.sh
 ```
-- Updater SHA-256: `9e28574d80f7c499772efb0fbc9968e4ad2b59a879be3423968c2febc62f761d`.
-- Expected: banner `updater 0.73.0` → panel **0.73.0** + agent **0.65.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Naya kya:** backup ka aakhri kadam ab tak adhura tha — archive sirf isi server par banta tha. Ab
-  WHM → **Backup Destinations** se wo **door ke server (off-site)** par bhi jata hai:
-    - **do kadam** — pehle Transfer Tool se *Fingerprint lao* (backup server ki SSH host key), use
-      destination me **pin** karo, phir *Test* (remote par likh + padh + saaf). Bina pin ke save hi nahi hoti,
-      aur har push par pin dobara check hota hai — badle to `MISMATCH` (MITM / server reinstall).
-    - **key auth me agent khud naya ed25519 key banata hai** aur public key screen par deta hai — use
-      backup server ke `~/.ssh/authorized_keys` me daal do. Password auth bhi chalega (sshpass).
-    - **secrets panel ke database me nahi** — wo `/usr/local/alphacp/etc/backup-keys/` me 0600 file me rehte hain.
-    - **atomic upload**: `.part` → remote `sha256sum` match → `mv`. Checksum na mile to remote file hat jati hai.
-    - **cron** har ghante har naya archive har enabled destination par **ek hi baar** bhejta hai.
-- Naye DB tables: `backup_destinations`, `backup_destination_pushes` (migration update me chalegi).
-
-### 2) iski live verification (server par asli scp chalta hai — localhost ko backup server bana kar)
-```bash
-sudo alphacp-sync get 1282907fa1ff8ec74caf7f2c071cb776a7622a5e tools/verify/s10-backup-destination-check.sh /tmp/acp-s10-dest-check.sh 6747ba69f797985c839d1a2c460104f431a6d3a09e8e68228718b1afe49f51e8 && sudo bash /tmp/acp-s10-dest-check.sh
-```
-- Expected last line: `=== S10 BACKUP DESTINATION LIVE CHECK: 25 pass, 0 fail, 0 skip ===`.
-- 25 checkein: validation (galat naam, bina pin, host smuggling, `..` path, store ke bahar archive) + asli
-  save → test → push → remote sha256 → browse → MITM refuse → remove (key bhi shred).
-- Ye bhi apni report `/usr/local/alphacp/verify-reports/` me likh deta hai, to aapko kuch bhejne ki zaroorat nahi.
-- sshd band ho ya `PermitRootLogin=no` ho to asli-pull/push wala hissa `skip` ho jata hai (jhootha fail nahi).
-
-### 3) (ek minat ka kaam) 0.72.1 wala remote-pull check ek baar dobara
-```bash
-sudo alphacp-sync get 1282907fa1ff8ec74caf7f2c071cb776a7622a5e tools/verify/s10-remote-pull-check.sh /tmp/acp-s10-remote-pull-check.sh 52e040400adb4fd5a5c94007c4320df4d87caf3946ee2c7a16f65f37e127133d && sudo bash /tmp/acp-s10-remote-pull-check.sh
-```
-- Isse confirm ho jayega ki kal wala `host key MISMATCH` fix server par sach me kaam kar raha hai (**0 fail**).
-- Expected: `=== S10 REMOTE PULL LIVE CHECK: ... pass, 0 fail, ... skip ===`.
+- **Live result:** panel **0.73.0** + agent **0.65.0**, HTTP **200**, migrations ran
+  (`backup_destinations`, `backup_destination_pushes`), scheduler cron installed.
+- Live check ne 6 fail diye (sab `ssh` allowlist + `.part` cleanup se) — fix **0.73.1** me hai (upar dekho).
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 
