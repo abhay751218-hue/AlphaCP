@@ -168,10 +168,17 @@ final class RemotePull
     // ------------------------------------------------------------------ probe --
 
     /**
-     * Fetch the SSH host key of a remote server WITHOUT downloading anything,
-     * so the panel can show the fingerprint and the admin can pin it.
+     * Fetch the SSH host keys of a remote server WITHOUT downloading anything,
+     * so the panel can show a fingerprint and the admin can pin it.
      *
-     * @return array{host: string, port: int, key_type: string, fingerprint: string, pubkey: string}
+     * A server usually advertises SEVERAL host keys (ed25519 + ecdsa + rsa) and
+     * `ssh-keyscan` does not promise a stable order between runs — taking "the
+     * first line" makes the fingerprint flap between probe and pull (that is a
+     * real bug the live check caught). So we scan them all, report every
+     * fingerprint, and put the strongest key (ed25519) first.
+     *
+     * @return array{host: string, port: int, key_type: string, fingerprint: string,
+     *               fingerprints: list<string>, pubkey: string}
      */
     public function probe(string $host, int $port = 22): array
     {
@@ -183,50 +190,61 @@ final class RemotePull
             throw new TaskRejectedException('openssh-client (ssh-keyscan/ssh-keygen) is not installed on this server');
         }
 
-        $knownHosts = $this->tempFile(0600);
-        try {
-            return $this->doProbe($host, $port, $knownHosts);
-        } finally {
-            $this->forget($knownHosts);
-        }
-    }
-
-    /**
-     * @param  string $knownHosts temp file holding the keyscan output
-     * @return array{host: string, port: int, key_type: string, fingerprint: string, pubkey: string}
-     */
-    private function doProbe(string $host, int $port, string $knownHosts): array
-    {
         $res = $this->cmd->run(
             [self::keyscanBin(), '-p', (string) $port, '-t', 'ed25519,ecdsa,rsa', $host],
             self::PROBE_TIMEOUT,
         );
-        $pubkey = trim($res->stdout);
-        if ($res->exitCode !== 0 || $pubkey === '') {
+        $lines = array_values(array_filter(
+            array_map('trim', preg_split('/\R/', (string) $res->stdout) ?: []),
+            static fn (string $line): bool => $line !== '' && !str_starts_with($line, '#'),
+        ));
+        if ($res->exitCode !== 0 || $lines === []) {
             throw new TaskRejectedException(
                 "host key of {$host}:{$port} could not be read (ssh reachable? port open?): "
                 . trim((string) $res->stderr)
             );
         }
-        file_put_contents($knownHosts, $pubkey . "\n");
 
-        $fp = $this->cmd->run([self::keygenBin(), '-l', '-E', 'sha256', '-f', $knownHosts], self::PROBE_TIMEOUT);
-        $line = trim($fp->stdout);
-        if (!preg_match('/(SHA256:[A-Za-z0-9+\/]+)/', $line, $m)) {
+        $keys = [];
+        foreach ($lines as $line) {
+            $one = $this->tempFile(0600);
+            file_put_contents($one, $line . "\n");
+            $fp = $this->cmd->run([self::keygenBin(), '-l', '-E', 'sha256', '-f', $one], self::PROBE_TIMEOUT);
+            $this->forget($one);
+            if (preg_match('/(SHA256:[A-Za-z0-9+\/]+)/', (string) $fp->stdout, $m) !== 1) {
+                continue;
+            }
+            $type = 'UNKNOWN';
+            if (preg_match('/\((ED25519|ECDSA|RSA|DSA)\)/i', (string) $fp->stdout, $t) === 1) {
+                $type = strtoupper($t[1]);
+            }
+            $keys[] = ['type' => $type, 'fingerprint' => $m[1], 'pubkey' => $line];
+        }
+        if ($keys === []) {
             throw new TaskRejectedException("host key fingerprint of {$host} could not be computed");
         }
-        $keyType = 'unknown';
-        if (preg_match('/\((ED25519|ECDSA|RSA|DSA)\)/i', $line, $t)) {
-            $keyType = strtoupper($t[1]);
-        }
+        usort($keys, static fn (array $a, array $b): int => self::keyRank($a['type']) <=> self::keyRank($b['type']));
 
         return [
             'host' => $host,
             'port' => $port,
-            'key_type' => $keyType,
-            'fingerprint' => $m[1],
-            'pubkey' => $pubkey,
+            'key_type' => $keys[0]['type'],
+            'fingerprint' => $keys[0]['fingerprint'],
+            'fingerprints' => array_column($keys, 'fingerprint'),
+            'pubkey' => implode("\n", array_column($keys, 'pubkey')),
         ];
+    }
+
+    /** Strongest first: ed25519 > ecdsa > rsa > dsa. */
+    private static function keyRank(string $type): int
+    {
+        return match (strtoupper($type)) {
+            'ED25519' => 0,
+            'ECDSA' => 1,
+            'RSA' => 2,
+            'DSA' => 3,
+            default => 9,
+        };
     }
 
     // ------------------------------------------------------------------- pull --
@@ -287,14 +305,33 @@ final class RemotePull
             throw new TaskRejectedException('openssh-client (scp) is not installed on this server');
         }
 
-        // 1) host key — pinned, or explicitly accepted on first contact
+        // Auth material pehle hi check ho jaye — network/dns fail hone se pehle, taaki
+        // error seedha kahe "key nahi di" na ki "host nahi mila".
+        $keyFile = null;
+        if ($auth === 'password') {
+            if (!self::have('ACP_SSH_SSHPASS', self::SSHPASS)) {
+                throw new TaskRejectedException('password auth ke liye sshpass chahiye (`apt-get install -y sshpass`) — ya key auth use karo');
+            }
+            if (trim((string) ($spec['password'] ?? '')) === '') {
+                throw new TaskRejectedException('password auth chuna gaya par password hi nahi diya');
+            }
+        } else {
+            $keyFile = $this->keyFile($spec);
+        }
+
+        // 1) host key — pinned, or explicitly accepted on first contact.
+        // Ek server kai keys dikha sakta hai (ed25519/ecdsa/rsa) aur keyscan ka order
+        // stable nahi hota, isliye pin ka kisi bhi presented key se match hona kaafi
+        // hai (OpenSSH bhi yahi karta hai) — nahi to MISMATCH.
         $probed = $this->probe($host, $port);
         $expected = trim((string) ($spec['host_fingerprint'] ?? ''));
         if ($expected !== '') {
-            if (self::normaliseFingerprint($expected) !== self::normaliseFingerprint($probed['fingerprint'])) {
+            $presented = array_map([self::class, 'normaliseFingerprint'], $probed['fingerprints']);
+            if (!in_array(self::normaliseFingerprint($expected), $presented, true)) {
                 throw new TaskRejectedException(
-                    "host key MISMATCH for {$host}: expected {$expected}, server presented {$probed['fingerprint']} "
-                    . '— refuse kar diya (MITM ya server reinstall; naya fingerprint pin karne ke liye dobara probe karo)'
+                    "host key MISMATCH for {$host}: expected {$expected}, server ne ye diye: "
+                    . implode(', ', $probed['fingerprints'])
+                    . ' — refuse kar diya (MITM ya server reinstall; naya fingerprint pin karne ke liye dobara probe karo)'
                 );
             }
         } elseif (($spec['accept_host_key'] ?? false) !== true) {
@@ -322,24 +359,16 @@ final class RemotePull
         // 3) argv — scp never sees a shell
         $argv = [self::scpBin(), '-q', '-o', 'UserKnownHostsFile=' . $knownHosts, '-o', 'StrictHostKeyChecking=yes'];
         if ($auth === 'password') {
-            if (!self::have('ACP_SSH_SSHPASS', self::SSHPASS)) {
-                throw new TaskRejectedException('password auth ke liye sshpass chahiye (`apt-get install -y sshpass`) — ya key auth use karo');
-            }
-            $password = (string) ($spec['password'] ?? '');
-            if ($password === '') {
-                throw new TaskRejectedException('password auth chuna gaya par password hi nahi diya');
-            }
             $pwFile = $this->tempFile(0600);
-            file_put_contents($pwFile, $password . "\n");
+            file_put_contents($pwFile, ((string) $spec['password']) . "\n");
             array_unshift($argv, self::sshpassBin(), '-f', $pwFile);
             $argv[] = '-o';
             $argv[] = 'PubkeyAuthentication=no';
             $argv[] = '-o';
             $argv[] = 'PreferredAuthentications=password';
         } else {
-            $keyFile = $this->keyFile($spec);
             $argv[] = '-i';
-            $argv[] = $keyFile;
+            $argv[] = (string) $keyFile;
             $argv[] = '-o';
             $argv[] = 'IdentitiesOnly=yes';
             $argv[] = '-o';

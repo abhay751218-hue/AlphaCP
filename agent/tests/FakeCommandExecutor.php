@@ -59,6 +59,12 @@ final class FakeCommandExecutor implements CommandExecutor
     /** when set, the SECOND keyscan reports this fingerprint (MITM / reinstall) */
     public ?string $hostKeySecondFingerprint = null;
     public int $keyscanCalls = 0;
+    /**
+     * Multiple host keys, exactly like a real server (ed25519 + ecdsa + rsa).
+     * Each entry: ['pubkey' => string, 'fingerprint' => string, 'type' => string].
+     * Empty = purane single-key behaviour (hostKeyPubkey/hostKeyFingerprint).
+     */
+    public array $hostKeys = [];
     /** bytes the fake `scp` writes into the destination file */
     public ?string $scpContent = 'fake-cpmove-archive-bytes-0123456789';
     public bool $scpFails = false;
@@ -388,12 +394,52 @@ final class FakeCommandExecutor implements CommandExecutor
         return new CommandResult($argv, 0, '', '', 1);
     }
 
+    /** @return list<string> */
+    private function keyscanLines(): array
+    {
+        if ($this->hostKeys !== []) {
+            $out = [];
+            foreach ($this->hostKeys as $key) {
+                $out[] = (string) $key['pubkey'];
+            }
+
+            return $out;
+        }
+
+        return [$this->hostKeyPubkey];
+    }
+
+    private function fingerprintFor(string $pubkey): string
+    {
+        foreach ($this->hostKeys as $key) {
+            if (($key['pubkey'] ?? '') === $pubkey) {
+                return (string) $key['fingerprint'];
+            }
+        }
+        if ($this->hostKeySecondFingerprint !== null && $this->keyscanCalls >= 2) {
+            return $this->hostKeySecondFingerprint;
+        }
+
+        return $this->hostKeyFingerprint;
+    }
+
+    private function keyTypeFor(string $pubkey): string
+    {
+        foreach ($this->hostKeys as $key) {
+            if (($key['pubkey'] ?? '') === $pubkey) {
+                return (string) ($key['type'] ?? 'ED25519');
+            }
+        }
+
+        return 'ED25519';
+    }
+
     /** @param list<string> $argv */
     private function handleKeyscan(array $argv): CommandResult
     {
         $this->keyscanCalls++;
 
-        return new CommandResult($argv, 0, $this->hostKeyPubkey . "\n", '', 1);
+        return new CommandResult($argv, 0, implode("\n", $this->keyscanLines()) . "\n", '', 1);
     }
 
     /** @param list<string> $argv */
@@ -405,17 +451,24 @@ final class FakeCommandExecutor implements CommandExecutor
                 $file = (string) $argv[$i + 1];
             }
         }
-        $pub = @file_get_contents($file);
-        $host = 'old.example.com';
-        if (is_string($pub) && $pub !== '') {
-            $host = (string) (explode(' ', trim($pub))[0] ?? 'old.example.com');
+        $raw = @file_get_contents($file);
+        $lines = array_values(array_filter(array_map('trim', preg_split('/\R/', (string) $raw) ?: [])));
+        if ($lines === []) {
+            $lines = ['old.example.com ssh-ed25519 AAAA'];
         }
-        $fp = $this->hostKeyFingerprint;
-        if ($this->hostKeySecondFingerprint !== null && $this->keyscanCalls >= 2) {
-            $fp = $this->hostKeySecondFingerprint;
+        $out = '';
+        foreach ($lines as $line) {
+            $host = (string) (explode(' ', $line)[0] ?? 'old.example.com');
+
+            $out .= sprintf(
+                "256 %s %s (%s)\n",
+                $this->fingerprintFor($line),
+                $host,
+                $this->keyTypeFor($line),
+            );
         }
 
-        return new CommandResult($argv, 0, "256 {$fp} {$host} (ED25519)\n", '', 1);
+        return new CommandResult($argv, 0, $out, '', 1);
     }
 
     /** @param list<string> $argv */

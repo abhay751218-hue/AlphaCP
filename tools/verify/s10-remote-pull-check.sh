@@ -145,7 +145,12 @@ else
     FP="$(printf '%s' "${LAST_TASK_ID}" >/dev/null; true)"
     # probe result task se nahi milta — paneld --run sirf status deta hai, isliye
     # fingerprint doosre tarike se nikalte hain: ssh-keyscan se (agents ke jaisa)
-    FP="$(ssh-keyscan -t ed25519 127.0.0.1 2>/dev/null > "${KEYDIR}/kh" && ssh-keygen -l -E sha256 -f "${KEYDIR}/kh" | awk '{print $2}')"
+    # Ek server kai keys (ed25519/ecdsa/rsa) dikha sakta hai aur keyscan ka order
+    # har baar badal sakta hai — isliye hamesha ED25519 wala lo (agent bhi yahi
+    # prefer karta hai), warna "pehli line" ka fingerprint flapping karega.
+    ssh-keyscan -t ed25519,ecdsa,rsa 127.0.0.1 2>/dev/null > "${KEYDIR}/kh"
+    FP="$(ssh-keygen -l -E sha256 -f "${KEYDIR}/kh" 2>/dev/null | awk '/\(ED25519\)/ {print $2}' | head -1)"
+    [[ -z "${FP}" ]] && FP="$(ssh-keygen -l -E sha256 -f "${KEYDIR}/kh" 2>/dev/null | awk '{print $2}' | head -1)"
     if [[ -n "${FP}" ]]; then
       ok "host key fingerprint mila: ${FP} (task #${LAST_TASK_ID})"
     else

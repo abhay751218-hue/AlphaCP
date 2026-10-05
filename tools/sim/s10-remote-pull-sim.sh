@@ -129,6 +129,9 @@ cat > "${W}/bin/sshd" <<'EOF'
 [[ "$1" == "-T" ]] && echo "permitrootlogin yes"
 exit 0
 EOF
+# Asli server ki tarah KAI host keys (ed25519 + ecdsa + rsa), aur har call par
+# unka order badalta hai (ssh-keyscan order stable nahi hota) — isi wajah se
+# "pehli line ka fingerprint" wala bug liva par nikla tha.
 cat > "${W}/bin/ssh-keygen" <<'EOF'
 #!/usr/bin/env bash
 if [[ " $* " == *" -t "* ]]; then
@@ -137,12 +140,29 @@ if [[ " $* " == *" -t "* ]]; then
   echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFAKE acp-s10-pull-check" > "${out}.pub"
   exit 0
 fi
-echo "256 SHA256:8Ph7mQ0FakeFingerprintAAAAAAAAAAAAAAAAAAAAAAA 127.0.0.1 (ED25519)"
+file=""; while [[ $# -gt 0 ]]; do [[ "$1" == "-f" ]] && file="$2"; shift; done
+# order: baari-baari ulta (1st call: ed,ec,rsa — 2nd: rsa,ed,ec — 3rd: ec,rsa,ed ...)
+case "${ACP_SIM_KEY_ORDER:-1}" in
+  1) order="ED25519 ECDSA RSA" ;;
+  2) order="RSA ED25519 ECDSA" ;;
+  *) order="ECDSA RSA ED25519" ;;
+esac
+: > "${file}.out"
+for t in ${order}; do
+  case "${t}" in
+    ED25519) echo "256 SHA256:8Ph7mQ0FakeFingerprintAAAAAAAAAAAAAAAAAAAAAAA 127.0.0.1 (ED25519)" >> "${file}.out" ;;
+    ECDSA)   echo "256 SHA256:ECDSAfakeFingerprintAAAAAAAAAAAAAAAAAAAAAAAAAA 127.0.0.1 (ECDSA)" >> "${file}.out" ;;
+    RSA)     echo "256 SHA256:RSAfakeFingerprintAAAAAAAAAAAAAAAAAAAAAAAAAAAA 127.0.0.1 (RSA)" >> "${file}.out" ;;
+  esac
+done
+cat "${file}.out"
 exit 0
 EOF
 cat > "${W}/bin/ssh-keyscan" <<'EOF'
 #!/usr/bin/env bash
 echo "127.0.0.1 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFAKE"
+echo "127.0.0.1 ecdsa-sha2-nistp256 AAAAE2VjZHNhLQAAAAAAAAAAAAAA"
+echo "127.0.0.1 ssh-rsa AAAAB3NzaC1yc2EAAAAAAAAAAAAAAAA"
 EOF
 chmod 0755 "${W}/bin/systemctl" "${W}/bin/sshd" "${W}/bin/ssh-keygen" "${W}/bin/ssh-keyscan"
 
@@ -157,7 +177,7 @@ chk() { if eval "$2" >/dev/null 2>&1; then PASS=$((PASS+1)); printf '  ok   %s\n
 # ------------------------------------------------------------------ run 1 -----
 echo
 echo "-- run 1: sab theek (script 0 fail dena chahiye)"
-: > "${W}/ssh/authorized_keys"
+mkdir -p "${W}/ssh" && : > "${W}/ssh/authorized_keys"
 set +e
 OUT1="$(bash "${REPO}/tools/verify/s10-remote-pull-check.sh" 2>&1)"; RC1=$?
 set -e
@@ -174,7 +194,7 @@ chk "run 1 drop dir saaf" "[[ -z \"\$(ls -A ${W}/home/incoming 2>/dev/null)\" ]]
 # ------------------------------------------------------------------ run 2 -----
 echo
 echo "-- run 2: fake paneld host-key pin ignore kare (script ko FAIL dena hi hoga)"
-: > "${W}/ssh/authorized_keys"
+mkdir -p "${W}/ssh" && : > "${W}/ssh/authorized_keys"
 set +e
 OUT2="$(ACP_FAKE_BREAK=nopull bash "${REPO}/tools/verify/s10-remote-pull-check.sh" 2>&1)"; RC2=$?
 set -e
@@ -183,7 +203,24 @@ chk "run 2 exit != 0" "[[ ${RC2} -ne 0 ]]"
 chk "run 2 me 'refuse' wala check fail hua" "grep -q 'MISMATCH\\|refuse' <<<\"${OUT2}\""
 chk "run 2 me fail count > 0" "! grep -qE '[0-9]+ pass, 0 fail' <<<\"${OUT2}\""
 
+
+# ------------------------------------------------------------------ run 3 -----
+# LIVE bug (5 Oct): ssh-keyscan kai keys laata hai aur unka order stable nahi hota.
+# "Pehli line ka fingerprint" lene se probe aur pull alag fingerprint pakadte the ->
+# hamesha MISMATCH. Ab agent pin ko kisi bhi key se match karta hai aur verifier
+# hamesha ED25519 wala leta hai — isliye har order me 0 fail aana chahiye.
+echo
+echo "-- run 3: host keys ka order badalne par bhi 0 fail (LIVE bug ka regression test)"
+mkdir -p "${W}/ssh" && : > "${W}/ssh/authorized_keys"
+set +e
+OUT3="$(ACP_SIM_KEY_ORDER=2 bash "${REPO}/tools/verify/s10-remote-pull-check.sh" 2>&1)"; RC3=$?
+set -e
+echo "${OUT3}" | sed 's/^/     /' | head -25 || true
+chk "run 3 exit 0 (order badla)" "[[ ${RC3} -eq 0 ]]"
+chk "run 3 me pull hua" "grep -q 'pull task success' <<<\"${OUT3}\""
+
 rm -rf "${W}"
+
 echo
 echo "=== S10-REMOTE-PULL-SIM: ${PASS} pass, ${FAIL} fail ==="
 [[ ${FAIL} -eq 0 ]]

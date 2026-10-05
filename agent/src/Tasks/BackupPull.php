@@ -51,6 +51,8 @@ final class BackupPull implements TaskInterface
                 'port' => $probed['port'],
                 'key_type' => $probed['key_type'],
                 'fingerprint' => $probed['fingerprint'],
+                'fingerprints' => $probed['fingerprints'],
+                'pubkey' => $probed['pubkey'],
                 'message' => "{$probed['host']} ka {$probed['key_type']} fingerprint: {$probed['fingerprint']} "
                     . '— isay verify karke host_fingerprint ke saath pull karo',
             ];
@@ -95,6 +97,7 @@ final class BackupPull implements TaskInterface
             'user' => $got['user'],
             'key_type' => $got['key_type'],
             'fingerprint' => $got['fingerprint'],
+            'fingerprints' => $got['fingerprints'],
             'auth' => $got['auth'],
             'duration_ms' => $got['duration_ms'],
             'message' => "archive drop dir me hai: {$got['path']} — ab Transfer/Restore page se import karo",

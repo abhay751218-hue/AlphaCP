@@ -3442,6 +3442,104 @@ test('backup.pull: scp fail hone par .part file saaf ho jati hai', function (): 
     acp_pull_cleanup($h);
 });
 
+test('backup.pull: server kai host keys de to sab fingerprints milte hain (ed25519 pehle)', function (): void {
+    $h = acp_pull_harness();
+    $h['cmd']->hostKeys = [
+        ['pubkey' => 'old.example.com ssh-rsa AAAARSA', 'fingerprint' => 'SHA256:RSAkeyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'type' => 'RSA'],
+        ['pubkey' => 'old.example.com ssh-ed25519 AAAAFake1', 'fingerprint' => 'SHA256:ED25519keyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'type' => 'ED25519'],
+        ['pubkey' => 'old.example.com ecdsa-sha2-nistp256 AAAAECDSA', 'fingerprint' => 'SHA256:ECDSAkeyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'type' => 'ECDSA'],
+    ];
+    $result = (new BackupPull())->handle([
+        'host' => 'old.example.com', 'probe' => true, '_confirm' => 'backup.pull',
+    ], $h['ctx']);
+
+    assert_true($result['key_type'] === 'ED25519', 'sabse strong key pehle');
+    assert_true($result['fingerprint'] === 'SHA256:ED25519keyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'ed25519 ka fingerprint diya');
+    assert_true(count($result['fingerprints']) === 3, 'teenon keys ke fingerprints mile');
+    assert_true(str_contains($result['pubkey'], 'ssh-rsa'), 'poora key block mila (scp chahe jo bhi use kare)');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: keyscan ka order badle to bhi pinned key match ho (LIVE bug ka fix)', function (): void {
+    $h = acp_pull_harness();
+    // pehle server ne ed25519 pehle diya (probe)
+    $h['cmd']->hostKeys = [
+        ['pubkey' => 'old.example.com ssh-ed25519 AAAAFake1', 'fingerprint' => 'SHA256:ED25519keyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'type' => 'ED25519'],
+        ['pubkey' => 'old.example.com ssh-rsa AAAARSA', 'fingerprint' => 'SHA256:RSAkeyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'type' => 'RSA'],
+    ];
+    $probed = (new BackupPull())->handle([
+        'host' => 'old.example.com', 'probe' => true, '_confirm' => 'backup.pull',
+    ], $h['ctx']);
+    $pinned = $probed['fingerprint'];
+
+    // ab keyscan ne order ulta diya (asli server par aisa hi hota hai)
+    $h['cmd']->hostKeys = array_reverse($h['cmd']->hostKeys);
+    $result = (new BackupPull())->handle([
+        'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+        'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+        'host_fingerprint' => $pinned, '_confirm' => 'backup.pull',
+    ], $h['ctx']);
+
+    assert_true($result['name'] === 'cpmove-a.tar.gz', 'order badalne ke bawajood pull chal gaya');
+    assert_true($result['fingerprint'] === $pinned, 'pinned fingerprint report hua');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: pin kisi bhi key se match na ho to MISMATCH (saare fingerprints dikhe)', function (): void {
+    $h = acp_pull_harness();
+    $h['cmd']->hostKeys = [
+        ['pubkey' => 'old.example.com ssh-ed25519 AAAAFake1', 'fingerprint' => 'SHA256:ED25519keyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'type' => 'ED25519'],
+        ['pubkey' => 'old.example.com ssh-rsa AAAARSA', 'fingerprint' => 'SHA256:RSAkeyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA', 'type' => 'RSA'],
+    ];
+    $msg = '';
+    try {
+        (new BackupPull())->handle([
+            'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+            'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+            'host_fingerprint' => 'SHA256:kisiAurKiKeyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+            '_confirm' => 'backup.pull',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true(str_contains($msg, 'MISMATCH'), 'MISMATCH par refuse');
+    assert_true(str_contains($msg, 'ED25519key'), 'error me server ki saari keys dikhen');
+    assert_true(str_contains($msg, 'RSAkey'), 'error me doosri key bhi dikhe');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: auth ki kami network se pehle pakdi jaye (keyscan call hi na ho)', function (): void {
+    $h = acp_pull_harness();
+    $h['cmd']->keyscanCalls = 0;
+    $msg = '';
+    try {
+        (new BackupPull())->handle([
+            'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+            'auth' => 'key', 'host_fingerprint' => 'SHA256:ED25519keyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+            '_confirm' => 'backup.pull',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true(str_contains($msg, 'private_key'), 'error key ke bare me ho: ' . $msg);
+    assert_true($h['cmd']->keyscanCalls === 0, 'network (keyscan) call hi nahi hua');
+
+    $h['cmd']->keyscanCalls = 0;
+    $msg = '';
+    try {
+        (new BackupPull())->handle([
+            'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+            'auth' => 'password', 'host_fingerprint' => 'SHA256:ED25519keyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA',
+            '_confirm' => 'backup.pull',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true(str_contains($msg, 'password'), 'error password ke bare me ho: ' . $msg);
+    assert_true($h['cmd']->keyscanCalls === 0, 'network (keyscan) call hi nahi hua (password case)');
+    acp_pull_cleanup($h);
+});
+
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");
 fwrite(STDOUT, sprintf("passed: %d   failed: %d\n", $passed, $failed));
 exit($failed === 0 ? 0 : 1);
