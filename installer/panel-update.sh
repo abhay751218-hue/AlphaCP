@@ -158,7 +158,7 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.74.4"
+UPDATER_VERSION="0.75.0"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.74.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
 BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-2654506a92e7f975d0d468afc16873803e992f3d}"
@@ -166,9 +166,9 @@ BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
 BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7396d88339f2d716889dc72058eded0e0e156f47668656b28a1c998dc479f4b5}"
 AGENT_VERSION="${ACP_AGENT_VERSION:-0.65.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-2654506a92e7f975d0d468afc16873803e992f3d}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-e1fc14d49fdbfb93c5a2e62f4d46b875679519df}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-f02dc0d558b0313a966d047718e419497eb1eff5e537ddccdee947f060468c5e}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-a5ca132d2232f2e19df28b4fd0d949763cd0fe74d777fb698c85e8cb007e0a9c}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -481,10 +481,9 @@ if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
   fi
 fi
 
-# S7 Email: Exim4 (MTA) + Dovecot (IMAP/POP3). Packages abhi install hote hain,
-# configuration agle release me (`mail.server` task) — tabhi service enable hogi.
-# Abhi install isliye: agle release me sirf config likhna aur verify karna bache,
-# aur apt ka waqt (sabse dheema hissa) abhi nikal jaye.
+# S7 Email: Exim4 (MTA) + Dovecot (IMAP/POP3). Packages install karte hain, phir
+# `mail.server setup` (backup -> validate -> apply) karke services chalu karte
+# hain — agent me mail.server task hai to. Nahi mile to services band rehte hain.
 if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
   MAIL_MISSING=""
   for b in /usr/sbin/exim4 /usr/sbin/dovecot; do
@@ -521,12 +520,35 @@ if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
   # rahe — adha-configured mail server public port 25 par na khula rahe.
   if [[ -x /usr/sbin/exim4 || -x /usr/sbin/dovecot ]]; then
     MAIL_VERSIONS="exim4=$(/usr/sbin/exim4 -bV 2>/dev/null | head -1 | awk '{print $3}') dovecot=$(/usr/sbin/dovecot --version 2>/dev/null)"
-    if [[ ! -f "${ACP_HOME}/etc/mail-server-configured" ]]; then
+    # Naye agent ke paas `mail.server` task hai to config likh kar services chalu
+    # kar do (backup -> validate -> apply). Purane agent par pehle jaisa: band.
+    MAIL_HAS_TASK=0
+    grep -q "'mail[.]server'" "${ACP_HOME}/agent/config/tasks.php" 2>/dev/null && MAIL_HAS_TASK=1
+    if [[ "${MAIL_HAS_TASK}" -eq 1 ]]; then
+      if [[ ! -f "${ACP_HOME}/etc/mail-server-configured" ]]; then
+        systemctl stop exim4 >/dev/null 2>&1 || true
+        systemctl stop dovecot >/dev/null 2>&1 || true
+      fi
+      if "${PHP_BIN}" "${ACP_HOME}/agent/bin/paneld" --run mail.server '{"action":"setup"}' >>"${LOG_FILE}" 2>&1; then
+        ok "mail.server setup ho gaya — exim4 + dovecot asli mailboxes ke saath chal rahe hain (${MAIL_VERSIONS})"
+        /usr/sbin/exim4 -bV >/dev/null 2>&1 || warn "exim4 -bV fail — config check karein"
+        systemctl is-active --quiet exim4 && ok "exim4 service active" || warn "exim4 service active NAHI"
+        systemctl is-active --quiet dovecot && ok "dovecot service active" || warn "dovecot service active NAHI"
+        info "verify: alphacp-sync get <commit> tools/verify/s7-mail-check.sh /tmp/s7.sh <sha> && sudo bash /tmp/s7.sh"
+      else
+        systemctl stop exim4 >/dev/null 2>&1 || true
+        systemctl stop dovecot >/dev/null 2>&1 || true
+        systemctl disable exim4 >/dev/null 2>&1 || true
+        systemctl disable dovecot >/dev/null 2>&1 || true
+        warn "mail.server setup fail — services band rakhe gaye (${LOG_FILE} dekhein)"
+        info "diagnose: sudo ${PHP_BIN} ${ACP_HOME}/agent/bin/paneld --run mail.server '{\"action\":\"status\"}'"
+      fi
+    elif [[ ! -f "${ACP_HOME}/etc/mail-server-configured" ]]; then
       systemctl stop exim4 >/dev/null 2>&1 || true
       systemctl stop dovecot >/dev/null 2>&1 || true
       systemctl disable exim4 >/dev/null 2>&1 || true
       systemctl disable dovecot >/dev/null 2>&1 || true
-      info "mail services abhi band hain — agle release me configure hoke start honge (${MAIL_VERSIONS})"
+      info "mail services abhi band hain — agent me mail.server nahi mila (${MAIL_VERSIONS})"
     else
       ok "mail server pehle se configured hai (${MAIL_VERSIONS})"
     fi
