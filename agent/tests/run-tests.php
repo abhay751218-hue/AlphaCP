@@ -4642,6 +4642,22 @@ test('mail.server setup — config validate hone ke baad hi apply (warn: mail ba
     $dov = (string) file_get_contents($h['root'] . '/etc/dovecot/conf.d/99-alphacp.conf');
     assert_true(str_contains($dov, 'driver = passwd-file'));
     assert_true(str_contains($dov, 'mail_location = maildir:~/'), 'Maildir location hona chahiye');
+    // Dovecot 2.3 docs: "scheme=" SIRF passdb ke liye hai. userdb args me likhne se
+    // Dovecot poore string ko filename samajh leta hai ->
+    //   passwd-file scheme=BLF-CRYPT /etc/dovecot/alphacp-users:open(...) No such file or directory
+    // -> userdb dead, `doveadm user` fail (live server par yahi hua tha).
+    preg_match_all('/^\s*(passdb|userdb)\s*\{(.*?)^\}/ms', $dov, $blocks, PREG_SET_ORDER);
+    $b = [];
+    foreach ($blocks as $set) {
+        $b[$set[1]] = $set[2];
+    }
+    assert_true(isset($b['passdb'], $b['userdb']), 'passdb + userdb dono hone chahiye');
+    assert_true(str_contains($b['passdb'], 'scheme=BLF-CRYPT'), 'passdb me scheme= hona chahiye');
+    assert_true(! str_contains($b['userdb'], 'scheme='), 'userdb args me scheme= NAHI hona chahiye (Dovecot ise filename samajhta hai)');
+    assert_true(
+        (bool) preg_match('/args\s*=\s*\S*alphacp-users\s*$/m', trim($b['userdb'])),
+        'userdb args me seedha users-file path hona chahiye',
+    );
     // systemctl enable/restart dono services ke liye chale
     $line = implode(' ', array_map(static fn (array $a): string => implode(' ', $a), $h['cmd']->calls));
     assert_true(str_contains($line, 'systemctl enable exim4'));
