@@ -51,12 +51,14 @@ final class MailServerSetup implements TaskInterface
                 ),
                 'eximconf'    => $server->eximConf(self::setPayload($payload)),
                 'dovecotconf' => $server->dovecotConf(self::setPayload($payload)),
+                // ---- cPanel #147: Apache SpamAssassin + Greylisting ----
+                'spamassassin' => $server->spamAssassin($payload),
                 'diskusage'   => $server->diskUsage(
                     trim((string) ($payload['username'] ?? '')) === '' ? null : strtolower(trim((string) $payload['username']))
                 ),
                 default  => throw new TaskRejectedException(
                     "mail.server action '{$action}' nahi chalega "
-                    . '(status/setup/sync/list/verify/deliverability/queue/reports/eximconf/dovecotconf/diskusage)'
+                    . '(status/setup/sync/list/verify/deliverability/queue/reports/eximconf/dovecotconf/diskusage/spamassassin)'
                 ),
             };
         } catch (TaskRejectedException $e) {

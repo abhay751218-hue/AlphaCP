@@ -64,6 +64,10 @@ final class MailServer
     private const DEFAULT_EXIM_FILTERS = '/etc/exim4/alphacp-filters';
     private const DEFAULT_EXIM_OPTIONS = '/usr/local/alphacp/etc/mail/exim-options.json';
     private const DEFAULT_DOVECOT_OPTIONS = '/usr/local/alphacp/etc/mail/dovecot-options.json';
+    private const DEFAULT_SPAMASSASSIN_CONF = '/etc/spamassassin/local.cf';
+    private const DEFAULT_GREYLISTD_SOCKET = '/var/run/greylistd/socket';
+    private const SPAMASSASSIN_BEGIN = '# >>> AlphaCP managed SpamAssassin';
+    private const SPAMASSASSIN_END = '# <<< AlphaCP managed SpamAssassin';
 
     /** Exim ke log — distro ke hisaab se alag jagah milte hain (pehla jo mile) */
     private const MAINLOG_CANDIDATES = [
@@ -90,6 +94,8 @@ final class MailServer
         'deliver_queue_load_max'     => ['number', '8.0'],
         'queue_only_load'            => ['number', '12.0'],
         'spam_score_limit'           => ['int', '80'],
+        'spam_enabled'              => ['bool', 'no'],
+        'greylisting'              => ['bool', 'no'],
     ];
 
     /** Mailserver Configuration / Dovecot (cPanel #144) */
@@ -212,6 +218,23 @@ final class MailServer
         return self::pathEnv('ACP_MAIL_DOVECOT_OPTIONS', self::DEFAULT_DOVECOT_OPTIONS);
     }
 
+    public function spamAssassinConfFile(): string
+    {
+        return self::pathEnv('ACP_MAIL_SPAMASSASSIN_CONF', self::DEFAULT_SPAMASSASSIN_CONF);
+    }
+
+    public function greylistdSocketFile(): string
+    {
+        $path = self::pathEnv('ACP_MAIL_GREYLISTD_SOCKET', self::DEFAULT_GREYLISTD_SOCKET);
+        // This path is embedded inside an Exim expansion (not shell-escaped),
+        // so accept only ordinary absolute Unix-socket path characters.
+        if (preg_match('#^/[A-Za-z0-9_./-]{1,220}$#D', $path) !== 1) {
+            return self::DEFAULT_GREYLISTD_SOCKET;
+        }
+
+        return $path;
+    }
+
     /** Exim mainlog (mail delivery reports isi se bante hain). Na mile to null. */
     public function mainlogFile(): ?string
     {
@@ -271,11 +294,343 @@ final class MailServer
             $out['services'][$unit] = $res->ok() && trim((string) $res->stdout) === 'active';
         }
 
+        $out['spam'] = $this->spamStatus();
         $out['domains'] = count($this->readLines($this->domainsFile()));
         $out['mailboxes'] = count($this->mailboxLines());
         $out['aliases'] = count($this->readLines($this->aliasesFile()));
 
         return $out;
+    }
+
+    /**
+     * Apache SpamAssassin + greylistd (cPanel #147).
+     *
+     * Payload: enabled?, required_score? (1.0-15.0), reject_score? (0=tag only),
+     *          greylisting?. Service units are enabled only when their feature is
+     * turned on; Exim uses /defer_ok so a later daemon outage cannot stop mail.
+     *
+     * @param array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public function spamAssassin(array $payload): array
+    {
+        if (!$this->installed()) {
+            throw new TaskRejectedException('exim4/dovecot installed nahi hain — pehle mail.server setup chalao');
+        }
+        if (!self::isConfigured()) {
+            throw new TaskRejectedException('mail.server setup pehle safal hona chahiye');
+        }
+
+        $current = $this->eximOptions();
+        $enabled = array_key_exists('enabled', $payload) ? self::truthy($payload['enabled']) : null;
+        $greylisting = array_key_exists('greylisting', $payload) ? self::truthy($payload['greylisting']) : null;
+        $requiredScore = array_key_exists('required_score', $payload) ? (float) $payload['required_score'] : null;
+        $rejectScore = array_key_exists('reject_score', $payload) ? (float) $payload['reject_score'] : null;
+
+        if ($requiredScore !== null && (!is_finite($requiredScore) || $requiredScore < 1.0 || $requiredScore > 15.0)) {
+            throw new TaskRejectedException('required_score 1.0 se 15.0 ke beech hona chahiye');
+        }
+        if ($rejectScore !== null && (!is_finite($rejectScore) || $rejectScore < 0.0 || $rejectScore > 30.0)) {
+            throw new TaskRejectedException('reject_score 0.0 se 30.0 ke beech hona chahiye (0 = sirf header tag)');
+        }
+
+        // Read-only call: no package/service/file changes.
+        if ($enabled === null && $greylisting === null && $requiredScore === null && $rejectScore === null) {
+            return [
+                'saved'       => [],
+                'exim_config' => null,
+                'spam'        => $this->spamStatus(),
+                'status'      => 'ok',
+            ];
+        }
+
+        $manageSpamService = $enabled === true
+            || ($enabled === null && $current['spam_enabled'] === 'yes'
+                && ($requiredScore !== null || $rejectScore !== null));
+        $wantGreylisting = $greylisting ?? ($current['greylisting'] === 'yes');
+        $set = [];
+        if ($enabled !== null) {
+            $set['spam_enabled'] = $enabled ? 'yes' : 'no';
+        }
+        if ($greylisting !== null) {
+            $set['greylisting'] = $greylisting ? 'yes' : 'no';
+        }
+        if ($rejectScore !== null) {
+            $set['spam_score_limit'] = (string) (int) round($rejectScore * 10);
+        }
+
+        $caps = $this->capabilities();
+        if ($manageSpamService && !$caps['spamd']) {
+            throw new TaskRejectedException('SpamAssassin/spamd installed nahi hai — `spamassassin` package chahiye');
+        }
+        if ($manageSpamService && !$caps['content_scanning']) {
+            throw new TaskRejectedException('Exim me Content_Scanning nahi hai — `exim4-daemon-heavy` chahiye; mail config nahi badli');
+        }
+        $spamConf = $this->spamAssassinConfFile();
+        if ($requiredScore !== null && !$caps['spamd']) {
+            throw new TaskRejectedException('required_score ke liye SpamAssassin/spamd package chahiye');
+        }
+        if ($requiredScore !== null && !is_dir(dirname($spamConf))) {
+            throw new TaskRejectedException('SpamAssassin installed nahi hai — /etc/spamassassin directory nahi mili');
+        }
+
+        $oldOptions = is_file($this->eximOptionsFile()) ? (string) @file_get_contents($this->eximOptionsFile()) : null;
+        $oldSpamConf = $requiredScore !== null && is_file($spamConf) ? (string) @file_get_contents($spamConf) : null;
+        $oldSpamMode = $requiredScore !== null && is_file($spamConf) ? (((int) @fileperms($spamConf)) & 0777) : 0644;
+        $started = [];
+        $restartedExisting = [];
+        $warnings = [];
+
+        try {
+            // local.cf is read at daemon startup. Write it BEFORE first start;
+            // if spamd was already running, restart it so the score takes effect.
+            if ($requiredScore !== null) {
+                $this->writeSpamAssassinConf($requiredScore);
+            }
+            if ($manageSpamService) {
+                $started['spamassassin'] = $this->startManagedService('spamassassin');
+                if ($requiredScore !== null && !$started['spamassassin']) {
+                    $restartedExisting['spamassassin'] = true;
+                    $this->restartManagedService('spamassassin');
+                }
+            }
+            if ($wantGreylisting) {
+                $started['greylistd'] = $this->startManagedService('greylistd');
+                if (!file_exists($this->greylistdSocketFile())) {
+                    throw new TaskRejectedException('greylistd active hai lekin Unix socket nahi mila — greylisting enable nahi ki');
+                }
+            }
+
+            // eximConf() validates all options, writes the JSON, regenerates the
+            // template, runs -bV + -bt smoke tests, then restarts Exim.
+            $applied = ['exim_config' => null];
+            if ($set !== []) {
+                $res = $this->applyEximOptionSet($set);
+                $applied = ['exim_config' => $res['exim_config'] ?? null];
+            }
+        } catch (Throwable $e) {
+            $rollbackErrors = [];
+            if ($requiredScore !== null) {
+                try {
+                    $this->restoreFileContents($spamConf, $oldSpamConf, $oldSpamMode);
+                } catch (Throwable $rollback) {
+                    $rollbackErrors[] = 'local.cf: ' . $rollback->getMessage();
+                }
+            }
+            if ($set !== []) {
+                try {
+                    $this->restoreFileContents($this->eximOptionsFile(), $oldOptions, 0644);
+                } catch (Throwable $rollback) {
+                    $rollbackErrors[] = 'exim options: ' . $rollback->getMessage();
+                }
+            }
+            foreach ($restartedExisting as $unit => $_) {
+                try {
+                    $this->restartManagedService($unit); // local.cf has its old bytes again
+                } catch (Throwable $rollback) {
+                    $rollbackErrors[] = $unit . ' old config reload: ' . $rollback->getMessage();
+                }
+            }
+            foreach ($started as $unit => $newlyStarted) {
+                if ($newlyStarted) {
+                    $this->stopManagedService($unit);
+                }
+            }
+            $suffix = $rollbackErrors === [] ? '' : ' (rollback warning: ' . implode('; ', $rollbackErrors) . ')';
+            if ($e instanceof TaskRejectedException) {
+                throw new TaskRejectedException($e->getMessage() . $suffix, 0, $e);
+            }
+            throw new TaskRejectedException('SpamAssassin/greylisting safe apply fail: ' . $e->getMessage() . $suffix, 0, $e);
+        }
+
+        // ACL is already removed/disabled and Exim validated before its daemon is
+        // stopped; a greylist/spam service is never stopped while Exim still asks it.
+        if ($enabled === false) {
+            $warnings = array_merge($warnings, $this->stopManagedService('spamassassin'));
+        }
+        if ($greylisting === false) {
+            $warnings = array_merge($warnings, $this->stopManagedService('greylistd'));
+        }
+
+        $spamStatus = $this->spamStatus();
+        if ($spamStatus['enabled'] && !$spamStatus['active']) {
+            $warnings[] = 'spamd/Exim content-scanning abhi active nahi; Exim mail ko fail-open deliver karega, SpamAssassin scan nahi hoga';
+        }
+        if ($spamStatus['greylisting'] && !$spamStatus['greylisting_active']) {
+            $warnings[] = 'greylistd service/socket abhi active nahi; greylisting fail-open hai';
+        }
+
+        return [
+            'saved'       => $set,
+            'exim_config' => $applied['exim_config'] ?? null,
+            'spam'        => $spamStatus,
+            'warnings'    => $warnings,
+            'status'      => 'ok',
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function spamStatus(): array
+    {
+        $opts = $this->eximOptions();
+        $caps = $this->capabilities();
+        $spamdServiceActive = $this->serviceActive('spamassassin');
+        $spamdRunning = $spamdServiceActive && $this->spamdListening();
+        $greySocket = file_exists($this->greylistdSocketFile());
+        $greylistdServiceActive = $this->serviceActive('greylistd');
+        $greylistdRunning = $greylistdServiceActive && $greySocket;
+
+        return [
+            'spamd_installed'  => $caps['spamd'],
+            'spamd_running'    => $spamdRunning,
+            'content_scanning' => $caps['content_scanning'],
+            'enabled'          => $opts['spam_enabled'] === 'yes',
+            'active'           => $opts['spam_enabled'] === 'yes'
+                && $caps['spamd']
+                && $caps['content_scanning']
+                && $spamdRunning,
+            'required_score'   => (float) $this->localCfScore(),
+            'reject_score'     => ((int) $opts['spam_score_limit']) / 10,
+            'greylisting'      => $opts['greylisting'] === 'yes',
+            'greylisting_active' => $opts['greylisting'] === 'yes' && $greylistdRunning,
+            'greylistd_running' => $greylistdServiceActive,
+            'greylistd_socket'  => $greySocket,
+        ];
+    }
+
+    /** Write a managed SpamAssassin block while preserving all unrelated local.cf lines. */
+    private function writeSpamAssassinConf(float $requiredScore): void
+    {
+        $file = $this->spamAssassinConfFile();
+        if (!is_dir(dirname($file))) {
+            throw new TaskRejectedException('SpamAssassin config directory nahi mili: ' . dirname($file));
+        }
+        $score = number_format($requiredScore, 1, '.', '');
+        $old = is_file($file) ? (string) @file_get_contents($file) : '';
+        $kept = $old;
+        $begin = strpos($old, self::SPAMASSASSIN_BEGIN);
+        $end = strpos($old, self::SPAMASSASSIN_END);
+        if ($begin !== false && $end !== false && $end >= $begin) {
+            $kept = substr($old, 0, $begin)
+                . substr($old, $end + strlen(self::SPAMASSASSIN_END));
+        }
+        if ($kept !== '' && !str_ends_with($kept, "\n")) {
+            $kept .= "\n";
+        }
+        $body = self::SPAMASSASSIN_BEGIN . "\n"
+            . '# AlphaCP SpamAssassin settings — haath se edit mat karo' . "\n"
+            . 'required_score ' . $score . "\n"
+            . 'rewrite_header Subject [SPAM]' . "\n"
+            . 'report_safe 0' . "\n"
+            . self::SPAMASSASSIN_END . "\n";
+        $this->writeManaged($file, $kept . $body, 0644);
+    }
+
+    /** Last matching required_score wins in SpamAssassin; mirror that for status. */
+    private function localCfScore(): string
+    {
+        $file = $this->spamAssassinConfFile();
+        if (!is_file($file)) {
+            return '5.0';
+        }
+        $score = null;
+        foreach ($this->readLines($file) as $line) {
+            if (preg_match('/^\s*required_score\s+([0-9]+(?:\.[0-9]+)?)/', $line, $m) === 1) {
+                $score = $m[1];
+            }
+        }
+
+        return $score ?? '5.0';
+    }
+
+    /** PHP bool / "yes" / 1 / "true" -> bool. */
+    private static function truthy(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value)) {
+            return $value > 0;
+        }
+        $text = strtolower(trim((string) $value));
+
+        return in_array($text, ['1', 'yes', 'true', 'on'], true);
+    }
+
+    /** systemctl's explicit state, not a best-effort PHP socket guess. */
+    private function serviceActive(string $unit): bool
+    {
+        $res = $this->cmd->run(['/bin/systemctl', 'is-active', $unit], 20);
+
+        return $res->ok() && trim((string) $res->stdout) === 'active';
+    }
+
+    /** Enable and start a private local mail helper; return whether we started it. */
+    private function startManagedService(string $unit): bool
+    {
+        $wasActive = $this->serviceActive($unit);
+        try {
+            $enable = $this->cmd->run(['/bin/systemctl', 'enable', $unit], self::CMD_TIMEOUT);
+            if (!$enable->ok()) {
+                throw new TaskRejectedException("{$unit} enable fail: " . self::cleanError($enable));
+            }
+            if (!$wasActive) {
+                $start = $this->cmd->run(['/bin/systemctl', 'start', $unit], self::CMD_TIMEOUT);
+                if (!$start->ok()) {
+                    throw new TaskRejectedException("{$unit} start fail: " . self::cleanError($start));
+                }
+            }
+            if (!$this->serviceActive($unit)) {
+                throw new TaskRejectedException("{$unit} service active nahi hua");
+            }
+        } catch (Throwable $e) {
+            if (!$wasActive) {
+                $this->stopManagedService($unit);
+            }
+            throw $e;
+        }
+
+        return !$wasActive;
+    }
+
+    /** Restart an already-active local helper after its configuration changed. */
+    private function restartManagedService(string $unit): void
+    {
+        $res = $this->cmd->run(['/bin/systemctl', 'restart', $unit], self::CMD_TIMEOUT);
+        if (!$res->ok() || !$this->serviceActive($unit)) {
+            throw new TaskRejectedException("{$unit} restart fail: " . self::cleanError($res));
+        }
+    }
+
+    /** Stop+disable only after the Exim ACL no longer depends on the unit. @return list<string> */
+    private function stopManagedService(string $unit): array
+    {
+        $warnings = [];
+        foreach (['stop', 'disable'] as $verb) {
+            try {
+                $res = $this->cmd->run(['/bin/systemctl', $verb, $unit], self::CMD_TIMEOUT);
+                if (!$res->ok()) {
+                    $warnings[] = "{$unit} {$verb} failed: " . self::cleanError($res);
+                }
+            } catch (Throwable $e) {
+                $warnings[] = "{$unit} {$verb} failed: " . $e->getMessage();
+            }
+        }
+
+        return $warnings;
+    }
+
+    /** Restore bytes/mode exactly after a failed multi-file SpamAssassin apply. */
+    private function restoreFileContents(string $file, ?string $contents, int $mode): void
+    {
+        if ($contents === null) {
+            if (is_file($file) && !@unlink($file)) {
+                throw new TaskRejectedException('rollback file remove nahi hui: ' . $file);
+            }
+
+            return;
+        }
+        $this->writeManaged($file, $contents, $mode > 0 ? $mode : 0644);
     }
 
     public function installed(): bool
@@ -380,12 +735,24 @@ final class MailServer
         ];
     }
 
-    /**
-     * Rebuild the aggregate files from every account (new mailbox, new domain,
-     * new forwarder). Daemons read these files per lookup — no restart needed.
-     *
-     * @return array<string, int>
-     */
+    /** Live service check for the status response only; Exim ACL remains fail-open. */
+    public function spamdListening(): bool
+    {
+        $sock = @fsockopen('127.0.0.1', 783, $errno, $errstr, 1.0);
+        if ($sock === false) {
+            return false;
+        }
+        fclose($sock);
+
+        return true;
+    }
+
+    /** Exim ka int score (80) -> insani number (8.0). */
+    public static function scoreHuman(int $score): string
+    {
+        return number_format($score / 10, 1, '.', '');
+    }
+
     /**
      * Exim kya-kya support karta hai (`exim4 -bV` khud batata hai).
      * DKIM signing aur SpamAssassin isi se gate hote hain — jo cheez binary
@@ -1697,7 +2064,11 @@ final class MailServer
     public function eximConf(?array $set = null): array
     {
         $file = $this->eximOptionsFile();
-        $allowed = array_keys(self::EXIM_OPTION_SPEC);
+        // SpamAssassin and greylistd services have to be managed alongside
+        // their ACL toggles, so expose them only through spamAssassin(), not
+        // the generic cPanel Exim Configuration Manager endpoint.
+        $managed = ['spam_enabled', 'greylisting'];
+        $allowed = array_values(array_diff(array_keys(self::EXIM_OPTION_SPEC), $managed));
         $out = [
             'file'     => $file,
             'options'  => $this->eximOptions(),
@@ -1708,6 +2079,31 @@ final class MailServer
         if ($set === null) {
             return $out;
         }
+        if ($set === []) {
+            throw new TaskRejectedException('eximconf: koi option nahi diya (allowed: ' . implode(', ', $allowed) . ')');
+        }
+        $restricted = array_values(array_intersect(array_keys($set), $managed));
+        if ($restricted !== []) {
+            throw new TaskRejectedException(
+                implode(', ', $restricted) . ' mail.server spamassassin action se manage hote hain (service safety ke liye)'
+            );
+        }
+
+        return $this->applyEximOptionSet($set);
+    }
+
+    /** @param array<string, mixed> $set @return array<string, mixed> */
+    private function applyEximOptionSet(array $set): array
+    {
+        $file = $this->eximOptionsFile();
+        $allowed = array_keys(self::EXIM_OPTION_SPEC);
+        $out = [
+            'file'     => $file,
+            'options'  => $this->eximOptions(),
+            'defaults' => self::specDefaults(self::EXIM_OPTION_SPEC),
+            'allowed'  => $allowed,
+            'applied'  => false,
+        ];
         if ($set === []) {
             throw new TaskRejectedException('eximconf: koi option nahi diya (allowed: ' . implode(', ', $allowed) . ')');
         }
@@ -2167,13 +2563,40 @@ final class MailServer
             : '';
         $opts = $this->eximOptions();
         $spamLimit = (string) $opts['spam_score_limit'];
+        $spamLimitHuman = self::scoreHuman((int) $opts['spam_score_limit']);
         $filtersFile = $this->filtersFile();
-        $spamAcl = $caps['content_scanning'] && $caps['spamd']
-            ? "  deny condition = \${if >{\$spam_score_int}{{$spamLimit}}{yes}{no}}\n"
-              . "       message = This message scored \$spam_score spam points (limit 8.0)\n"
-              . "       spam = nobody:true\n\n          "
+        // SpamAssassin (cPanel #147): content-scan support + installed spamd +
+        // explicit opt-in. `:true` populates score/header variables on every message;
+        // `/defer_ok` makes a later spamd outage fail open (never hold mail in queue).
+        // 0 score limit is deliberately tag-only; it must not reject score > 0.
+        $spamOn = $opts['spam_enabled'] === 'yes' && $caps['spamd'] && $caps['content_scanning'];
+        $spamRejectAcl = (int) $spamLimit > 0
+            ? "  deny condition = \${if >{\${if def:spam_score_int {\$spam_score_int}{0}}}{{$spamLimit}}{yes}{no}}\n"
+              . "       message = Message scored \$spam_score spam points (limit {$spamLimitHuman}) - rejected as spam\n\n"
             : '';
-
+        $spamAcl = $spamOn
+            ? "  warn spam = nobody:true/defer_ok\n"
+              . "       add_header = X-Spam-Score: \$spam_score (\$spam_bar)\n"
+              . "       add_header = X-Spam-Checker-Version: SpamAssassin \$spam_score_int/{$spamLimit} AlphaCP\n\n"
+              . $spamRejectAcl
+              . "          "
+            : '';
+        // Debian greylistd protocol: --grey <IP> <MAIL FROM> <RCPT TO> returns
+        // true only while a triplet is greylisted. A missing/unavailable socket
+        // returns false, so greylisting degrades open rather than blocking all mail.
+        $greylistSocket = $this->greylistdSocketFile();
+        $greylistAcl = $opts['greylisting'] === 'yes'
+            ? "  defer\n"
+              . "       message = temporarily rejected (greylisted): \$sender_host_address is not yet authorized to deliver mail from <\$sender_address> to <\$local_part@\$domain>. Please try again later.\n"
+              . "       log_message = greylisted (\$sender_host_address)\n"
+              . "       domains = +local_domains\n"
+              . "       !senders = :\n"
+              . "       !hosts = : +relay_from_hosts\n"
+              . "       !authenticated = *\n"
+              . "       verify = recipient\n"
+              . "       condition = \${readsocket{{$greylistSocket}}{--grey \$sender_host_address \$sender_address \$local_part@\$domain}{5s}{}{false}}\n\n"
+              . "          "
+            : '';
         return <<<EXIM
         # AlphaCP managed exim4 configuration (mail.server)
         # Asli distro wali template ki copy: {$this->eximTemplateBackup()}
@@ -2226,7 +2649,7 @@ final class MailServer
                local_parts = ^[./|] : ^.*[@%!/|`#&?] : ^.*/\\.\\./
                message = restricted characters in address
 
-          accept domains = +local_domains
+          {$greylistAcl}accept domains = +local_domains
                  endpass
                  verify = recipient
 

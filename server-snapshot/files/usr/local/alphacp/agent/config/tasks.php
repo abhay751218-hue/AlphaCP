@@ -1116,7 +1116,7 @@ return [
         'handler'     => Tasks\MailServerSetup::class,
         'safety'      => 'mutating',
         'timeout'     => 180,
-        'description' => 'Exim4 + Dovecot: status/setup/sync/list/verify (config validated before apply).',
+        'description' => 'Exim4 + Dovecot: status/setup/sync/verify, server mail config and SpamAssassin/greylisting.',
         'paths'       => ['/home', '/usr/local/alphacp'],
         'schema'      => [
             'type'                 => 'object',
@@ -1129,6 +1129,8 @@ return [
                     // #143 Exim Configuration Manager, #144 Mailserver Configuration (Dovecot),
                     // #146 Email Disk Usage (server view)
                     'queue', 'reports', 'eximconf', 'dovecotconf', 'diskusage',
+                    // #147 Apache SpamAssassin + Greylisting
+                    'spamassassin',
                 ]],
                 'address' => ['type' => 'string', 'maxLength' => 190, 'pattern' => '^[a-z0-9._-]+@[a-z0-9.-]+$'],
                 'username' => ['type' => 'string', 'maxLength' => 32, 'pattern' => '^[a-z][a-z0-9]{2,15}$'],
@@ -1141,6 +1143,11 @@ return [
                 'search' => ['type' => 'string', 'maxLength' => 120, 'pattern' => '^[ -~]{1,120}$'],
                 // configuration manager: { option: value } — har value apne type se validate hoti hai
                 'set' => ['type' => 'object', 'maxProperties' => 40],
+                // #147 SpamAssassin + Greylisting
+                'enabled'        => ['type' => 'boolean'],
+                'greylisting'    => ['type' => 'boolean'],
+                'required_score' => ['type' => 'number', 'minimum' => 1, 'maximum' => 15],
+                'reject_score'   => ['type' => 'number', 'minimum' => 0, 'maximum' => 30],
             ],
         ],
     ],
