@@ -115,6 +115,12 @@ final class Dns
         return $value;
     }
 
+    /** True when $domain is a bare FQDN we may use as a BIND zone name. */
+    public static function validDomain(string $domain): bool
+    {
+        return AccountIdentity::domain(strtolower(trim($domain))) === null;
+    }
+
     public const MAX_DYNAMIC = 20;
 
     /**

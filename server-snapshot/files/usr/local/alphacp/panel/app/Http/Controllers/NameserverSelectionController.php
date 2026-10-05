@@ -56,6 +56,9 @@ class NameserverSelectionController extends Controller
             ]);
         }
         DnsProvisioner::enqueueNameserver($software, $ns1, $ns2);
+        // NS badle to har zone file dobara likhni padti hai (naye NS + glue A)
+        DnsProvisioner::enqueueBindSetup();
+        DnsProvisioner::enqueueBindSync();
         Audit::log('dns.nameserver', 'info', 'system', null, ['software' => $software, 'ns1' => $ns1, 'ns2' => $ns2]);
 
         return redirect()->route('nameserver-selection.index')->with('success', 'Nameserver selection is queued.');

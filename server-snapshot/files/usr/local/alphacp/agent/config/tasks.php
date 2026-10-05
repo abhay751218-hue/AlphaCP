@@ -1172,6 +1172,43 @@ return [
         ],
     ],
 
+    // S9: BIND9 — asli authoritative zones. JSON ke baad yahi asli kadam hai:
+    // zone file likhne se pehle `named-checkzone` gate, phir rndc reload, phir
+    // `dig @127.0.0.1` se verify (likhna = server ka jawab dena).
+    'dns.bind' => [
+        'handler'     => Tasks\BindSetup::class,
+        'safety'      => 'mutating',
+        'timeout'     => 120,
+        'description' => 'BIND9 zones: status/setup/list/write/remove/verify (named-checkzone gated).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['action'],
+            'properties'           => [
+                'action'  => ['type' => 'string', 'enum' => ['status', 'setup', 'list', 'write', 'remove', 'verify', 'sync']],
+                'domain'  => ['type' => 'string', 'pattern' => '^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$', 'maxLength' => 190],
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'ttl'     => ['type' => 'integer', 'minimum' => 60, 'maximum' => 86400],
+                'records' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'name', 'type', 'value'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'name'   => ['type' => 'string', 'maxLength' => 63],
+                            'type'   => ['type' => 'string', 'enum' => ['A', 'CNAME', 'MX', 'TXT']],
+                            'value'  => ['type' => 'string', 'maxLength' => 255],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
     'dns.dynamic' => [
         'handler'     => Tasks\DynamicSet::class,
         'safety'      => 'mutating',
