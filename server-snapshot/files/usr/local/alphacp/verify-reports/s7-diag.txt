@@ -1,4 +1,4 @@
-S7 mail diagnostics — 2026-10-05T13:53:57Z host=ip-172-26-4-65
+S7 mail diagnostics — 2026-10-05T15:00:40Z host=ip-172-26-4-65
 
 === FILTER (folder) FAIL diagnostics ===
 $ cat /home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter
@@ -17,30 +17,30 @@ $ cat /home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter
     
 $ ls -la /home/acpmailchk/mail/acp-mail-check.test/info
     total 24
-    drwx------ 6 acpmailchk acpmailchk 4096 Oct  5 13:54 .
-    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 13:54 ..
-    drwx------ 5 acpmailchk acpmailchk 4096 Oct  5 13:54 .filtered
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 13:54 cur
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 13:54 new
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 13:54 tmp
+    drwx------ 6 acpmailchk acpmailchk 4096 Oct  5 15:00 .
+    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 15:00 ..
+    drwx------ 5 acpmailchk acpmailchk 4096 Oct  5 15:00 .filtered
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 15:00 cur
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 15:00 new
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 15:00 tmp
 $ tail -30 /var/log/exim4/mainlog
-    2026-10-05 13:54:06 Warning: purging the environment.
+    2026-10-05 15:00:46 1xDkBK-00000002fP3-0f0a <= root@ip-172-26-4-65 U=root P=local S=366
+    2026-10-05 15:00:46 1xDkBK-00000002fP3-0f0a => info <info@acp-mail-check.test> R=alphacp_mailbox T=alphacp_maildir
+    2026-10-05 15:00:46 1xDkBK-00000002fP3-0f0a Completed
+    2026-10-05 15:00:48 Warning: purging the environment.
      Suggested action: use keep_environment.
-    2026-10-05 13:54:07 Warning: purging the environment.
+    2026-10-05 15:00:49 Warning: purging the environment.
      Suggested action: use keep_environment.
-    2026-10-05 13:54:07 Warning: No server certificate defined; will use a selfsigned one.
+    2026-10-05 15:00:51 Warning: purging the environment.
+     Suggested action: use keep_environment.
+    2026-10-05 15:00:51 Warning: No server certificate defined; will use a selfsigned one.
      Suggested action: either install a certificate or change tls_advertise_hosts option
-    2026-10-05 13:54:07 exim 4.97 daemon started: pid=626517, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
-    2026-10-05 13:54:08 Start queue run: pid=626681
-    2026-10-05 13:54:08 1xDj8H-00000002bpy-2gaQ == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-    2026-10-05 13:54:08 1xDfcU-00000002S8n-3C1V == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-    2026-10-05 13:54:08 1xDj8H-00000002bpt-2Rp1 == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-    2026-10-05 13:54:08 1xDj8G-00000002bpo-4B1T == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-    2026-10-05 13:54:08 1xDg13-00000002TYw-1pGc == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-    2026-10-05 13:54:08 End queue run: pid=626681
-    2026-10-05 13:54:08 Warning: purging the environment.
+    2026-10-05 15:00:51 exim 4.97 daemon started: pid=636515, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
+    2026-10-05 15:00:52 Warning: purging the environment.
      Suggested action: use keep_environment.
-    2026-10-05 13:54:08 Warning: No server certificate defined; will use a selfsigned one.
+    2026-10-05 15:00:52 Warning: No server certificate defined; will use a selfsigned one.
      Suggested action: either install a certificate or change tls_advertise_hosts option
-    2026-10-05 13:54:08 exim 4.97 daemon started: pid=627029, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
-    2026-10-05 13:54:09 Start queue run: pid=627055
+    2026-10-05 15:00:52 exim 4.97 daemon started: pid=637021, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
+    2026-10-05 15:00:52 Start queue run: pid=637047
+    2026-10-05 15:00:52 1xDfcU-00000002S8n-3C1V == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+    2026-10-05 15:00:52 1xDj8H-00000002bpt-2Rp1 == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
