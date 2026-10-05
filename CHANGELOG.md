@@ -28,6 +28,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   s10-backup-destination-sim **21/0** (4 runs: sab theek / pin ignore / checksum mismatch / keyscan order),
   `tools/verify/s10-backup-destination-check.sh` live check (**25** checks).
 
+### Verified
+- **S7 #147 SpamAssassin + greylist status (5 Oct)** — pinned read-only live verifier returned **8 pass / 0 fail / 0 skip** and `S7 SPAMASSASSIN + GREYLIST:STATUS-VERIFIED`. No setting or service toggle was changed. The report file is awaiting the next alphacp-sync (latest snapshot predates this run).
+
 ### Fixed
 - **S7 #20/#21 — Exim user-filter permission fix, live-verified (agent 0.81.1, 5 Oct)** — live diagnostics
   showed Exim 4.97 opening the per-mailbox filter as the mailbox uid/gid and deferring with `Permission denied`;

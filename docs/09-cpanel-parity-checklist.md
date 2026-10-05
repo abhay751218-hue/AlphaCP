@@ -5,7 +5,7 @@
 > Jo step poora hoga, uske items ✅ ho jaayenge. **Project tab complete maana jayega jab ye file 100% ✅ ho.**
 
 **Banaya:** 28 Sep 2026 · **Base:** cPanel 138 (Meridian, Jul 2026) + WHM full tool list
-**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail). **S7 #147 ka code + real Exim verify ho gaya** (0.81.0; 20 pass / 0 fail), live status check pending. Server par 0.81.0 deploy hua; mail verifier ne base delivery aur #19 tracking pass ki, lekin filters fail hue (old verifier 61 pass / 1 fail; same failure 0.80.0 me bhi). Revised diagnostic ne Exim userfilter EACCES confirm kiya (60 pass / 2 fail); agent 0.81.1 fix deploy hua (panel code 0.74.0, release/agent 0.81.1, HTTP 200). Post-update S7 live mail verifier **62 pass / 0 fail / 0 skip** (5 Oct); #20/#21 ab ✅. Latest synced report pre-run 60/2 hai; updated report next sync me aana chahiye. Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
+**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail). **S7 #147 code + real Exim verification** (0.81.0; 20 pass / 0 fail) aur live status check (5 Oct; 8/0/0) complete. Server par 0.81.0 deploy hua; mail verifier ne base delivery aur #19 tracking pass ki, lekin filters fail hue (old verifier 61 pass / 1 fail; same failure 0.80.0 me bhi). Revised diagnostic ne Exim userfilter EACCES confirm kiya (60 pass / 2 fail); agent 0.81.1 fix deploy hua (panel code 0.74.0, release/agent 0.81.1, HTTP 200). Post-update S7 live mail verifier **62 pass / 0 fail / 0 skip** (5 Oct); #20/#21 ab ✅. #147 SpamAssassin/greylist status verifier bhi **8 pass / 0 fail / 0 skip** (`STATUS-VERIFIED`) (5 Oct); latest synced snapshot 17:11 UTC se baad ka report next sync me expected hai. Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
 
 ---
 
@@ -251,7 +251,7 @@
 | 144 | Mailserver Configuration (Dovecot) | S7 | ✅ (live verified: option set karte hi ASLI 99-alphacp.conf me value) |
 | 145 | Email Deliverability (server default) | S7 | ⏳ S7 |
 | 146 | Email Disk Usage (server view) | S7 | ✅ (live verified: per account + per mailbox asli bytes) |
-| 147 | SpamAssassin + Greylisting config | S7 | 🟡 Code + real Exim verified (0.81.0); live verify pending |
+| 147 | SpamAssassin + Greylisting config | S7 | ✅ Live read-only status verifier: **8 pass / 0 fail / 0 skip**, `STATUS-VERIFIED` (5 Oct); no feature toggle changed |
 | 148 | Address Importer (server) | S7 | ⏳ S7 |
 
 ### SQL / Databases (server-wide)

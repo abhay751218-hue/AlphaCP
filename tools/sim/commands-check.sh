@@ -22,9 +22,21 @@ CMD_FILE="${COMMANDS_CHECK_FILE:-COMMANDS.md}"
 
 # ---------------------------------------------------------------- parse -------
 # Us section ka pehla alphacp-sync get line jo "NEXT STEP" ke baad aata hai.
-NEXT_BLOCK="$(awk '/NEXT STEP/{f=1;next} /^## /{f=0} f' "${CMD_FILE}")"
+NEXT_BLOCK="$(awk '/^## .*NEXT STEP/{f=1;next} f && /^## /{exit} f' "${CMD_FILE}")"
 CMD_LINE="$(grep -m1 'alphacp-sync get' <<<"${NEXT_BLOCK}" || true)"
-[[ -n "${CMD_LINE}" ]] || { echo "NEXT STEP me koi alphacp-sync get command nahi mili"; exit 1; }
+if [[ -z "${CMD_LINE}" ]]; then
+  # Local feature development must not publish a live command before the release
+  # artifact and verifier are tested. COMMANDS.md has to say this explicitly.
+  if grep -Fq 'NO LIVE SERVER COMMAND — local implementation in progress.' <<<"${NEXT_BLOCK}"; then
+    echo '=== COMMANDS-CHECK: local implementation phase ==='
+    ok 'no untested live-server command is published while the feature is being built'
+    echo
+    echo "=== COMMANDS-CHECK: ${PASS} pass, ${FAIL} fail ==="
+    exit 0
+  fi
+  echo "NEXT STEP me koi alphacp-sync get command nahi mili aur local-development sentinel bhi nahi hai"
+  exit 1
+fi
 
 read -r COMMIT PATH_IN_REPO DEST SHA <<<"$(sed -n 's/.*alphacp-sync get \([0-9a-f]\{40\}\) \([^ ]*\) \([^ ]*\) \([0-9a-f]\{64\}\).*/\1 \2 \3 \4/p' <<<"${CMD_LINE}")"
 [[ -n "${COMMIT:-}" && -n "${PATH_IN_REPO:-}" && -n "${SHA:-}" ]] || { echo "command parse nahi hui: ${CMD_LINE}"; exit 1; }

@@ -12,47 +12,25 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ NEXT STEP — S7 #147 SpamAssassin + greylist status check (read-only)
+## ✅ NEXT STEP — S7 #18 Mailing Lists (local implementation)
 
-> 5 Oct ko aapke post-0.81.1 S7 mail live check ne **62 pass / 0 fail / 0 skip** diya.
-> Isse folder-save/discard filter checks pass hue; checklist #20/#21 ab ✅ hain.
-> Server ka aakhri synced report abhi 17:11 UTC wala purana **60/2** hai—naya 62/0/0 run us sync ke baad hua,
-> isliye `${ACP_HOME}/verify-reports/s7-mail-check.txt` agle alphacp-sync me refresh hona chahiye.
+> #147 ka live status verifier aapne chalaya: **8 pass / 0 fail / 0 skip** (`STATUS-VERIFIED`).
+> #147 ab live-verified hai. Latest GitHub snapshot (17:11 UTC) abhi is newer report se pehle ka hai;
+> `${ACP_HOME}/verify-reports/s7-spam-check.txt` next alphacp-sync me verify karunga.
+> #20/#21 ka live mail result bhi **62/0/0** hai. Current required checklist status: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
 >
-> Ab #147 ka **sirf status** check hai. Pinned verifier `mail.server spamassassin` bina settings bheje call karta hai;
-> agent code is case ko read-only rakhta hai (koi package/config/service change ya feature enable nahi hota).
+> Ab agla feature #18: mailing-list subscriber management aur actual Exim delivery. Current implementation
+> sirf list address/owner JSON rakhti hai; members aur real list fan-out abhi nahi hain. Is feature ke liye
+> local implementation, regression tests, pinned artifacts/updater aur dedicated live verifier taiyar honge.
+> **NO LIVE SERVER COMMAND — local implementation in progress.** Is beech updater/service manually mat chalana.
 
-### 1) Run the pinned #147 live status verifier
-```bash
-sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-spam-check.sh /tmp/s7-spam-check.sh e775b853066cb4a966e359bda54a9f0026faa91de48d7d7bcaac16783035eb86 && sudo bash /tmp/s7-spam-check.sh
-```
-- Script/hash/shell syntax checked; it is pinned to commit `f15c4b03adc6f3e242a6ee00871cd38997cb1142`.
-- Healthy-state expectation: **8 pass / 0 fail / 0 skip**. If any check fails, paste the full result; it does not turn SpamAssassin or greylisting on.
-- Report: `${ACP_HOME}/verify-reports/s7-spam-check.txt`; alphacp-sync will carry it to the repo.
-
-### Just completed — S7 mail delivery / filters
-- Live result you pasted: **62 pass / 0 fail / 0 skip** after agent 0.81.1; #20 global filters and #21 mailbox folder/discard filters now pass.
-- 0.81.1 is deployed: panel code bundle **0.74.0**, `.env ACP_VERSION=0.81.1`, agent **0.81.1**, panel HTTP **200**.
-  `New panel: 0.74.0` is the unchanged panel-code artifact version; no panel UI/code bundle was part of the agent-only fix.
-- Local checks for 0.81.1: updater/artifact pin guard **10/0**, S7 mail SIM **7/0**, updater SIM **12/0**, agent suite
-  **207/0** via PHP-WASM. The real-Exim sandbox was skipped locally (custom Exim binary unavailable); live server check has now passed.
-- The latest GitHub snapshot still contains the pre-update 60/2 report, because its last sync preceded your 62/0/0 run.
-  Keep the pasted result as the live pass; confirm the report file refresh on the next sync.
-
-### Previous live release — 0.81.0 (historical; do not rerun)
-- Live result after that update was `UPDATE COMPLETE`, panel **0.74.0**, agent **0.81.0**.
-- Its old verifier showed **61 pass / 1 fail**; you confirmed the same failure on 0.80.0.
-  The revised diagnostic exposed the EACCES and split it into two failed filter actions; both now pass after 0.81.1.
-- Earlier local 0.81.0 checks: agent suite **207/0**, S7 mail SIM **7/0**, updater SIM **12/0**,
-  S9 BIND SIM **3/0**, and real Exim **15/0/1 skip** (SpamAssassin ACL unavailable in that Exim build).
-
-### Roadmap / kitna baaki hai
-- Checklist ab **53 ✅ / 54 🟡 / 92 ⏳ / 9 🔵** (208 rows) hai; project tab complete jab required rows 100% ✅.
-- Live: #19 tracking, #20 global filters, #21 mailbox filters passed. Ab #147 read-only status verifier baaki hai.
-- S7 me abhi build karna: #18 Mailing Lists, #23/#148 Address Importer, #25 Encryption, #26 BoxTrapper,
-  #27 Calendar & Contacts, #29 Roundcube Webmail, #145 server deliverability. #147 code complete hai; live status verify baaki.
-- Phir S10 ke bache hue mail import + cpmove DNS-zone import; uske baad S11 Metrics → S12 Billing →
-  S13 Security Center (18) → S14 app installer/WP Toolkit → S15 reseller, multi-server, DNS cluster.
+### Remaining S7 scope
+- #18 Mailing Lists; #23/#148 Address Importer; #25 Encryption; #26 BoxTrapper; #27 Calendar & Contacts;
+  #29 Webmail; #145 server-default Email Deliverability.
+- Required checklist ab **54/199 green** (27.1%); **145 rows** baaki: 53 🟡 partial + 92 ⏳ not started.
+  Optional/parked blue rows: 9.
+- Earlier S7 checks passed: mail/filter verifier **62/0/0** (#20/#21), SpamAssassin/greylist status verifier **8/0/0** (#147),
+  #19 tracking and the base mail-server delivery checks. S7 is not complete until the remaining items above are live-verified.
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 
