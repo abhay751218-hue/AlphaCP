@@ -5,6 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **S7 #23 — Address Importer hardening and CSV file upload (6 Oct)** — panel code candidate **0.76.0**; agent remains **0.82.0**. The importer now accepts either pasted CSV or a bounded `.csv`/`.txt` upload, rejects normalized duplicate addresses, hashes the whole batch before writes, inserts mailboxes transactionally, and handles DB conflicts without partial imports. Import errors do not flash request input, and the form never renders previously flashed CSV/passwords. Final importer feature file: **10 tests / 55 assertions**; full panel suite on the same application code: **456 passed / 0 failed / 6 wasm-skip**, followed by the final focused 10/10 rerun against the rebuilt artifact. Candidate is local-only and **not live-verified**; checklist #23 stays 🟡 and #148 stays ⏳.
 - **S7 #18 — mailing-list subscribers and static Exim fan-out (5 Oct)** — local candidate artifacts panel code **0.75.0** and agent **0.82.0**.
   Customer list CRUD now stores normalized subscriber addresses in `mailing_lists.members`; the `mail.list`
   agent task persists them and syncs a static Exim alias that expands posts to each subscriber. Legacy

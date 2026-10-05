@@ -5,7 +5,7 @@
 > Jo step poora hoga, uske items ✅ ho jaayenge. **Project tab complete maana jayega jab ye file 100% ✅ ho.**
 
 **Banaya:** 28 Sep 2026 · **Base:** cPanel 138 (Meridian, Jul 2026) + WHM full tool list
-**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail). **S7 #147 code + real Exim verification** (0.81.0; 20 pass / 0 fail) aur live status check (5 Oct; 8/0/0) complete. Server par 0.81.0 deploy hua; mail verifier ne base delivery aur #19 tracking pass ki, lekin filters fail hue (old verifier 61 pass / 1 fail; same failure 0.80.0 me bhi). Revised diagnostic ne Exim userfilter EACCES confirm kiya (60 pass / 2 fail); agent 0.81.1 fix deploy hua (panel code 0.74.0, release/agent 0.81.1, HTTP 200). Post-update S7 live mail verifier **62 pass / 0 fail / 0 skip** (5 Oct); #20/#21 ab ✅. #147 SpamAssassin/greylist status verifier bhi **8 pass / 0 fail / 0 skip** (`STATUS-VERIFIED`) (5 Oct); latest synced snapshot 17:11 UTC se baad ka report next sync me expected hai. S7 #18 ka local static-Exim subscriber fan-out implementation panel bundle 0.75.0 me hai; 8/8 focused panel tests aur S7 mail simulation 14/0 pass, lekin dedicated real-Exim delivery abhi nahi chali—row yellow hi rahega. Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
+**Updated:** 6 Oct 2026 · Checklist status is **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵** (199 required rows; 145 are not green). S9 BIND9 and S7 #20/#21 remain live-verified; #147 status check remains **8/0/0**. #18 static mailing-list fan-out is implemented locally in panel 0.75.0 but still lacks real Exim/subscriber-Maildir delivery proof, so its live command remains withheld. S7 #23 Address Importer hardening is implemented in local candidate panel 0.76.0: full panel suite **456/0/6 wasm-skip**, final importer feature file **10 tests / 55 assertions**; live Exim/Dovecot authentication and delivery remain unverified, so #23 stays 🟡. Server deployment has not been inferred from these local results.
 
 ---
 
@@ -67,7 +67,7 @@
 | 20 | Global Email Filters | Server-side filters | S7 | ✅ (post-0.81.1 live S7 verifier: **62 pass / 0 fail / 0 skip**, 5 Oct; account-wide Exim filter delivery verified) |
 | 21 | Email Filters | Per-mailbox filters | S7 | ✅ (post-0.81.1 live S7 verifier: **62 pass / 0 fail / 0 skip**, 5 Oct; folder-save and discard both verified) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF + DMARC + DKIM live verified: `dig TXT`, `_dmarc`, `default._domainkey` sab green) |
-| 23 | Address Importer | Bulk CSV import | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (CSV local,domain,password → mail.set; no pipe)) |
+| 23 | Address Importer | Bulk CSV import | S7 | 🟡 (panel 0.76.0 candidate: paste or bounded CSV upload; normalized duplicate rejection; passwords never flashed/rendered; hashed batch is transactional. Full panel suite 456/0/6 wasm-skip; final importer file 10 tests/55 assertions. Live Exim/Dovecot authentication + mailbox delivery still pending) |
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (SpamAssassin score + blacklist/whitelist files live (0.77.0)) |
 | 25 | Encryption | PGP/GnuPG email keys | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (identity JSON; no gpg/private key)) |
 | 26 | BoxTrapper | Challenge-response anti-spam | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (enabled+allowlist JSON; no daemon)) |
@@ -348,11 +348,11 @@
 
 | Hissa | Total items | ✅ Done | 🟡 Building | ⏳ Planned | 🔵 Optional |
 |---|---|---|---|---|---|
-| Client panel (cPanel) | 93 | 28 | 27 | 32 | 6 |
-| Admin/Reseller (WHM) | 99 | 18 | 26 | 54 | 1 |
+| Client panel (cPanel) | 93 | 31 | 24 | 32 | 6 |
+| Admin/Reseller (WHM) | 99 | 19 | 26 | 54 | 0 |
 | System/Business | 10 | **4** | 2 | 4 | 0 |
 | cPanel 138 naye features | 6 | 0 | 1 | 2 | 3 |
-| **TOTAL** | **208** | **50** | **56** | **92** | **10** |
+| **TOTAL** | **208** | **54** | **53** | **92** | **9** |
 
 > **5 Oct 2026 (0.77.0 + 0.78.0):** S7 Email ke 13 rows ✅ ho gaye — live server par
 > **54 pass / 0 fail**: asli mail Maildir me pahunchi, `doveadm user` ok,

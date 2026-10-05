@@ -3,7 +3,7 @@
 > 👉 **Naya AI/developer? Sabse pehle [`START-HERE.md`](START-HERE.md) padho** — server ki live state `server-snapshot/STATE.md` me hai.
 
 > **Working title:** "AlphaCP" (final brand name aap decide karoge)
-> **Status:** 🟡 S10 in progress — panel 0.65.0 / agent 0.58.0 deployed on 3 Oct (HTTP 200). Real home-file archive is implemented; mail/DB backup, restore, scheduling, remote storage, and cPanel migration are still incomplete.
+> **Status (6 Oct 2026):** 🟡 Roadmap continues through S15. Parity checklist: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵** (54 of 199 required rows green; 145 still not green). S7 #18 is held at real-delivery verification without stopping local roadmap work; #23 Address Importer is candidate panel 0.76.0, locally tested (456 full-suite passes / 0 failures / 6 wasm skips, plus the final importer file 10/10), not live-verified.
 > **Type:** Commercial hosting control panel (cPanel/WHM parity target)
 
 A from-scratch, cPanel-compatible hosting control panel written for real hosting businesses.

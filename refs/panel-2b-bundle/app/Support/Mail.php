@@ -198,6 +198,9 @@ final class Mail
                 return null;
             }
             $key = $parsed['local'] . '@' . $parsed['domain'];
+            if (array_key_exists($key, $rows)) {
+                return null;
+            }
             $rows[$key] = $parsed;
             if (count($rows) > self::MAX) {
                 return null;
