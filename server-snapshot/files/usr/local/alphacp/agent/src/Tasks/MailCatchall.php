@@ -7,6 +7,7 @@ use Alphacp\Agent\AccountIdentity;
 use Alphacp\Agent\AccountOs;
 use Alphacp\Agent\AccountPaths;
 use Alphacp\Agent\Mail;
+use Alphacp\Agent\MailServer;
 use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskRejectedException;
 use RuntimeException;
@@ -47,6 +48,7 @@ final class MailCatchall implements TaskInterface
         return [
             'username'  => $username,
             'catchalls' => count($written),
+            'mail_sync' => MailServer::syncIfConfigured($ctx->cmd, $ctx->log),
             'status'    => 'ok',
         ];
     }

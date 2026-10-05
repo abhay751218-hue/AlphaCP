@@ -91,6 +91,8 @@ final class CommandRunner implements CommandExecutor
         '/usr/local/sbin/doveconf',
         '/usr/sbin/update-exim4.conf',
         '/usr/bin/update-exim4.conf',
+        '/usr/bin/openssl',
+        '/usr/local/bin/openssl',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

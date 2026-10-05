@@ -1,0 +1,7 @@
+=== S7 MAIL SERVER LIVE CHECK (2026-10-05T10:01:51Z) ===
+pass=29 fail=2 skip=0
+tasks: mail.server#332, account.create#333, mail.set#334, mail.server#335, mail.server#336, mail.server#337, mail.server#338, mail.server#339
+live_mail_delivery=NO
+tools: exim=/usr/sbin/exim4 dovecot=/usr/sbin/dovecot doveadm=/usr/bin/doveadm
+mailboxes: 1
+domains: 1

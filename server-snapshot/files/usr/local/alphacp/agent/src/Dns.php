@@ -64,7 +64,8 @@ final class Dns
         if ($name === '@' || $name === '*') {
             return $name;
         }
-        if (preg_match('/^[a-z0-9](?:[a-z0-9._-]{0,61}[a-z0-9])?$/', $name) !== 1) {
+        // `_dmarc`, `default._domainkey`, `_acme-challenge` — sab legal hain
+        if (preg_match('/^[a-z0-9_](?:[a-z0-9._-]{0,61}[a-z0-9])?$/', $name) !== 1) {
             throw new TaskRejectedException('invalid dns name');
         }
         if (str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '|')) {
@@ -87,7 +88,21 @@ final class Dns
     public static function normalizeValue(string $type, string $value): string
     {
         $value = trim($value);
-        if ($value === '' || strlen($value) > 255) {
+        if ($value === '') {
+            throw new TaskRejectedException('invalid dns value');
+        }
+        if ($type === 'TXT') {
+            // SPF / DKIM / DMARC me `;` `/` `+` `@` `..` sab aate hain —
+            // normal TXT rule unhe rok degi, aur wo sab BIND me bilkul legal
+            // hain (BindServer::quote() `"` aur `\` escape karta hai).
+            // Isliye TXT ke liye: sirf printable ASCII, control chars nahi.
+            if (strlen($value) > 4096 || preg_match('/^[\x20-\x7E]+$/', $value) !== 1) {
+                throw new TaskRejectedException('invalid TXT value');
+            }
+
+            return $value;
+        }
+        if (strlen($value) > 255) {
             throw new TaskRejectedException('invalid dns value');
         }
         if (str_contains($value, "\n") || str_contains($value, "\r") || str_contains($value, '|') || str_contains($value, '..') || str_contains($value, '/')) {

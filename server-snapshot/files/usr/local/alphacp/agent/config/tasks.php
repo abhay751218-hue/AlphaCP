@@ -1123,8 +1123,9 @@ return [
             'additionalProperties' => false,
             'required'             => ['action'],
             'properties'           => [
-                'action'  => ['type' => 'string', 'enum' => ['status', 'setup', 'sync', 'list', 'verify']],
+                'action'  => ['type' => 'string', 'enum' => ['status', 'setup', 'sync', 'list', 'verify', 'deliverability']],
                 'address' => ['type' => 'string', 'maxLength' => 190, 'pattern' => '^[a-z0-9._-]+@[a-z0-9.-]+$'],
+                'username' => ['type' => 'string', 'maxLength' => 32, 'pattern' => '^[a-z][a-z0-9]{2,15}$'],
             ],
         ],
     ],

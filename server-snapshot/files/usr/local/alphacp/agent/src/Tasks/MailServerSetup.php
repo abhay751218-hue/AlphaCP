@@ -36,7 +36,10 @@ final class MailServerSetup implements TaskInterface
                 'setup'  => $server->setup(),
                 'sync'   => $server->syncFiles(),
                 'list'   => $this->listMailboxes($server),
-                'verify' => $server->verify((string) ($payload['address'] ?? '')),
+                'verify'        => $server->verify((string) ($payload['address'] ?? '')),
+                'deliverability' => $server->deliverability(
+                    trim((string) ($payload['username'] ?? '')) === '' ? null : strtolower(trim((string) $payload['username']))
+                ),
                 default  => throw new TaskRejectedException(
                     "mail.server action '{$action}' nahi chalega (status/setup/sync/list/verify)"
                 ),
