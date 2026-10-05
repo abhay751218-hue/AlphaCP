@@ -23,10 +23,23 @@ use Throwable;
  */
 final class BindServer
 {
+    // Distro ke hisaab se BIND ke tools alag jagah ho sakte hain (Ubuntu 24.04
+    // par /usr/sbin, kuch image par /usr/bin, source build par /usr/local/sbin).
+    // Hardcoded ek path = "binary not in allowlist"/"bind9 nahi mila" jaisi
+    // chuppi hui fail — isliye dono: candidates + dono hi allowlist me.
     public const CHECKCONF = '/usr/sbin/named-checkconf';
     public const CHECKZONE = '/usr/sbin/named-checkzone';
     public const RNDC = '/usr/sbin/rndc';
     public const DIG = '/usr/bin/dig';
+
+    /** @var list<string> jahan named-checkconf ho sakta hai (pehla mila wahi) */
+    public const CHECKCONF_PATHS = ['/usr/sbin/named-checkconf', '/usr/bin/named-checkconf', '/usr/local/sbin/named-checkconf', '/usr/local/bin/named-checkconf'];
+    /** @var list<string> */
+    public const CHECKZONE_PATHS = ['/usr/sbin/named-checkzone', '/usr/bin/named-checkzone', '/usr/local/sbin/named-checkzone', '/usr/local/bin/named-checkzone'];
+    /** @var list<string> */
+    public const RNDC_PATHS = ['/usr/sbin/rndc', '/usr/bin/rndc', '/usr/local/sbin/rndc', '/usr/local/bin/rndc'];
+    /** @var list<string> */
+    public const DIG_PATHS = ['/usr/bin/dig', '/usr/sbin/dig', '/bin/dig', '/usr/local/bin/dig'];
 
     // Real defaults. Every path is env-overridable (ACP_BIND_*) so the whole
     // class can be exercised inside a temp root — tests never touch /etc/bind.
@@ -87,8 +100,8 @@ final class BindServer
 
     public function installed(): bool
     {
-        return self::have('ACP_BIND_CHECKCONF', self::CHECKCONF)
-            && self::have('ACP_BIND_CHECKZONE', self::CHECKZONE);
+        return self::have('ACP_BIND_CHECKCONF', self::CHECKCONF, self::CHECKCONF_PATHS)
+            && self::have('ACP_BIND_CHECKZONE', self::CHECKZONE, self::CHECKZONE_PATHS);
     }
 
     // ----------------------------------------------------------------- setup --
@@ -104,8 +117,9 @@ final class BindServer
     {
         if (!$this->installed()) {
             throw new TaskRejectedException(
-                'bind9 (named-checkconf/named-checkzone) nahi mila — updater install karta hai '
-                . '(`apt-get install -y bind9 bind9-utils dnsutils`), uske baad dobara chalao'
+                'bind9 (named-checkconf/named-checkzone) nahi mila — dhoondha: '
+                . implode(', ', self::CHECKCONF_PATHS) . ' / ' . implode(', ', self::CHECKZONE_PATHS)
+                . ' — updater install karta hai (`apt-get install -y bind9 bind9-utils dnsutils`)'
             );
         }
 
@@ -552,10 +566,22 @@ final class BindServer
         return substr($msg, 0, 300) === '' ? "exit {$res->exitCode}" : substr($msg, 0, 300);
     }
 
-    private static function which(string $env, string $default): string
+    /**
+     * Binary kahan hai: env override > jo candidate asli me executable ho >
+     * default (error message ke liye).
+     *
+     * @param list<string> $candidates
+     */
+    private static function which(string $env, string $default, array $candidates = []): string
     {
         $override = trim((string) (getenv($env) ?: ''));
         if ($override === '') {
+            foreach ($candidates !== [] ? $candidates : [$default] as $candidate) {
+                if ($candidate !== '' && $candidate[0] === '/' && is_executable($candidate)) {
+                    return $candidate;
+                }
+            }
+
             return $default;
         }
         if (!str_starts_with($override, '/') || str_contains($override, "\0")) {
@@ -565,13 +591,19 @@ final class BindServer
         return $override;
     }
 
-    private static function have(string $env, string $default): bool
+    /** @param list<string> $candidates */
+    private static function have(string $env, string $default, array $candidates = []): bool
     {
         if (trim((string) (getenv($env) ?: '')) !== '') {
             return true;
         }
+        foreach ($candidates !== [] ? $candidates : [$default] as $candidate) {
+            if (is_executable($candidate)) {
+                return true;
+            }
+        }
 
-        return is_executable($default);
+        return false;
     }
 
     // ------------------------------------------------------------ paths ------
@@ -618,21 +650,21 @@ final class BindServer
 
     private static function checkconfBin(): string
     {
-        return self::which('ACP_BIND_CHECKCONF', self::CHECKCONF);
+        return self::which('ACP_BIND_CHECKCONF', self::CHECKCONF, self::CHECKCONF_PATHS);
     }
 
     private static function checkzoneBin(): string
     {
-        return self::which('ACP_BIND_CHECKZONE', self::CHECKZONE);
+        return self::which('ACP_BIND_CHECKZONE', self::CHECKZONE, self::CHECKZONE_PATHS);
     }
 
     private static function rndcBin(): string
     {
-        return self::which('ACP_BIND_RNDC', self::RNDC);
+        return self::which('ACP_BIND_RNDC', self::RNDC, self::RNDC_PATHS);
     }
 
     private static function digBin(): string
     {
-        return self::which('ACP_BIND_DIG', self::DIG);
+        return self::which('ACP_BIND_DIG', self::DIG, self::DIG_PATHS);
     }
 }
