@@ -49,11 +49,19 @@ $map = [
     'ACP_MAIL_UPDATE_EXIM'     => '/usr/sbin/update-exim4.conf',
     'ACP_MAIL_EXIM_OPTIONS'    => $root . '/alphacp/etc/mail/exim-options.json',
     'ACP_MAIL_DOVECOT_OPTIONS' => $root . '/alphacp/etc/mail/dovecot-options.json',
+    'ACP_MAIL_SPAMASSASSIN_CONF' => $root . '/etc/spamassassin/local.cf',
+    'ACP_MAIL_GREYLISTD_SOCKET'  => '/var/run/greylistd/socket',
     'ACP_MAIL_MAINLOG'         => $root . '/var/log/exim4/mainlog',
     'ACP_STATE_ROOT'           => $root . '/alphacp',
     'ACP_ACCOUNTS_ROOT'        => $root . '/home',
 ];
 foreach ($map as $name => $value) {
+    // DEV: caller env se override kar sake (jaise asli exim binary ka path) —
+    // allowlist/option testing ke liye. Pehle yahan putenv force hota tha,
+    // jisse ACP_MAIL_EXIM=... jaise overrides ignore ho jate the.
+    if (getenv($name) !== false) {
+        continue;
+    }
     putenv($name . '=' . $value);
 }
 

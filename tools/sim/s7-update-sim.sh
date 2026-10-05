@@ -25,7 +25,10 @@ export PATH="$BIN:$PATH"
 # ---------------------------------------------------------------- stubs ------
 cat > "$BIN/systemctl" <<'EOF'
 #!/usr/bin/env bash
-[[ "${SIM_CALLS:-}" ]] && echo "systemctl $*"
+if [[ "${SIM_CALLS:-}" ]]; then
+  echo "systemctl $*" >> "${SIM_SBIN}/systemctl.log"
+  echo "systemctl $*"
+fi
 exit 0
 EOF
 cat > "$BIN/debconf-set-selections" <<'EOF'
@@ -40,10 +43,10 @@ cat > "$BIN/apt-get" <<'EOF'
 #!/usr/bin/env bash
 if [[ "${SIM_APT_FAIL:-0}" == "1" ]]; then echo "apt-get FAIL $*" >&2; exit 1; fi
 mkdir -p "${SIM_SBIN}"
-for b in exim4 dovecot doveadm doveconf; do
+for b in exim4 dovecot doveadm doveconf spamd greylistd; do
   cat > "${SIM_SBIN}/${b}" <<'BINEOF'
 #!/usr/bin/env bash
-[[ "${1:-}" == "-bV" ]] && { echo "Exim version 4.97 (sim)"; exit 0; }
+[[ "${1:-}" == "-bV" ]] && { echo "Exim version 4.97 (sim)"; echo "Support for: Content_Scanning"; exit 0; }
 [[ "${1:-}" == "--version" ]] && { echo "2.3.21 (sim)"; exit 0; }
 exit 0
 BINEOF
@@ -63,7 +66,7 @@ EOF
 for b in exim4 dovecot doveadm doveconf; do
   cat > "$BIN/$b" <<'EOF'
 #!/usr/bin/env bash
-[[ "${1:-}" == "-bV" ]] && { echo "Exim version 4.97 (sim)"; exit 0; }
+[[ "${1:-}" == "-bV" ]] && { echo "Exim version 4.97 (sim)"; echo "Support for: Content_Scanning"; exit 0; }
 [[ "${1:-}" == "--version" ]] && { echo "2.3.21 (sim)"; exit 0; }
 exit 0
 EOF
@@ -79,7 +82,7 @@ start = next(i for i, l in enumerate(src) if 'MAIL_MISSING=""' in l) - 1
 end = next(j for j in range(start, len(src))
            if src[j].strip() == 'fi' and src[j + 2].startswith('NEW_PANEL='))
 block = ''.join(src[start:end + 1])
-for p in ('/usr/sbin/exim4', '/usr/sbin/dovecot', '/usr/bin/doveadm', '/usr/sbin/doveconf'):
+for p in ('/usr/sbin/exim4', '/usr/sbin/dovecot', '/usr/bin/doveadm', '/usr/sbin/doveconf', '/usr/sbin/spamd', '/usr/sbin/greylistd'):
     block = block.replace(p, '${SIM_SBIN}/' + p.rsplit('/', 1)[1])
 head = '''#!/usr/bin/env bash
 set -uo pipefail
@@ -110,6 +113,15 @@ chk() { # desc, expected-marker, pattern
     echo "$out" | sed 's/^/       | /'
   fi
 }
+chk_absent() { # desc, forbidden-pattern, output
+  local desc="$1" pattern="$2" out="$3"
+  if ! grep -q -- "$pattern" <<<"$out"; then
+    PASS=$((PASS + 1)); echo "  ok   $desc"
+  else
+    FAIL=$((FAIL + 1)); echo "  FAIL $desc"
+    echo "$out" | sed 's/^/       | /'
+  fi
+}
 run_case() { # $1 = sbin dir (binaries kahan hain) ; baaki = env overrides
   local sbin="$1"; shift
   rm -rf "$EMPTY"; mkdir -p "$EMPTY"   # har case saaf slate se
@@ -126,11 +138,24 @@ chk "purane agent par services BAND rehte hain" absent "mail services abhi band 
 
 # case 2: naya agent + setup OK
 printf "<?php\nreturn ['mail.server' => []];\n" > "$ACP/agent/config/tasks.php"
-rm -f "$ACP/etc/mail-server-configured"
-out="$(run_case "$BIN" SIM_CASE=2)"
+rm -f "$ACP/etc/mail-server-configured" "$BIN/systemctl.log"
+out="$(run_case "$BIN" SIM_CASE=2 SIM_CALLS=1)"
 chk "naye agent par mail.server setup chalta hai" present "mail.server setup ho gaya" "$out"
 chk "exim4 service active dikhta hai" present "exim4 service active" "$out"
 chk "dovecot service active dikhta hai" present "dovecot service active" "$out"
+calls="$(cat "$BIN/systemctl.log" 2>/dev/null)"
+chk "spamd default me stop/disable rehta hai" present "systemctl stop spamassassin" "$calls"
+chk "greylistd default me stop/disable rehta hai" present "systemctl disable greylistd" "$calls"
+
+# opted-in daemons should survive a future updater run
+mkdir -p "$ACP/etc/mail"
+printf '{"spam_enabled":"yes","greylisting":"yes"}\n' > "$ACP/etc/mail/exim-options.json"
+rm -f "$ACP/etc/mail-server-configured" "$BIN/systemctl.log"
+out="$(run_case "$BIN" SIM_CASE=2 SIM_CALLS=1)"
+calls="$(cat "$BIN/systemctl.log" 2>/dev/null)"
+chk_absent "opted-in SpamAssassin updater se stop nahi hota" "systemctl stop spamassassin" "$calls"
+chk_absent "opted-in greylistd updater se stop nahi hota" "systemctl stop greylistd" "$calls"
+rm -f "$ACP/etc/mail/exim-options.json"
 
 # case 3: setup fail
 rm -f "$ACP/etc/mail-server-configured"
@@ -141,7 +166,7 @@ chk "setup fail par services band + warn" absent "mail.server setup fail" "$out"
 rm -f "$ACP/etc/mail-server-configured"
 out="$(run_case "$EMPTY" SIM_CASE=4)"
 # install ke baad binaries mil gaye to setup bhi chalega (isliye marker = present)
-chk "packages missing par apt install + setup hota hai" present "exim4 + dovecot install ho rahe hain" "$out"
+chk "packages missing par apt install + setup hota hai" present "Content_Scanning + SpamAssassin + greylistd + Dovecot install ho rahe hain" "$out"
 
 # case 5: apt fail
 rm -f "$ACP/etc/mail-server-configured"

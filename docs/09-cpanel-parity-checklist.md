@@ -5,7 +5,7 @@
 > Jo step poora hoga, uske items ✅ ho jaayenge. **Project tab complete maana jayega jab ye file 100% ✅ ho.**
 
 **Banaya:** 28 Sep 2026 · **Base:** cPanel 138 (Meridian, Jul 2026) + WHM full tool list
-**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail) — Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
+**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail). **S7 #147 ka code + real Exim verify ho gaya** (0.81.0; 20 pass / 0 fail), live verify pending. Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
 
 ---
 
@@ -251,7 +251,7 @@
 | 144 | Mailserver Configuration (Dovecot) | S7 | ✅ (live verified: option set karte hi ASLI 99-alphacp.conf me value) |
 | 145 | Email Deliverability (server default) | S7 | ⏳ S7 |
 | 146 | Email Disk Usage (server view) | S7 | ✅ (live verified: per account + per mailbox asli bytes) |
-| 147 | SpamAssassin + Greylisting config | S7 | ⏳ S7 |
+| 147 | SpamAssassin + Greylisting config | S7 | 🟡 Code + real Exim verified (0.81.0); live verify pending |
 | 148 | Address Importer (server) | S7 | ⏳ S7 |
 
 ### SQL / Databases (server-wide)

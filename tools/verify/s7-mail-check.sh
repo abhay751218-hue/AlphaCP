@@ -123,7 +123,7 @@ for b in "${EXIM}" "${DOVEADM}" "${DOVECOT_BIN}"; do
 done
 if [[ -n "${MISSING}" ]]; then
   bad "mail tools nahi mile:${MISSING}"
-  info "Fix: sudo apt-get install -y exim4 exim4-daemon-light dovecot-core dovecot-imapd dovecot-pop3d"
+  info "Fix: sudo apt-get install -y exim4 exim4-daemon-heavy dovecot-core dovecot-imapd dovecot-pop3d spamassassin spamc greylistd"
   info "command -v exim4 : $(command -v exim4 2>/dev/null || echo NAHI-MILA)"
   info "command -v dovecot: $(command -v dovecot 2>/dev/null || echo NAHI-MILA)"
   echo; echo "=== S7 MAIL SERVER LIVE CHECK: ${PASS} pass, ${FAIL} fail, ${SKIP} skip ==="

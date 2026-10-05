@@ -8,6 +8,8 @@
 #
 #   * router/transport option galat (config-time reject)
 #   * lookup file missing hone par PANIC/defer
+#   * SpamAssassin: spamd-down fail-open + asla score/header/reject via SPAMD protocol
+#   * greylistd: socket fail-open, true=>451, false=>accepted, null sender bypass
 #   * filter ka `save` sach-much folder me jata hai ya nahi (ASLI delivery)
 #
 # Chalane ka tarika (sandbox me):
@@ -21,9 +23,10 @@
 set -uo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.." || exit 1
 
-PASS=0; FAIL=0
+PASS=0; FAIL=0; SKIP=0
 ok()   { PASS=$((PASS+1)); printf '  ok   %s\n' "$1"; }
 bad()  { FAIL=$((FAIL+1)); printf '  FAIL %s\n' "$1"; }
+skip() { SKIP=$((SKIP+1)); printf '  SKIP %s\n' "$1"; }
 
 PHP_BIN="${PHP_BIN:-node $HOME/.tools/phpw/node_modules/@php-wasm/cli/php-wasm.js -d memory_limit=1G}"
 ACP_EXIM="${ACP_EXIM:-$HOME/.tools/exim/bin/exim}"
@@ -50,7 +53,9 @@ rm -rf "$SB"
 mkdir -p "$SB/etc/exim4" "$SB/home/info/Maildir/new" "$SB/home/info/Maildir/cur" \
          "$SB/home/info/Maildir/tmp" "$SB/home/info/Maildir/.filtered/new" \
          "$SB/home/info/Maildir/.filtered/cur" "$SB/home/info/Maildir/.filtered/tmp" \
-         "$SB/home/info/etc/mail/filter.d" /tmp/eximspool/input /tmp/eximspool/msglog /tmp/eximlog
+         "$SB/home/info/etc/mail/filter.d" "$SB/alphacp/etc/mail" \
+         "$SB/etc/spamassassin" "$SB/run/greylistd" \
+         /tmp/eximspool/input /tmp/eximspool/msglog /tmp/eximlog
 chmod -R 777 /tmp/eximspool /tmp/eximlog 2>/dev/null
 
 MY_UID="${ACP_REAL_UID:-1001}"; MY_GID="${ACP_REAL_GID:-1001}"   # root (0) never_users me hai
@@ -64,6 +69,19 @@ echo "info@acp-sandbox.test: $FILTER_FILE" > "$SB/etc/exim4/alphacp-filters"
 
 printf 'From: sender@outside.test\nTo: info@acp-sandbox.test\nSubject: acpfilter test\n\nbody\n' > "$SB/msg-filter"
 printf 'From: sender@outside.test\nTo: info@acp-sandbox.test\nSubject: normal mail\n\nbody\n'    > "$SB/msg-normal"
+cat > "$SB/smtp-data.txt" <<'EOF'
+EHLO sender.example
+MAIL FROM:<sender@outside.test>
+RCPT TO:<info@acp-sandbox.test>
+DATA
+From: sender@outside.test
+To: info@acp-sandbox.test
+Subject: ACL integration test
+
+body
+.
+QUIT
+EOF
 
 # ------------------------------------------------------------------ render ---
 ACP_RENDER_ROOT="$SB" $PHP_BIN tools/dev/render-exim-template.php > "$SB/exim.conf" 2>"$SB/render.err"
@@ -193,6 +211,222 @@ grep -q "alphacp_maildir" <<<"$OUT" \
   && ok "mailbox -bt: alphacp_maildir transport tak pahuncha" \
   || bad "mailbox -bt: $(tr '\n' ' ' <<<"$OUT" | cut -c1-160)"
 
+# ---------------------------------------- 10. SpamAssassin fail-open/tag-only --
+# `spam =` sirf Content_Scanning Exim me hota hai. Renderer isi binary capability
+# check karta hai; system par light daemon ho to is part ko SKIP (mail config safe).
+SPAMD_BIN="/usr/sbin/exim4"
+if [[ -x "$SPAMD_BIN" ]] && "$SPAMD_BIN" -bV 2>&1 | grep -q 'Content_Scanning'; then
+  printf '{"spam_enabled":"yes","greylisting":"no","spam_score_limit":"0"}\n' > "$SB/alphacp/etc/mail/exim-options.json"
+  SOCK="$SB/run/greylistd/socket"
+  ACP_RENDER_ROOT="$SB" ACP_MAIL_EXIM="$SPAMD_BIN" ACP_MAIL_SPAMD=1 \
+    ACP_MAIL_GREYLISTD_SOCKET="$SOCK" $PHP_BIN tools/dev/render-exim-template.php > "$SB/exim.spam.conf" 2>"$SB/render-spam.err"
+  {
+    echo "spool_directory = /tmp/eximspool"
+    echo "log_file_path = /tmp/eximlog/%slog"
+    echo "spamd_address = 127.0.0.1 65534" # closed port: prove /defer_ok fail-open
+    cat "$SB/exim.spam.conf"
+  } > "$SB/exim.spam.test"
+  install_cfg "$SB/exim.spam.test"
+  if grep -q 'warn spam = nobody:true/defer_ok' "$SB/exim.spam.conf" \
+     && ! grep -q 'rejected as spam' "$SB/exim.spam.conf" \
+     && "$ACP_EXIM" -bV 2>"$SB/spam-bv.err" | grep -q 'Exim version' \
+     && ! grep -qi 'configuration error' "$SB/spam-bv.err"; then
+    ok "SpamAssassin ACL: Content_Scanning config valid, reject_score=0 tag-only"
+  else
+    bad "SpamAssassin ACL config/tag-only gate: $(tr '\n' ' ' < "$SB/spam-bv.err" 2>/dev/null | cut -c1-160)"
+  fi
+  SPAM_OUT="$SB/spam-bh.out"; SPAM_ERR="$SB/spam-bh.err"
+  "$ACP_EXIM" -bh 198.51.100.7 < "$SB/smtp-data.txt" >"$SPAM_OUT" 2>"$SPAM_ERR"
+  if grep -q '250 OK id=' "$SPAM_OUT" && grep -qi 'spamd.*failed\|all spamd servers failed' "$SPAM_ERR"; then
+    ok "spamd down: DATA accepted (defer_ok fail-open, message not stuck)"
+  else
+    bad "spamd down: expected accepted DATA + fail-open log; smtp=$(grep -E '250 OK id=|451|550' "$SPAM_OUT" | tail -1)"
+  fi
+
+  printf '{"spam_enabled":"yes","greylisting":"no","spam_score_limit":"80"}\n' > "$SB/alphacp/etc/mail/exim-options.json"
+  ACP_RENDER_ROOT="$SB" ACP_MAIL_EXIM="$SPAMD_BIN" ACP_MAIL_SPAMD=1 \
+    ACP_MAIL_GREYLISTD_SOCKET="$SOCK" $PHP_BIN tools/dev/render-exim-template.php > "$SB/exim.spam-reject.conf" 2>"$SB/render-spam-reject.err"
+  {
+    echo "spool_directory = /tmp/eximspool"
+    echo "log_file_path = /tmp/eximlog/%slog"
+    echo "spamd_address = 127.0.0.1 65534"
+    cat "$SB/exim.spam-reject.conf"
+  } > "$SB/exim.spam-reject.test"
+  install_cfg "$SB/exim.spam-reject.test"
+  if grep -q 'rejected as spam' "$SB/exim.spam-reject.conf" \
+     && "$ACP_EXIM" -bV 2>"$SB/spam-reject-bv.err" | grep -q 'Exim version' \
+     && ! grep -qi 'configuration error' "$SB/spam-reject-bv.err"; then
+    ok "SpamAssassin reject_score=8.0: real Exim config valid + threshold emitted"
+  else
+    bad "SpamAssassin rejection threshold config invalid"
+  fi
+
+  # A protocol-accurate tiny spamd answers the REPORT request with Exim's
+  # supported SPAMD/1.1 Content-length + score/threshold response. This proves
+  # the live score variables, X-Spam-Score header, and reject threshold—not only -bV.
+  SPAM_PORT="$(python3 -c 'import socket;s=socket.socket();s.bind(("127.0.0.1",0));print(s.getsockname()[1]);s.close()')"
+  {
+    echo "spool_directory = /tmp/eximspool"
+    echo "log_file_path = /tmp/eximlog/%slog"
+    echo "spamd_address = 127.0.0.1 ${SPAM_PORT}"
+    cat "$SB/exim.spam-reject.conf"
+  } > "$SB/exim.spam-active.test"
+  install_cfg "$SB/exim.spam-active.test"
+  FAKE_SPAMD_PID=""
+  start_fake_spamd() {
+    local score="$1"
+    rm -f "$SB/fake-spamd.ready"
+    python3 - "$SPAM_PORT" "$score" "$SB/fake-spamd.ready" >"$SB/fake-spamd.log" 2>&1 <<'PY_SPAMD' &
+import socket, sys
+port, score, ready = int(sys.argv[1]), sys.argv[2], sys.argv[3]
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+server.bind(('127.0.0.1', port))
+server.listen(1)
+open(ready, 'w').write('ready')
+client, _ = server.accept()
+request = b''
+while True:
+    data = client.recv(8192)
+    if not data:
+        break
+    request += data
+body = (score + '/5.0\r\n').encode()
+reply = (f'SPAMD/1.1 0 EX_OK\r\nContent-length: {len(body)}\r\n\r\n').encode() + body
+client.sendall(reply)
+client.close()
+server.close()
+PY_SPAMD
+    FAKE_SPAMD_PID=$!
+    for _ in 1 2 3 4 5 6 7 8 9 10; do
+      [[ -f "$SB/fake-spamd.ready" ]] && break
+      sleep 0.1
+    done
+  }
+  stop_fake_spamd() {
+    if [[ -n "$FAKE_SPAMD_PID" ]]; then
+      kill "$FAKE_SPAMD_PID" 2>/dev/null || true
+      wait "$FAKE_SPAMD_PID" 2>/dev/null || true
+      FAKE_SPAMD_PID=""
+    fi
+  }
+
+  start_fake_spamd 9.5
+  "$ACP_EXIM" -bh 198.51.100.7 < "$SB/smtp-data.txt" >"$SB/spam-high.out" 2>"$SB/spam-high.err"
+  stop_fake_spamd
+  if grep -q '^550 Message scored 9.5 spam points (limit 8.0)' "$SB/spam-high.out" \
+     && grep -q 'X-Spam-Score: 9.5' "$SB/spam-high.err"; then
+    ok "spamd score 9.5: X-Spam-Score header + Exim reject threshold produce 550"
+  else
+    bad "spamd score 9.5: expected score header and 550 rejection"
+  fi
+
+  start_fake_spamd 4.2
+  "$ACP_EXIM" -bh 198.51.100.7 < "$SB/smtp-data.txt" >"$SB/spam-low.out" 2>"$SB/spam-low.err"
+  stop_fake_spamd
+  if grep -q '250 OK id=' "$SB/spam-low.out" && grep -q 'X-Spam-Score: 4.2' "$SB/spam-low.err"; then
+    ok "spamd score 4.2: X-Spam-Score header added and normal message delivered"
+  else
+    bad "spamd score 4.2: expected X-Spam-Score header + accepted DATA"
+  fi
+else
+  skip "SpamAssassin live ACL needs /usr/sbin/exim4 built with Content_Scanning"
+fi
+
+# ----------------------------------------- 11. greylistd real ACL over socket --
+SOCK="$SB/run/greylistd/socket"
+printf '{"spam_enabled":"no","greylisting":"yes","spam_score_limit":"80"}\n' > "$SB/alphacp/etc/mail/exim-options.json"
+ACP_RENDER_ROOT="$SB" ACP_MAIL_EXIM="${SPAMD_BIN:-/usr/sbin/exim4}" ACP_MAIL_SPAMD= \
+  ACP_MAIL_GREYLISTD_SOCKET="$SOCK" $PHP_BIN tools/dev/render-exim-template.php > "$SB/exim.grey.conf" 2>"$SB/render-grey.err"
+{
+  echo "spool_directory = /tmp/eximspool"
+  echo "log_file_path = /tmp/eximlog/%slog"
+  cat "$SB/exim.grey.conf"
+} > "$SB/exim.grey.test"
+install_cfg "$SB/exim.grey.test"
+if "$ACP_EXIM" -bV 2>"$SB/grey-bv.err" | grep -q 'Exim version' \
+   && ! grep -qi 'configuration error' "$SB/grey-bv.err"; then
+  ok "greylistd ACL: real Exim config valid"
+else
+  bad "greylistd ACL: real Exim rejected config"
+fi
+
+GREY_PID=""
+start_greylistd() {
+  local reply="$1"
+  rm -f "$SOCK"
+  python3 - "$SOCK" "$reply" >"$SB/fake-greylistd.log" 2>&1 <<'PY_GREYLISTD' &
+import os, socket, sys
+path, reply = sys.argv[1], sys.argv[2]
+server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+server.bind(path)
+os.chmod(path, 0o666)
+server.listen(8)
+while True:
+    client, _ = server.accept()
+    try:
+        client.recv(4096)
+        client.sendall(reply.encode())
+    finally:
+        client.close()
+PY_GREYLISTD
+  GREY_PID=$!
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    [[ -S "$SOCK" ]] && break
+    sleep 0.1
+  done
+}
+stop_greylistd() {
+  if [[ -n "$GREY_PID" ]]; then
+    kill "$GREY_PID" 2>/dev/null || true
+    wait "$GREY_PID" 2>/dev/null || true
+    GREY_PID=""
+  fi
+  rm -f "$SOCK"
+}
+
+# Missing socket is an explicit false fallback: mail still gets accepted.
+stop_greylistd
+"$ACP_EXIM" -bh 198.51.100.7 < "$SB/smtp-data.txt" >"$SB/grey-missing.out" 2>"$SB/grey-missing.err"
+if grep -q '250 OK id=' "$SB/grey-missing.out"; then
+  ok "greylistd socket missing: mail fails open, no queue/defer"
+else
+  bad "greylistd socket missing: expected accepted DATA"
+fi
+
+start_greylistd true
+"$ACP_EXIM" -bh 198.51.100.7 < "$SB/smtp-data.txt" >"$SB/grey-true.out" 2>"$SB/grey-true.err"
+if grep -q '^451 ' "$SB/grey-true.out"; then
+  ok "greylistd --grey true: remote RCPT gets temporary 451"
+else
+  bad "greylistd --grey true: expected 451 greylist defer"
+fi
+stop_greylistd
+
+start_greylistd false
+"$ACP_EXIM" -bh 198.51.100.7 < "$SB/smtp-data.txt" >"$SB/grey-false.out" 2>"$SB/grey-false.err"
+if grep -q '250 OK id=' "$SB/grey-false.out"; then
+  ok "greylistd --grey false: retried/whitelisted sender passes"
+else
+  bad "greylistd --grey false: expected accepted DATA"
+fi
+stop_greylistd
+
+start_greylistd true
+cat > "$SB/smtp-null.txt" <<'EOF'
+EHLO sender.example
+MAIL FROM:<>
+RCPT TO:<info@acp-sandbox.test>
+QUIT
+EOF
+"$ACP_EXIM" -bh 198.51.100.7 < "$SB/smtp-null.txt" >"$SB/grey-null.out" 2>"$SB/grey-null.err"
+if grep -q '250 Accepted' "$SB/grey-null.out" && ! grep -q 'check condition = .*readsocket' "$SB/grey-null.err"; then
+  ok "greylistd null sender: DSN/callout bypasses socket check"
+else
+  bad "greylistd null sender: must bypass greylisting"
+fi
+stop_greylistd
+
 echo
-echo "=== ASLI EXIM SANDBOX TEST: ${PASS} pass, ${FAIL} fail ==="
+echo "=== ASLI EXIM SANDBOX TEST: ${PASS} pass, ${FAIL} fail, ${SKIP} skip ==="
 [[ "$FAIL" == "0" ]]

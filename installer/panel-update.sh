@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.80.0  ·  default panel bundle 0.74.0  ·  agent 0.80.0  ·  alphacp-sync v1.2
+# updater 0.81.0  ·  default panel bundle 0.74.0  ·  agent 0.81.0  ·  alphacp-sync v1.2
 #
-# 0.80.0: S7 FIX 2 — 0.79.0 me `allow_filter` se `user` hatane par exim config reject
-#         ("user or check_local_user must be set with allow_filter"). ASLI exim 4.97
-#         sandbox me build karke 4 bug pakde: (1) router par safe `user`/`group`;
-#         (2) `address_directory` transport se directory/user/group hataya (filter ke
-#         save path ko override kar raha tha); (3) `require_files` (lookup file missing
-#         par PANIC band); (4) `condition` bhi (key missing par queue me atak jati thi).
-#         Rollback ab pristine ki jagah pichli working AlphaCP config (.acp-prev).
-#         Agent version ab release ke sath: 0.80.0. Naya dev tool:
-#         tools/dev/exim-sandbox-test.sh (asli exim se 10/10).
+# 0.81.0: S7 #147 SpamAssassin + greylistd (explicit opt-in, default OFF).
+#         Exim daemon-light -> daemon-heavy (Content_Scanning), spamassassin/spamc/
+#         greylistd packages installed. `mail.server spamassassin` manages the local
+#         daemons and Exim ACL together; bad config rolls back options/local.cf/template.
+#         spamd down -> /defer_ok fail-open; greylistd socket missing -> false/fail-open.
+#         Exim generic `eximconf` cannot bypass service management. Real Exim 4.97:
+#         18/0 (spamd down accepted, greylist true=451, false=accepted, null sender bypass).
+# 0.80.0: S7 mail delivery fix. Built Exim 4.97 and found four real filter/router bugs:
+#         allow_filter needs user/group; address_directory must not override filter save;
+#         missing lookup file needs require_files; missing filter key needs condition.
+#         Rollback restores .acp-prev (last working AlphaCP config), not pristine distro.
+#         Agent release version tracks UI version. Real Exim sandbox: 10/10 at 0.80.0.
 # 0.79.0: S7 FIX — 0.78.0 ke email filters ne live par mail delivery tod di thi (har address
 #         defer: `Failed to find user "}"`, aur `exim -bf` ne sab filter reject kiye). Do asli
 #         wajahein: (1) Exim filter file ka pehla text `# Exim filter` hona chahiye — warna exim
@@ -176,17 +179,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.80.0"
+UPDATER_VERSION="0.81.0"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.74.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
 BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-2654506a92e7f975d0d468afc16873803e992f3d}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
 BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7396d88339f2d716889dc72058eded0e0e156f47668656b28a1c998dc479f4b5}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.80.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-a261f757ecb61aac56ff1ee999e844627d361fd8}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.81.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-fb7de77bf2dea57563fb1a018f2c704501bee082}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-9716dbbcb1e7a7c383958a792370e0481b0e13f26cdc5df560fe659f893f34cc}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-55f3cc0cc2a69df4a1015464f1677c2347de67703d60005ad2ea545acbf53c73}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -504,13 +507,18 @@ fi
 # hain — agent me mail.server task hai to. Nahi mile to services band rehte hain.
 if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
   MAIL_MISSING=""
-  for b in /usr/sbin/exim4 /usr/sbin/dovecot; do
+  for b in /usr/sbin/exim4 /usr/sbin/dovecot /usr/bin/doveadm /usr/sbin/doveconf /usr/sbin/spamd /usr/sbin/greylistd; do
     [[ -x "${b}" ]] || MAIL_MISSING="${MAIL_MISSING} ${b}"
   done
+  # SpamAssassin ka Exim ACL sirf daemon-heavy ke Content_Scanning build me hai.
+  # daemon-light par `spam =` likhne se exim -bV reject hota (mail down ho jati).
+  if [[ -x /usr/sbin/exim4 ]] && ! /usr/sbin/exim4 -bV 2>/dev/null | grep -q 'Content_Scanning'; then
+    MAIL_MISSING="${MAIL_MISSING} exim4-Content_Scanning"
+  fi
   if [[ -z "${MAIL_MISSING}" ]]; then
-    ok "mail server packages present (exim4=$(/usr/sbin/exim4 -bV 2>/dev/null | head -1 | awk '{print $3}') dovecot=$(/usr/sbin/dovecot --version 2>/dev/null))"
+    ok "mail packages present (Content_Scanning + SpamAssassin + greylistd; exim4=$(/usr/sbin/exim4 -bV 2>/dev/null | head -1 | awk '{print $3}') dovecot=$(/usr/sbin/dovecot --version 2>/dev/null))"
   elif command -v apt-get >/dev/null 2>&1; then
-    info "exim4 + dovecot install ho rahe hain (S7: asli email)"
+    info "Exim Content_Scanning + SpamAssassin + greylistd + Dovecot install ho rahe hain (S7: asli email)"
     # debconf ke sawaal chup karane ke liye (warn: interactive prompt na aaye)
     {
       echo "exim4-config exim4/dc_eximconfig_configtype select internet"
@@ -525,13 +533,25 @@ if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
       echo "exim4-config exim4/dc_minimaldns boolean false"
       echo "exim4-config exim4/no_config boolean false"
     } | debconf-set-selections >/dev/null 2>&1 || true
-    if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq exim4 exim4-daemon-light dovecot-core dovecot-imapd dovecot-pop3d >>"${LOG_FILE}" 2>&1; then
-      ok "exim4 + dovecot installed"
+    if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq exim4 exim4-daemon-heavy dovecot-core dovecot-imapd dovecot-pop3d spamassassin spamc greylistd >>"${LOG_FILE}" 2>&1; then
+      ok "Exim Content_Scanning + SpamAssassin + greylistd + Dovecot installed"
     else
       warn "mail packages install fail — S7 email config agle release me dobara koshish karega"
     fi
   else
     warn "exim4/dovecot missing (apt-get nahi) — S7 email nahi chalega"
+  fi
+
+  # Local-only antispam daemons remain stopped by default. mail.server spamassassin
+  # starts/enables them only after the operator opts in; no public spamd port.
+  MAIL_OPTIONS="${ACP_HOME}/etc/mail/exim-options.json"
+  if ! grep -Eq '"spam_enabled"[[:space:]]*:[[:space:]]*"yes"' "${MAIL_OPTIONS}" 2>/dev/null; then
+    systemctl stop spamassassin >/dev/null 2>&1 || true
+    systemctl disable spamassassin >/dev/null 2>&1 || true
+  fi
+  if ! grep -Eq '"greylisting"[[:space:]]*:[[:space:]]*"yes"' "${MAIL_OPTIONS}" 2>/dev/null; then
+    systemctl stop greylistd >/dev/null 2>&1 || true
+    systemctl disable greylistd >/dev/null 2>&1 || true
   fi
 
   # Configuration abhi adhuri hai: agle release (`mail.server`) tak service band

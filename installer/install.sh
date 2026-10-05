@@ -348,7 +348,7 @@ phase_packages() {
   info "Mail stack packages (installed now, configured properly in Step 7)..."
   apt_install exim4 exim4-daemon-heavy dovecot-core dovecot-imapd dovecot-pop3d \
               dovecot-lmtpd dovecot-sieve dovecot-managesieved dovecot-mysql \
-              spamassassin spamc opendkim opendkim-tools
+              spamassassin spamc greylistd opendkim opendkim-tools
   if [[ "$PROFILE" == "prod" ]]; then
     info "ClamAV (prod profile)..."
     apt_install_try clamav clamav-daemon || warn "ClamAV install failed (continuing)"
@@ -736,7 +736,7 @@ EOF
   # 2.7 MAIL + FTP services: installed but intentionally stopped until their steps
   # ---------------------------------------------------------------------------
   info "Mail + FTP services: keeping them stopped until Step 6/7 (security: no unconfigured services)"
-  for s in exim4 dovecot spamassassin clamav-daemon clamav-freshclam opendkim pure-ftpd; do
+  for s in exim4 dovecot spamassassin greylistd clamav-daemon clamav-freshclam opendkim pure-ftpd; do
     if svc_exists "$s"; then svc_stop_disable "$s"; fi
   done
 
@@ -854,7 +854,7 @@ EOF
   # ---------------------------------------------------------------------------
   info "Final health check: bringing the customer-site web server up..."
   if (( ! DRY_RUN )); then
-    for s in nginx exim4 dovecot spamassassin clamav-daemon clamav-freshclam opendkim pure-ftpd; do
+    for s in nginx exim4 dovecot spamassassin greylistd clamav-daemon clamav-freshclam opendkim pure-ftpd; do
       if svc_exists "$s" && svc_active "$s"; then svc_stop_disable "$s"; fi
     done
     local attempt=0 apache_ok=0
@@ -998,6 +998,7 @@ cmd_status() {
     "exim4|step-7"
     "dovecot|step-7"
     "spamassassin|step-7"
+    "greylistd|step-7"
     "pure-ftpd|step-6"
   )
   for row in "${rows[@]}"; do
@@ -1050,7 +1051,7 @@ cmd_doctor() {
   chk "default page responds"  "$(curl -fsS -m 5 -o /dev/null http://127.0.0.1/ && echo 1 || echo 0)" "apache down?"
   echo
   local stopped_expected=0
-  for s in exim4 dovecot spamassassin pure-ftpd nginx; do svc_running "$s" && stopped_expected=1; done
+  for s in exim4 dovecot spamassassin greylistd pure-ftpd nginx; do svc_running "$s" && stopped_expected=1; done
   if (( stopped_expected )); then printf '  %-40s %s\n' "unconfigured services stopped" "${c_y}WARN — some are running${c_0} (fine, they get configured in later steps)"; warns=$((warns+1));
   else printf '  %-40s %s\n' "unconfigured services stopped" "${c_g}OK${c_0}"; fi
   echo
