@@ -5,6 +5,250 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Step 10 Review Transfers and Restores (3 Oct)** — WHM username+status via `backup.review`
+  (JSON; no tar/rsync/shell; pipe/path fail closed). Panel **0.64.0**, agent **0.57.0**.
+  Tests: panel **399/0**, provision-sim **88/88**, update-sim **176/176** (pin in B).
+  Deploy via `panel-update.sh` 0.64.0.
+- **Step 10 Transfer or Restore a cPanel Account (3 Oct)** — WHM username+action via `backup.cpanel`
+  (JSON; no tar/rsync/shell; pipe/path fail closed). Panel **0.63.0**, agent **0.56.0**.
+  Tests: panel **393/0**, provision-sim **87/87**, update-sim **174/174** (pin in B).
+  Deploy via `panel-update.sh` 0.63.0.
+- **Step 10 Transfer Tool (3 Oct)** — WHM cPanel→AlphaCP via `backup.transfer`
+  (JSON; no tar/rsync/shell; pipe/path fail closed). Panel **0.62.0**, agent **0.55.0**.
+  Tests: panel **387/0**, provision-sim **86/86**, update-sim **172/172** (pin in B).
+  Deploy via `panel-update.sh` 0.62.0.
+- **Step 10 File and Directory Restoration (3 Oct)** — WHM username+path via `backup.filedir`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.61.0**, agent **0.54.0**.
+  Tests: panel **381/0**, provision-sim **85/85**, update-sim **170/170** (pin in B).
+  Deploy via `panel-update.sh` 0.61.0.
+- **Step 10 Backup User Selection (3 Oct)** — WHM usernames via `backup.users`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.60.0**, agent **0.53.0**.
+  Tests: panel **375/0**, provision-sim **84/84**, update-sim **168/168** (pin in B).
+  Deploy via `panel-update.sh` 0.60.0.
+- **Step 10 Backup Restoration (3 Oct)** — WHM full/partial/per-account via `backup.restoration`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.59.0**, agent **0.52.0**.
+  Tests: panel **369/0**, provision-sim **83/83**, update-sim **166/166** (pin in B).
+  Deploy via `panel-update.sh` 0.59.0.
+- **Step 10 Backup Config (3 Oct)** — WHM schedule/retention via `backup.config`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.58.0**, agent **0.51.0**.
+  Tests: panel **363/0**, provision-sim **82/82**, update-sim **164/164** (pin in B).
+  Deploy via `panel-update.sh` 0.58.0.
+- **Step 10 File Restoration (3 Oct)** — customer restore paths via `backup.restore`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.57.0**, agent **0.50.0**.
+  Tests: panel **357/0**, provision-sim **81/81**, update-sim **162/162** (pin in B).
+  Deploy via `panel-update.sh` 0.57.0.
+- **Step 10 Backup Wizard (3 Oct)** — customer wizard via `backup.wizard`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.56.0**, agent **0.49.0**.
+  Tests: panel **351/0**, provision-sim **80/80**, update-sim **160/160** (pin in B).
+  Deploy via `panel-update.sh` 0.56.0.
+- **Step 10 Backup (3 Oct)** — customer backup jobs via `backup.create`
+  (JSON; no tar/shell; pipe/path fail closed). Panel **0.55.0**, agent **0.48.0**.
+  Tests: panel **345/0**, provision-sim **79/79**, update-sim **158/158** (pin in B).
+  Deploy via `panel-update.sh` 0.55.0.
+- **Step 9 Nameserver Selection (2 Oct)** — WHM nameserver via `dns.nameserver`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.54.0**, agent **0.47.0**.
+  Tests: panel **339/0**, provision-sim **78/78**, update-sim **154/154** (pin in B).
+  Deploy via `panel-update.sh` 0.54.0.
+- **Step 9 Synchronize DNS Records (2 Oct)** — WHM sync via `dns.sync`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.53.0**, agent **0.46.0**.
+  Tests: panel **333/0**, provision-sim **77/77**, update-sim **152/152** (pin in B).
+  Deploy via `panel-update.sh` 0.53.0.
+- **Step 9 Domain Forwarding (2 Oct)** — WHM forward via `dns.forward`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.52.0**, agent **0.45.0**.
+  Tests: panel **327/0**, provision-sim **76/76**, update-sim **150/150** (pin in B).
+  Deploy via `panel-update.sh` 0.52.0.
+- **Step 9 Set Zone TTL (2 Oct)** — WHM TTL via `dns.ttl`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.51.0**, agent **0.44.0**.
+  Tests: panel **321/0**, provision-sim **75/75**, update-sim **148/148** (pin in B).
+  Deploy via `panel-update.sh` 0.51.0.
+- **Step 9 DNS Cleanup (2 Oct)** — WHM cleanup via `dns.cleanup`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.50.0**, agent **0.43.0**.
+  Tests: panel **315/0**, provision-sim **74/74**, update-sim **146/146** (pin in B).
+  Deploy via `panel-update.sh` 0.50.0.
+- **Step 9 Park a Domain (2 Oct)** — WHM park via `dns.park`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.49.0**, agent **0.42.0**.
+  Tests: panel **309/0**, provision-sim **73/73**, update-sim **144/144** (pin in B).
+  Deploy via `panel-update.sh` 0.49.0.
+- **Step 9 NS Record Report (2 Oct)** — WHM nameserver report via `dns.nsreport`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.48.0**, agent **0.41.0**.
+  Tests: panel **303/0**, provision-sim **72/72**, update-sim **142/142** (pin in B).
+  Deploy via `panel-update.sh` 0.48.0.
+- **Step 9 Global Email Routing (2 Oct)** — WHM routing via `mail.globalrouting`
+  (JSON; no Exim rewrite; pipe/path fail closed). Panel **0.47.0**, agent **0.40.0**.
+  Tests: panel **297/0**, provision-sim **71/71**, update-sim **140/140** (pin in B).
+  Deploy via `panel-update.sh` 0.47.0.
+- **Step 9 Zone Templates (1 Oct)** — WHM templates via `dns.templates`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.46.0**, agent **0.39.0**.
+  Tests: panel **291/0**, provision-sim **70/70**, update-sim **138/138** (pin in B).
+  Deploy via `panel-update.sh` 0.46.0.
+- **Step 9 Hostname A (1 Oct)** — WHM hostname A via `dns.hostname`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.45.0**, agent **0.38.0**.
+  Tests: panel **285/0**, provision-sim **69/69**, update-sim **136/136** (pin in B).
+  Deploy via `panel-update.sh` 0.45.0.
+- **Step 9 Add/Delete DNS Zone (1 Oct)** — WHM parked zone add/delete
+  (reuses domain.add/remove + dns.zone; no BIND rewrite; pipe fail closed). Panel **0.44.0**, agent **0.37.0** (reuse).
+  Tests: panel **279/0**, provision-sim **68/68**, update-sim **135/135** (pin in B).
+  Deploy via `panel-update.sh` 0.44.0.
+- **Step 9 DNS Zone Manager (1 Oct)** — WHM zone list; sync reuses `dns.zone`
+  (no BIND rewrite; hostile filter fail closed). Panel **0.43.0**, agent **0.37.0** (reuse).
+  Tests: panel **276/0**, provision-sim **68/68**, update-sim **134/134** (pin in B).
+  Deploy via `panel-update.sh` 0.43.0.
+- **Step 9 Track DNS (1 Oct)** — FQDN search via `dns.track`
+  (zone/dynamic JSON; no dig/BIND; pipe/path fail closed). Panel **0.42.0**, agent **0.37.0**.
+  Tests: panel **270/0**, provision-sim **68/68**, update-sim **132/132** (pin in B).
+  Deploy via `panel-update.sh` 0.42.0.
+- **Step 9 Dynamic DNS (1 Oct)** — hosts + tokens via `dns.dynamic`
+  (JSON; no BIND rewrite; no public updater; pipe/path fail closed). Panel **0.41.0**, agent **0.36.0**.
+  Tests: panel **264/0**, provision-sim **67/67**, update-sim **130/130** (pin in B).
+  Deploy via `panel-update.sh` 0.41.0.
+- **Step 9 Zone Editor (1 Oct)** — A/CNAME/MX/TXT via `dns.zone`
+  (JSON; no BIND rewrite; pipe/path fail closed). Panel **0.40.0**, agent **0.35.0**.
+  Tests: panel **258/0**, provision-sim **66/66**, update-sim **128/128** (pin in B).
+  Deploy via `panel-update.sh` 0.40.0.
+- **Step 8 Remote MySQL (1 Oct)** — access hosts via `db.remote`
+  (`%`/IPv4/FQDN JSON; no mysql GRANT; pipe/path fail closed). Panel **0.39.0**, agent **0.34.0**.
+  Tests: panel **252/0**, provision-sim **65/65**, update-sim **128/128**.
+  Deploy via `panel-update.sh` 0.39.0.
+- **Step 8 phpMyAdmin (1 Oct)** — enabled flag via `db.phpmyadmin`
+  (JSON; no phpMyAdmin install/SSO; hostile enabled fail closed). Panel **0.38.0**, agent **0.33.0**.
+  Tests: panel **246/0**, provision-sim **64/64**, update-sim **126/126**.
+  Deploy via `panel-update.sh` 0.38.0.
+  UI: login/accounts/cPanel blades English; remaining flash strings later.
+- **Step 8 Database Wizard (1 Oct)** — step-by-step name via existing `db.set`
+  (session confirm; no mysql binary; pipe/path fail closed). Panel **0.37.0**, agent **0.32.0**.
+  Tests: panel **240/0**, provision-sim **63/63**, update-sim **124/124**.
+  Deploy via `panel-update.sh` 0.37.0.
+- **Step 8 MySQL Databases (1 Oct)** — prefixed names via `db.set`
+  (JSON; no mysql binary; pipe/path fail closed). Panel **0.36.0**, agent **0.32.0**.
+  Tests: panel **234/0**, provision-sim **63/63**, update-sim **123/123**.
+  Deploy via `panel-update.sh` 0.36.0.
+- **Step 7 Webmail (1 Oct)** — preferred client via `mail.webmail`
+  (JSON; no Roundcube/Horde install; hostile client fail closed). Panel **0.35.0**, agent **0.31.0**.
+  Tests: panel **228/0**, provision-sim **62/62**, update-sim **121/121**.
+  Deploy via `panel-update.sh` 0.35.0.
+- **Step 7 Email Disk Usage (1 Oct)** — per-folder sizes via `mail.usage`
+  (`~/mail` walk; symlink skip; `..`/pipe fail closed; purge later). Panel **0.34.0**, agent **0.30.0**.
+  Tests: panel **222/0**, provision-sim **61/61**, update-sim **119/119**.
+  Deploy via `panel-update.sh` 0.34.0.
+- **Step 7 Calendar (1 Oct)** — calendar + contact names via `mail.calendar`
+  (JSON; no CalDAV/CardDAV daemon; pipe name fail closed). Panel **0.33.0**, agent **0.29.0**.
+  Tests: panel **216/0**, provision-sim **60/60**, update-sim **117/117**.
+  Deploy via `panel-update.sh` 0.33.0.
+- **Step 7 BoxTrapper (30 Sep)** — enabled + allowlist via `mail.boxtrapper`
+  (JSON; no daemon; pipe dest fail closed). Panel **0.32.0**, agent **0.28.0**.
+  Tests: panel **210/0**, provision-sim **59/59**, update-sim **115/115**.
+  Deploy via `panel-update.sh` 0.32.0.
+- **Step 7 Encryption (30 Sep)** — GnuPG identity rows via `mail.encrypt`
+  (JSON; no gpg binary, no private key; pipe comment fail closed). Panel **0.31.0**, agent **0.27.0**.
+  Tests: panel **204/0**, provision-sim **58/58**, update-sim **113/113**.
+  Deploy via `panel-update.sh` 0.31.0.
+- **Step 7 Address Importer (30 Sep)** — CSV mailboxes via existing `mail.set`
+  (pipe/foreign domain fail closed; plaintext never queued). Panel **0.30.0**, agent **0.26.0**.
+  Tests: panel **198/0**, provision-sim **57/57**, update-sim **111/111**.
+  Deploy via `panel-update.sh` 0.30.0.
+- **Step 7 Global Email Filters (30 Sep)** — account-wide contains-match via `mail.gfilter`
+  (JSON; no mailbox local; pipe needle fail closed). Panel **0.29.0**, agent **0.26.0**.
+  Tests: panel **192/0**, provision-sim **57/57**, update-sim **110/110**.
+  Deploy via `panel-update.sh` 0.29.0.
+- **Step 7 Track Delivery (30 Sep)** — recipient search via `mail.track`
+  (jailed `track.json`; no Exim log; pipe query fail closed). Panel **0.28.0**, agent **0.25.0**.
+  Tests: panel **186/0**, provision-sim **56/56**, update-sim **108/108**.
+  Deploy via `panel-update.sh` 0.28.0.
+- **Step 7 Email Routing (30 Sep)** — per-domain auto/local/backup/remote via `mail.routing`
+  (JSON; no Exim rewrite; hostile domain/mode fail closed). Panel **0.27.0**, agent **0.24.0**.
+  Tests: panel **180/0**, provision-sim **55/55**, update-sim **106/106**.
+  Deploy via `panel-update.sh` 0.27.0.
+- **Step 7 Mailing Lists (30 Sep)** — list+owner via `mail.list`
+  (JSON; no mailman; pipe owner fail closed). Panel **0.26.0**, agent **0.23.0**.
+  Tests: panel **174/0**, provision-sim **54/54**, update-sim **104/104**.
+  Deploy via `panel-update.sh` 0.26.0.
+- **Step 7 Spam Filters (30 Sep)** — score + blacklist/whitelist via `mail.spam`
+  (JSON; pipe dest fail closed). Panel **0.25.0**, agent **0.22.0**.
+  Tests: panel **168/0**, provision-sim **53/53**, update-sim **102/102**.
+  Deploy via `panel-update.sh` 0.25.0.
+- **Step 7 Deliverability (30 Sep)** — SPF/DMARC copy records via `mail.deliverability`
+  (no DNS write, no openssl). Panel **0.24.0**, agent **0.21.0**.
+  Tests: panel **162/0**, provision-sim **52/52**, update-sim **100/100**.
+  Deploy via `panel-update.sh` 0.24.0.
+- **Step 7 Email Filters (30 Sep)** — contains-match via `mail.filter`
+  (JSON; discard/folder; pipe/regex/shell fail closed). Panel **0.23.0**, agent **0.20.0**.
+  Tests: panel **156/0**, provision-sim **51/51**, update-sim **98/98**.
+  Deploy via `panel-update.sh` 0.23.0.
+- **Step 7 Default Address (30 Sep)** — catch-all via `mail.catchall`
+  (`*@domain` → email; pipe/shell dest fail closed). Panel **0.22.0**, agent **0.19.0**.
+  Tests: panel **150/0**, provision-sim **50/50**, update-sim **96/96**.
+  Deploy via `panel-update.sh` 0.22.0.
+- **Step 7 Autoresponders (30 Sep)** — vacation auto-reply via `mail.autorespond`
+  (JSON file; pipe/shell body fail closed). Panel **0.21.0**, agent **0.18.0**.
+  Tests: panel **144/0**, provision-sim **49/49**, update-sim **94/94**.
+  Deploy via `panel-update.sh` 0.21.0.
+- **Step 7 Forwarders (30 Sep)** — address→address via `mail.forward`
+  (aliases file; pipe/shell dest fail closed). Panel **0.20.0**, agent **0.17.0**.
+  Tests: panel **138/0**, provision-sim **48/48**, update-sim **92/92**.
+  Deploy via `panel-update.sh` 0.20.0.
+- **Step 7 Email Accounts (29 Sep)** — virtual mailboxes via `mail.set`
+  (Maildir + bcrypt passwd-file). Panel **0.19.0**, agent **0.16.0**.
+  Tests: panel **132/0**, provision-sim **47/47**, update-sim **90/90**.
+  Deploy via `panel-update.sh` 0.19.0.
+- **Step 6 SSH Access (29 Sep)** — authorized_keys via `ssh.set` (public keys
+  only; nologin/bash when HASSHELL). Panel **0.18.0**, agent **0.15.0**.
+  Tests: panel **126/0**, provision-sim **46/46**, update-sim **88/88**.
+  Deploy via `panel-update.sh` 0.18.0.
+- **Step 6 Disk Usage (29 Sep)** — folder-wise space via readonly `files.usage`
+  (home-jailed, symlink skip, 2000-node cap). Panel **0.17.0**, agent **0.14.0**.
+  Tests: panel **120/0**, provision-sim **45/45**, update-sim **86/86**.
+  Deploy via `panel-update.sh` 0.17.0.
+- **Step 6 Directory Privacy (29 Sep)** — Apache Basic Auth via `privacy.set`
+  (bcrypt hashes only, path-jailed). Panel **0.16.0**, agent **0.13.0**.
+  Tests: panel **115/0**, provision-sim **44/44**, update-sim **84/84**.
+  Deploy via `panel-update.sh` 0.16.0.
+- **Step 6 File Manager slice 1 (29 Sep)** — home-jailed browse/mkdir/edit/delete/rename
+  via `files.list` + `files.set`. Zip/chmod/FTP later. Panel **0.15.0**, agent **0.12.0**.
+  Tests: panel **110/0**, provision-sim **43/43**, update-sim **82/82**.
+  Deploy via `panel-update.sh` 0.15.0.
+- **Step 5 Apache Handlers (29 Sep)** — allowlisted Apache `AddHandler` via
+  `handlers.set` (PHP/proxy/fcgi fail closed). Panel **0.14.0**, agent **0.11.0**.
+  Tests: panel **105/0**, provision-sim **42/42**, update-sim **80/80**.
+  Deploy via `panel-update.sh` 0.14.0.
+- **Step 5 MIME Types (29 Sep)** — custom Apache `AddType` via `mime.set`
+  (PHP/CGI/SSI extensions fail closed). Panel **0.13.0**, agent **0.10.0**.
+  Tests: panel **100/0**, provision-sim **41/41**, update-sim **78/78**.
+  Deploy via `panel-update.sh` 0.13.0.
+- **Step 5 Indexes (29 Sep)** — Apache directory listing (`off`/`simple`/`fancy`)
+  via `indexes.set`. Panel **0.12.0**, agent **0.9.0**.
+  Tests: panel **95/0**, provision-sim **40/40**, update-sim **76/76**.
+  Deploy via `panel-update.sh` 0.12.0.
+- **Step 5 Error Pages (29 Sep)** — custom 400/401/403/404/500/503 HTML via
+  `errorpages.set` (Apache ErrorDocument). Panel **0.11.0**, agent **0.8.0**.
+  Tests: panel **91/0**, provision-sim **39/39**.
+- **Step 5 MultiPHP INI Editor (29 Sep)** — allowlisted php.ini via
+  `php.setIni` (FPM `php_admin_value`). Panel **0.10.0**, agent **0.7.0**.
+  Tests: panel **87/0**, provision-sim **38/38**.
+- **Step 5 AutoSSL (29 Sep)** — Let's Encrypt via certbot HTTP-01 (`ssl.issue`
+  mode=letsencrypt) + Run AutoSSL / include-exclude. Self-signed fallback
+  remains. Panel **0.9.0**, agent **0.6.0**.
+  Tests: panel **83/0**, provision-sim **36/36**.
+- **Step 5 SSL/TLS Status (29 Sep)** — self-signed certs + Apache :443 vhost
+  (`ssl.issue` / `ssl.remove`). Panel **0.8.0**, agent **0.5.0**.
+  Tests: panel **80/0**, provision-sim **34/34**.
+- **Step 5 MultiPHP + Cron (29 Sep)** — cPanel MultiPHP Manager (PHP 7.4/8.1–8.4) +
+  Cron Jobs (`php.setVersion`, `cron.set`). Panel **0.7.0**, agent **0.4.0**.
+  Tests: panel **76/0**, provision-sim **33/33**.
+- **Step 5 start + WHM/cPanel split (29 Sep)** — Customer (role `user`) sees **cPanel**
+  (Domains, quota, no Create Account). Root/reseller see **WHM**. Domains
+  addon/sub/parked/redirect via `domain.add`/`domain.remove`. Panel **0.6.0**,
+  agent **0.3.0**. Tests: panel **70 pass / 0 fail**, provision-sim **31/31**.
+- **Step 4 packages & limits (29 Sep)** — WHM-style Packages UI with cPanel-compatible
+  keys (`QUOTA`, `MAXPOP`, `MAXSQL`, …), feature lists, account upgrade/downgrade +
+  quota override (`account.setQuota`). Panel **0.5.0**. Tests: panel-tests **58 pass / 0 fail**.
+- **Step 3 provisioning engine (29 Sep)** — **deployed on dev-srv1** (panel 0.4.0 + agent 0.2.0,
+  HTTP 200, accounts routes + `create_accounts_tables` ran, trial same). hosting account create/suspend/unsuspend/terminate
+  with compensating rollback. Agent `0.2.0` tasks: `account.create` (Linux user, `/home/<user>/public_html`,
+  Apache vhost, PHP-FPM pool, quota), `account.suspend` / `unsuspend`, `account.terminate` (typed confirm),
+  `account.setQuota`. Panel **0.4.0**: Accounts pages, default package, license `max_accounts` gate,
+  no plaintext password in the task payload (SHA-512 `shadow_hash` only). Tests: provision-sim **28/28**,
+  panel-tests **52 pass / 0 fail / 6 wasm-skip**, update-sim **59/59**.
+  Deploy via `panel-update.sh` 0.4.0 (agent tarball pehle, phir panel).
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
   PR refs se commit milta hai. sync-sim **60/60**. `panel-update 0.3.0`: artifact/sync-tool pehle `get` se,

@@ -1,7 +1,130 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.3.0  ·  default panel bundle 0.3.2  ·  alphacp-sync v1.2
+# updater 0.64.0  ·  default panel bundle 0.64.0  ·  agent 0.57.0  ·  alphacp-sync v1.2
+#
+# 0.64.0: Step 10 — panel 0.64.0 (Review Transfers and Restores) + agent 0.57.0 (backup.review)
+#
+# 0.63.0: Step 10 — panel 0.63.0 (Transfer or Restore a cPanel Account) + agent 0.56.0 (backup.cpanel)
+#
+# 0.62.0: Step 10 — panel 0.62.0 (Transfer Tool) + agent 0.55.0 (backup.transfer)
+#
+# 0.61.0: Step 10 — panel 0.61.0 (File and Directory Restoration) + agent 0.54.0 (backup.filedir)
+#
+# 0.60.0: Step 10 — panel 0.60.0 (Backup User Selection) + agent 0.53.0 (backup.users)
+#
+# 0.59.0: Step 10 — panel 0.59.0 (Backup Restoration) + agent 0.52.0 (backup.restoration)
+#
+# 0.58.0: Step 10 — panel 0.58.0 (Backup Config) + agent 0.51.0 (backup.config)
+#
+# 0.57.0: Step 10 — panel 0.57.0 (File Restoration) + agent 0.50.0 (backup.restore)
+#
+# 0.56.0: Step 10 — panel 0.56.0 (Backup Wizard) + agent 0.49.0 (backup.wizard)
+#
+# 0.55.0: Step 10 — panel 0.55.0 (Backup) + agent 0.48.0 (backup.create)
+#
+# 0.54.0: Step 9 — panel 0.54.0 (Nameserver Selection) + agent 0.47.0 (dns.nameserver)
+#
+# 0.53.0: Step 9 — panel 0.53.0 (Synchronize DNS) + agent 0.46.0 (dns.sync)
+#
+# 0.52.0: Step 9 — panel 0.52.0 (Domain Forwarding) + agent 0.45.0 (dns.forward)
+#
+# 0.51.0: Step 9 — panel 0.51.0 (Set Zone TTL) + agent 0.44.0 (dns.ttl)
+#
+# 0.50.0: Step 9 — panel 0.50.0 (DNS Cleanup) + agent 0.43.0 (dns.cleanup)
+#
+# 0.49.0: Step 9 — panel 0.49.0 (Park a Domain) + agent 0.42.0 (dns.park)
+#
+# 0.48.0: Step 9 — panel 0.48.0 (NS Record Report) + agent 0.41.0 (dns.nsreport)
+#
+# 0.47.0: Step 9 — panel 0.47.0 (Global Email Routing) + agent 0.40.0 (mail.globalrouting)
+#
+# 0.46.0: Step 9 — panel 0.46.0 (Zone Templates) + agent 0.39.0 (dns.templates)
+#
+# 0.45.0: Step 9 — panel 0.45.0 (Hostname A) + agent 0.38.0 (dns.hostname)
+#
+# 0.44.0: Step 9 — panel 0.44.0 (Add/Delete DNS Zone) + agent 0.37.0 (domain.add/remove + dns.zone)
+#
+# 0.43.0: Step 9 — panel 0.43.0 (DNS Zone Manager) + agent 0.37.0 (dns.zone reuse)
+#
+# 0.42.0: Step 9 — panel 0.42.0 (Track DNS) + agent 0.37.0 (dns.track)
+#
+# 0.41.0: Step 9 — panel 0.41.0 (Dynamic DNS) + agent 0.36.0 (dns.dynamic)
+#
+# 0.40.0: Step 9 — panel 0.40.0 (Zone Editor) + agent 0.35.0 (dns.zone)
+#
+# 0.39.0: Step 8 — panel 0.39.0 (Remote MySQL) + agent 0.34.0 (db.remote)
+#
+# 0.38.0: Step 8 — panel 0.38.0 (phpMyAdmin) + agent 0.33.0 (db.phpmyadmin)
+#
+# 0.37.0: Step 8 — panel 0.37.0 (Database Wizard) + agent 0.32.0 (db.set reuse)
+#
+# 0.36.0: Step 8 — panel 0.36.0 (MySQL Databases) + agent 0.32.0 (db.set)
+#
+# 0.35.0: Step 7 — panel 0.35.0 (Webmail) + agent 0.31.0 (mail.webmail)
+#
+# 0.34.0: Step 7 — panel 0.34.0 (Email Disk Usage) + agent 0.30.0 (mail.usage)
+#
+# 0.33.0: Step 7 — panel 0.33.0 (Calendar) + agent 0.29.0 (mail.calendar)
+#
+# 0.32.0: Step 7 — panel 0.32.0 (BoxTrapper) + agent 0.28.0 (mail.boxtrapper)
+#
+# 0.31.0: Step 7 — panel 0.31.0 (Encryption) + agent 0.27.0 (mail.encrypt)
+#
+# 0.30.0: Step 7 — panel 0.30.0 (Address Importer) + agent 0.26.0 (mail.set reuse)
+#
+# 0.29.0: Step 7 — panel 0.29.0 (Global Email Filters) + agent 0.26.0 (mail.gfilter)
+#
+# 0.28.0: Step 7 — panel 0.28.0 (Track Delivery) + agent 0.25.0 (mail.track)
+#
+# 0.27.0: Step 7 — panel 0.27.0 (Email Routing) + agent 0.24.0 (mail.routing)
+#
+# 0.26.0: Step 7 — panel 0.26.0 (Mailing Lists) + agent 0.23.0 (mail.list)
+#
+# 0.25.0: Step 7 — panel 0.25.0 (Spam Filters) + agent 0.22.0 (mail.spam)
+#
+# 0.24.0: Step 7 — panel 0.24.0 (Deliverability) + agent 0.21.0 (mail.deliverability)
+#
+# 0.23.0: Step 7 — panel 0.23.0 (Email Filters) + agent 0.20.0 (mail.filter)
+#
+# 0.22.0: Step 7 — panel 0.22.0 (Default Address) + agent 0.19.0 (mail.catchall)
+#
+# 0.21.0: Step 7 — panel 0.21.0 (Autoresponders) + agent 0.18.0 (mail.autorespond)
+#
+# 0.20.0: Step 7 — panel 0.20.0 (Forwarders) + agent 0.17.0 (mail.forward)
+#
+# 0.19.0: Step 7 — panel 0.19.0 (Email Accounts) + agent 0.16.0 (mail.set)
+#
+# 0.18.0: Step 6 — panel 0.18.0 (SSH Access) + agent 0.15.0 (ssh.set)
+#
+# 0.17.0: Step 6 — panel 0.17.0 (Disk Usage) + agent 0.14.0 (files.usage)
+#
+# 0.16.0: Step 6 — panel 0.16.0 (Directory Privacy) + agent 0.13.0 (privacy.set)
+#
+# 0.15.0: Step 6 — panel 0.15.0 (File Manager) + agent 0.12.0 (files.list/set)
+#
+# 0.14.0: Step 5 — panel 0.14.0 (Apache Handlers) + agent 0.11.0 (handlers.set)
+#
+# 0.13.0: Step 5 — panel 0.13.0 (MIME Types) + agent 0.10.0 (mime.set)
+#
+# 0.12.0: Step 5 — panel 0.12.0 (Indexes) + agent 0.9.0 (indexes.set)
+#
+# 0.11.0: Step 5 — panel 0.11.0 (Error Pages) + agent 0.8.0 (errorpages.set)
+#
+# 0.10.0: Step 5 — panel 0.10.0 (MultiPHP INI Editor) + agent 0.7.0 (php.setIni)
+#
+# 0.9.0: Step 5 — panel 0.9.0 (AutoSSL Let's Encrypt) + agent 0.6.0 (ssl.issue letsencrypt)
+#
+# 0.8.0: Step 5 — panel 0.8.0 (SSL/TLS Status) + agent 0.5.0 (ssl.issue/remove)
+#
+# 0.7.0: Step 5 — panel 0.7.0 (MultiPHP + Cron) + agent 0.4.0 (php.setVersion, cron.set)
+#
+# 0.6.0: Step 5 — panel 0.6.0 (WHM vs cPanel shell, Domains) + agent 0.3.0 (domain.add/remove)
+#
+# 0.5.0: Step 4 — panel 0.5.0 (Packages UI, upgrade/quota). Agent 0.2.0 same.
+#
+# 0.4.0: Step 3 — panel 0.4.0 (Accounts UI) + paneld agent 0.2.0 (account.* tasks)
+#        pehle agent, phir panel swap. Agent fail ho to panel nahi chheḍte.
 #
 # 0.3.0: PRIVATE repo support — artifact/sync-tool pehle `alphacp-sync get` (deploy key) se,
 #        na ho to public raw.githubusercontent (fallback). sha256 dono raaston par check.
@@ -22,13 +145,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.3.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.3.2}"
+UPDATER_VERSION="0.64.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.64.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-6001033f0ee6e76614a390bc394e8d7e76ea4bdf}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-676d26f9544dabb88c7b8c10079e0687e8d703e5}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-c27e7dd4c2fc27f702129d881c707c5b7c33b532c2cc2205f099afc39ae5896b}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.57.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-676d26f9544dabb88c7b8c10079e0687e8d703e5}"
+AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-46e5838df7266487ce7f8faceb1c12d79fcbf832cde02c8ced3107a550c3806b}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -104,7 +231,7 @@ FPM_UNIT="php${FPM_VERSION}-fpm"
 
 say ""
 say "${C_BOLD}AlphaCP existing-server updater ${UPDATER_VERSION}${C_RESET}   (yahan '${UPDATER_VERSION}' dikhe = sahi command)"
-say "Panel bundle: ${PANEL_VERSION}"
+say "Panel bundle: ${PANEL_VERSION}  ·  agent: ${AGENT_VERSION}"
 say "PHP-FPM: ${FPM_UNIT} · PHP: $(${PHP_BIN} -r 'echo PHP_VERSION;' 2>/dev/null || echo unknown)"
 say ""
 
@@ -127,6 +254,61 @@ ACTUAL_SHA="$(sha256sum "${TMP_DIR}/panel-code.tar.gz" | awk '{print $1}')"
   || die "checksum mismatch: got ${ACTUAL_SHA}, expected ${BUNDLE_SHA256}"
 ok "artifact checksum verified: ${ACTUAL_SHA:0:16}…"
 tar tzf "${TMP_DIR}/panel-code.tar.gz" >/dev/null 2>&1 || die "artifact corrupt"
+
+info "agent ${AGENT_VERSION} download ho raha hai"
+fetch_repo_file "${AGENT_COMMIT}" "${AGENT_PATH}" "${TMP_DIR}/agent.tar.gz" "${AGENT_SHA256}" \
+  || die "agent artifact download fail — repo private hai to pehle alphacp-sync v1.2 chahiye (COMMANDS.md)"
+AGENT_ACTUAL="$(sha256sum "${TMP_DIR}/agent.tar.gz" | awk '{print $1}')"
+[[ "${AGENT_ACTUAL}" == "${AGENT_SHA256}" ]] \
+  || die "agent checksum mismatch: got ${AGENT_ACTUAL}, expected ${AGENT_SHA256}"
+tar tzf "${TMP_DIR}/agent.tar.gz" >/dev/null 2>&1 || die "agent artifact corrupt"
+ok "agent checksum verified: ${AGENT_ACTUAL:0:16}…"
+
+AGENT_ROOT="${ACP_HOME}/agent"
+AGENT_STAGE="${TMP_DIR}/agent-new"
+mkdir -p "${AGENT_STAGE}"
+tar xzf "${TMP_DIR}/agent.tar.gz" -C "${AGENT_STAGE}"
+[[ -x "${AGENT_STAGE}/agent/bin/paneld" || -f "${AGENT_STAGE}/agent/bin/paneld" ]] || die "agent paneld missing"
+grep -q 'account.create' "${AGENT_STAGE}/agent/config/tasks.php" || die "agent 0.2.0 tasks missing (account.create)"
+if [[ -d "${AGENT_ROOT}" ]]; then
+  rm -rf "${RELEASES}/agent-backup-${STAMP}"
+  cp -a "${AGENT_ROOT}" "${RELEASES}/agent-backup-${STAMP}"
+fi
+rm -rf "${AGENT_ROOT}"
+mv "${AGENT_STAGE}/agent" "${AGENT_ROOT}"
+chmod 0755 "${AGENT_ROOT}/bin/paneld"
+ok "agent ${AGENT_VERSION} installed → ${AGENT_ROOT}"
+
+install -d "${ACP_HOME}/share/suspended"
+cat > "${ACP_HOME}/share/suspended/index.html" <<'HTML'
+<!doctype html><html><head><meta charset="utf-8"><title>Account suspended</title></head>
+<body style="font-family:system-ui;padding:48px;background:#1b1020;color:#fca5a5">
+<h1>Account suspended</h1><p>This hosting account is suspended. Contact your provider.</p>
+</body></html>
+HTML
+chmod 0644 "${ACP_HOME}/share/suspended/index.html"
+if command -v a2enmod >/dev/null 2>&1; then
+  a2enmod proxy_fcgi rewrite headers >/dev/null 2>&1 || warn "a2enmod proxy_fcgi/rewrite skip"
+fi
+if [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; then
+  systemctl restart paneld >>"${LOG_FILE}" 2>&1 && ok "paneld restarted" || warn "paneld restart skip (unit missing?)"
+fi
+grep -q 'issueLetsEncrypt' "${AGENT_ROOT}/src/AccountOs.php" || die "agent AutoSSL (issueLetsEncrypt) missing"
+
+if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
+  if [[ -x /usr/bin/certbot ]]; then
+    ok "certbot present"
+  elif command -v apt-get >/dev/null 2>&1; then
+    info "certbot install ho raha hai (Let's Encrypt AutoSSL)"
+    if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq certbot >>"${LOG_FILE}" 2>&1; then
+      ok "certbot installed"
+    else
+      warn "certbot install fail — AutoSSL later; self-signed chalega"
+    fi
+  else
+    warn "certbot missing (apt-get nahi) — AutoSSL later"
+  fi
+fi
 
 NEW_PANEL="${RELEASES}/panel-${STAMP}"
 mkdir -p "${NEW_PANEL}"
@@ -162,6 +344,11 @@ if grep -q '^ACP_VERSION=' "${NEW_PANEL}/.env"; then
   sed -i "s/^ACP_VERSION=.*/ACP_VERSION=${PANEL_VERSION}/" "${NEW_PANEL}/.env"
 else
   printf '\nACP_VERSION=%s\n' "${PANEL_VERSION}" >> "${NEW_PANEL}/.env"
+fi
+if grep -q '^ACP_AGENT_VERSION=' "${NEW_PANEL}/.env"; then
+  sed -i "s/^ACP_AGENT_VERSION=.*/ACP_AGENT_VERSION=${AGENT_VERSION}/" "${NEW_PANEL}/.env"
+else
+  printf '\nACP_AGENT_VERSION=%s\n' "${AGENT_VERSION}" >> "${NEW_PANEL}/.env"
 fi
 chown "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/.env"
 chmod 0640 "${NEW_PANEL}/.env"
