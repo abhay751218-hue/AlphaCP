@@ -38,6 +38,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `tools/verify/s10-backup-destination-check.sh` live check (**25** checks).
 
 ### Verified
+- **6 Oct 2026 — release 0.82.0 (panel 0.75.0 + agent 0.82.0) dobara locally verify hui** (is session me,
+  sandbox me): `panel-tests.sh` **453 pass / 0 fail / 6 wasm-skip**, `update-sim.sh` **247 pass / 0 fail**,
+  `provision-sim.sh` **209 pass / 0 fail** (sudo ke bina — dekho `tools/sim/README.md`), `s7-mail-sim.sh`
+  **14 pass / 0 fail** (mail sim se pehle `/usr/bin/php8.4` stub hatana padta hai). Deployable artifacts ka
+  sha256 updater ke pin se byte-for-byte match karta hai (panel `53bcfb3b…`, agent `b3cb65c6…`) aur GitHub
+  par pinned commit `47a7461` / artifact commit `312f21c` reachable hai. `COMMANDS.md` me live deploy command
+  add ho gayi — uske baad `tools/verify/s7-mailing-list-check.sh` se asli Exim fan-out proof lena hai.
 - **S7 #147 SpamAssassin + greylist status (5 Oct)** — pinned read-only live verifier returned **8 pass / 0 fail / 0 skip** and `S7 SPAMASSASSIN + GREYLIST:STATUS-VERIFIED`. No setting or service toggle was changed. The report file is awaiting the next alphacp-sync (latest snapshot predates this run).
 
 ### Fixed

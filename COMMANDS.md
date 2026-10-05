@@ -12,20 +12,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ⏸️ NEXT STEP — S7 #18 Mailing Lists — live verification pending
+## ✅ Abhi chalani hai (NEXT STEP) — panel-update 0.82.0 (S7 #18 Mailing Lists: subscribers + static Exim fan-out)
 
-> #147 ka live status verifier aapne chalaya: **8 pass / 0 fail / 0 skip** (`STATUS-VERIFIED`).
-> #20/#21 ka live mail result **62/0/0** hai. Current required checklist status: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
->
-> #18 now has customer CRUD, persisted subscriber addresses, validation, and static Exim fan-out.
-> Local checks: focused panel tests **8/8**, full panel suite **453/0/6 wasm-skip**, `provision-sim`
-> **209/0**, updated `s7-mail-sim` **14/0**, and full `update-sim` **247/0**. Candidate archives panel
-> **0.75.0** and agent **0.82.0** are pinned with checksum-matching defaults in updater **0.82.0**.
-> `tools/verify/s7-mailing-list-check.sh` passes only against its simulator so far; no real Exim route or
-> subscriber-Maildir delivery has been verified. Checklist #18 remains 🟡.
->
-> **NO LIVE SERVER COMMAND — live verification pending.** Keep the live command withheld until the release is pinned and the
-> dedicated verifier can prove real Exim fan-out and subscriber delivery. Do not manually update services.
+> Local verification (6 Oct, sandbox): panel suite **453 pass / 0 fail / 6 wasm-skip**, `update-sim`
+> **247/0**, `provision-sim` **209/0**, `s7-mail-sim` **14/0** — artifact sha256 updater ke pin se match karta hai.
+> Ye update **2 artifacts** deploy karta hai: panel code **0.75.0** + agent **0.82.0** (naya `mail.list` task).
+> Health check fail hone par updater **apne aap rollback** kar deta hai (kuch manually nahi karna).
+```bash
+sudo alphacp-sync get 47a7461b7aa4d5556e487ab79c7ff2741896186b installer/panel-update.sh /tmp/acp-panel-update-0.82.0.sh 6222e47172a96f9ba43085b5f38f24a68620f732b3f720612485fe691ed6c81e && sudo bash /tmp/acp-panel-update-0.82.0.sh
+```
+- Expect: banner `updater 0.82.0` → panel + agent artifact sha256 OK → migrations → `==> UPDATE COMPLETE ✅` → HTTP `200`.
+- Iske turant baad (alag command, tab denge) `tools/verify/s7-mailing-list-check.sh` chalega jo **asli Exim route + subscriber Maildir delivery** prove karega → uske baad checklist #18 ✅.
+
+> Purana status (context ke liye): #147 ka live status verifier **8 pass / 0 fail / 0 skip** (`STATUS-VERIFIED`),
+> #20/#21 ka live mail result **62/0/0**. Current required checklist status: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
+> #18 ka bacha hua kaam: sirf live Exim fan-out + subscriber delivery ka proof (upar wale update ke baad).
 
 
 ### Remaining S7 scope
