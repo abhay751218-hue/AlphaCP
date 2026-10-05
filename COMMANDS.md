@@ -14,22 +14,40 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-### 1) verify-report folder saaf karo (hourly snapshot use GitHub par na le jaye)
+### 1) report folder saaf karo (0.71.0 wala, hourly snapshot use GitHub par na le jaye)
 ```bash
 sudo rm -rf /usr/local/alphacp/verify-reports && sudo alphacp-sync
 ```
-- S10 live check apni report `/usr/local/alphacp/verify-reports/*.txt` me likhta hai (taaki natija
-  khud GitHub se padha ja sake). Kaam ho gaya to folder hata do — sync ke baad repo bhi saaf.
 
-### 2) 0.71.0 dobara chalana ho to (idempotent — zaroori nahi)
+### 2) panel-update 0.72.0 — S10: purane server se archive khinch lao (SSH)
 ```bash
-sudo alphacp-sync get ff8e7079f173f2ab78422de84c33ed5717bf7677 installer/panel-update.sh /tmp/acp-panel-update-0.71.0.sh b744348c82239f0bd255bee5648bdc0230da4a9b76b1c9e23f0b724c11200640 && sudo bash /tmp/acp-panel-update-0.71.0.sh
+sudo alphacp-sync get 7df6dface80598f4688a714f7acae6a6cdfeabe9 installer/panel-update.sh /tmp/acp-panel-update-0.72.0.sh 5edf0af62c9c310d72e3332f2aa6acf1311032d6fb48bc7ec4eeb1c81c9f91cb && sudo bash /tmp/acp-panel-update-0.72.0.sh
 ```
-- Expected: banner `updater 0.71.0` → panel **0.71.0** + agent **0.64.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Ye deploy ho chuka hai (5 Oct 01:44Z)** aur live verify bhi ho gaya: `s10-mysql-restore-check.sh`
-  → **18 pass / 0 fail** (tasks #213–#218) — asli MariaDB me database + table + 3 rows import, hostile
-  dump aur galat sha256 refuse, cleanup safal. Dobara chalane ki zaroorat sirf tab hai jab koi
-  problem ho ya naya server ho.
+- Updater SHA-256: `5edf0af62c9c310d72e3332f2aa6acf1311032d6fb48bc7ec4eeb1c81c9f91cb`.
+- Expected: banner `updater 0.72.0` → panel **0.72.0** + agent **0.65.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Naya kya:** ab tak cpmove archive purane server se haath se copy karke allowlisted jagah (`/home`,
+  `/usr/local/alphacp`) rakhna padta tha — cPanel archive aksar `/root` ya `/backup` me hote hain jo
+  allowlist ke bahar hain. Ab **Transfer Tool** page par "**Purane server se archive khinch lao**" se
+  archive scp se seedha `/usr/local/alphacp/incoming` me aa jata hai:
+    - **do kadam** — pehle *Fingerprint lao* (agent sirf purane server ki SSH host key padhta hai,
+      koi download nahi), use verify karke pin karo, phir *Archive lao*. Fingerprint badle to
+      `MISMATCH` par pull ruk jata hai; bina pin ke bhi nahi chalega.
+    - **key ya password** dono chalte hain; password/private key kabhi command-line me nahi jate aur
+      job history se scrub ho jate hain. Download **atomic** hai (`.part` → sha256 match ke baad rename),
+      to adhoora archive kabhi import ko nahi milta. Bandwidth limit (`max_kbps`) bhi lag sakti hai.
+- Updater `openssh-client` install karega (zarurat ho to), `sshpass` best-effort.
+
+### 3) remote pull ki live verification (recommended)
+```bash
+sudo alphacp-sync get e5f333a12ca012cb5c4f8d27785a906f87c35665 tools/verify/s10-remote-pull-check.sh /tmp/acp-s10-remote-pull-check.sh acaa5d8325999b814d71c2d942954ee0c57c524247d175374e18f77eb330a464 && sudo bash /tmp/acp-s10-remote-pull-check.sh
+```
+- Server par **asli** scp chalta hai (localhost ko "purana server" bana kar, ek kacchi SSH key se;
+  `authorized_keys` ant me bilkul wapas). Validation bhi check hoti hai — host smuggling
+  (`-oProxyCommand`), `..` wala path, ghalat dest name, adhoora auth, galat fingerprint, galat sha256.
+- Expected last line: `=== S10 REMOTE PULL LIVE CHECK: ... pass, 0 fail, ... skip ===` (**0 fail** zaroori).
+  sshd band ho ya `PermitRootLogin=no` ho to asli-pull wala hissa `skip` ho jata hai (jhootha fail nahi).
+- Ye bhi khud report GitHub par likhta hai (`/usr/local/alphacp/verify-reports/`), to aapko kuch bhejne
+  ki zaroorat nahi — main padh loonga.
 
 ## ✅ Latest deployment (4 Oct 2026; already completed)
 
