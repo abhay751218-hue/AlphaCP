@@ -22,7 +22,7 @@ CMD_FILE="COMMANDS.md"
 
 # ---------------------------------------------------------------- parse -------
 # Us section ka pehla alphacp-sync get line jo "NEXT STEP" ke baad aata hai.
-NEXT_BLOCK="$(awk '/NEXT STEP/{f=1} f' "${CMD_FILE}")"
+NEXT_BLOCK="$(awk '/NEXT STEP/{f=1;next} /^## /{f=0} f' "${CMD_FILE}")"
 CMD_LINE="$(grep -m1 'alphacp-sync get' <<<"${NEXT_BLOCK}" || true)"
 [[ -n "${CMD_LINE}" ]] || { echo "NEXT STEP me koi alphacp-sync get command nahi mili"; exit 1; }
 
