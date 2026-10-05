@@ -18,8 +18,8 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ```
 laravel       : Laravel Framework 13.33.0
 panel code    : 0.74.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.81.0   (.env)
-AGENT_VERSION : 0.81.0
+ACP_VERSION   : 0.81.1   (.env)
+AGENT_VERSION : 0.81.1
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -120,15 +120,16 @@ agent-backup-20261005114249
 agent-backup-20261005120447
 agent-backup-20261005135321
 agent-backup-20261005145330
-panel-backup-20261005120447
+agent-backup-20261005165927
 panel-backup-20261005135321
 panel-backup-20261005145330
+panel-backup-20261005165927
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active

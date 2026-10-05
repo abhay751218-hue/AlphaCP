@@ -1216,7 +1216,7 @@ final class MailServer
                         }
                     }
                     $path = $home . '/etc/mail/filter.d/' . $addr . '.filter';
-                    $why = $this->writeFilterFile($path, $body, (string) $addr, $uid, $gid);
+                    $why = $this->writeFilterFile($path, $body, (string) $addr, $uid, $gid, $home . '/etc');
                     if ($why !== null) {
                         // galat filter = delivery chalti rahegi, filter nahi lagega —
                         // par wajah report me zaroor batao (andha fail nahi).
@@ -1653,11 +1653,71 @@ final class MailServer
     }
 
     /**
+     * Exim's redirect router drops to the mailbox uid/gid before opening this
+     * file. Permit that identity to search the account's ~/etc directory, but
+     * do not grant it directory listing when it is neither owner nor group.
+     *
+     * @return null|string null when the path is searchable; otherwise a safe error
+     */
+    private function ensureFilterEtcSearchable(string $etcDir, int $uid, int $gid): ?string
+    {
+        if (is_link($etcDir)) {
+            return 'filter parent ~/etc is a symlink';
+        }
+        $stat = @lstat($etcDir);
+        if (!is_array($stat) || (($stat['mode'] & 0170000) !== 0040000)) {
+            return 'filter parent ~/etc is missing or not a directory';
+        }
+
+        $mode = (int) ($stat['mode'] & 0777);
+        $owner = (int) ($stat['uid'] ?? -1);
+        $group = (int) ($stat['gid'] ?? -1);
+        $rewriteGroup = false;
+        if ($owner === $uid) {
+            $searchBit = 0100;
+        } elseif ($group === $gid) {
+            $searchBit = 0010;
+        } else {
+            // Per-account primary group is preferred over making ~/etc
+            // world-searchable. Fall back to search-only for other users if
+            // chgrp is unavailable; this adds no read/list permission.
+            if (@chgrp($etcDir, $gid)) {
+                $searchBit = 0010;
+                $rewriteGroup = true;
+            } else {
+                $searchBit = 0001;
+            }
+        }
+
+        if (!$rewriteGroup && ($mode & $searchBit) !== 0) {
+            return null;
+        }
+        $targetMode = $rewriteGroup
+            ? (($mode & ~0070) | 0010)
+            : ($mode | $searchBit);
+        if (!@chmod($etcDir, $targetMode)) {
+            return 'filter parent ~/etc search permission could not be set';
+        }
+
+        $after = @lstat($etcDir);
+        if (!is_array($after) || (($after['mode'] & 0170000) !== 0040000)) {
+            return 'filter parent ~/etc changed while setting permissions';
+        }
+        $afterMode = (int) ($after['mode'] & 0777);
+        $afterOwner = (int) ($after['uid'] ?? -1);
+        $afterGroup = (int) ($after['gid'] ?? -1);
+        $effectiveBit = $afterOwner === $uid ? 0100 : ($afterGroup === $gid ? 0010 : 0001);
+        $searchable = ($afterMode & $effectiveBit) !== 0;
+
+        return $searchable ? null : 'filter parent ~/etc remains inaccessible to the mailbox uid/gid';
+    }
+
+    /**
      * Filter file likho — par sirf tab jab `exim -bf` use VALID bole.
      * Galat filter se poora mail server nahi rukna chahiye: reject ho to
      * purani file wapas / naye filter ke bina delivery chalti rahe.
      */
-    private function writeFilterFile(string $path, string $body, string $addr, int $uid, int $gid): ?string
+    private function writeFilterFile(string $path, string $body, string $addr, int $uid, int $gid, string $etcDir): ?string
     {
         $dir = dirname($path);
         if (!is_dir($dir)) {
@@ -1680,6 +1740,13 @@ final class MailServer
             $this->log->warning('email filter reject (exim -bf): ' . $addr . ' -> ' . $why);
 
             return $why === '' ? 'exim -bf ne filter reject kar diya' : $why;
+        }
+        $permissionError = $this->ensureFilterEtcSearchable($etcDir, $uid, $gid);
+        if ($permissionError !== null) {
+            @unlink($tmp);
+            $this->log->warning('email filter path permission: ' . $addr . ' -> ' . $permissionError);
+
+            return $permissionError;
         }
         if (!@rename($tmp, $path)) {
             @unlink($tmp);
