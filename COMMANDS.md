@@ -14,26 +14,29 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-### 1) panel-update 0.74.3 — zone HATANE ke baad bhi `rndc reconfig`
+### 1) panel-update 0.74.4 — S7 Email ki taiyari (Exim4 + Dovecot packages)
+```bash
+sudo alphacp-sync get fd3d42a76a45eb86c0186e4555e64d1eedf2dfdc installer/panel-update.sh /tmp/acp-panel-update-0.74.4.sh 5d1c63dd0e78711dcd2a0331aad35c64622bfea6c16c69eb2655ec77f41dff43 && sudo bash /tmp/acp-panel-update-0.74.4.sh
+```
+- Updater SHA-256: `5d1c63dd0e78711dcd2a0331aad35c64622bfea6c16c69eb2655ec77f41dff43`.
+- Expected: banner `updater 0.74.4` → `exim4 + dovecot install ho rahe hain (S7: asli email)` →
+  `exim4 + dovecot installed` → `mail services abhi band hain — agle release me configure hoke
+  start honge (exim4=4.97 dovecot=2.3.21)` → `==> UPDATE COMPLETE ✅`.
+- **Ye kyun:** S7 Email (26 items) ka sabse dheema hissa apt packages hai. Isko abhi nikal dete hain,
+  agle release me sirf configuration + verification bachega (chhota round trip).
+- **Suraksha:** configuration adhuri hone tak exim4/dovecot **band** rahenge — adha-configured
+  mail server port 25 par nahi khulega. Panel/agent code is release me badla nahi hai.
+
+## ✅ Latest deployment (5 Oct 2026; already completed)
+
+### panel-update 0.74.3 — S9 BIND9 POORA (aapne chalaya: 38 pass / 0 fail / 1 skip)
 ```bash
 sudo alphacp-sync get e817303bc1cf48723a74fd5c96fb4f6d6c87c0bf installer/panel-update.sh /tmp/acp-panel-update-0.74.3.sh 2802dd8072d77f28ded8f6d0f9a01f5d20939834480b6f4f7bb46f41c46ebaf4 && sudo bash /tmp/acp-panel-update-0.74.3.sh
 ```
-- Updater SHA-256: `2802dd8072d77f28ded8f6d0f9a01f5d20939834480b6f4f7bb46f41c46ebaf4`.
-- Expected: banner `updater 0.74.3` → panel 0.74.0 (badla nahi) + naya agent bundle → `==> UPDATE COMPLETE ✅`.
-- **0.74.2 me kya bacha tha (37/1):** zone LIVE ho gayi thi (`dig www A = 203.0.113.10` ✅),
-  par remove ke baad bhi named purani zone serve kar raha tha. Wajah: zone clause
-  `named.conf` se hatane ke baad bhi `rndc reconfig` chahiye — warna zone named ki
-  memory me rehti hai. Ab remove bhi reconfig karta hai aur `dig` se tasdeeq karta hai.
+- **Live result:** `dig @127.0.0.1 SOA` ✅ · `dig www A = 203.0.113.10` ✅ · `dig MX` ✅ ·
+  remove ke baad `dig ab khamosh hai` ✅ · `named-checkconf` har step ke baad pass.
+- Checklist me 6 rows ✅ ho gaye (35, 128, 129, 135, 137, 139) — asli BIND zones.
 
-### 2) BIND9 ki live verification (asli named, asli dig)
-```bash
-sudo alphacp-sync get e817303bc1cf48723a74fd5c96fb4f6d6c87c0bf tools/verify/s9-bind-check.sh /tmp/acp-s9-bind-check.sh 1d7e713ca68fd8d851e47f6c2831e39347f04f6fc06d578bd37f058a25f7a89f && sudo bash /tmp/acp-s9-bind-check.sh
-```
-- Expected last line: `=== S9 BIND9 LIVE CHECK: 40 pass, 0 fail, 0 skip ===`.
-- Ek skip reh sakta hai (`server par koi account zone nahi`) — wo tab hai jab server par
-  koi hosting account bana hi nahi; account bante hi khud chal padega.
-
-## ✅ Latest deployment (5 Oct 2026; already completed)
 
 ### panel-update 0.74.2 — naya zone `rndc reconfig` se LIVE (aapne chalaya: 37/1)
 ```bash
