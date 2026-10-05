@@ -354,8 +354,8 @@ final class AccountOs
     }
 
     /**
-     * @param  list<array{local: string, domain: string, owner: string}> $rows
-     * @return list<array{local: string, domain: string, owner: string}>
+     * @param  list<array{local: string, domain: string, owner: string, members: list<string>}> $rows
+     * @return list<array{local: string, domain: string, owner: string, members: list<string>}>
      */
     public function setLists(string $username, array $rows): array
     {

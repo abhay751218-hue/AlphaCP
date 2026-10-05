@@ -432,6 +432,7 @@ final class RemotePull
             'port' => $port,
             'user' => $user,
             'fingerprint' => $probed['fingerprint'],
+            'fingerprints' => $probed['fingerprints'],
             'key_type' => $probed['key_type'],
             'auth' => $auth,
             'duration_ms' => $duration,

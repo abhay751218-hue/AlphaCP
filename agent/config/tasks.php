@@ -911,8 +911,8 @@ return [
     'mail.list' => [
         'handler'     => Tasks\MailList::class,
         'safety'      => 'mutating',
-        'timeout'     => 20,
-        'description' => 'Replace mailing lists (JSON, owner email only, no mailman).',
+        'timeout'     => 60,
+        'description' => 'Replace static Exim distribution lists (owner + subscriber addresses).',
         'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
         'schema'      => [
             'type'                 => 'object',
@@ -931,6 +931,11 @@ return [
                             'local'  => ['type' => 'string', 'maxLength' => 32],
                             'domain' => ['type' => 'string', 'maxLength' => 190],
                             'owner'  => ['type' => 'string', 'maxLength' => 190],
+                            'members' => [
+                                'type' => 'array',
+                                'maxItems' => 200,
+                                'items' => ['type' => 'string', 'maxLength' => 190],
+                            ],
                         ],
                     ],
                 ],

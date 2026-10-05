@@ -239,6 +239,8 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.view')->name('mailing-lists.index');
     Route::post('/mailing-lists', [MailingListsController::class, 'store'])
         ->middleware('perm:email.manage')->name('mailing-lists.store');
+    Route::patch('/mailing-lists/{mailing_list}', [MailingListsController::class, 'update'])
+        ->middleware('perm:email.manage')->name('mailing-lists.update');
     Route::delete('/mailing-lists/{mailing_list}', [MailingListsController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('mailing-lists.destroy');
 

@@ -10,8 +10,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MailingList extends Model
 {
     protected $fillable = [
-        'account_id', 'localpart', 'domain', 'owner',
+        'account_id', 'localpart', 'domain', 'owner', 'members',
     ];
+
+    protected function casts(): array
+    {
+        return ['members' => 'array'];
+    }
 
     public function account(): BelongsTo
     {

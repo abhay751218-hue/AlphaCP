@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# S7 MAIL SERVER SIM — tools/verify/s7-mail-check.sh ko BINA server ke chalata hai.
+# S7 MAIL SERVER SIM — S7 mail + #18 mailing-list verifiers ko BINA server ke chalata hai.
 # Package installs ki zaroorat nahi (sab kuch fake bin/ me hai).
 #
 #   run 1 : sab theek            -> 0 fail hona chahiye
@@ -68,6 +68,7 @@ EOF
 cat > "$BIN/exim4" <<'EXIMEOF'
 #!/usr/bin/env bash
 RECIPIENTS="${ACP_MAIL_EXIM_RECIPIENTS:-/etc/exim4/alphacp-recipients}"
+ALIASES="${ACP_MAIL_EXIM_ALIASES:-/etc/exim4/alphacp-aliases}"
 VERBOSE=0
 for arg in "$@"; do [[ "$arg" == "-v" ]] && VERBOSE=1; done
 case "${1:-}" in
@@ -82,6 +83,10 @@ case "${1:-}" in
     if [[ "${SIM_BREAK_EXIM:-0}" == "1" ]]; then echo "Unrouteable address"; exit 1; fi
     if grep -q "^${addr}:" "$RECIPIENTS" 2>/dev/null; then
       echo "$addr"; echo "  router = alphacp_mailbox, transport = alphacp_maildir"
+    elif grep -q "^${addr}:" "$ALIASES" 2>/dev/null; then
+      target="$(awk -F': ' -v key="$addr" '$1 == key {print $2; exit}' "$ALIASES")"
+      echo "$addr"; echo "  router = alphacp_aliases, transport = address_directory"
+      echo "  redirect to ${target}"
     else
       dom="${addr#*@}"
       if grep -q "^\\*@${dom}:" "${ACP_MAIL_CATCHALL:-/dev/null}" 2>/dev/null; then
@@ -100,10 +105,23 @@ case "${1:-}" in
     fi
     line="$(grep "^${addr}:" "$RECIPIENTS" 2>/dev/null | head -1)"
     dir="$(echo "$line" | awk -F': ' '{print $2}' | awk '{print $1}' | sed 's#~##')"
-    if [[ -z "$dir" || ! -d "$dir/new" ]]; then
+    body="$(cat)"
+    if [[ -z "$dir" ]]; then
+      alias_line="$(awk -F': ' -v key="$addr" '$1 == key {print $2; exit}' "$ALIASES" 2>/dev/null)"
+      if [[ -z "$alias_line" ]]; then
+        echo "sim: mailbox/alias nahi mila ($addr)" >&2; exit 1
+      fi
+      alias_line="${alias_line//,/ }"
+      rc=0
+      for target in $alias_line; do
+        [[ -z "$target" ]] && continue
+        if ! printf '%s\n' "$body" | "$0" -odf "$target"; then rc=1; fi
+      done
+      exit "$rc"
+    fi
+    if [[ ! -d "$dir/new" ]]; then
       echo "sim: mailbox directory nahi mila ($addr -> $dir)" >&2; exit 1
     fi
-    body="$(cat)"
     # S7 email filters (#20/#21): Exim filter file ko SIM me bhi chalao
     # (asli server par ye kaam exim ka `alphacp_userfilter` router karta hai).
     # NOTE: heredoc stdin ko override kar deta hai, isliye message file se padha jata hai.
@@ -293,6 +311,7 @@ def accounts():
 def aggregate():
     domains, recipients, aliases, users, boxes = set(), [], [], [], []
     catchalls, vacation, spam = [], [], []
+    list_count, list_errors = 0, 0
     for user in accounts():
         home = os.path.join(HOME, user)
         pfile = os.path.join(home, "etc", "mail", "passwd")
@@ -318,6 +337,25 @@ def aggregate():
                 if not line or ":" not in line or not RE_ADDR.match(line.split(":", 1)[0]):
                     continue
                 aliases.append(line)
+        # static mailing lists -> Exim aliases; this covers the S7 #18 verifier
+        lfile = os.path.join(home, "etc", "mail", "lists.json")
+        if os.path.isfile(lfile):
+            try:
+                for row in json.load(open(lfile)):
+                    if not isinstance(row, dict):
+                        list_errors += 1
+                        continue
+                    addr = "%s@%s" % (str(row.get("local", "")).lower(), str(row.get("domain", "")).lower())
+                    members = row.get("members", [row.get("owner", "")])
+                    members = sorted(set(str(m).lower() for m in members if RE_ADDR.match(str(m).lower()))) if isinstance(members, list) else []
+                    if not RE_ADDR.match(addr) or not members or addr in members or len(members) > 200:
+                        list_errors += 1
+                        continue
+                    aliases.append("%s: %s" % (addr, ", ".join(members)))
+                    domains.add(addr.split("@", 1)[1])
+                    list_count += 1
+            except Exception:
+                list_errors += 1
         # catch-all (*@domain: dest)
         cfile = os.path.join(home, "etc", "mail", "catchall")
         if os.path.isfile(cfile) and os.environ.get("SIM_BREAK_CATCHALL", "0") != "1":
@@ -379,6 +417,8 @@ def aggregate():
         "domains": len(domains),
         "mailboxes": len(boxes),
         "aliases": len(aliases),
+        "lists": list_count,
+        "list_errors": list_errors,
         "catchalls": len(catchalls),
         "responders": len(vacation),
         "spam_lists": len(spam),
@@ -869,6 +909,27 @@ def main():
             existing = open(pfile).read()
         write(pfile, existing + "".join(l + "\n" for l in lines))
         emit("success", mailboxes_written=len(lines))
+    if kind == "mail.list":
+        u = p.get("username", "")
+        if u not in accounts():
+            emit("failed", error="account does not exist: %s" % u)
+        rows = p.get("lists", [])
+        if not isinstance(rows, list) or len(rows) > 50:
+            emit("failed", error="invalid lists")
+        for row in rows:
+            if not isinstance(row, dict):
+                emit("failed", error="invalid mailing list")
+            addr = "%s@%s" % (str(row.get("local", "")).lower(), str(row.get("domain", "")).lower())
+            members = row.get("members", [row.get("owner", "")])
+            if not isinstance(members, list) or not members or len(members) > 200 or not RE_ADDR.match(addr):
+                emit("failed", error="invalid mailing-list subscribers")
+            if any(not isinstance(m, str) or not RE_ADDR.match(m.lower()) or m.lower() == addr for m in members):
+                emit("failed", error="invalid mailing-list subscriber address")
+        write(os.path.join(HOME, u, "etc", "mail", "lists.json"), json.dumps(rows, sort_keys=True))
+        sync = "skipped"
+        if configured():
+            sync = "ok (%s lists)" % aggregate()["lists"]
+        emit("success", lists=len(rows), subscribers=sum(len(r.get("members", [r.get("owner", "")])) for r in rows), mail_sync=sync)
     if kind == "mail.catchall":
         u = p.get("username", "")
         if u not in accounts():
@@ -967,12 +1028,12 @@ chmod 755 "$ACP_HOME/agent/bin/paneld"
 cat > "$ACP_HOME/agent/config/tasks.php" <<'EOF'
 <?php
 // SIM: mail.server registered
-return ['mail.server' => ['handler' => 'Tasks\MailServerSetup', 'actions' => ['status', 'setup', 'sync', 'list', 'verify']]];
+return ['mail.server' => ['handler' => 'Tasks\MailServerSetup', 'actions' => ['status', 'setup', 'sync', 'list', 'verify']], 'mail.list' => ['handler' => 'Tasks\\MailList']];
 EOF
 
 # ----------------------------- runner ----------------------------------------
 run_mode() {  # $1 mode, $2 expected fail or 0
-  local mode="$1" efail="$2" out="" rc=0
+  local mode="$1" efail="$2" out="" rc=0 list_out="" list_rc=0
   local SIMROOT="$WORKROOT/run-${mode}"
   rm -rf "$SIMROOT"; mkdir -p "$SIMROOT/home" "$SIMROOT/etc/exim4" "$SIMROOT/etc/dovecot/conf.d" "$SIMROOT/state" "$SIMROOT/etc/exim4/vacation" "$SIMROOT/etc/exim4/spam"
   # exim4 package jaisa distro template (backup lene ke liye)
@@ -1035,12 +1096,15 @@ QEOF
 
   out="$(ACP_HOME="$ACP_HOME" bash "$(dirname "$0")/../verify/s7-mail-check.sh" 2>&1)"
   rc=$?
-  if [[ "${SIM_DEBUG:-0}" == "1" ]]; then printf '%s\n' "$out"; fi
+  list_out="$(ACP_HOME="$ACP_HOME" bash "$(dirname "$0")/../verify/s7-mailing-list-check.sh" 2>&1)"
+  list_rc=$?
+  if [[ "${SIM_DEBUG:-0}" == "1" ]]; then printf '%s\n%s\n' "$out" "$list_out"; fi
   # local vars must not leak into later modes
   unset SIM_BREAK_EXIM SIM_BREAK_DELIVERY SIM_BREAK_DNS SIM_BREAK_CATCHALL SIM_BREAK_FILTER
   echo "$out"
+  echo "$list_out"
   if grep -q "pass=${PASS}" <<<"out"; then :; fi
-  return $rc
+  (( rc == 0 && list_rc == 0 ))
 }
 
 PASS=0; FAIL=0
@@ -1063,7 +1127,19 @@ for mode in good breakexim breakdelivery breakdns breakcatchall breakfilter; do
   F="$(grep -o '[0-9]* pass, [0-9]* fail, [0-9]* skip' <<<"$OUT" | tail -1 | sed 's/.*, \([0-9]*\) fail.*/\1/')"
   [[ -z "$F" ]] && F="?"
   if [[ "${SIM_DEBUG:-0}" == "1" ]]; then printf '%s\n' "$OUT"; fi
-  check "mode=$mode live-check" "$want" "$F"
+  check "mode=$mode base mail live-check" "$want" "$F"
+  LF="$(grep -o 'S7 #18 MAILING LIST LIVE CHECK: [0-9]* pass, [0-9]* fail' <<<"$OUT" | tail -1 | sed 's/.*pass, //; s/ fail//')"
+  [[ -z "$LF" ]] && LF="?"
+  list_want=0
+  [[ "$mode" == "breakexim" || "$mode" == "breakdelivery" ]] && list_want=1
+  check "mode=$mode mailing-list verifier" "$list_want" "$LF"
+  if [[ "$mode" == "good" ]]; then
+    if grep -q 'list delivery: YES' <<<"$OUT"; then
+      PASS=$((PASS+1)); echo "[ok]   mailing-list subscriber received test message"
+    else
+      FAIL=$((FAIL+1)); echo "[FAIL] mailing-list delivery marker missing"
+    fi
+  fi
   if [[ "$want" == "1" ]]; then
     grep -q "FAIL" <<<"$OUT" || { FAIL=$((FAIL+1)); echo "[FAIL] mode=$mode: koi FAIL line hi nahi aayi"; }
   fi

@@ -17,6 +17,7 @@ final class Mail
     public const MAX_DELIV = 50;
     public const MAX_SPAM_LIST = 50;
     public const MAX_LST = 50;
+    public const MAX_LIST_MEMBERS = 200;
     public const MAX_RTE = 50;
     public const MAX_TRACK = 50;
     public const MAX_GFILTER = 50;
@@ -494,7 +495,7 @@ final class Mail
 
     /**
      * @param  list<mixed> $raw
-     * @return list<array{local: string, domain: string, owner: string}>
+     * @return list<array{local: string, domain: string, owner: string, members: list<string>}>
      */
     public static function sanitizeLists(array $raw): array
     {
@@ -510,7 +511,30 @@ final class Mail
             $domain = self::normalizeDomain((string) ($row['domain'] ?? ''));
             $owner = self::normalizeDest((string) ($row['owner'] ?? ''));
             $key = $local . '@' . $domain;
-            $byName[$key] = ['local' => $local, 'domain' => $domain, 'owner' => $owner];
+            // Backward-compatible upgrade: old list rows only had an owner;
+            // keep delivery useful by making that owner the initial subscriber.
+            $rawMembers = $row['members'] ?? [$owner];
+            if (!is_array($rawMembers) || $rawMembers === [] || count($rawMembers) > self::MAX_LIST_MEMBERS) {
+                throw new TaskRejectedException("mailing list {$key} needs 1-" . self::MAX_LIST_MEMBERS . ' subscriber addresses');
+            }
+            $members = [];
+            foreach ($rawMembers as $memberIndex => $rawMember) {
+                if (!is_string($rawMember)) {
+                    throw new TaskRejectedException("invalid mailing-list subscriber at {$i}.{$memberIndex}");
+                }
+                $member = self::normalizeDest($rawMember);
+                if ($member === $key) {
+                    throw new TaskRejectedException("mailing list {$key} cannot subscribe to itself");
+                }
+                $members[$member] = $member;
+            }
+            ksort($members);
+            $byName[$key] = [
+                'local' => $local,
+                'domain' => $domain,
+                'owner' => $owner,
+                'members' => array_values($members),
+            ];
         }
         ksort($byName);
 
@@ -518,7 +542,7 @@ final class Mail
     }
 
     /**
-     * @param  list<array{local: string, domain: string, owner: string}> $rows
+     * @param  list<array{local: string, domain: string, owner: string, members: list<string>}> $rows
      */
     public static function listsJson(array $rows): string
     {

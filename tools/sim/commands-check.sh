@@ -25,11 +25,13 @@ CMD_FILE="${COMMANDS_CHECK_FILE:-COMMANDS.md}"
 NEXT_BLOCK="$(awk '/^## .*NEXT STEP/{f=1;next} f && /^## /{exit} f' "${CMD_FILE}")"
 CMD_LINE="$(grep -m1 'alphacp-sync get' <<<"${NEXT_BLOCK}" || true)"
 if [[ -z "${CMD_LINE}" ]]; then
-  # Local feature development must not publish a live command before the release
-  # artifact and verifier are tested. COMMANDS.md has to say this explicitly.
-  if grep -Fq 'NO LIVE SERVER COMMAND — local implementation in progress.' <<<"${NEXT_BLOCK}"; then
-    echo '=== COMMANDS-CHECK: local implementation phase ==='
-    ok 'no untested live-server command is published while the feature is being built'
+  # A live command stays withheld both while a local implementation is being built
+  # and after local testing, until the real-server verifier has proved delivery.
+  # COMMANDS.md must carry one of these explicit sentinels.
+  if grep -Fq 'NO LIVE SERVER COMMAND — local implementation in progress.' <<<"${NEXT_BLOCK}" \
+    || grep -Fq 'NO LIVE SERVER COMMAND — live verification pending.' <<<"${NEXT_BLOCK}"; then
+    echo '=== COMMANDS-CHECK: live command withheld ==='
+    ok 'no live-server command is published before real delivery verification'
     echo
     echo "=== COMMANDS-CHECK: ${PASS} pass, ${FAIL} fail ==="
     exit 0

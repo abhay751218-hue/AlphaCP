@@ -12,17 +12,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ NEXT STEP — S7 #18 Mailing Lists (local implementation)
+## ⏸️ NEXT STEP — S7 #18 Mailing Lists — live verification pending
 
 > #147 ka live status verifier aapne chalaya: **8 pass / 0 fail / 0 skip** (`STATUS-VERIFIED`).
-> #147 ab live-verified hai. Latest GitHub snapshot (17:11 UTC) abhi is newer report se pehle ka hai;
-> `${ACP_HOME}/verify-reports/s7-spam-check.txt` next alphacp-sync me verify karunga.
-> #20/#21 ka live mail result bhi **62/0/0** hai. Current required checklist status: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
+> #20/#21 ka live mail result **62/0/0** hai. Current required checklist status: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
 >
-> Ab agla feature #18: mailing-list subscriber management aur actual Exim delivery. Current implementation
-> sirf list address/owner JSON rakhti hai; members aur real list fan-out abhi nahi hain. Is feature ke liye
-> local implementation, regression tests, pinned artifacts/updater aur dedicated live verifier taiyar honge.
-> **NO LIVE SERVER COMMAND — local implementation in progress.** Is beech updater/service manually mat chalana.
+> #18 now has customer CRUD, persisted subscriber addresses, validation, and static Exim fan-out.
+> Local checks: focused panel tests **8/8**, full panel suite **453/0/6 wasm-skip**, `provision-sim`
+> **209/0**, and updated `s7-mail-sim` **14/0**. Candidate archives panel **0.75.0** and agent **0.82.0**
+> exist locally, but the pinned updater release is not prepared. `tools/verify/s7-mailing-list-check.sh`
+> passes only against its simulator so far; no real Exim route or subscriber-Maildir delivery has been
+> verified. Checklist #18 remains 🟡.
+>
+> **NO LIVE SERVER COMMAND — live verification pending.** Keep the live command withheld until the release is pinned and the
+> dedicated verifier can prove real Exim fan-out and subscriber delivery. Do not manually update services.
+
 
 ### Remaining S7 scope
 - #18 Mailing Lists; #23/#148 Address Importer; #25 Encryption; #26 BoxTrapper; #27 Calendar & Contacts;
