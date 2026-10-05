@@ -12,54 +12,45 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ NEXT STEP — post-0.81.1 S7 live verification
+## ✅ NEXT STEP — S7 #147 SpamAssassin + greylist status check (read-only)
 
-> Aapke 0.80.0 aur 0.81.0 runs me filter failure tha. Revised verifier ne **60 pass / 2 fail**
-> dikhaya aur Exim 4.97 ka exact error pakda: filter file `euid=1001 egid=1001` ke liye unreadable/search-blocked thi.
-> Agent 0.81.1 updater **ab deploy ho chuka hai**. Latest server snapshot confirms panel code **0.74.0**,
-> `ACP_VERSION=0.81.1`, `AGENT_VERSION=0.81.1`, HTTP **200**.
+> 5 Oct ko aapke post-0.81.1 S7 mail live check ne **62 pass / 0 fail / 0 skip** diya.
+> Isse folder-save/discard filter checks pass hue; checklist #20/#21 ab ✅ hain.
+> Server ka aakhri synced report abhi 17:11 UTC wala purana **60/2** hai—naya 62/0/0 run us sync ke baad hua,
+> isliye `${ACP_HOME}/verify-reports/s7-mail-check.txt` agle alphacp-sync me refresh hona chahiye.
 >
-> `New panel: 0.74.0` ka matlab panel **code bundle** version hai. Is release me Laravel panel code nahi badla;
-> mail permission fix agent me tha. Isliye bundle version 0.74.0 rehna expected hai, failure nahi. Release version
-> 0.81.1 update hua hai. Updater ke log me tamam listed steps successful hain; lekin S7 live mail verifier
-> **automatically nahi chala**—neeche uska alag command hai. Filter fix ko abhi live-pass nahi maana gaya.
+> Ab #147 ka **sirf status** check hai. Pinned verifier `mail.server spamassassin` bina settings bheje call karta hai;
+> agent code is case ko read-only rakhta hai (koi package/config/service change ya feature enable nahi hota).
 
-### 1) Run the pinned S7 live verifier now
-```bash
-sudo alphacp-sync get 31726394519c03332e29715c3ed37d1b4cc73d41 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh eed20adcbc77550d2407f81ed82a6373b9b00bc6a09ce220139915f25d4b53fc && sudo bash /tmp/s7-mail-check.sh
-```
-- It captures the exact Exim `-v` route/status and checks folder-save, discard, inbox counts, queue and new mainlog lines.
-- Reports: `${ACP_HOME}/verify-reports/s7-mail-check.txt` and `s7-diag.txt` (hourly sync carries them to GitHub).
-- Paste the full output. Only a zero-failure full S7 result can close #20/#21; if it fails, include `FILTER delivery diagnostics`.
-
-### 0.81.1 deployment facts / local checks
-- Updater commit `68e64ce4b578c13ad929adb0bab865f8317f3a6f`, SHA-256
-  `656db4911e1a72f00569f1d83544b34771123dac763d44b338703fc3dbb63c13`; deployed output showed `UPDATE COMPLETE`.
-- Panel bundle artifact remains **0.74.0**; `.env` release version and agent are both **0.81.1**. Panel health HTTP 200.
-- Agent bundle pin check **10/0**, S7 mail SIM **7/0**, S7 updater simulation **12/0**, updater shell syntax passed.
-  Agent suite via PHP-WASM: **207 pass / 0 fail** (pre-existing non-fatal PHP warnings printed).
-- Real-Exim sandbox regression was skipped locally because this checkout lacks the custom Exim binary; the
-  post-deployment live verifier is still required. The previous server report still says **60/2** because it
-  was captured before 0.81.1; it must be refreshed.
-
-### Next after S7 mail passes — #147 status (read-only)
+### 1) Run the pinned #147 live status verifier
 ```bash
 sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-spam-check.sh /tmp/s7-spam-check.sh e775b853066cb4a966e359bda54a9f0026faa91de48d7d7bcaac16783035eb86 && sudo bash /tmp/s7-spam-check.sh
 ```
-- Expected by that verifier: **8 pass / 0 fail / 0 skip**. It does not enable SpamAssassin or greylisting.
+- Script/hash/shell syntax checked; it is pinned to commit `f15c4b03adc6f3e242a6ee00871cd38997cb1142`.
+- Healthy-state expectation: **8 pass / 0 fail / 0 skip**. If any check fails, paste the full result; it does not turn SpamAssassin or greylisting on.
+- Report: `${ACP_HOME}/verify-reports/s7-spam-check.txt`; alphacp-sync will carry it to the repo.
+
+### Just completed — S7 mail delivery / filters
+- Live result you pasted: **62 pass / 0 fail / 0 skip** after agent 0.81.1; #20 global filters and #21 mailbox folder/discard filters now pass.
+- 0.81.1 is deployed: panel code bundle **0.74.0**, `.env ACP_VERSION=0.81.1`, agent **0.81.1**, panel HTTP **200**.
+  `New panel: 0.74.0` is the unchanged panel-code artifact version; no panel UI/code bundle was part of the agent-only fix.
+- Local checks for 0.81.1: updater/artifact pin guard **10/0**, S7 mail SIM **7/0**, updater SIM **12/0**, agent suite
+  **207/0** via PHP-WASM. The real-Exim sandbox was skipped locally (custom Exim binary unavailable); live server check has now passed.
+- The latest GitHub snapshot still contains the pre-update 60/2 report, because its last sync preceded your 62/0/0 run.
+  Keep the pasted result as the live pass; confirm the report file refresh on the next sync.
 
 ### Previous live release — 0.81.0 (historical; do not rerun)
-- Live result after the update was `UPDATE COMPLETE`, panel **0.74.0**, agent **0.81.0**.
+- Live result after that update was `UPDATE COMPLETE`, panel **0.74.0**, agent **0.81.0**.
 - Its old verifier showed **61 pass / 1 fail**; you confirmed the same failure on 0.80.0.
-  The revised verifier exposed the underlying EACCES and split it into two failed filter actions.
-- The earlier local 0.81.0 checks were agent suite **207/0**, S7 mail SIM **7/0**, updater SIM **12/0**,
+  The revised diagnostic exposed the EACCES and split it into two failed filter actions; both now pass after 0.81.1.
+- Earlier local 0.81.0 checks: agent suite **207/0**, S7 mail SIM **7/0**, updater SIM **12/0**,
   S9 BIND SIM **3/0**, and real Exim **15/0/1 skip** (SpamAssassin ACL unavailable in that Exim build).
 
 ### Roadmap / kitna baaki hai
-- Checklist abhi **50 ✅ / 56 🟡 / 92 ⏳ / 10 🔵** (208 rows) hai; project tab complete jab required rows 100% ✅.
-- Live: #19 mail tracking passed; #20 global filters and #21 folder/discard filters remain unverified after the permission fix; #147 read-only status verifier pending.
+- Checklist ab **53 ✅ / 54 🟡 / 92 ⏳ / 9 🔵** (208 rows) hai; project tab complete jab required rows 100% ✅.
+- Live: #19 tracking, #20 global filters, #21 mailbox filters passed. Ab #147 read-only status verifier baaki hai.
 - S7 me abhi build karna: #18 Mailing Lists, #23/#148 Address Importer, #25 Encryption, #26 BoxTrapper,
-  #27 Calendar & Contacts, #29 Roundcube Webmail, #145 server deliverability. #147 ka code complete hai; live verify baaki.
+  #27 Calendar & Contacts, #29 Roundcube Webmail, #145 server deliverability. #147 code complete hai; live status verify baaki.
 - Phir S10 ke bache hue mail import + cpmove DNS-zone import; uske baad S11 Metrics → S12 Billing →
   S13 Security Center (18) → S14 app installer/WP Toolkit → S15 reseller, multi-server, DNS cluster.
 
@@ -278,12 +269,12 @@ Har naye feature/fix ke saath yahan ek nayi row aayegi:
 ### ❌ 0.79.0 — MAT CHALAO (config reject -> mail nonlocal)
 `… get 4ee552a3135233d9614afe234733db1fc76c6b62 installer/panel-update.sh … bb749fc072c90aad…`
 — isme `allow_filter` se `user` hata diya gaya tha, jisse `exim -bV` hi reject ho gaya.
-**0.81.1 chalao** (upar NEXT STEP; 0.81.1 me live filter permission fix hai). 0.78.0/0.79.0 ab sirf history me hain.
+**0.81.1 live server par deployed hai; updater dobara mat chalao. Ab upar NEXT STEP ka read-only #147 verifier hai. 0.78.0/0.79.0 sirf history hain.
 
 ### ❌ 0.78.0 — MAT CHALAO (mail delivery todtata hai)
 `alphacp-sync get 222a113863cd3e1426cb816f76f5e5aca693e43a installer/panel-update.sh /tmp/acp-panel-update-0.78.0.sh 53b775235f1e9531a26d26f3e06c5a48649173865b9dd3f0da2ed7955de92aa8`
 — iske filters ne live server par **har address defer** kar diya (`Failed to find user "}"`).
-**0.81.1 chalao** (upar NEXT STEP), isme 0.78/0.79/0.80 mail fixes aur userfilter permission fix hai. 0.78.0 ab sirf history me hai.
+**0.81.1 live server par deployed hai; updater dobara mat chalao. Ab upar NEXT STEP ka read-only #147 verifier hai. 0.78.0 sirf history me hai.
 
 | Purani command | Kyun |
 |---|---|
