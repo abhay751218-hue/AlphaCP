@@ -340,12 +340,23 @@ if ! grep -q 'zone "'"${TEST_DOMAIN}"'"' "${ZONES_FILE}" 2>/dev/null; then
 else
   bad "zones file me zone clause abhi bhi hai"
 fi
-GONE="$("${DIG}" @127.0.0.1 +short +tries=1 +time=2 "${TEST_DOMAIN}" SOA 2>/dev/null | head -1)"
+# named ko zone chhodne me 1-2 second lag sakte hain (reconfig ke baad)
+GONE=""
+for try in 1 2 3; do
+  GONE="$("${DIG}" @127.0.0.1 +short +tries=1 +time=2 "${TEST_DOMAIN}" SOA 2>/dev/null | head -1)"
+  [[ -z "${GONE}" ]] && break
+  [[ "${try}" -lt 3 ]] && sleep 1
+done
 if [[ "${LIVE}" == "1" ]]; then
   if [[ -z "${GONE}" ]]; then
     ok "dig ab khamosh hai (zone serve nahi ho rahi)"
   else
     bad "remove ke baad bhi dig jawab de raha hai: ${GONE}"
+    info "rndc reconfig : $("${RNDC}" reconfig 2>&1 | head -2 | tr '\n' ' ')"
+    GONE2="$("${DIG}" @127.0.0.1 +short +tries=1 +time=2 "${TEST_DOMAIN}" SOA 2>/dev/null | head -1)"
+    info "reconfig ke baad dig: ${GONE2:-khamosh}"
+    info "zones clause  : $(grep -c 'zone "'"${TEST_DOMAIN}"'"' "${ZONES_FILE}" 2>/dev/null) (0 hona chahiye)"
+    info "zone file     : $(ls -l "${ZONE_FILE}" 2>&1 | head -1)"
   fi
 else
   skip "remove ke baad dig ka test tabhi maayne rakhta hai jab pehle jawab mil raha ho (upar dekho)"

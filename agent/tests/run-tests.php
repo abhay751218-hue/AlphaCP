@@ -4321,6 +4321,33 @@ test('dns.bind remove — zone file hat ti hai aur zone clause bhi', function ()
     acp_bind_cleanup($h);
 });
 
+test('dns.bind remove — zone mitne ke baad named use serve nahi karta (reconfig)', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $h['cmd']->digStdout = "ns1.alice.test. hostmaster.alice.test. 2025090101 3600 600 1209600 300";
+    $h['cmd']->digFollowsZones = true;   // asli named jaisa: file hat te hi khamosh
+    $out = (new BindSetup())->handle([
+        'action'  => 'write',
+        'domain'  => 'alice.test',
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    assert_true($out['verified'] === true, 'pehle zone live honi chahiye');
+
+    $h['cmd']->rndcArgvs = [];
+    $del = (new BindSetup())->handle(['action' => 'remove', 'domain' => 'alice.test'], $h['ctx']);
+    assert_true($del['removed'] === true);
+    assert_true($del['gone'] === true, 'zone hatne ke baad dig khamosh hona chahiye (memory se bhi)');
+    assert_true($del['dig_after'] === '', 'dig ab kuch nahi dena chahiye');
+    $sawReconfig = false;
+    foreach ($h['cmd']->rndcArgvs as $argv) {
+        if (in_array('reconfig', $argv, true)) {
+            $sawReconfig = true;
+        }
+    }
+    assert_true($sawReconfig, 'zone hatane ke baad bhi rndc reconfig chalna chahiye');
+    acp_bind_cleanup($h);
+});
+
 test('dns.bind list — zone files count', function (): void {
     $h = acp_bind_harness();
     (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);

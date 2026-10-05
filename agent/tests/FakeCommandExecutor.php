@@ -98,6 +98,8 @@ final class FakeCommandExecutor implements CommandExecutor
     public array $rndcArgvs = [];
     /** stdout the fake `dig` returns (the real SOA/NS answer we verify against) */
     public string $digStdout = '';
+    /** true => `dig` tabhi jawab dega jab zone file maujood ho (remove ke baad khamosh) */
+    public bool $digFollowsZones = false;
     /** @var list<string>|null last `dig` argv */
     public ?array $digArgv = null;
     /** stdout of `hostname -I` — the server's own IPs for listen-on */
@@ -599,7 +601,30 @@ final class FakeCommandExecutor implements CommandExecutor
     private function handleDig(array $argv): CommandResult
     {
         $this->digArgv = $argv;
+        $stdout = $this->digStdout;
 
-        return new CommandResult($argv, 0, $this->digStdout, '', 1);
+        if ($this->digFollowsZones) {
+            // asli named jaisa: zone file hat te hi jawab khatam
+            $dir = rtrim((string) (getenv('ACP_BIND_ZONE_DIR') ?: ''), '/');
+            // domain = aakhri aisa argument jo flag (@server, +opt) ya type na ho
+            $domain = '';
+            foreach ($argv as $token) {
+                $token = strtolower(trim((string) $token));
+                if ($token === '' || $token[0] === '@' || $token[0] === '+') {
+                    continue;
+                }
+                if (in_array(strtoupper($token), ['SOA', 'A', 'AAAA', 'MX', 'NS', 'TXT', 'CNAME', 'PTR', 'ANY'], true)) {
+                    continue;
+                }
+                $domain = $token;
+            }
+            $zone = $domain;
+            while ($zone !== '' && !is_file($dir . '/db.' . $zone)) {
+                $zone = str_contains($zone, '.') ? substr($zone, strpos($zone, '.') + 1) : '';
+            }
+            $stdout = ($dir !== '' && $zone !== '' && is_file($dir . '/db.' . $zone)) ? $this->digStdout : '';
+        }
+
+        return new CommandResult($argv, 0, $stdout, '', 1);
     }
 }

@@ -280,15 +280,25 @@ final class BindServer
             @unlink($file);
         }
         $this->writeConfig($this->zonesFile(), $this->renderZonesFile($this->zoneFiles()), 0644);
-        $reload = $this->installed()
-            ? $this->cmd->run([self::rndcBin(), 'reload', $domain], self::CMD_TIMEOUT)
-            : null;
+
+        // Zone clause hatane ke baad bhi named ko config dobara padhni padti hai
+        // (`rndc reconfig`) — warna zone memory me rehti hai aur named use
+        // mitne ke baad bhi serve karta rahta hai.
+        $reload = null;
+        $digAfter = null;
+        if ($this->installed()) {
+            $this->cmd->run([self::rndcBin(), 'reconfig'], self::CMD_TIMEOUT);
+            $reload = $this->cmd->run([self::rndcBin(), 'reload', $domain], self::CMD_TIMEOUT);
+            $digAfter = $this->digRetry($domain, 'SOA', 3);
+        }
 
         return [
-            'ok'      => true,
-            'domain'  => $domain,
-            'removed' => $existed,
-            'reload'  => $reload === null ? 'skipped' : ($reload->ok() ? 'ok' : self::cleanError($reload)),
+            'ok'       => true,
+            'domain'   => $domain,
+            'removed'  => $existed,
+            'gone'     => $digAfter === '',
+            'dig_after' => (string) $digAfter,
+            'reload'   => $reload === null ? 'skipped' : ($reload->ok() ? 'ok' : self::cleanError($reload)),
         ];
     }
 
