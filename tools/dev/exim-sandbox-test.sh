@@ -137,6 +137,30 @@ if $header_subject: contains "acpfilter" then
 endif
 EOF
 sed -i "s|MAILDIR|$SB/home/info/Maildir|" "$FILTER_FILE"
+
+# Reproduce the live 0750 root-owned ~/etc parent that blocked euid=mailbox uid.
+ETC_PARENT="$SB/home/info/etc"
+chown root:root "$ETC_PARENT" 2>/dev/null || true
+chmod 0750 "$ETC_PARENT"
+deliver_verbose "$SB/msg-filter"
+BLOCKED_FILTERS=$(count "$SB/home/info/Maildir/.filtered/new"); BLOCKED_INBOX=$(count "$SB/home/info/Maildir/new")
+BLOCKED_ID="$(sed -n 's/.*delivering \([^[:space:]]*\).*/\1/p' <<<"$DELIVERY_OUT" | head -1)"
+if [[ "$DELIVERY_RC" == "0" && "$BLOCKED_FILTERS" == "0" && "$BLOCKED_INBOX" == "0" && "$DELIVERY_OUT" == *"Permission denied"* && -n "$BLOCKED_ID" ]]; then
+  ok "permission regression: root-owned ~/etc 0750 blocks mailbox uid exactly as live (queue $BLOCKED_ID)"
+else
+  bad "permission regression: expected Exim EACCES/defer; rc=$DELIVERY_RC filtered=$BLOCKED_FILTERS inbox=$BLOCKED_INBOX id=${BLOCKED_ID:-NAHI}"
+fi
+if [[ -n "$BLOCKED_ID" ]] && "$ACP_EXIM" -Mrm "$BLOCKED_ID" >/dev/null 2>&1; then
+  ok "permission regression: deferred synthetic message removed from sandbox queue"
+else
+  bad "permission regression: deferred synthetic message queue cleanup failed"
+fi
+if chgrp "$MY_GID" "$ETC_PARENT" 2>/dev/null; then
+  chmod 0710 "$ETC_PARENT"
+else
+  chmod 0751 "$ETC_PARENT"
+fi
+
 deliver_verbose "$SB/msg-filter"
 F=$(count "$SB/home/info/Maildir/.filtered/new"); I=$(count "$SB/home/info/Maildir/new")
 if [[ "$DELIVERY_RC" == "0" && "$F" == "1" && "$I" == "0" && "$DELIVERY_OUT" == *"$SB/home/info/Maildir/.filtered/"* && "$DELIVERY_OUT" == *"Completed"* ]]; then

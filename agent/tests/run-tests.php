@@ -5597,6 +5597,9 @@ function acp_mail_seed_filter_account(array $h): string
     $home = $root . '/home/alicehost';
     mkdir($home . '/mail/alice.test/info/new', 0755, true);
     mkdir($home . '/etc/mail', 0755, true);
+    // Reproduce the live install: recursive mail config creation leaves
+    // ~/etc root-owned/search-blocked for Exim's mailbox uid.
+    chmod($home . '/etc', 0750);
     file_put_contents(
         $home . '/etc/mail/passwd',
         "info@alice.test:{BLF-CRYPT}{$hash}:1001:1001::{$home}/mail/alice.test/info::\n"
@@ -5619,6 +5622,16 @@ test('mail.server sync — email filters se ASLI Exim filter file ban ti hai', f
 
     $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
     assert_true(($out['filters'] ?? -1) === 1, '1 mailbox ke liye filter banana chahiye, bana ' . (int) ($out['filters'] ?? -1));
+
+    $etcPath = $home . '/etc';
+    $etcMode = (int) ((fileperms($etcPath) ?: 0) & 0777);
+    $etcOwner = (int) (fileowner($etcPath) ?: -1);
+    $etcGroup = (int) (filegroup($etcPath) ?: -1);
+    $mailboxCanSearchEtc = ($etcOwner === 1001 && ($etcMode & 0100) !== 0)
+        || ($etcGroup === 1001 && ($etcMode & 0010) !== 0)
+        || (($etcMode & 0001) !== 0);
+    assert_true($mailboxCanSearchEtc, 'filter path parent ~/etc mailbox UID/GID ke liye searchable honi chahiye');
+    assert_true(($etcMode & 0004) === 0, '~/etc ko world-readable nahi banana chahiye');
 
     $lookup = (string) file_get_contents($h['root'] . '/etc/exim4/alphacp-filters');
     assert_true(str_contains($lookup, 'info@alice.test: '), 'lookup file me address hona chahiye');
