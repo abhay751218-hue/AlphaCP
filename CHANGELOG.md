@@ -29,8 +29,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   pakadta hai (fake paneld bhi ab PathGuard mirror karta hai). Doosra live-check fix: account
   chunte waqt ab **panel row + asli Linux user (GECOS AlphaCP)** dono chahiye — sirf panel row
   hone par `db.restore` "is not an AlphaCP account" reject karta hai; aisa koi account na mile
-  to script khud temp account banata hai. Sim: **18/0** (naye run 3/run 4/run 5), live check
-  **18 pass / 0 fail**. Naya **read-only** `tools/verify/s10-diag.sh`: server ki asli sthiti
+  to script khud temp account banata hai. Sim: **20/0** (naye run 3/run 4/run 5), live check
+  **18 pass / 0 fail**. Ab check script apni **poori report `${ACP_HOME}/verify-reports/s10-<stamp>.txt`**
+  me likhti hai — `alphacp-sync` ka hourly snapshot poora ACP_HOME copy karta hai (`etc/` aur
+  `var/` chhod kar), to live natija bina kisi ko bataye GitHub se padha ja sakta hai
+  (`ACP_VERIFY_REPORT=0` se band). Naya **read-only** `tools/verify/s10-diag.sh`: server ki asli sthiti
   (version, `db.restore` allowlist, archive dir, panel account ↔ asli Linux user, MariaDB root,
   pichle db.restore tasks, bacha-khucha) ek hi output me — jab live check fail ho to yahi bhejna.
   Tests: panel **437/0** (+6 wasm-skip), update-sim **234/234** (naya U10: db.restore + panel wiring + migration), provision-sim **109/109**, mysql-sim PASS (S8), commands-check 10/0.

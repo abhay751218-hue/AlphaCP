@@ -25,6 +25,18 @@ CLIENT="${ACP_VERIFY_CLIENT:-/usr/bin/mariadb}"; [[ -x "${CLIENT}" ]] || CLIENT=
 WORK="${ACP_VERIFY_WORK:-${ACP_HOME}/var/s10-verify}"
 
 PASS=0; FAIL=0; TASK_IDS=""; LAST_TASK_ID=""; LAST_ERR=""; DONE=0; TEMP_ACCOUNT=0
+
+# Report: ${ACP_HOME}/verify-reports/ me likhi jati hai. Ye folder `alphacp-sync` ke hourly
+# snapshot ke saath GitHub par chala jata hai (etc/ aur var/ ko chhod kar poora ACP_HOME
+# copy hota hai) — isliye live natija bina kisi ko bataye bhi padha ja sakta hai.
+REPORT=""
+if [[ "${ACP_VERIFY_REPORT:-1}" == "1" && -d "${ACP_HOME}" && -w "${ACP_HOME}" ]]; then
+  RDIR="${ACP_HOME}/verify-reports"
+  if mkdir -p "${RDIR}" 2>/dev/null; then
+    REPORT="${RDIR}/s10-$(date -u +%Y%m%d-%H%M%S).txt"
+    exec > >(tee -a "${REPORT}") 2>&1
+  fi
+fi
 ok()   { PASS=$((PASS+1)); printf '  \033[32mok\033[0m   %s\n' "$1"; }
 bad()  { FAIL=$((FAIL+1)); printf '  \033[31mFAIL\033[0m %s\n' "$1"; }
 info() { printf '  --   %s\n' "$1"; }
@@ -72,6 +84,7 @@ echo "=== S10 MYSQL RESTORE LIVE CHECK ==="
 info "panel DB : ${DBN}"
 info "account  : ${ACCT}${TEMP_ACCOUNT:+  (temp — ant me terminate)}"
 info "target   : ${DB1} (success case)  ·  ${DB2} (hostile case)"
+[[ -n "${REPORT}" ]] && info "report    : ${REPORT}  (hourly sync ke saath GitHub par chala jayega)"
 echo
 
 run_task() {  # type payload -> 0/1 ; LAST_TASK_ID + LAST_ERR set
@@ -88,6 +101,8 @@ run_task() {  # type payload -> 0/1 ; LAST_TASK_ID + LAST_ERR set
 }
 
 cleanup() {
+  # tee (process substitution) ko flush hone ka ek mauka — warna report adhuri reh sakti hai
+  [[ -n "${REPORT}" ]] && sleep 1
   if [[ "${DONE}" != "1" ]]; then
     info "cleanup (script beech me ruka)"
     "${PHP_BIN}" "${PANELD}" --run db.drop "{\"username\":\"${ACCT}\",\"name\":\"acpverify\",\"_confirm\":\"db.drop\"}" >/dev/null 2>&1

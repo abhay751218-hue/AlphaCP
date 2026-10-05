@@ -174,6 +174,9 @@ chk "run 1 exit 0" "[[ ${RC1} -eq 0 ]]"
 chk "run 1 me import proof (rows)" "grep -qE '3 rows import hue' <<<\"\${OUT1}\""
 chk "run 1 me hostile refuse proof" "grep -q 'hostile dump refuse hua' <<<\"\${OUT1}\""
 chk "run 1 me panel DB salamat" "grep -q 'salamat hai' <<<\"\${OUT1}\""
+RPT="$(ls -1 "${W}/home/verify-reports/s10-"*.txt 2>/dev/null | head -1)"
+chk "run 1 report file bani (hourly sync GitHub par le jayega)" "[[ -n \"${RPT}\" ]]"
+chk "run 1 report poori likhi gayi (summary line)" "grep -q 'S10 MYSQL RESTORE LIVE CHECK' \"${RPT}\" 2>/dev/null"
 chk "run 1 end me sab saaf" "[[ \$(python3 -c 'import json,os; s=json.load(open(os.environ[\"ACP_FAKE_STATE\"])); print(len(s[\"databases\"]), len(s[\"accounts\"]))') == '1 0' ]]"
 
 # ------------------------------------------------------------------ run 2 -----
