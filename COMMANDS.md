@@ -14,18 +14,40 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-### 1) panel-update 0.74.4 — S7 Email ki taiyari (Exim4 + Dovecot packages)
+### 1) panel-update 0.75.0 — S7 Email LIVE (Exim4 + Dovecot = asli mail)
 ```bash
-sudo alphacp-sync get fd3d42a76a45eb86c0186e4555e64d1eedf2dfdc installer/panel-update.sh /tmp/acp-panel-update-0.74.4.sh 5d1c63dd0e78711dcd2a0331aad35c64622bfea6c16c69eb2655ec77f41dff43 && sudo bash /tmp/acp-panel-update-0.74.4.sh
+sudo alphacp-sync get 849c9331c4523419d6c892fd4a13e0a6617235e9 installer/panel-update.sh /tmp/acp-panel-update-0.75.0.sh 63684f5d119a78a49ac75a8a2c7eb065468bb1e990ba60d1173bbee76b27d7ff && sudo bash /tmp/acp-panel-update-0.75.0.sh
 ```
-- Updater SHA-256: `5d1c63dd0e78711dcd2a0331aad35c64622bfea6c16c69eb2655ec77f41dff43`.
-- Expected: banner `updater 0.74.4` → `exim4 + dovecot install ho rahe hain (S7: asli email)` →
-  `exim4 + dovecot installed` → `mail services abhi band hain — agle release me configure hoke
-  start honge (exim4=4.97 dovecot=2.3.21)` → `==> UPDATE COMPLETE ✅`.
-- **Ye kyun:** S7 Email (26 items) ka sabse dheema hissa apt packages hai. Isko abhi nikal dete hain,
-  agle release me sirf configuration + verification bachega (chhota round trip).
-- **Suraksha:** configuration adhuri hone tak exim4/dovecot **band** rahenge — adha-configured
-  mail server port 25 par nahi khulega. Panel/agent code is release me badla nahi hai.
+- Updater SHA-256: `63684f5d119a78a49ac75a8a2c7eb065468bb1e990ba60d1173bbee76b27d7ff`.
+- Expected: banner **`updater 0.75.0`** → `exim4 + dovecot install ho rahe hain (S7: asli email)` →
+  `exim4 + dovecot installed` → `mail.server setup ho gaya — exim4 + dovecot asli mailboxes ke
+  saath chal rahe hain (exim4=4.97 dovecot=2.3.21)` → `exim4 service active` →
+  `dovecot service active` → `==> UPDATE COMPLETE ✅`.
+- **Ye karta hai:** har account ke `~/etc/mail/passwd` + `aliases` se `/etc/exim4/alphacp-*`
+  aur `/etc/dovecot/alphacp-users` banate hain, Dovecot config (passwd-file, BLF-CRYPT) aur Exim
+  template likhte hain, phir `update-exim4.conf` + `exim4 -bV` + `doveconf -n` se validate karke
+  services chalu karte hain. Config kharaab nikle to purani template wapas aa jati hai.
+- **Suraksha:** relay sirf localhost se (koi open relay nahi). Setup fail ho to services
+  **band** rehte hain — adha-configured mail server port 25 par nahi khulega.
+- Agar `exim4 + dovecot install ho rahe hain` na dikhe (pehle se installed) to bhi theek hai —
+  tab seedha `mail.server setup` wali line aayegi.
+
+### 2) Verification — ASLI mail bhej kar check (updater ke turant baad)
+```bash
+sudo alphacp-sync get e1fc14d49fdbfb93c5a2e62f4d46b875679519df tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 0b8d498f32632476445a531820dc11e9f849bdaa1cf2e266cba1f46b9ebec4b0 && sudo bash /tmp/s7-mail-check.sh
+```
+- Verifier SHA-256: `0b8d498f32632476445a531820dc11e9f849bdaa1cf2e266cba1f46b9ebec4b0`.
+- Expected: `mail.server setup success` · `exim4 -bV pass` · `doveconf -n pass` ·
+  `exim4 service active` · `dovecot service active` ·
+  **`ASLI MAIL PAHUNCH GAYI → .../mail/<domain>/info/new`** · `ASLI MAIL DELIVERY:VERIFIED`.
+- Ye script khud ek kaccha account (`acpmailchk`) banati hai, mailbox banati hai, mail bhejti hai,
+  Maildir me file dhoondhti hai — aur ant me account saaf kar deti hai.
+- Result `${ACP_HOME}/verify-reports/s7-mail-check.txt` me bhi likha jata hai (hourly sync se
+  main branch par aa jata hai — main khud padh lunga).
+- **Ek hi command me dono (recommended):**
+```bash
+sudo alphacp-sync get 849c9331c4523419d6c892fd4a13e0a6617235e9 installer/panel-update.sh /tmp/acp-panel-update-0.75.0.sh 63684f5d119a78a49ac75a8a2c7eb065468bb1e990ba60d1173bbee76b27d7ff && sudo bash /tmp/acp-panel-update-0.75.0.sh && sudo alphacp-sync get e1fc14d49fdbfb93c5a2e62f4d46b875679519df tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 0b8d498f32632476445a531820dc11e9f849bdaa1cf2e266cba1f46b9ebec4b0 && sudo bash /tmp/s7-mail-check.sh
+```
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 
