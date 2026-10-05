@@ -10,8 +10,8 @@ declare(strict_types=1);
  */
 return [
     // Panel + agent versions (shown in the UI footer and system page)
-    'version'       => env('ACP_VERSION', '0.3.2'),
-    'agent_version' => env('ACP_AGENT_VERSION', '0.1.0'),
+    'version'       => env('ACP_VERSION', '0.72.0'),
+    'agent_version' => env('ACP_AGENT_VERSION', '0.62.0'),
 
     // AlphaCP install root (agent, etc/, logs/, panel/)
     'home'          => rtrim((string) env('ACP_HOME', '/usr/local/alphacp'), '/'),
@@ -28,6 +28,10 @@ return [
         'accounts' => env('ACP_ACCOUNTS_PATH', '/home'),
         'www'      => env('ACP_WWW_PATH', '/var/www'),
     ],
+
+    // Seconds the panel waits for paneld after enqueueing account tasks.
+    // Tests force 0 (see AccountProvisioner).
+    'provision_wait' => (int) env('ACP_PROVISION_WAIT', 25),
 
     // First admin account (used once by AdminUserSeeder during install).
     // Kept here — not read with env() in the seeder — because env() is
@@ -48,6 +52,15 @@ return [
         'store_path' => (string) env('ACP_LICENSE_STORE_PATH', storage_path('app/private/license.json')),
         'public_key' => (string) env('ACP_LICENSE_PUBLIC_KEY', ''),
         'public_key_path' => (string) env('ACP_LICENSE_PUBLIC_KEY_PATH', config_path('license_public.pem')),
+    ],
+
+    // S10 scheduled backups (routes/console.php → alphacp:scheduled-backups).
+    //
+    // `file` is the window marker: it records which day / ISO week / month was
+    // already backed up, so the hourly tick runs the real archive pass exactly
+    // once per window. Tests point it at a temp file.
+    'backup_schedule' => [
+        'file' => (string) env('ACP_BACKUP_SCHEDULE_FILE', storage_path('app/private/backup-schedule.json')),
     ],
 
     // Password quality

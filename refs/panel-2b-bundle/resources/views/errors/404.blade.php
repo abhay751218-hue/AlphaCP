@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
-@section('title', '404 — Page nahi mila')
-@section('subtitle', 'Ye URL panel me nahi hai')
+@section('title', '404 — Page not found')
+@section('subtitle', 'This URL is not in the panel')
 
 @section('content')
 <div class="card">
