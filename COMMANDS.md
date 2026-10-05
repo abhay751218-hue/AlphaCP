@@ -40,6 +40,13 @@ sudo alphacp-sync get fb19113582c5ffadf570ec6f94a0e43775c70560 tools/verify/s10-
   refuse hone par koi database na bane — ye bhi check hota hai. Ant me sab saaf (dono database drop,
   archive dir delete, temp account terminate — `trap` me bhi).
 - Expected last line: `=== S10 MYSQL RESTORE LIVE CHECK: 18 pass, 0 fail ===`.
+
+- **Agar isme koi FAIL aaye** to ye read-only diagnostic chalao (server par kuch nahi badalta) aur
+  uska output bhej do — isme asli wajah likhi hoti hai (version, `db.restore` allowlist, archive dir,
+  panel account ↔ asli Linux user, MariaDB root, pichle db.restore tasks, bacha-khucha):
+```bash
+sudo alphacp-sync get 1035d1e68d5bf1cfbe8e35e4b7b27d3a451a4727 tools/verify/s10-diag.sh /tmp/acp-s10-diag.sh 75e9f863b1afa189a67aac9f2e8bdddbc76088448f7cfed6bf93802ccf94dc7c && sudo bash /tmp/acp-s10-diag.sh
+```
 - Chaaho to ye step skip karo — update khud-tested hai (panel **437/0** + 6 wasm-skip, update-sim
   **234/234**, provision-sim **109/109**, mysql-sim **PASS**, s10-mysql-restore-sim **15/0**).
 
