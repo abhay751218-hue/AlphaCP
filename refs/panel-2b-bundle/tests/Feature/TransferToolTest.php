@@ -174,4 +174,113 @@ class TransferToolTest extends TestCase
         $this->asPanelUser($customer)->get('/transfer-tool')->assertForbidden();
         $this->asPanelUser($mail)->get('/transfer-tool')->assertForbidden();
     }
+
+    public function test_remote_pull_probe_enqueues_a_host_key_check_only(): void
+    {
+        $root = $this->userWithRole('root');
+        $this->asPanelUser($root)->post('/transfer-tool/probe', [
+            'host'        => 'old.example.com',
+            'port'        => 22,
+            'user'        => 'root',
+            'remote_path' => '/home/cpmove-alicehost.tar.gz',
+        ])->assertRedirect(route('transfer-tool.index'));
+
+        $task = DB::table('tasks')->where('type', 'backup.pull')->first();
+        $this->assertNotNull($task);
+        $payload = json_decode((string) $task->payload, true);
+        $this->assertIsArray($payload);
+        $this->assertTrue($payload['probe']);
+        $this->assertSame('old.example.com', $payload['host']);
+        $this->assertSame('/home/cpmove-alicehost.tar.gz', $payload['remote_path']);
+        // probe downloads nothing and carries no secret
+        $this->assertArrayNotHasKey('password', $payload);
+        $this->assertArrayNotHasKey('private_key', $payload);
+        $this->assertSame('backup.pull', $payload['_confirm']);
+        $this->assertSame('mutating', $task->safety);
+    }
+
+    public function test_remote_pull_requires_a_pinned_host_key(): void
+    {
+        $root = $this->userWithRole('root');
+        $this->asPanelUser($root)->post('/transfer-tool/pull', [
+            'host'        => 'old.example.com',
+            'user'        => 'root',
+            'remote_path' => '/home/cpmove-alicehost.tar.gz',
+            'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+        ])->assertRedirect();
+        $this->assertNull(DB::table('tasks')->where('type', 'backup.pull')->first());
+
+        // with the fingerprint pinned it goes through
+        $this->asPanelUser($root)->post('/transfer-tool/pull', [
+            'host'             => 'old.example.com',
+            'user'             => 'root',
+            'remote_path'      => '/home/cpmove-alicehost.tar.gz',
+            'auth'             => 'key',
+            'private_key'      => '-----BEGIN OPENSSH PRIVATE KEY-----',
+            'host_fingerprint' => 'SHA256:8Ph7mQ0FakeFingerprintAAAAAAAAAAAAAAAAAAAAAAA',
+        ])->assertRedirect(route('transfer-tool.index'));
+
+        $task = DB::table('tasks')->where('type', 'backup.pull')->first();
+        $this->assertNotNull($task);
+        $payload = json_decode((string) $task->payload, true);
+        $this->assertIsArray($payload);
+        $this->assertArrayNotHasKey('probe', $payload);
+        $this->assertSame('SHA256:8Ph7mQ0FakeFingerprintAAAAAAAAAAAAAAAAAAAAAAA', $payload['host_fingerprint']);
+        $this->assertSame('key', $payload['auth']);
+    }
+
+    public function test_remote_pull_rejects_host_smuggling_and_bad_paths(): void
+    {
+        $root = $this->userWithRole('root');
+        $bad = [
+            ['host' => '-oProxyCommand=evil.example.com'],
+            ['host' => 'old.example.com|/bin/sh'],
+            ['host' => 'old example.com'],
+            ['remote_path' => '/home/../etc/passwd.tar.gz'],
+            ['remote_path' => 'relative.tar.gz'],
+            ['dest_name' => 'evil.sh'],
+            ['host_fingerprint' => 'not-a-fingerprint'],
+        ];
+        foreach ($bad as $override) {
+            $this->asPanelUser($root)->post('/transfer-tool/pull', array_merge([
+                'host'             => 'old.example.com',
+                'user'             => 'root',
+                'remote_path'      => '/home/cpmove-alicehost.tar.gz',
+                'auth'             => 'key',
+                'private_key'      => '-----BEGIN OPENSSH PRIVATE KEY-----',
+                'host_fingerprint' => 'SHA256:8Ph7mQ0FakeFingerprintAAAAAAAAAAAAAAAAAAAAAAA',
+            ], $override))->assertRedirect();
+            $this->assertNull(
+                DB::table('tasks')->where('type', 'backup.pull')->first(),
+                'rejected: ' . json_encode($override)
+            );
+        }
+    }
+
+    public function test_remote_pull_password_needs_the_password_and_key_needs_the_key(): void
+    {
+        $root = $this->userWithRole('root');
+        $base = [
+            'host'             => 'old.example.com',
+            'user'             => 'root',
+            'remote_path'      => '/home/cpmove-alicehost.tar.gz',
+            'host_fingerprint' => 'SHA256:8Ph7mQ0FakeFingerprintAAAAAAAAAAAAAAAAAAAAAAA',
+        ];
+        $this->asPanelUser($root)->post('/transfer-tool/pull', $base + ['auth' => 'password'])
+            ->assertSessionHasErrors('password');
+        $this->asPanelUser($root)->post('/transfer-tool/pull', $base + ['auth' => 'key'])
+            ->assertSessionHasErrors('private_key');
+        $this->assertNull(DB::table('tasks')->where('type', 'backup.pull')->first());
+    }
+
+    public function test_transfer_tool_page_offers_the_remote_pull_form(): void
+    {
+        $root = $this->userWithRole('root');
+        $this->asPanelUser($root)->get('/transfer-tool')
+            ->assertOk()
+            ->assertSee('Purane server se archive khinch lao')
+            ->assertSee(route('transfer-tool.probe'), false)
+            ->assertSee(route('transfer-tool.pull'), false)
+            ->assertSee('Fingerprint lao');
+    }
 }

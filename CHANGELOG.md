@@ -5,6 +5,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **S10 — remote pull: cpmove archive purane server se SSH se (5 Oct)** — panel **0.72.0**, agent **0.65.0**.
+  Migration ka pehla kadam abhi haath se tha: admin `cpmove-<user>.tar.gz` purane server se copy karke
+  aisi jagah rakhta tha jahan agent padh sake (allowlist = `/home` + `/usr/local/alphacp`), jabki cPanel
+  archive aam taur par `/root`, `/backup` ya `/home` me hote hain. Ab **Transfer Tool** page par
+  "Purane server se archive khinch lao" se archive seedha scp se **`/usr/local/alphacp/incoming`** me aa
+  jata hai — phir wahi import flow chalta hai. Naya agent task `backup.pull` (mutating, `_confirm`):
+    - **do kadam**: `probe: true` sirf host key fingerprint laata hai (koi download nahi) — UI wo dikhata
+      hai, admin verify karke pin karta hai, phir asli pull. Fingerprint badle (MITM / server reinstall)
+      to `MISMATCH` par refuse; bina pin ke bhi refuse (`accept_host_key=true` ho to warning ke saath).
+    - **secrets kabhi argv me nahi**: inline private key 0600 temp file me, password `sshpass -f <0600>`
+      se; dono `finally` me zero-fill + delete. Job history se `private_key` bhi scrub hota hai.
+    - **atomic download**: bytes `.acp-pull-<stamp>.part` me, (optional) sha256 match ke baad hi rename —
+      adhoora archive kabhi import ko nahi milta; fail ho to `.part` saaf.
+    - validation: host (FQDN/IP, `-oProxyCommand` jaisi smuggling reject), remote path (absolute,
+      `..` ke bina), dest name (sirf `.tar/.tar.gz/.tgz`), port, `max_kbps` (bandwidth limit), overwrite.
+  Updater `openssh-client` install karta hai (`sshpass` best-effort — na ho to key auth hi chalega).
+  Tests: provision-sim **120/109 → 120/0** (11 naye agent tests), panel **—**, update-sim **—** (naya U11).
+
 - **S10 — MySQL dumps from a cPanel archive (4 Oct)** — panel **0.71.0**, agent **0.64.0**.
   WHM Transfer or Restore page ka naya checkbox (**default on**) archive ke `mysql/<user>_<db>.sql`
   (`.sql.gz` bhi) dumps ko **asli MariaDB** me restore karta hai — `<account>_<db>` database banta hai

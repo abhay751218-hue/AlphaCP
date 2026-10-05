@@ -196,6 +196,75 @@ final class BackupProvisioner
         return Paneld::enqueue('db.restore', $payload);
     }
 
+    /**
+     * S10 remote pull: ask the agent for the SSH host key fingerprint of the old
+     * server WITHOUT downloading anything, so the operator can compare it
+     * against something they trust before a single byte is transferred.
+     *
+     * @param array{host:string,port:int,user:string,remote_path:string} $spec
+     */
+    public static function enqueueRemoteProbe(array $spec): int
+    {
+        return Paneld::enqueue('backup.pull', [
+            'host'          => $spec['host'],
+            'port'          => $spec['port'],
+            'user'          => $spec['user'],
+            'remote_path'   => $spec['remote_path'],
+            'probe'         => true,
+            '_confirm'      => 'backup.pull',
+        ]);
+    }
+
+    /**
+     * S10 remote pull: fetch the archive over scp into the import drop dir.
+     *
+     * The host key MUST be pinned (the probe result) unless the operator
+     * explicitly ticks `accept_host_key` — the agent refuses either way if the
+     * fingerprint does not match what the server presents. A password is sent
+     * only for this one task and the agent scrubs it from the stored payload.
+     *
+     * @param array{host:string,port:int,user:string,remote_path:string} $spec
+     * @param array<string, mixed> $options
+     */
+    public static function enqueueRemotePull(array $spec, array $options = []): int
+    {
+        $payload = [
+            'host'        => $spec['host'],
+            'port'        => $spec['port'],
+            'user'        => $spec['user'],
+            'remote_path' => $spec['remote_path'],
+            'auth'        => ($options['auth'] ?? 'key') === 'password' ? 'password' : 'key',
+            '_confirm'    => 'backup.pull',
+        ];
+        $fingerprint = trim((string) ($options['host_fingerprint'] ?? ''));
+        if ($fingerprint !== '') {
+            $payload['host_fingerprint'] = $fingerprint;
+        } elseif (($options['accept_host_key'] ?? false) === true) {
+            $payload['accept_host_key'] = true;
+        }
+        if (trim((string) ($options['private_key'] ?? '')) !== '') {
+            $payload['private_key'] = (string) $options['private_key'];
+        }
+        if (trim((string) ($options['password'] ?? '')) !== '') {
+            $payload['password'] = (string) $options['password'];
+        }
+        if (trim((string) ($options['dest_name'] ?? '')) !== '') {
+            $payload['dest_name'] = (string) $options['dest_name'];
+        }
+        if (trim((string) ($options['sha256'] ?? '')) !== '') {
+            $payload['sha256'] = (string) $options['sha256'];
+        }
+        $maxKbps = (int) ($options['max_kbps'] ?? 0);
+        if ($maxKbps > 0) {
+            $payload['max_kbps'] = min($maxKbps, 1000000);
+        }
+        if (($options['overwrite'] ?? false) === true) {
+            $payload['overwrite'] = true;
+        }
+
+        return Paneld::enqueue('backup.pull', $payload);
+    }
+
     public static function enqueueReview(string $username, string $status): int
     {
         return Paneld::enqueue('backup.review', [
