@@ -22,7 +22,7 @@ PHP_BIN="${ACP_PHP:-$(command -v php8.4 || command -v php || true)}"
 PANELD="${ACP_VERIFY_PANELD:-${ACP_HOME}/agent/bin/paneld}"
 ENVFILE="${ACP_HOME}/etc/database.env"
 CLIENT="${ACP_VERIFY_CLIENT:-/usr/bin/mariadb}"; [[ -x "${CLIENT}" ]] || CLIENT="${ACP_VERIFY_CLIENT:-/usr/bin/mysql}"
-WORK="${ACP_VERIFY_WORK:-/tmp/acp-s10-check}"
+WORK="${ACP_VERIFY_WORK:-${ACP_HOME}/var/s10-verify}"
 
 PASS=0; FAIL=0; TASK_IDS=""; LAST_TASK_ID=""; LAST_ERR=""; DONE=0; TEMP_ACCOUNT=0
 ok()   { PASS=$((PASS+1)); printf '  \033[32mok\033[0m   %s\n' "$1"; }
@@ -92,6 +92,33 @@ trap cleanup EXIT
 
 [[ -z "$(sql "SHOW DATABASES LIKE '${DB1}'")" ]] || die "${DB1} pehle se maujood hai — pehle hatao"
 [[ -z "$(sql "SHOW DATABASES LIKE '${DB2}'")" ]] || die "${DB2} pehle se maujood hai — pehle hatao"
+
+# Archive wahin banni chahiye jahan se agent padh sakta hai: `db.restore` ka PathGuard
+# sirf allowlisted roots se padhta hai (/home, /usr/local/alphacp). /tmp allowlisted NAHI
+# hai — wahan archive banane par task "cPanel archive path is outside the allowlisted
+# roots" ke saath reject ho jata hai (0.71.1 me yahi check pehle hi pakad leta hai).
+ALLOW_ROOTS="${ACP_VERIFY_ALLOW_ROOTS:-}"
+if [[ -z "${ALLOW_ROOTS}" ]]; then
+  ALLOW_ROOTS="$("${PHP_BIN}" -r '$c = @require "'"${ACP_HOME}"'/agent/config/tasks.php"; $p = (is_array($c) && isset($c["db.restore"]["paths"])) ? $c["db.restore"]["paths"] : ["/home", "/usr/local/alphacp"]; echo implode(":", $p);' 2>/dev/null | tail -1)"
+fi
+[[ -n "${ALLOW_ROOTS}" ]] || ALLOW_ROOTS="/home:/usr/local/alphacp"
+
+mkdir -p "${WORK}" || die "work dir ban nahi paya: ${WORK}"
+WREAL="$(cd "${WORK}" 2>/dev/null && pwd -P)"
+[[ -n "${WREAL}" ]] || die "work dir resolve nahi hua: ${WORK}"
+INSIDE=0
+IFS=':' read -r -a ALLOW_ARR <<< "${ALLOW_ROOTS}"
+for r in "${ALLOW_ARR[@]}"; do
+  [[ -n "${r}" ]] || continue
+  rr="$(cd "${r}" 2>/dev/null && pwd -P)" || continue
+  [[ -n "${rr}" ]] || continue
+  if [[ "${WREAL}" == "${rr}" || "${WREAL}" == "${rr}/"* ]]; then INSIDE=1; break; fi
+done
+if [[ "${INSIDE}" == "1" ]]; then
+  ok "archive dir allowlisted hai: ${WREAL}"
+else
+  die "archive dir ${WREAL} db.restore ki allowlist (${ALLOW_ROOTS}) ke bahar hai — ACP_VERIFY_WORK se koi allowlisted jagah do (jaise ${ACP_HOME}/var/s10-verify)"
+fi
 
 if [[ "${TEMP_ACCOUNT}" == "1" ]]; then
   info "koi account nahi mila — temp account '${ACCT}' banaya ja raha hai (ant me terminate)"

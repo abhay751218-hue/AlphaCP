@@ -107,6 +107,12 @@ if type_ == 'db.drop':
 if type_ == 'db.restore':
     if payload.get('_confirm') != 'db.restore': emit('failed', error="destructive task 'db.restore' requires _confirm='db.restore'", code=1)
     archive = payload['archive_path']
+    # PathGuard mirror: asli agent (db.restore paths) sirf allowlisted roots padhta hai
+    import os.path as _p
+    _roots = [r for r in os.environ.get('ACP_VERIFY_ALLOW_ROOTS', '/home:/usr/local/alphacp').split(':') if r]
+    _real = _p.realpath(archive)
+    if not any(_real == _p.realpath(r) or _real.startswith(_p.realpath(r).rstrip('/') + '/') for r in _roots):
+        emit('failed', error='cPanel archive path is outside the allowlisted roots', code=1)
     if not os.path.isfile(archive): emit('failed', error='archive missing', code=1)
     import hashlib
     if payload.get('sha256') and hashlib.sha256(open(archive, 'rb').read()).hexdigest() != payload['sha256']:
@@ -149,7 +155,7 @@ chmod 0755 "${W}/bin/mariadb" "${W}/home/agent/bin/paneld"
 
 export ACP_HOME="${W}/home" ACP_PHP=/bin/bash ACP_VERIFY_ALLOW_NONROOT=1
 export ACP_VERIFY_PANELD="${W}/home/agent/bin/paneld" ACP_VERIFY_CLIENT="${W}/bin/mariadb"
-export ACP_VERIFY_WORK="${W}/check"
+export ACP_VERIFY_ALLOW_ROOTS="/home:/usr/local/alphacp:${W}/home"
 unset ACP_VERIFY_ACCOUNT ACP_VERIFY_NO_CREATE 2>/dev/null || true
 
 PASS=0; FAIL=0
@@ -181,6 +187,23 @@ echo "${OUT2}" | grep -E 'ok |FAIL|LIVE CHECK' | sed 's/^/     /' | head -20
 chk "run 2 exit != 0" "[[ ${RC2} -ne 0 ]]"
 chk "run 2 me 'nahi bana' FAIL" "grep -q 'nahi bana' <<<\"\${OUT2}\""
 chk "run 2 me fail count > 0" "! grep -q '0 fail' <<<\"\${OUT2}\""
+
+# ------------------------------------------------------------------ run 3 -----
+# Regression: archive dir allowlist ke BAHAR (/tmp) ho to script ko archive banane se
+# PEHLE hi rukna chahiye — warna har db.restore "outside the allowlisted roots" ke saath
+# reject hota hai (yehi asli server par 0.71.0 check ka failure tha).
+echo
+echo "-- run 3: archive dir /tmp (allowlist ke bahar) -> turant rukna chahiye"
+reset_state
+set +e
+OUT3="$(ACP_VERIFY_WORK=/tmp/acp-s10sim-outside bash tools/verify/s10-mysql-restore-check.sh 2>&1)"; RC3=$?
+set -e
+echo "${OUT3}" | sed 's/^/     /'
+chk "run 3 exit != 0" "[[ ${RC3} -ne 0 ]]"
+chk "run 3 allowlist message" "grep -q 'allowlist' <<<\"${OUT3}\""
+chk "run 3 me koi task hi nahi chala" "! grep -q 'db.restore task success' <<<\"${OUT3}\""
+chk "run 3 state saaf" "[[ \$(python3 -c 'import json,os; s=json.load(open(os.environ[\"ACP_FAKE_STATE\"])); print(len(s[\"databases\"]), len(s[\"accounts\"]))') == '1 0' ]]"
+rm -rf /tmp/acp-s10sim-outside 2>/dev/null || true
 
 echo
 echo "=== S10-MYSQL-RESTORE-SIM: ${PASS} pass, ${FAIL} fail ==="

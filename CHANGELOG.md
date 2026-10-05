@@ -21,7 +21,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
     - result me per-database report (bytes, created?, dump name) + skipped reasons; Review Transfers
       page ab `db.restore` jobs bhi dikhata hai.
   Migration `2026_10_04_000055` (`transfer_restores.mysql`, `.mysql_only`). Updater me S10 ship-check.
-  Tests: panel **—** , update-sim **234/234** (naya U10: db.restore + panel wiring + migration), provision-sim **109/109**, mysql-sim PASS (S8), commands-check 10/0.
+  **Live-check fix (tools only, koi naya release nahi):** `s10-mysql-restore-check.sh` archive
+  `/tmp` me banata tha, jabki `db.restore` ka PathGuard sirf `/home` + `/usr/local/alphacp`
+  allowlisted roots padhta hai — isliye live check ka har `db.restore` reject ho raha tha. Ab
+  archive default `${ACP_HOME}/var/s10-verify` me banta hai aur script **archive banane se pehle**
+  allowlist check karke saaf message ke saath rukti hai. Sim me naya **run 3** ye regression
+  pakadta hai (fake paneld bhi ab PathGuard mirror karta hai): s10-mysql-restore-sim **12/0**,
+  live check **18 pass / 0 fail**.
+  Tests: panel **437/0** (+6 wasm-skip), update-sim **234/234** (naya U10: db.restore + panel wiring + migration), provision-sim **109/109**, mysql-sim PASS (S8), commands-check 10/0.
 
 - **0.70.1 — live-verify fix: `useradd` GECOS colon (4 Oct)** — panel **0.70.0**, agent **0.63.0**.
   Asli server par S8 live-check ne pakda ki **panel ka "Create Account" kabhi kaam nahi karta tha**:
