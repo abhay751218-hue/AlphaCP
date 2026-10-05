@@ -1,21 +1,21 @@
 # ROADMAP — 16 Steps to Full cPanel Parity
 
 **Legend:** ✅ done · 🟡 in progress · ⏳ pending
-**Updated:** 2026-09-28
+**Updated:** 2026-10-03
 
 | Step | Deliverable | Status |
 |---|---|---|
 | **S0** | Blueprint: requirements, architecture, DB schema, security matrix, coding standards, license design, installer design, ADRs | ✅ **DONE** |
-| **S1** | Server base stack + **one-click installer** (Phase 1-2) + `alphacp` CLI basics (`status`, `doctor`) | ⏳ next |
-| **S2** | Panel core: auth/RBAC/2FA/audit, **paneld agent**, task queue, license client + trial, base UI shell, systemd units | 🔄 **2A ✅** · **2B-1 ✅** · **2B-2 ✅** (password + 2FA + RBAC pages verified) · **2C 🟡** (license client/trial deployed; license-server API pending) |
-| **S3** | Provisioning engine: account create/suspend/unsuspend/terminate/limits (+ rollback), account UI | ⏳ |
-| **S4** | Packages & limits manager (+ feature lists, cPanel-compatible limit keys) | ⏳ |
-| **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | ⏳ |
-| **S6** | File Manager, disk usage, FTP (+ jailed shell), SSH keys, Git deploys, trash | ⏳ |
-| **S7** | Email suite: mailboxes/quotas, forwarders, autoresponders, filters, spam/virus, deliverability (SPF/DKIM/DMARC), lists, webmail | ⏳ |
-| **S8** | Databases: create/manage, users, privileges, size limits, phpMyAdmin SSO, remote access | ⏳ |
-| **S9** | DNS: zone editor, templates, nameservers, cluster | ⏳ |
-| **S10** | Backup/restore + schedules + remote destinations + **cPanel backup import** | ⏳ |
+| **S1** | Server base stack + **one-click installer** (Phase 1-2) + `alphacp` CLI basics (`status`, `doctor`) | 🟡 **~95%** — server stack/panel installed; CLI/browser acceptance and installer re-verification remain |
+| **S2** | Panel core: auth/RBAC/2FA/audit, **paneld agent**, task queue, license client + trial, base UI shell, systemd units | ✅ **2A/2B** · **2C 🟡** (license client/trial deployed; license-server API pending) |
+| **S3** | Provisioning engine: account create/suspend/unsuspend/terminate/limits (+ rollback), account UI | ✅ **deployed 0.4.0** (dedicated IP later) |
+| **S4** | Packages & limits manager (+ feature lists, cPanel-compatible limit keys) | ✅ **deployed 0.5.0** |
+| **S5** | Website layer: domains (addon/sub/parked/redirect), vhost engine, MultiPHP, SSL/AutoSSL, cron, error pages | 🟡 **0.66.0** — account **aur per-domain** MultiPHP/INI done; baaki S5 items (Web Template Editor etc.) pending |
+| **S6** | File Manager, disk usage, FTP (+ jailed shell), SSH keys, Git deploys, trash | 🟡 **FM + Privacy + Disk Usage + SSH (0.18.0)** — zip/FTP/jail later |
+| **S7** | Email suite: mailboxes/quotas, forwarders, autoresponders, filters, spam/virus, deliverability (SPF/DKIM/DMARC), lists, webmail | 🟡 **through Webmail UI/config (0.35.0)** — real Exim/Dovecot provisioning and mail store still pending; virus/ClamAV later |
+| **S8** | Databases: create/manage, users, privileges, size limits, phpMyAdmin SSO, remote access | 🟡 **through Remote MySQL UI/config (0.39.0)** — real database/user provisioning and SSO still pending |
+| **S9** | DNS: zone editor, templates, nameservers, cluster | 🟡 **through Nameserver Selection (0.54.0)** — JSON/config layer; BIND write/reload and cluster still pending |
+| **S10** | Backup/restore + schedules + remote destinations + **cPanel backup import** | 🟡 **0.65.0: real verified home tar.gz + authenticated download; other UI rows mostly JSON-only** — mail/DB backups depend on S7/S8; restore, schedule, remote, transfer/import remain pending |
 | **S11** | Monitoring: usage sync, bandwidth, resource limits (cgroups), alerts, stats, health checks | ⏳ |
 | **S12** | 💳 **Billing API layer**: WHM API 1 core set (exact shape), native REST v1, webhooks, API tokens UI | ⏳ |
 | **S13** | Security suite: WAF (ModSecurity), malware scan, brute-force protection, IP blocker, 2FA enforcement, security center | ⏳ |

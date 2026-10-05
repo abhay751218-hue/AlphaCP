@@ -53,7 +53,7 @@ Legend: ✅ full · 🟡 own scope only · ⛔ none
 | ssh.keys.* | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
 | cron.* | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
 | ssl.issue / install / renew | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
-| backup.run / restore | ✅ | ✅ | ⛔ | 🟡 | 🟡 (own) |
+| backup.archive / restore | ✅ | ✅ | ⛔ | 🟡 | 🟡 (own) |
 | backup.serverWide | ✅ | ✅ | ⛔ | ⛔ | ⛔ |
 | apps.install (one-click installer) | ✅ | ✅ | ⛔ | 🟡 | 🟡 |
 | security.scan / quarantine | ✅ | ✅ | 🟡 (read) | 🟡 own accts | 🟡 own acct |

@@ -41,6 +41,22 @@ EOF
 echo '<?php return ["db" => "SuperSecretDb123"];' > ${PANEL}/app/Leak.php           # leak attempt 1
 echo '<?php // token ghp_abcdefghijklmnopqrstuvwxyz0123456789AB' > ${PANEL}/config/leak2.php   # leak attempt 2
 echo '<?php // license server (sim)' > /opt/alphacp-license/server.php
+# v1.3 regression fixtures:
+#  * sahi code folder jinka naam backup/ssl hai -> snapshot me jaana CHAHIYE
+#  * test-fixture PEM (chhoti dummy line)      -> jaana CHAHIYE
+#  * asli jaisa PEM (lambi base64 body)        -> NAHI jaana chahiye
+mkdir -p ${PANEL}/resources/views/backup ${PANEL}/resources/views/ssl
+printf '{{-- backup view sim --}}\n' > ${PANEL}/resources/views/backup/index.blade.php
+printf '{{-- ssl view sim --}}\n' > ${PANEL}/resources/views/ssl/index.blade.php
+printf '<?php\n// fixture\nconst FIXTURE_PEM = "-----BEGIN PRIVATE KEY-----\\nLE-fake\\n-----END PRIVATE KEY-----";\n' > ${PANEL}/app/Support/FixtureKey.php
+{
+  printf '<?php\n// asli key jaisa (sim) — sirf body lambi hai\n'
+  printf '// -----BEGIN PRIVATE KEY-----\n'
+  printf '// MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7VJTUt9Us8cKj\n'
+  printf '// MzEfYyjiWA4R4/M2bS1GB4t7NXp98C3SC6dVMvDuictGeurT8jNbvJZHtCSuYEvu\n'
+  printf '// NMoSfm76oqFvAp8Gy0iz5sxjZmSnXyCdPEovGhLa0VzMaQ8s+CLOyS56YyCFGeJZ\n'
+  printf '// -----END PRIVATE KEY-----\n'
+} > ${PANEL}/config/real_pem_fixture.php
 printf 'server { listen 8090 ssl; root %s/public; }\n' "${PANEL}" > /etc/nginx/sites-available/alphacp-panel.conf
 printf '#!/bin/sh\necho alphacp cli\n' > ${ACP}/bin/alphacp; chmod +x ${ACP}/bin/alphacp
 # v1.1: releases/ (backup/failed panel copies) + license/trial store
@@ -66,12 +82,15 @@ count()     { git -C "${REMOTE}" rev-list --count main; }
 echo; echo "=== Run 1: pehla sync ==="
 rc="$(run_sync 1)"; tail -4 /tmp/syncsim/run-1.out | sed 's/^/    | /'
 [[ "$rc" == 0 ]] && grep -q "SYNC OK" /tmp/syncsim/run-1.out && t_ok "sync OK (exit 0)" || { t_fail "sync fail rc=$rc"; cat /tmp/syncsim/run-1.out; }
-grep -q "v1.2" /tmp/syncsim/run-1.out && t_ok "banner v1.2" || t_fail "banner"
+grep -q "v1.3" /tmp/syncsim/run-1.out && t_ok "banner v1.3" || t_fail "banner"
 for f in server-snapshot/STATE.md server-snapshot/README.md server-snapshot/LAST-SYNC.md server-snapshot/MANIFEST.txt \
          server-snapshot/files/usr/local/alphacp/panel/app/Services/License/LicenseManager.php \
          server-snapshot/files/usr/local/alphacp/panel/routes/web.php \
          server-snapshot/files/usr/local/alphacp/bin/alphacp \
          server-snapshot/files/opt/alphacp-license/server.php \
+         server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/index.blade.php \
+         server-snapshot/files/usr/local/alphacp/panel/resources/views/ssl/index.blade.php \
+         server-snapshot/files/usr/local/alphacp/panel/app/Support/FixtureKey.php \
          server-snapshot/files/etc/nginx/sites-available/alphacp-panel.conf \
          server-snapshot/files/etc/php/8.4/fpm/pool.d/alphacp.conf \
          server-snapshot/files/etc/systemd/system/php8.4-fpm.service.d/alphacp-panel.conf; do
@@ -81,12 +100,13 @@ for f in files/usr/local/alphacp/panel/.env files/usr/local/alphacp/etc files/us
          files/usr/local/alphacp/panel/vendor files/usr/local/alphacp/panel/storage \
          files/usr/local/alphacp/license/keys/signing.pem files/usr/local/alphacp/license/embedded_key.php \
          files/usr/local/alphacp/panel/app/Leak.php files/usr/local/alphacp/panel/config/leak2.php \
+         files/usr/local/alphacp/panel/config/real_pem_fixture.php \
          files/usr/local/alphacp/panel/database/panel.sqlite; do
   tree_has "server-snapshot/$f" && t_fail "LEAK/heavy push ho gaya: $f" || t_ok "nahi gaya (sahi): $f"
 done
 # poore GitHub tree me koi server secret?
 LEAKS=0
-for s in "$DBPASS" "$LIC" "$APPKEY" "$ADMINPW" "BEGIN PRIVATE KEY" "ghp_abcdefghij"; do
+for s in "$DBPASS" "$LIC" "$APPKEY" "$ADMINPW" "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC7" "ghp_abcdefghij"; do
   if git -C "${REMOTE}" grep -qF -- "$s" main -- server-snapshot; then t_fail "SECRET GitHub par: ${s:0:6}…"; LEAKS=1; fi
 done
 [[ $LEAKS == 0 ]] && t_ok "server-snapshot me ek bhi secret value nahi (DB pass, license key, APP_KEY, admin pw, private key, token)"
@@ -98,6 +118,8 @@ grep -q "alphacp:admin-password" <<<"$ST" && t_ok "STATE: custom artisan command
 grep -q "LicenseManager.php" <<<"$ST" && t_ok "STATE: license files list" || t_fail "STATE: license list nahi"
 grep -q "license.env  keys: LICENSE_KEY LICENSE_SERVER TRIAL_DAYS" <<<"$ST" && t_ok "STATE: secret file ke sirf KEY naam" || t_fail "STATE: secret keys list nahi"
 grep -q "Leak.php  (server secret value mila)" <<<"$ST" && t_ok "STATE: skipped leak file report" || t_fail "STATE: skip report nahi"
+grep -q "real_pem_fixture.php  (secret jaisa pattern)" <<<"$ST" && t_ok "v1.3: asli PEM body wali file skip + report" || t_fail "v1.3: PEM skip report nahi"
+grep -q "panel/resources/views/backup/index.blade.php" <<<"$ST" && t_fail "v1.3: backup view skip list me (prune abhi bhi galat)" || t_ok "v1.3: backup view skip nahi hua"
 grep -q "panel http    : 200" <<<"$ST" && t_ok "STATE: panel http 200" || t_fail "STATE: panel http"
 tree_has server-snapshot/files/usr/local/alphacp/releases && t_fail "releases/ snapshot me chala gaya" || t_ok "v1.1: releases/ snapshot me NAHI"
 grep -q "panel-backup-20260928224358" <<<"$ST" && grep -q "panel-failed-20260928223644" <<<"$ST" && t_ok "v1.1: STATE me releases ke naam" || t_fail "STATE: releases naam nahi"
@@ -160,7 +182,9 @@ rm -f /tmp/syncsim/key-added
 grep -q "timer mode" /tmp/syncsim/run-7.out && t_ok "timer mode: fast fail" || { t_fail "timer mode"; tail -5 /tmp/syncsim/run-7.out; }
 
 echo; echo "=== Run 8 (v1.2): alphacp-sync get — deploy key se file (private repo me bhi) ==="
-GC="$(git -C "${REMOTE}" rev-parse refs/heads/arena/01a0ea3e-alphacp 2>/dev/null || git -C "${REMOTE}" rev-parse main)"
+# --verify --quiet: ref na mile to rev-parse apna argument stdout par nahi chhapta
+GC="$(git -C "${REMOTE}" rev-parse --verify --quiet refs/heads/arena/01a0ea3e-alphacp \
+      || git -C "${REMOTE}" rev-parse --verify --quiet main)"
 GSHA="$(git -C "${REMOTE}" show "${GC}:START-HERE.md" | sha256sum | cut -d' ' -f1)"
 rm -rf /tmp/syncsim/getwork /tmp/syncsim/got*
 run_get() { ( cd /root && SYNC_CONF_DIR=/tmp/syncsim/conf SYNC_WORK_DIR=/tmp/syncsim/getwork SYNC_REPO_URL="file://${REMOTE}" bash "${SYNC}" get "$@" ) 2>&1; }
@@ -189,6 +213,8 @@ o="$( cd /root && SYNC_CONF_DIR=/tmp/syncsim/noconf SYNC_WORK_DIR=/tmp/syncsim/g
 [[ $rc != 0 ]] && grep -q "pehle setup" <<<"$o" && t_ok "get: deploy key na ho -> setup ka message" || { t_fail "get no key"; echo "$o"; }
 
 # cleanup nakli files (fake server)
-rm -f ${PANEL}/app/Leak.php ${PANEL}/config/leak2.php
+rm -f ${PANEL}/app/Leak.php ${PANEL}/config/leak2.php ${PANEL}/config/real_pem_fixture.php \
+      ${PANEL}/app/Support/FixtureKey.php ${PANEL}/resources/views/backup/index.blade.php \
+      ${PANEL}/resources/views/ssl/index.blade.php
 echo; echo "=== RESULT: ${PASS} pass, ${FAIL} fail ==="
 [[ ${FAIL} -eq 0 ]]
