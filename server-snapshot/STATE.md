@@ -117,15 +117,16 @@ agent-backup-20261005100819
 agent-backup-20261005103341
 agent-backup-20261005110804
 agent-backup-20261005114249
-panel-backup-20261005103341
+agent-backup-20261005120447
 panel-backup-20261005110804
 panel-backup-20261005114249
+panel-backup-20261005120447
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -144,16 +145,11 @@ redis-server               active
 ## Listening ports
 ```
 22	sshd
-25	exim4
 53	named
 80	apache2
-110	dovecot
-143	dovecot
 443	apache2
 783	spamd
 953	named
-993	dovecot
-995	dovecot
 3306	mariadbd
 6379	redis-server
 8090	nginx
