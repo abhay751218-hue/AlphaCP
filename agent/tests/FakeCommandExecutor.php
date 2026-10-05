@@ -94,6 +94,8 @@ final class FakeCommandExecutor implements CommandExecutor
     public int $rndcCalls = 0;
     /** @var list<string>|null last `rndc` argv */
     public ?array $rndcArgv = null;
+    /** @var list<list<string>> har `rndc` call ka argv (reconfig/reload ka farq dikhane ke liye) */
+    public array $rndcArgvs = [];
     /** stdout the fake `dig` returns (the real SOA/NS answer we verify against) */
     public string $digStdout = '';
     /** @var list<string>|null last `dig` argv */
@@ -588,6 +590,7 @@ final class FakeCommandExecutor implements CommandExecutor
     {
         $this->rndcCalls++;
         $this->rndcArgv = $argv;
+        $this->rndcArgvs[] = $argv;
 
         return new CommandResult($argv, 0, 'server reload successful\n', '', 1);
     }

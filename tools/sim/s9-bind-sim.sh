@@ -103,6 +103,30 @@ esac
 exit 0
 SH
 
+cat > "${W}/bin/systemctl" <<'SH'
+#!/usr/bin/env bash
+# sirf sim ke liye: systemd nahi hai, to "named chal raha hai" maan lo
+case "$1" in
+  is-active) echo "active"; exit 0 ;;
+  restart|start|enable) exit 0 ;;
+  status) echo "named.service - BIND Domain Name Server (sim)"; echo "     Active: active (running)"; exit 0 ;;
+esac
+exit 0
+SH
+
+cat > "${W}/bin/journalctl" <<'SH'
+#!/usr/bin/env bash
+echo "(sim: journalctl nahi hai)"
+exit 0
+SH
+
+cat > "${W}/bin/ss" <<'SH'
+#!/usr/bin/env bash
+echo "udp   UNCONN 0 0 127.0.0.1:53 0.0.0.0:*"
+echo "tcp   LISTEN 0 10 127.0.0.1:53 0.0.0.0:*"
+exit 0
+SH
+
 chmod +x "${W}/bin/"*
 
 # ------------------------------------------------------------- fake paneld -----
@@ -356,7 +380,8 @@ sim_fail() { FAIL=$((FAIL+1)); printf '  \033[31mFAIL\033[0m %s\n' "$1"; }
 
 run_live() {  # $1 = label, $2 = expected result (pass|fail)
   local label="$1" expect="$2" out rc
-  out="$(ACP_VERIFY_ALLOW_NONROOT=1 \
+  out="$(PATH="${W}/bin:${PATH}" \
+         ACP_VERIFY_ALLOW_NONROOT=1 \
          ACP_HOME="${W}/acp-home" \
          ACP_VERIFY_PANELD="${W}/fake_paneld" \
          ACP_VERIFY_DOMAIN="acp-bind-check.test" \

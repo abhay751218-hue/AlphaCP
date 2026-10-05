@@ -3935,6 +3935,7 @@ function acp_bind_harness(): array
     putenv('ACP_BIND_DIG=' . $root . '/bin/dig');
     putenv('ACP_STATE_ROOT=' . $root . '/alphacp');
     putenv('ACP_ACCOUNTS_ROOT=' . $root . '/home');
+    putenv('ACP_BIND_DIG_WAIT=1');   // tests me intezaar nahi (asli server 0.7s leta hai)
 
     $cmd = new FakeCommandExecutor();
     $cmd->hostnameI = "203.0.113.5 10.0.0.7\n";
@@ -3965,6 +3966,7 @@ function acp_bind_cleanup(array $harness): void
     foreach ([
         'ACP_BIND_CONF', 'ACP_BIND_OPTIONS', 'ACP_BIND_ZONES', 'ACP_BIND_ZONE_DIR',
         'ACP_BIND_CHECKCONF', 'ACP_BIND_CHECKZONE', 'ACP_BIND_RNDC', 'ACP_BIND_DIG',
+        'ACP_BIND_DIG_WAIT',
     ] as $name) {
         putenv($name);
     }
@@ -4149,6 +4151,63 @@ test('dns.bind write — serial har baar badhta hai', function (): void {
     assert_true($b['serial'] > $a['serial'], 'naya serial purane se bada hona chahiye');
     $body = (string) file_get_contents($b['file']);
     assert_true(str_contains($body, (string) $b['serial']), 'zone me naya serial hona chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — NAYA zone `rndc reconfig` ke bina serve nahi hota', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $h['cmd']->digStdout = "ns1.alice.test. hostmaster.alice.test. 2025090101 3600 600 1209600 300";
+    $h['cmd']->rndcArgvs = [];
+
+    // pehli baar = naya zone: named ko config dobara padhni padti hai
+    (new BindSetup())->handle([
+        'action' => 'write',
+        'domain' => 'alice.test',
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    $sawReconfig = false;
+    foreach ($h['cmd']->rndcArgvs as $argv) {
+        if (in_array('reconfig', $argv, true)) {
+            $sawReconfig = true;
+        }
+    }
+    assert_true($sawReconfig, 'naye zone ke liye rndc reconfig chalna hi chahiye (warna dig khamosh)');
+
+    // doosri baar = zone maujood, dig jawab de raha -> reconfig ki zaroorat nahi
+    $h['cmd']->rndcArgvs = [];
+    (new BindSetup())->handle([
+        'action' => 'write',
+        'domain' => 'alice.test',
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    $reconfigAgain = false;
+    foreach ($h['cmd']->rndcArgvs as $argv) {
+        if (in_array('reconfig', $argv, true)) {
+            $reconfigAgain = true;
+        }
+    }
+    assert_true(!$reconfigAgain, 'maujooda zone par reconfig nahi chalna chahiye');
+    acp_bind_cleanup($h);
+});
+
+test('dns.bind write — named chalu na ho to bhi sach boli jaati hai (verified=false)', function (): void {
+    $h = acp_bind_harness();
+    (new BindSetup())->handle(['action' => 'setup'], $h['ctx']);
+    // systemd khamosh: is-active fail -> named_running false
+    $h['cmd']->failWhenContains = 'is-active';
+    $status = (new BindSetup())->handle(['action' => 'status'], $h['ctx']);
+    assert_true(($status['named_running'] ?? true) === false, 'named_running false hona chahiye');
+    // dig khamosh -> verified false (jhoothi "ok" nahi)
+    $h['cmd']->failWhenContains = null;
+    $h['cmd']->digStdout = '';
+    $out = (new BindSetup())->handle([
+        'action' => 'write',
+        'domain' => 'alice.test',
+        'records' => acp_bind_records('alice.test'),
+    ], $h['ctx']);
+    assert_true($out['verified'] === false);
+    assert_true($out['dig_soa'] === '');
     acp_bind_cleanup($h);
 });
 

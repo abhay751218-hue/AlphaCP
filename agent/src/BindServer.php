@@ -71,8 +71,9 @@ final class BindServer
     public function status(): array
     {
         $out = [
-            'installed'   => $this->installed(),
-            'checkconf'   => null,
+            'installed'     => $this->installed(),
+            'named_running' => false,
+            'checkconf'     => null,
             'rndc'        => null,
             'zones'       => count($this->zoneFiles()),
             'zone_dir'    => $this->zoneDir(),
@@ -82,6 +83,8 @@ final class BindServer
         if (!$out['installed']) {
             return $out + ['error' => 'bind9 install nahi hai (updater install karta hai)'];
         }
+
+        $out['named_running'] = $this->namedRunning();
 
         $conf = $this->cmd->run([self::checkconfBin(), $this->confFile()], self::CMD_TIMEOUT);
         $out['checkconf'] = $conf->ok() ? 'ok' : trim($conf->stderr);
@@ -154,10 +157,16 @@ final class BindServer
         }
 
         $status = $this->status();
+        $running = $this->namedRunning();
+        if (!$running) {
+            // jab tak named nahi chalega, zone file likhne ka koi matlab nahi
+            $this->log->warning('bind: config theek hai par named active nahi hai — zone serve nahi hoga');
+        }
 
         return [
-            'ok'          => true,
-            'listen'      => $listen,
+            'ok'            => true,
+            'named_running' => $running,
+            'listen'        => $listen,
             'zone_dir'    => $dir,
             'include'     => $this->zonesFile(),
             'checkconf'   => $status['checkconf'] ?? null,
@@ -212,6 +221,7 @@ final class BindServer
         }
 
         $final = $this->zoneDir() . '/db.' . $domain;
+        $existed = is_file($final);
         if (!@rename($tmp, $final)) {
             $this->cleanupTemp();
             throw new TaskRejectedException("zone file {$final} likhi nahi ja saki");
@@ -228,8 +238,21 @@ final class BindServer
             throw new TaskRejectedException('named-checkconf fail: ' . self::cleanError($conf));
         }
 
+        // Naya zone named.conf me ab aaya hai — sirf `rndc reload <zone>` kaafi
+        // nahi hota: named ko config dobara padhna padta hai (`rndc reconfig`),
+        // warna zone file likhi jati hai par named use serve nahi karta.
+        $isNewZone = $existed === false;
+        if ($isNewZone) {
+            $this->cmd->run([self::rndcBin(), 'reconfig'], self::CMD_TIMEOUT);
+        }
         $reload = $this->cmd->run([self::rndcBin(), 'reload', $domain], self::CMD_TIMEOUT);
-        $verified = $this->soaAnswer($domain);
+        $verified = $this->digRetry($domain, 'SOA', 3);
+        if ($verified === '') {
+            // reload ke bawajood khamosh: ek baar poora reconfig + reload
+            $this->cmd->run([self::rndcBin(), 'reconfig'], self::CMD_TIMEOUT);
+            $this->cmd->run([self::rndcBin(), 'reload', $domain], self::CMD_TIMEOUT);
+            $verified = $this->digRetry($domain, 'SOA', 3);
+        }
 
         $this->log->info("bind zone {$domain} written ({$serial}) — dig: " . ($verified === '' ? 'koi jawab nahi' : $verified));
 
@@ -241,6 +264,7 @@ final class BindServer
             'records'  => $rendered,
             'ns'       => $ns,
             'reload'   => $reload->ok() ? 'ok' : self::cleanError($reload),
+            'new_zone' => $isNewZone,
             'dig_soa'  => $verified,
             'verified' => $verified !== '',
         ];
@@ -458,6 +482,39 @@ final class BindServer
     private function soaAnswer(string $domain): string
     {
         return $this->dig($domain, 'SOA');
+    }
+
+    /** Thoda intezaar: named ko zone load karne me 1-2 second lagte hain. */
+    private function digRetry(string $domain, string $type, int $attempts = 3): string
+    {
+        for ($i = 0; $i < max(1, $attempts); $i++) {
+            $answer = $this->dig($domain, $type);
+            if ($answer !== '') {
+                return $answer;
+            }
+            if ($i + 1 < $attempts) {
+                // server par thoda intezaar; tests isse 0 kar dete hain
+                $wait = (int) (getenv('ACP_BIND_DIG_WAIT') ?: 700000);
+                if ($wait > 0) {
+                    usleep(min(2_000_000, max(0, $wait)));
+                }
+            }
+        }
+
+        return '';
+    }
+
+    /** `named` sach me chal raha hai ya nahi — setup/setup ke baad report me jata hai. */
+    public function namedRunning(): bool
+    {
+        foreach (['named', 'bind9'] as $unit) {
+            $res = $this->cmd->run(['/bin/systemctl', 'is-active', $unit], 20);
+            if ($res->ok() && trim((string) $res->stdout) === 'active') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function dig(string $domain, string $type): string

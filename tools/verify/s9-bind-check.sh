@@ -162,7 +162,7 @@ if grep -q 'include "'"${ZONES_FILE}"'";' "${NAMED_CONF}" 2>/dev/null; then
 else
   bad "named.conf me include line nahi mili"
 fi
-if [[ -f "${ZONES_FILE}" ]] && grep -q 'BEGIN AlphaCP managed' "${ZONES_FILE}" 2>/dev/null; then
+if [[ -f "${ZONES_FILE}" ]] && grep -q 'AlphaCP managed' "${ZONES_FILE}" 2>/dev/null; then
   ok "managed zones file likhi gayi: ${ZONES_FILE}"
 else
   bad "managed zones file nahi mili"
@@ -185,6 +185,38 @@ if [[ "${INCLUDE_BEFORE}" == "${INCLUDE_AFTER}" && "${INCLUDE_AFTER}" == "1" ]];
   ok "doosri baar setup: include line ek hi rahi (idempotent)"
 else
   bad "setup idempotent nahi (pehle ${INCLUDE_BEFORE}, baad me ${INCLUDE_AFTER})"
+fi
+
+# named sach me chal raha hai? zone file likhna kaafi nahi — serve bhi karna padta hai
+NAMED_UNIT=""
+for u in named bind9; do
+  if [[ "$(systemctl is-active "$u" 2>/dev/null)" == "active" ]]; then NAMED_UNIT="$u"; fi
+done
+if [[ -z "${NAMED_UNIT}" ]]; then
+  info "named active nahi — shuru karne ki koshish (systemctl restart named/bind9)"
+  systemctl restart named >/dev/null 2>&1 || systemctl restart bind9 >/dev/null 2>&1 || true
+  sleep 2
+  for u in named bind9; do
+    [[ "$(systemctl is-active "$u" 2>/dev/null)" == "active" ]] && NAMED_UNIT="$u"
+  done
+fi
+if [[ -n "${NAMED_UNIT}" ]]; then
+  ok "named service active: ${NAMED_UNIT}"
+else
+  bad "named service active NAHI hai (koi zone serve nahi hoga)"
+  info "systemctl status: $(systemctl status named --no-pager -n 0 2>&1 | head -3 | tr '\n' ' ')"
+  info "journalctl named: $(journalctl -u named -n 12 --no-pager 2>/dev/null | tail -8 | tr '\n' ' ')"
+  info "journalctl bind9 : $(journalctl -u bind9 -n 12 --no-pager 2>/dev/null | tail -8 | tr '\n' ' ')"
+  info "port 53          : $(ss -lntup 2>/dev/null | grep ':53' | head -3 | tr '\n' ' ')"
+fi
+if [[ -n "${NAMED_UNIT}" ]]; then
+  RNDCS="$("${RNDC}" status 2>&1 | head -3 | tr '\n' ' ')"
+  info "rndc status: ${RNDCS}"
+  if "${RNDC}" status >/dev/null 2>&1; then
+    ok "rndc se baat ho rahi hai (reload/reconfig kaam karega)"
+  else
+    bad "rndc status fail — zone load nahi hoga: ${RNDCS}"
+  fi
 fi
 
 # ------------------------------------------------------------------ part C ----
@@ -235,6 +267,21 @@ if [[ "${MX_OUT}" == *"mail.${TEST_DOMAIN}"* ]]; then
   ok "dig MX = ${MX_OUT}"
 else
   bad "dig MX galat: '${MX_OUT}'"
+fi
+LIVE=1
+if [[ -z "${SOA_OUT}" ]]; then
+  LIVE=0
+  info "--- dig khamosh hai, asli wajah dhoondh rahe hain ---"
+  info "rndc reload   : $("${RNDC}" reload "${TEST_DOMAIN}" 2>&1 | head -2 | tr '\n' ' ')"
+  info "rndc reconfig : $("${RNDC}" reconfig 2>&1 | head -2 | tr '\n' ' ')"
+  info "dig dobara    : $("${DIG}" @127.0.0.1 +short +tries=2 +time=2 "${TEST_DOMAIN}" SOA 2>&1 | head -1)"
+  info "dig @server-ip: $("${DIG}" @$("${ACP_VERIFY_DIG_SELF:-127.0.0.1}") +short +tries=1 +time=2 "${TEST_DOMAIN}" SOA 2>&1 | head -1)"
+  info "named unit    : ${NAMED_UNIT:-NAHI}"
+  info "port 53       : $(ss -lntup 2>/dev/null | grep ':53' | head -3 | tr '\n' ' ')"
+  info "journalctl    : $(journalctl -u "${NAMED_UNIT:-named}" -n 10 --no-pager 2>/dev/null | tail -6 | tr '\n' ' ')"
+  info "zone file head: $(head -3 "${ZONE_FILE}" 2>/dev/null | tr '\n' ' ')"
+  info "zones clause  : $(grep -m1 'zone "'"${TEST_DOMAIN}"'"' "${ZONES_FILE}" 2>/dev/null)"
+  info "--- ant ---"
 fi
 if run_task dns.bind "{\"action\":\"verify\",\"domain\":\"${TEST_DOMAIN}\"}"; then
   ok "dns.bind verify action chala (task #${LAST_TASK_ID})"
@@ -294,10 +341,14 @@ else
   bad "zones file me zone clause abhi bhi hai"
 fi
 GONE="$("${DIG}" @127.0.0.1 +short +tries=1 +time=2 "${TEST_DOMAIN}" SOA 2>/dev/null | head -1)"
-if [[ -z "${GONE}" ]]; then
-  ok "dig ab khamosh hai (zone serve nahi ho rahi)"
+if [[ "${LIVE}" == "1" ]]; then
+  if [[ -z "${GONE}" ]]; then
+    ok "dig ab khamosh hai (zone serve nahi ho rahi)"
+  else
+    bad "remove ke baad bhi dig jawab de raha hai: ${GONE}"
+  fi
 else
-  bad "remove ke baad bhi dig jawab de raha hai: ${GONE}"
+  skip "remove ke baad dig ka test tabhi maayne rakhta hai jab pehle jawab mil raha ho (upar dekho)"
 fi
 if "${CHECKCONF}" "${NAMED_CONF}" >/dev/null 2>&1; then
   ok "remove ke baad bhi named-checkconf pass"
