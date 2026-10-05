@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.79.0  ·  default panel bundle 0.74.0  ·  agent 0.65.0  ·  alphacp-sync v1.2
+# updater 0.80.0  ·  default panel bundle 0.74.0  ·  agent 0.80.0  ·  alphacp-sync v1.2
 #
+# 0.80.0: S7 FIX 2 — 0.79.0 me `allow_filter` se `user` hatane par exim config reject
+#         ("user or check_local_user must be set with allow_filter"). ASLI exim 4.97
+#         sandbox me build karke 4 bug pakde: (1) router par safe `user`/`group`;
+#         (2) `address_directory` transport se directory/user/group hataya (filter ke
+#         save path ko override kar raha tha); (3) `require_files` (lookup file missing
+#         par PANIC band); (4) `condition` bhi (key missing par queue me atak jati thi).
+#         Rollback ab pristine ki jagah pichli working AlphaCP config (.acp-prev).
+#         Agent version ab release ke sath: 0.80.0. Naya dev tool:
+#         tools/dev/exim-sandbox-test.sh (asli exim se 10/10).
 # 0.79.0: S7 FIX — 0.78.0 ke email filters ne live par mail delivery tod di thi (har address
 #         defer: `Failed to find user "}"`, aur `exim -bf` ne sab filter reject kiye). Do asli
 #         wajahein: (1) Exim filter file ka pehla text `# Exim filter` hona chahiye — warna exim
@@ -167,17 +176,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.79.0"
+UPDATER_VERSION="0.80.0"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.74.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
 BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-2654506a92e7f975d0d468afc16873803e992f3d}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
 BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7396d88339f2d716889dc72058eded0e0e156f47668656b28a1c998dc479f4b5}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.65.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-d65b186ffca69bcfb96a80ff1cb28dfc0ba04019}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.80.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-a261f757ecb61aac56ff1ee999e844627d361fd8}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-7f742a84bd9a4d0f5e29618dcd5a8d89e80d988c9544ccf17ff1b16e81ad3788}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-9716dbbcb1e7a7c383958a792370e0481b0e13f26cdc5df560fe659f893f34cc}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -611,10 +620,12 @@ mkdir -p "${NEW_PANEL}/storage/app/private" \
          "${NEW_PANEL}/bootstrap/cache"
 chown -R "${PANEL_USER}:${PANEL_USER}" "${NEW_PANEL}/storage" "${NEW_PANEL}/bootstrap/cache"
 # naye panel ki .env me version (rollback par purani .env wapas aati hai)
+# UI me RELEASE version dikhe (PANEL_VERSION = panel CODE bundle, wo 0.74.0 hi rahega
+# jab tak panel ka code nahi badalta — isse user ko har release ka number nazar aata hai).
 if grep -q '^ACP_VERSION=' "${NEW_PANEL}/.env"; then
-  sed -i "s/^ACP_VERSION=.*/ACP_VERSION=${PANEL_VERSION}/" "${NEW_PANEL}/.env"
+  sed -i "s/^ACP_VERSION=.*/ACP_VERSION=${UPDATER_VERSION}/" "${NEW_PANEL}/.env"
 else
-  printf '\nACP_VERSION=%s\n' "${PANEL_VERSION}" >> "${NEW_PANEL}/.env"
+  printf '\nACP_VERSION=%s\n' "${UPDATER_VERSION}" >> "${NEW_PANEL}/.env"
 fi
 if grep -q '^ACP_AGENT_VERSION=' "${NEW_PANEL}/.env"; then
   sed -i "s/^ACP_AGENT_VERSION=.*/ACP_AGENT_VERSION=${AGENT_VERSION}/" "${NEW_PANEL}/.env"
