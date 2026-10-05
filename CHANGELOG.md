@@ -33,8 +33,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   showed Exim 4.97 opening the per-mailbox filter as the mailbox uid/gid and deferring with `Permission denied`;
   `exim -bf` as root had only validated syntax. The agent now checks `~/etc` and grants the mailbox identity
   search-only traversal (account-group execute-only when possible; execute-only fallback, no read/list),
-  with regression coverage for a root-owned `0750` parent. Release 0.81.1 is pushed; live deployment and
-  post-update S7 verification are still pending, so #20/#21 are not marked complete.
+  with regression coverage for a root-owned `0750` parent. Release 0.81.1 is deployed (panel code 0.74.0; release/agent 0.81.1); post-update S7 verification
+  is still pending, so #20/#21 are not marked complete.
 
 - **S10 remote pull: `host key MISMATCH` har baar (5 Oct, live server par 14 pass / 4 fail)** —
   asli server ek saath 3 SSH keys (ed25519 + ecdsa + rsa) advertise karta hai aur `ssh-keyscan` unka

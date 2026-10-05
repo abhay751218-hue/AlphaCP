@@ -5,7 +5,7 @@
 > Jo step poora hoga, uske items ✅ ho jaayenge. **Project tab complete maana jayega jab ye file 100% ✅ ho.**
 
 **Banaya:** 28 Sep 2026 · **Base:** cPanel 138 (Meridian, Jul 2026) + WHM full tool list
-**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail). **S7 #147 ka code + real Exim verify ho gaya** (0.81.0; 20 pass / 0 fail), live status check pending. Server par 0.81.0 deploy hua; mail verifier ne base delivery aur #19 tracking pass ki, lekin filters fail hue (old verifier 61 pass / 1 fail; same failure 0.80.0 me bhi). Revised diagnostic ne Exim userfilter EACCES confirm kiya (60 pass / 2 fail); 0.81.1 permission fix pushed hai, live verify pending. #20/#21 abhi green nahi. Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
+**Updated:** 5 Oct 2026 · **S9 BIND9 live ho gaya** (server par `dig` se verify, 38 pass / 0 fail). **S7 #147 ka code + real Exim verify ho gaya** (0.81.0; 20 pass / 0 fail), live status check pending. Server par 0.81.0 deploy hua; mail verifier ne base delivery aur #19 tracking pass ki, lekin filters fail hue (old verifier 61 pass / 1 fail; same failure 0.80.0 me bhi). Revised diagnostic ne Exim userfilter EACCES confirm kiya (60 pass / 2 fail); agent 0.81.1 fix deploy hua (panel code 0.74.0, release/agent 0.81.1, HTTP 200), post-update live mail verification pending. #20/#21 abhi green nahi. Zone Editor, DNS Zone Manager, Add/Delete zone, Park a Domain, Zone TTL, Synchronize DNS Records ab ✅; DNS ke bache hue rows (Dynamic DNS updater, hostname A, zone templates, NS report, cleanup, forwarding) 🟡 me hain.
 
 ---
 
@@ -64,8 +64,8 @@
 | 17 | Default Address | Catch-all | S7 | ✅ (catch-all live verified: unknown@ -> mailbox redirect chain) |
 | 18 | Mailing Lists | Mailman lists | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (list+owner JSON; no mailman daemon)) |
 | 19 | Track Delivery | Delivery trace | S7 | ✅ (0.81.0 live: `mail.track` ne asli Exim mainlog se 24 entries trace ki; base inbox delivery bhi pass) |
-| 20 | Global Email Filters | Server-side filters | S7 | 🟡 (account-wide Exim filter code/sandbox proof; live filter path permission issue confirmed by #21 diagnostic; agent 0.81.1 fix pushed, global-filter live verification pending) |
-| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.81.0 revised live verifier: **60 pass / 2 fail**; Exim 4.97 `euid=1001 egid=1001` cannot open filter file: `Permission denied` while traversing root-owned `~/etc`; both folder-save and discard were deferred; agent 0.81.1 search-permission fix pushed, live verification pending) |
+| 20 | Global Email Filters | Server-side filters | S7 | 🟡 (account-wide Exim filter code/sandbox proof; live filter path permission issue confirmed by #21 diagnostic; agent 0.81.1 search-permission fix deployed, global-filter live verification pending) |
+| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.81.0 revised live verifier: **60 pass / 2 fail**; Exim 4.97 `euid=1001 egid=1001` cannot open filter file: `Permission denied` while traversing root-owned `~/etc`; both folder-save and discard were deferred; agent 0.81.1 search-permission fix deployed, post-update live verification pending) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF + DMARC + DKIM live verified: `dig TXT`, `_dmarc`, `default._domainkey` sab green) |
 | 23 | Address Importer | Bulk CSV import | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (CSV local,domain,password → mail.set; no pipe)) |
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (SpamAssassin score + blacklist/whitelist files live (0.77.0)) |

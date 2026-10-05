@@ -12,44 +12,35 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ NEXT STEP — S7 Exim user-filter permission fix (0.81.1)
+## ✅ NEXT STEP — post-0.81.1 S7 live verification
 
-> **Live diagnosis is conclusive:** the same folder-filter failure was present after 0.80.0 and 0.81.0.
-> The revised verifier then returned **60 pass / 2 fail**. Exim 4.97's `-v` output says it cannot open
-> `/home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter`: `Permission denied
-> (euid=1001 egid=1001)`. `exim -bf` as root accepts the rule, but delivery runs as the mailbox uid.
-> The filter and `.filtered/` Maildir exist; Exim defers both folder and discard test messages because
-> it cannot traverse the root-owned `~/etc` parent. This is the actual permission failure—not path taint.
+> Aapke 0.80.0 aur 0.81.0 runs me filter failure tha. Revised verifier ne **60 pass / 2 fail**
+> dikhaya aur Exim 4.97 ka exact error pakda: filter file `euid=1001 egid=1001` ke liye unreadable/search-blocked thi.
+> Agent 0.81.1 updater **ab deploy ho chuka hai**. Latest server snapshot confirms panel code **0.74.0**,
+> `ACP_VERSION=0.81.1`, `AGENT_VERSION=0.81.1`, HTTP **200**.
+>
+> `New panel: 0.74.0` ka matlab panel **code bundle** version hai. Is release me Laravel panel code nahi badla;
+> mail permission fix agent me tha. Isliye bundle version 0.74.0 rehna expected hai, failure nahi. Release version
+> 0.81.1 update hua hai. Updater ke log me tamam listed steps successful hain; lekin S7 live mail verifier
+> **automatically nahi chala**—neeche uska alag command hai. Filter fix ko abhi live-pass nahi maana gaya.
 
-The 0.81.1 agent fix ensures the mailbox identity can **search** through `~/etc` (account-group
-execute-only when possible; execute-only fallback otherwise—no read/list permission), then verifies the
-mode. It includes a regression for the root-owned `0750` parent. **It is pushed but is not yet deployed
-or live-verified.** #20/#21 stay 🟡 until the new live mail verifier returns zero failures.
-
-### 1) Deploy the pinned 0.81.1 updater (no panel bundle change)
-```bash
-sudo alphacp-sync get 68e64ce4b578c13ad929adb0bab865f8317f3a6f installer/panel-update.sh /tmp/acp-panel-update-0.81.1.sh 656db4911e1a72f00569f1d83544b34771123dac763d44b338703fc3dbb63c13 && sudo bash /tmp/acp-panel-update-0.81.1.sh
-```
-- Pin check: **10 pass / 0 fail** — pushed commit, updater SHA, 0.81.1 banner, panel bundle and agent bundle pins all match.
-- Agent bundle: commit `33660a15b70376385579bdbb251c5adf2e991e1e`, SHA-256
-  `b0614835d4790a68ce328c93e74fdb3d21d78b64eeb51641b7b64273e582ed5f`.
-- Panel stays **0.74.0**; this updater ships agent **0.81.1**. SpamAssassin/greylistd remain opt-in/off.
-  Do not rerun 0.80.0 or 0.81.0.
-
-### 2) After `UPDATE COMPLETE`, rerun the pinned S7 live verifier
+### 1) Run the pinned S7 live verifier now
 ```bash
 sudo alphacp-sync get 31726394519c03332e29715c3ed37d1b4cc73d41 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh eed20adcbc77550d2407f81ed82a6373b9b00bc6a09ce220139915f25d4b53fc && sudo bash /tmp/s7-mail-check.sh
 ```
 - It captures the exact Exim `-v` route/status and checks folder-save, discard, inbox counts, queue and new mainlog lines.
 - Reports: `${ACP_HOME}/verify-reports/s7-mail-check.txt` and `s7-diag.txt` (hourly sync carries them to GitHub).
-- If either filter check still fails, paste the full `FILTER delivery diagnostics` section; do not mark #20/#21 complete.
+- Paste the full output. Only a zero-failure full S7 result can close #20/#21; if it fails, include `FILTER delivery diagnostics`.
 
-### Local checks for this release
-- Pinned updater guard **10/0**, S7 mail SIM **7/0**, S7 updater simulation **12/0**, updater shell syntax,
-  and updater/agent artifact SHA checks passed. Agent suite via PHP-WASM: **207 pass / 0 fail** (pre-existing
-  non-fatal PHP warnings were printed).
-- The real-Exim regression was **skipped** here because the custom Exim test binary is unavailable.
-  The commit adds coverage for the root-owned `0750` parent; the post-update live verifier is still required.
+### 0.81.1 deployment facts / local checks
+- Updater commit `68e64ce4b578c13ad929adb0bab865f8317f3a6f`, SHA-256
+  `656db4911e1a72f00569f1d83544b34771123dac763d44b338703fc3dbb63c13`; deployed output showed `UPDATE COMPLETE`.
+- Panel bundle artifact remains **0.74.0**; `.env` release version and agent are both **0.81.1**. Panel health HTTP 200.
+- Agent bundle pin check **10/0**, S7 mail SIM **7/0**, S7 updater simulation **12/0**, updater shell syntax passed.
+  Agent suite via PHP-WASM: **207 pass / 0 fail** (pre-existing non-fatal PHP warnings printed).
+- Real-Exim sandbox regression was skipped locally because this checkout lacks the custom Exim binary; the
+  post-deployment live verifier is still required. The previous server report still says **60/2** because it
+  was captured before 0.81.1; it must be refreshed.
 
 ### Next after S7 mail passes — #147 status (read-only)
 ```bash
