@@ -42,6 +42,12 @@ final class CommandRunner implements CommandExecutor
         '/bin/tar',
         '/usr/bin/mariadb',
         '/usr/bin/mysql',
+        // S10 remote pull (openssh-client + optional sshpass). argv-only; the agent
+        // never builds a shell string, so scp/ssh-keyscan cannot be tricked.
+        '/usr/bin/ssh-keyscan',
+        '/usr/bin/ssh-keygen',
+        '/usr/bin/scp',
+        '/usr/bin/sshpass',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

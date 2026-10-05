@@ -51,6 +51,23 @@ final class FakeCommandExecutor implements CommandExecutor
 
     public ?string $failWhenContains = null;
 
+    // ---- S10 remote pull (backup.pull) ----
+    /** host key pubkey line returned by the fake `ssh-keyscan` */
+    public string $hostKeyPubkey = 'old.example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl';
+    /** fingerprint returned by the fake `ssh-keygen -l -E sha256` */
+    public string $hostKeyFingerprint = 'SHA256:8Ph7mQ0FakeFingerprintAAAAAAAAAAAAAAAAAAAAAAA';
+    /** when set, the SECOND keyscan reports this fingerprint (MITM / reinstall) */
+    public ?string $hostKeySecondFingerprint = null;
+    public int $keyscanCalls = 0;
+    /** bytes the fake `scp` writes into the destination file */
+    public ?string $scpContent = 'fake-cpmove-archive-bytes-0123456789';
+    public bool $scpFails = false;
+    public bool $sshpassInstalled = true;
+    /** last scp argv (sshpass prefix stripped) */
+    public ?array $scpArgv = null;
+    /** '-f <file>' value seen by sshpass on the last call */
+    public ?string $sshpassFile = null;
+
     /** @var list<string> databases that exist in the fake MariaDB */
     public array $mysqlDatabases = [];
 
@@ -95,6 +112,10 @@ final class FakeCommandExecutor implements CommandExecutor
             'certbot' => $this->handleCertbot($argv),
             'tar' => $this->handleTar($argv),
             'mariadb', 'mysql' => $this->handleMysql($argv, $stdin),
+            'ssh-keyscan' => $this->handleKeyscan($argv),
+            'ssh-keygen' => $this->handleKeygen($argv),
+            'scp' => $this->handleScp($argv),
+            'sshpass' => $this->handleSshpass($argv),
             default => new CommandResult($argv, 0, '', '', 1),
         };
     }
@@ -365,5 +386,71 @@ final class FakeCommandExecutor implements CommandExecutor
         }
         $this->crontabBody = (string) $stdin;
         return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleKeyscan(array $argv): CommandResult
+    {
+        $this->keyscanCalls++;
+
+        return new CommandResult($argv, 0, $this->hostKeyPubkey . "\n", '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleKeygen(array $argv): CommandResult
+    {
+        $file = '';
+        foreach ($argv as $i => $a) {
+            if ($a === '-f' && isset($argv[$i + 1])) {
+                $file = (string) $argv[$i + 1];
+            }
+        }
+        $pub = @file_get_contents($file);
+        $host = 'old.example.com';
+        if (is_string($pub) && $pub !== '') {
+            $host = (string) (explode(' ', trim($pub))[0] ?? 'old.example.com');
+        }
+        $fp = $this->hostKeyFingerprint;
+        if ($this->hostKeySecondFingerprint !== null && $this->keyscanCalls >= 2) {
+            $fp = $this->hostKeySecondFingerprint;
+        }
+
+        return new CommandResult($argv, 0, "256 {$fp} {$host} (ED25519)\n", '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleScp(array $argv): CommandResult
+    {
+        $this->scpArgv = $argv;
+        if ($this->scpFails) {
+            return new CommandResult($argv, 1, '', 'Permission denied (publickey).', 1);
+        }
+        $dest = (string) (count($argv) >= 2 ? $argv[count($argv) - 1] : '');
+        if ($dest === '') {
+            return new CommandResult($argv, 2, '', 'scp: no destination', 1);
+        }
+        if (@file_put_contents($dest, (string) $this->scpContent) === false) {
+            return new CommandResult($argv, 1, '', "scp: cannot write {$dest}", 1);
+        }
+
+        return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleSshpass(array $argv): CommandResult
+    {
+        if (!$this->sshpassInstalled) {
+            return new CommandResult($argv, 127, '', 'sshpass: command not found', 1);
+        }
+        // sshpass -f <file> scp ...
+        $rest = $argv;
+        array_shift($rest);                    // /usr/bin/sshpass
+        if (($rest[0] ?? '') === '-f') {
+            $this->sshpassFile = (string) ($rest[1] ?? '');
+            array_shift($rest);
+            array_shift($rest);
+        }
+
+        return $this->handleScp($rest);
     }
 }

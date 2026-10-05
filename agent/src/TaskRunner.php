@@ -154,6 +154,12 @@ final class TaskRunner
             && $payload['password'] !== '' && $payload['password'] !== '***') {
             $payload['password'] = '***';
         }
+        // S10 remote pull: an inline SSH private key is just as sensitive as a
+        // password — the job history must never keep it after the task finished.
+        if (isset($payload['private_key']) && is_string($payload['private_key'])
+            && $payload['private_key'] !== '' && $payload['private_key'] !== '***') {
+            $payload['private_key'] = '***';
+        }
 
         return $payload;
     }

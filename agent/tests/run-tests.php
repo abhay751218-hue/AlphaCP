@@ -22,6 +22,7 @@ use Alphacp\Agent\Files;
 use Alphacp\Agent\JsonSchema;
 use Alphacp\Agent\PathGuard;
 use Alphacp\Agent\PathGuardException;
+use Alphacp\Agent\RemotePull;
 use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskLogger;
 use Alphacp\Agent\TaskRejectedException;
@@ -31,6 +32,7 @@ use Alphacp\Agent\Tasks\AccountSetQuota;
 use Alphacp\Agent\Tasks\AccountSuspend;
 use Alphacp\Agent\Tasks\AccountTerminate;
 use Alphacp\Agent\Tasks\AccountUnsuspend;
+use Alphacp\Agent\Tasks\BackupPull;
 use Alphacp\Agent\Tasks\CronSet;
 use Alphacp\Agent\Tasks\DomainAdd;
 use Alphacp\Agent\Tasks\DomainRemove;
@@ -3145,6 +3147,301 @@ test('SafeFs refuses writes outside the allowlisted roots', function (): void {
     acp_account_cleanup($harness);
 });
 
+// ---------------------------------------------------------------------------
+// S10 — remote pull (backup.pull): cpmove archive doosre server se SSH (scp) se
+// laana. Yahan asli network nahi chalta — FakeCommandExecutor ssh-keyscan /
+// ssh-keygen / scp / sshpass ko intercept karta hai.
+// ---------------------------------------------------------------------------
+
+/** @return array{root: string, cmd: FakeCommandExecutor, ctx: TaskContext, drop: string} */
+function acp_pull_harness(): array
+{
+    $root = sys_get_temp_dir() . '/acp-pull-' . bin2hex(random_bytes(4));
+    $drop = $root . '/incoming';
+    mkdir($drop, 0750, true);
+    putenv('ACP_STATE_ROOT=' . $root);
+    putenv('ACP_IMPORT_DIR=' . $drop);
+    // fake executor basename se dispatch karta hai — asli server par ye openssh-client hai
+    putenv('ACP_SSH_KEYSCAN=/usr/bin/ssh-keyscan');
+    putenv('ACP_SSH_KEYGEN=/usr/bin/ssh-keygen');
+    putenv('ACP_SSH_SCP=/usr/bin/scp');
+    putenv('ACP_SSH_SSHPASS=/usr/bin/sshpass');
+
+    $cmd = new FakeCommandExecutor();
+    $log = new TaskLogger(new PDO('sqlite::memory:'), null, false);
+    $ctx = new TaskContext(log: $log, cmd: $cmd, paths: null, taskId: null, taskRow: null);
+
+    return ['root' => $root, 'drop' => $drop, 'cmd' => $cmd, 'ctx' => $ctx];
+}
+
+/** @param array{root: string} $harness */
+function acp_pull_cleanup(array $harness): void
+{
+    $root = $harness['root'];
+    if (is_dir($root)) {
+        $it = new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $file) {
+            $file->isDir() ? @rmdir($file->getPathname()) : @unlink($file->getPathname());
+        }
+        @rmdir($root);
+    }
+    foreach (['ACP_STATE_ROOT', 'ACP_IMPORT_DIR', 'ACP_SSH_KEYSCAN', 'ACP_SSH_KEYGEN', 'ACP_SSH_SCP', 'ACP_SSH_SSHPASS'] as $name) {
+        putenv($name);
+    }
+}
+
+test('backup.pull probe: fingerprint laata hai, kuch download nahi karta', function (): void {
+    $h = acp_pull_harness();
+    $result = (new BackupPull())->handle([
+        'host' => 'old.example.com', 'probe' => true, '_confirm' => 'backup.pull',
+    ], $h['ctx']);
+
+    assert_true($result['probe'] === true, 'probe mode flag');
+    assert_true(str_starts_with($result['fingerprint'], 'SHA256:'), 'fingerprint SHA256: se shuru ho');
+    assert_true($result['key_type'] === 'ED25519', 'key type mila');
+    assert_true($h['cmd']->scpArgv === null, 'probe me scp kabhi nahi chala');
+    assert_true(glob($h['drop'] . '/*') === [] || glob($h['drop'] . '/*') === false, 'probe me koi file nahi bani');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: key auth se archive drop dir me aata hai', function (): void {
+    $h = acp_pull_harness();
+    $h['cmd']->scpContent = str_repeat('cpmove-bytes-', 20);
+
+    $result = (new BackupPull())->handle([
+        'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-alicehost.tar.gz',
+        'auth' => 'key', 'private_key' => "-----BEGIN OPENSSH PRIVATE KEY-----\nfake\n-----END OPENSSH PRIVATE KEY-----",
+        'host_fingerprint' => $h['cmd']->hostKeyFingerprint, '_confirm' => 'backup.pull',
+    ], $h['ctx']);
+
+    assert_true($result['name'] === 'cpmove-alicehost.tar.gz', 'remote file ka naam mila');
+    assert_true(is_file($result['path']), 'archive drop dir me likha gaya');
+    assert_true(str_starts_with($result['path'], $h['drop'] . '/'), 'archive drop dir ke andar hi hai');
+    assert_true($result['bytes'] === strlen(str_repeat('cpmove-bytes-', 20)), 'size sahi');
+    assert_true($result['sha256'] === hash('sha256', str_repeat('cpmove-bytes-', 20)), 'sha256 sahi');
+    $argv = $h['cmd']->scpArgv ?? [];
+    assert_true(in_array('-i', $argv, true), 'key auth me -i pass hua');
+    assert_true(in_array('BatchMode=yes', $argv, true), 'key auth batch mode me chala');
+    assert_true(in_array('root@old.example.com:/home/cpmove-alicehost.tar.gz', $argv, true), 'scp source spec sahi');
+    assert_true(!in_array('/usr/bin/sshpass', $argv, true), 'key auth me sshpass nahi');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: host key pin na ho to refuse (MITM se bachav)', function (): void {
+    $h = acp_pull_harness();
+    $blocked = false;
+    try {
+        (new BackupPull())->handle([
+            'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+            'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----', '_confirm' => 'backup.pull',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $blocked = str_contains($e->getMessage(), 'not pinned');
+    }
+    assert_true($blocked, 'bina pinned fingerprint ke pull refuse ho');
+    assert_true($h['cmd']->scpArgv === null, 'refuse hone par scp hi nahi chala');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: fingerprint mismatch (server badla / MITM) -> refuse', function (): void {
+    $h = acp_pull_harness();
+    // admin ne pehle probe karke is fingerprint ko pin kiya tha...
+    $first = (new BackupPull())->handle([
+        'host' => 'old.example.com', 'probe' => true, '_confirm' => 'backup.pull',
+    ], $h['ctx']);
+    // ...aur ab wahi server (ya beech me koi) DOOSRI key dikha raha hai
+    $h['cmd']->hostKeySecondFingerprint = 'SHA256:TOTALLYdiFFerentFingerprintAAAAAAAAAAAAAAAAAAA';
+
+    $blocked = false;
+    try {
+        (new BackupPull())->handle([
+            'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+            'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+            'host_fingerprint' => $first['fingerprint'], '_confirm' => 'backup.pull',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $blocked = str_contains($e->getMessage(), 'MISMATCH');
+    }
+    assert_true($blocked, 'fingerprint badalne par pull refuse ho');
+    assert_true($h['cmd']->scpArgv === null, 'mismatch par scp chala hi nahi');
+    assert_true(glob($h['drop'] . '/*') === [] || glob($h['drop'] . '/*') === false, 'koi file nahi chhodi');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: password auth me password argv me nahi, sshpass -f file se', function (): void {
+    $h = acp_pull_harness();
+    $h['cmd']->scpContent = str_repeat('pw-archive-', 12);
+
+    $result = (new BackupPull())->handle([
+        'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/backup/cpmove-bob.tar.gz',
+        'auth' => 'password', 'password' => 'hunter2-super-secret',
+        'host_fingerprint' => $h['cmd']->hostKeyFingerprint, '_confirm' => 'backup.pull',
+    ], $h['ctx']);
+
+    assert_true($result['auth'] === 'password', 'auth mode report hua');
+    $pwFile = $h['cmd']->sshpassFile;
+    assert_true(is_string($pwFile) && $pwFile !== '', 'sshpass ko -f <file> mila');
+    assert_true(!is_file($pwFile), 'password file kaam ke baad delete ho gayi');
+    $argv = $h['cmd']->calls;
+    foreach ($argv as $call) {
+        assert_true(!in_array('hunter2-super-secret', $call, true), 'password kabhi argv me nahi gaya');
+    }
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: sshpass na ho to password auth saaf message ke saath refuse', function (): void {
+    $h = acp_pull_harness();
+    putenv('ACP_SSH_SSHPASS=');           // override hatao -> asli path hi use hoga
+    if (is_executable(RemotePull::SSHPASS)) {
+        acp_pull_cleanup($h);
+        assert_true(true, 'sshpass installed — skip');
+
+        return;
+    }
+    $blocked = false;
+    try {
+        (new BackupPull())->handle([
+            'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+            'auth' => 'password', 'password' => 'x',
+            'host_fingerprint' => $h['cmd']->hostKeyFingerprint, '_confirm' => 'backup.pull',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $blocked = str_contains($e->getMessage(), 'sshpass');
+    }
+    assert_true($blocked, 'sshpass missing par saaf message');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: remote path aur naam ke niyam (.. / absolute / tar ext)', function (): void {
+    $h = acp_pull_harness();
+    $fp = $h['cmd']->hostKeyFingerprint;
+
+    foreach (['/home/../etc/passwd', 'relative/path.tar.gz', '/home/c pmove.tar.gz'] as $bad) {
+        $blocked = false;
+        try {
+            (new BackupPull())->handle([
+                'host' => 'old.example.com', 'user' => 'root', 'remote_path' => $bad,
+                'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+                'host_fingerprint' => $fp, '_confirm' => 'backup.pull',
+            ], $h['ctx']);
+        } catch (TaskRejectedException $e) {
+            $blocked = true;
+        }
+        assert_true($blocked, "remote path '{$bad}' refuse ho");
+    }
+
+    foreach (['evil.sh', 'archive.zip', '.bashrc'] as $badName) {
+        $blocked = false;
+        try {
+            (new BackupPull())->handle([
+                'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+                'dest_name' => $badName, 'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+                'host_fingerprint' => $fp, '_confirm' => 'backup.pull',
+            ], $h['ctx']);
+        } catch (TaskRejectedException $e) {
+            $blocked = true;
+        }
+        assert_true($blocked, "dest_name '{$badName}' refuse ho (sirf tar/tar.gz/tgz)");
+    }
+
+    foreach (['old.example.com; rm -rf /', 'not a host', ''] as $badHost) {
+        $blocked = false;
+        try {
+            (new BackupPull())->handle([
+                'host' => $badHost, 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+                'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+                'host_fingerprint' => $fp, '_confirm' => 'backup.pull',
+            ], $h['ctx']);
+        } catch (TaskRejectedException $e) {
+            $blocked = true;
+        }
+        assert_true($blocked, "host '{$badHost}' refuse ho");
+    }
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: sha256 mismatch par file drop dir me nahi rehti', function (): void {
+    $h = acp_pull_harness();
+    $h['cmd']->scpContent = str_repeat('x', 100);
+    $blocked = false;
+    try {
+        (new BackupPull())->handle([
+            'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+            'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+            'sha256' => str_repeat('a', 64),
+            'host_fingerprint' => $h['cmd']->hostKeyFingerprint, '_confirm' => 'backup.pull',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $blocked = str_contains($e->getMessage(), 'checksum mismatch');
+    }
+    assert_true($blocked, 'galat sha256 par refuse');
+    $left = glob($h['drop'] . '/*');
+    assert_true($left === [] || $left === false, 'adhoora archive drop dir me nahi chhoda gaya');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: maujooda file overwrite nahi hoti (jab tak overwrite=true na ho)', function (): void {
+    $h = acp_pull_harness();
+    file_put_contents($h['drop'] . '/cpmove-alice.tar.gz', 'purana-archive');
+    $blocked = false;
+    try {
+        (new BackupPull())->handle([
+            'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-alice.tar.gz',
+            'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+            'host_fingerprint' => $h['cmd']->hostKeyFingerprint, '_confirm' => 'backup.pull',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $blocked = str_contains($e->getMessage(), 'already exists');
+    }
+    assert_true($blocked, 'bina overwrite ke refuse');
+    assert_true(file_get_contents($h['drop'] . '/cpmove-alice.tar.gz') === 'purana-archive', 'purani file waise hi hai');
+
+    (new BackupPull())->handle([
+        'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-alice.tar.gz',
+        'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----', 'overwrite' => true,
+        'host_fingerprint' => $h['cmd']->hostKeyFingerprint, '_confirm' => 'backup.pull',
+    ], $h['ctx']);
+    assert_true(file_get_contents($h['drop'] . '/cpmove-alice.tar.gz') !== 'purana-archive', 'overwrite=true par nayi file');
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: private key disk par nahi rehti (temp files saaf)', function (): void {
+    $h = acp_pull_harness();
+    $secret = 'ACPCANARY-PRIVATE-KEY-MATERIAL-0123456789';
+    (new BackupPull())->handle([
+        'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+        'private_key' => "-----BEGIN OPENSSH PRIVATE KEY-----\n{$secret}\n-----END OPENSSH PRIVATE KEY-----",
+        'host_fingerprint' => $h['cmd']->hostKeyFingerprint, '_confirm' => 'backup.pull',
+    ], $h['ctx']);
+
+    $leftovers = glob(sys_get_temp_dir() . '/acprp*') ?: [];
+    assert_true($leftovers === [], 'koi temp file nahi bachi: ' . implode(',', $leftovers));
+    foreach ($leftovers as $file) {
+        assert_true(!str_contains((string) @file_get_contents($file), $secret), 'key material disk par nahi');
+    }
+    acp_pull_cleanup($h);
+});
+
+test('backup.pull: scp fail hone par .part file saaf ho jati hai', function (): void {
+    $h = acp_pull_harness();
+    $h['cmd']->scpFails = true;
+    $blocked = false;
+    try {
+        (new BackupPull())->handle([
+            'host' => 'old.example.com', 'user' => 'root', 'remote_path' => '/home/cpmove-a.tar.gz',
+            'private_key' => '-----BEGIN OPENSSH PRIVATE KEY-----',
+            'host_fingerprint' => $h['cmd']->hostKeyFingerprint, '_confirm' => 'backup.pull',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $blocked = str_contains($e->getMessage(), 'remote pull fail');
+    }
+    assert_true($blocked, 'scp fail par task fail');
+    $left = glob($h['drop'] . '/*');
+    assert_true($left === [] || $left === false, 'koi adhura archive nahi chhoda');
+    acp_pull_cleanup($h);
+});
+
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");
 fwrite(STDOUT, sprintf("passed: %d   failed: %d\n", $passed, $failed));
 exit($failed === 0 ? 0 : 1);
@@ -3220,3 +3517,4 @@ function acp_create_payload(): array
         'php_version' => '8.4',
     ];
 }
+
