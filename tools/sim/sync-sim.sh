@@ -160,7 +160,12 @@ rm -f /tmp/syncsim/key-added
 grep -q "timer mode" /tmp/syncsim/run-7.out && t_ok "timer mode: fast fail" || { t_fail "timer mode"; tail -5 /tmp/syncsim/run-7.out; }
 
 echo; echo "=== Run 8 (v1.2): alphacp-sync get — deploy key se file (private repo me bhi) ==="
-GC="$(git -C "${REMOTE}" rev-parse refs/heads/arena/01a0ea3e-alphacp 2>/dev/null || git -C "${REMOTE}" rev-parse main)"
+# NOTE: `git rev-parse <bad-ref>` prints the ref name to STDOUT before failing (git >= 2.39),
+# isliye --verify --quiet zaroori hai — warna GC me kachra aa jata hai aur Run 8 ke 4 tests fail hote hain.
+# Fallback chain: PR-ref -> main -> HEAD (kisi bhi checkout me kaam kare).
+GC="$(git -C "${REMOTE}" rev-parse --verify --quiet refs/heads/arena/01a0ea3e-alphacp \
+      || git -C "${REMOTE}" rev-parse --verify --quiet refs/heads/main \
+      || git -C "${REMOTE}" rev-parse --verify --quiet HEAD)"
 GSHA="$(git -C "${REMOTE}" show "${GC}:START-HERE.md" | sha256sum | cut -d' ' -f1)"
 rm -rf /tmp/syncsim/getwork /tmp/syncsim/got*
 run_get() { ( cd /root && SYNC_CONF_DIR=/tmp/syncsim/conf SYNC_WORK_DIR=/tmp/syncsim/getwork SYNC_REPO_URL="file://${REMOTE}" bash "${SYNC}" get "$@" ) 2>&1; }

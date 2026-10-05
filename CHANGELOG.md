@@ -4,6 +4,16 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Fixed
+- **`tools/sim/sync-sim.sh` — Run 8 (`alphacp-sync get`) kisi bhi branch/checkout se chalta hai (5 Oct)** —
+  `GC=...` line `git rev-parse refs/heads/arena/01a0ea3e-alphacp 2>/dev/null || ... main` use karti thi.
+  `git rev-parse <bad-ref>` (git >= 2.39) fail hone se pehle **ref ka naam STDOUT par** likhta hai, isliye
+  `GC` me kachra (`refs/heads/...` + fallback SHA) aa jata tha → Run 8 ke 4 tests (`get basic / sha mismatch /
+  missing path / no key`) har us checkout me FAIL hote the jahan local branch ka naam
+  `arena/01a0ea3e-alphacp` na ho (yaani aaj ke sabhi `arena/*` checkouts me). Ab
+  `rev-parse --verify --quiet` + fallback chain (`PR-ref -> main -> HEAD`) hai — sync-sim **60/60**
+  (pehle 56/60). Sirf test harness fix hai; product code nahi badla.
+
 ### Added
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
