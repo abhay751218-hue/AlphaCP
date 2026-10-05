@@ -106,15 +106,16 @@ agent-backup-20261005014431
 agent-backup-20261005030945
 agent-backup-20261005034027
 agent-backup-20261005053943
-panel-backup-20261005030945
+agent-backup-20261005062349
 panel-backup-20261005034027
 panel-backup-20261005053943
+panel-backup-20261005062349
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active

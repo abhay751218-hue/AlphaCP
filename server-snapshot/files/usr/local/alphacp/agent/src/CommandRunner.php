@@ -42,11 +42,17 @@ final class CommandRunner implements CommandExecutor
         '/bin/tar',
         '/usr/bin/mariadb',
         '/usr/bin/mysql',
-        // S10 remote pull (openssh-client + optional sshpass). argv-only; the agent
-        // never builds a shell string, so scp/ssh-keyscan cannot be tricked.
+        // S10 remote pull + remote backup destinations (openssh-client + optional
+        // sshpass). argv-only; the agent never builds a shell string, so
+        // scp/ssh/ssh-keyscan cannot be tricked into running something else.
+        // `ssh` is here because a destination test/push/browse has to RUN a
+        // command on the far side (mkdir/checksum/ls) — it was missing in 0.73.0
+        // and every destination action failed with "binary not in allowlist".
         '/usr/bin/ssh-keyscan',
         '/usr/bin/ssh-keygen',
         '/usr/bin/scp',
+        '/usr/bin/ssh',
+        '/bin/ssh',
         '/usr/bin/sshpass',
     ];
 

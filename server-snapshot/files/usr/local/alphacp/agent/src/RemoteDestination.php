@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace Alphacp\Agent;
 
+use Throwable;
+
 /**
  * Remote backup destinations — where this server PUSHES its archives (scp).
  *
@@ -365,7 +367,7 @@ final class RemoteDestination
         if (($cfg['enabled'] ?? true) === false) {
             throw new TaskRejectedException("destination '{$name}' disabled hai — pehle enable karo");
         }
-        $source = $this->assertLocalArchive($localFile);
+        $source = self::assertArchivePath($localFile, $this->stateRoot);
         $probed = $this->assertPin($cfg);
         $knownHosts = $this->knownHostsFile($probed);
 
@@ -403,24 +405,31 @@ final class RemoteDestination
             );
         }
 
-        // remote par atomic rename + checksum: adhoori file kabhi asli backup na bane
+        // remote par atomic rename + checksum: adhoori file kabhi asli backup na bane.
+        // Agar yahin kuch bhi fail ho jaye (network, allowlist, checksum) to door ke
+        // server par .part FILE NAHI REHNI CHAHIYE — warna backup server me kachra
+        // jamta jayega (live check ne ye pakda tha 0.73.0 me).
         $verify = 'mv -f ' . $part . ' ' . $remote . ' && sha256sum ' . $remote;
-        $vres = $this->cmd->run($this->sshArgv($cfg, $verify, $knownHosts), self::BROWSE_TIMEOUT);
-        $this->cleanupTemp();
-        $remoteSha = '';
-        if (preg_match('/([a-f0-9]{64})/', (string) $vres->stdout, $m) === 1) {
-            $remoteSha = strtolower($m[1]);
-        }
-        if (!$vres->ok() || $remoteSha === '' || !hash_equals($sha, $remoteSha)) {
-            $rm = $this->cmd->run($this->sshArgv($cfg, 'rm -f ' . $part . ' ' . $remote, $knownHosts), self::BROWSE_TIMEOUT);
+        try {
+            $vres = $this->cmd->run($this->sshArgv($cfg, $verify, $knownHosts), self::BROWSE_TIMEOUT);
             $this->cleanupTemp();
-            if (!$rm->ok()) {
-                $this->log->warning("destination '{$name}': kharaab upload hata nahi saka ({$part})");
+            $remoteSha = '';
+            if (preg_match('/([a-f0-9]{64})/', (string) $vres->stdout, $m) === 1) {
+                $remoteSha = strtolower($m[1]);
             }
-            throw new TaskRejectedException(
-                "destination '{$name}' par checksum mismatch (local {$sha}, remote "
-                . ($remoteSha === '' ? 'koi sha nahi mila' : $remoteSha) . ') — remote file hata di'
-            );
+            if (!$vres->ok() || $remoteSha === '' || !hash_equals($sha, $remoteSha)) {
+                throw new TaskRejectedException(
+                    "destination '{$name}' par checksum mismatch (local {$sha}, remote "
+                    . ($remoteSha === '' ? 'koi sha nahi mila' : $remoteSha) . ') — remote file hata di'
+                );
+            }
+        } catch (Throwable $e) {
+            $this->cleanupRemote($cfg, $part . ' ' . $remote, $knownHosts, $name);
+            $this->cleanupTemp();
+
+            throw $e instanceof TaskRejectedException
+                ? $e
+                : new TaskRejectedException("destination '{$name}' par upload verify nahi ho saka: " . $e->getMessage());
         }
 
         return [
@@ -437,6 +446,28 @@ final class RemoteDestination
             'verified'    => true,
             'duration_ms' => (int) round((microtime(true) - $started) * 1000),
         ];
+    }
+
+    /**
+     * Best-effort remote saafai — jab upload adhoora reh gaya ho. Network/allowlist
+     * fail ho to bhi koshish karni chahiye; na ho paye to log me likh do (asli
+     * galti wapas admin ko dikhni chahiye, ye nahi).
+     *
+     * @param array<string, mixed> $cfg
+     */
+    private function cleanupRemote(array $cfg, string $remoteFiles, string $knownHosts, string $name): void
+    {
+        try {
+            $rm = $this->cmd->run(
+                $this->sshArgv($cfg, 'rm -f ' . $remoteFiles, $knownHosts),
+                self::BROWSE_TIMEOUT,
+            );
+            if (!$rm->ok()) {
+                $this->log->warning("destination '{$name}': adhoora upload remote par reh gaya ({$remoteFiles}) — haath saaf kar lo");
+            }
+        } catch (Throwable $e) {
+            $this->log->warning("destination '{$name}': adhoora upload hata nahi sake ({$remoteFiles}): " . $e->getMessage());
+        }
     }
 
     // ----------------------------------------------------------------- helpers --
@@ -460,8 +491,13 @@ final class RemoteDestination
         return preg_match('/^(SHA256:)?[A-Za-z0-9+\/]{20,}={0,2}$/', trim($fp)) === 1;
     }
 
-    /** Only files from OUR backup store may be pushed — never anything else on disk. */
-    private function assertLocalArchive(string $file): string
+    /**
+     * Only files from OUR backup store may be pushed — never anything else on
+     * disk. Public + static so the task handler can check it BEFORE the
+     * destination is even loaded: a bad path must say "store ke bahar", not
+     * "destination nahi mili" (a real live-check found exactly that).
+     */
+    public static function assertArchivePath(string $file, string $stateRoot): string
     {
         $candidate = trim($file);
         if ($candidate === '' || str_contains($candidate, "\0")) {
@@ -478,11 +514,8 @@ final class RemoteDestination
             || preg_match('/\.(tar|tar\.gz|tgz)$/i', $base) !== 1) {
             throw new TaskRejectedException("sirf .tar / .tar.gz / .tgz archive push ho sakti hai (mila: {$base})");
         }
-        if (is_link($candidate) || !is_file($candidate) || !is_readable($candidate)) {
-            throw new TaskRejectedException("archive {$candidate} nahi mila ya padha nahi ja sakta");
-        }
 
-        $root = rtrim($this->stateRoot, '/') . '/backups';
+        $root = rtrim($stateRoot, '/') . '/backups';
         $realRoot = realpath($root);
         $realFile = realpath($candidate);
         if (!is_string($realRoot) || !is_string($realFile)
@@ -490,6 +523,9 @@ final class RemoteDestination
             throw new TaskRejectedException(
                 "archive {$candidate} backup store ({$root}) ke andar nahi hai — wahin se push allowed hai"
             );
+        }
+        if (is_link($candidate) || !is_file($realFile) || !is_readable($realFile)) {
+            throw new TaskRejectedException("archive {$candidate} nahi mila ya padha nahi ja sakta");
         }
 
         return $realFile;

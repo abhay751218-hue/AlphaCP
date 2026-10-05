@@ -92,6 +92,10 @@ final class BackupDestination implements TaskInterface
         if ($archive === '') {
             throw new TaskRejectedException('archive_path do — kaunsa archive bhejna hai');
         }
+        // Path pehle, destination baad me: galat path ko "store ke bahar" milna
+        // chahiye, na ki "destination nahi mili".
+        $stateRoot = rtrim((string) (getenv('ACP_STATE_ROOT') ?: ACP_HOME), '/');
+        RemoteDestination::assertArchivePath($archive, $stateRoot);
 
         return $store->push($name, $archive);
     }
