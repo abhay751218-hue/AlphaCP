@@ -6906,7 +6906,6 @@
 /usr/local/alphacp/var/install.state
 /usr/local/alphacp/var/panel-admin.txt
 /usr/local/alphacp/var/panel-appkey.txt
-/usr/local/alphacp/verify-reports/s10-20261005-022429.txt
 /var/www/alphacp-default/check.php
 /var/www/alphacp-default/index.html
 /var/www/alphacp-default/robots.txt
