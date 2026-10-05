@@ -14,12 +14,11 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-> Aapne **0.76.2** chalaya → **43 pass / 1 fail / 0 skip** · **`ASLI MAIL DELIVERY:VERIFIED`** 🎉
-> (asli mail Maildir me pahunchi, catch-all redirect, autoresponder, spam list,
-> `dig TXT` SPF + `_dmarc` + `default._domainkey` — sab green).
-> **Sirf ek fail bacha tha: `doveadm user`** — uski asli wajah mil gayi aur fix ho gaya.
+> **0.77.0 = 0.76.3 (Dovecot `doveadm user` fix) + S7 server-wide features.**
+> Agar aapne 0.76.3 abhi chalaya bhi hai to koi farq nahi — 0.77.0 wahi fix + naye features lekar aata hai.
+> **Seedha 0.77.0 chalao** (0.76.0/0.76.1/0.76.2/0.76.3 sab supersede).
 
-### ❌ 0.76.2 ka akela fail — kya tha
+### 🐛 0.76.2 ka akela fail — wajah mil gayi, fix ho gaya
 ```
 auth-worker: Error: passwd-file scheme=BLF-CRYPT /etc/dovecot/alphacp-users:
              open(scheme=BLF-CRYPT /etc/dovecot/alphacp-users) failed: No such file or directory
@@ -27,31 +26,46 @@ auth-worker: Error: passwd-file scheme=BLF-CRYPT /etc/dovecot/alphacp-users:
 Dovecot 2.3 ke **official docs** me likha hai: *"**scheme=** … **This is available only for passdb.**"*
 Hamara rendered `userdb` block bhi `args = scheme=BLF-CRYPT /etc/dovecot/alphacp-users` likh raha tha →
 Dovecot us **poore string ko filename** samajh baitha → userdb dead → `Auth USER lookup failed`.
-**Fix:** `userdb` me se `scheme=` hata diya (hash me `{BLF-CRYPT}` prefix pehle se hai, to scheme ki zarurat hi nahi).
-`passdb` me `scheme=` rehne diya — wahan ye sahi hai.
+**Fix:** `userdb` me se `scheme=` hata diya (hash me `{BLF-CRYPT}` prefix pehle se hai).
+
+### 🆕 0.77.0 — S7 server-wide, ab asli daemons ke saath
+| cPanel # | Tool | Kya ab asli hai |
+|---|---|---|
+| **#141** | Mail Queue Manager | `mail.server action=queue` — `exim -bp` parse; `deliver/remove/freeze/thaw/flush` (`exim -M/-Mrm/-Mf/-Mt/-qf`); galat id reject |
+| **#142** | Mail Delivery Reports | `action=reports` — asli `/var/log/exim4/mainlog` se ginati (aayi / pahunchi / deferred / failed / rejected / completed) + top senders |
+| **#143** | Exim Configuration Manager | `action=eximconf` — 11 options (size limit, banner, queue, parallel, spam score…) panel se set; template dobara likha + `exim4 -bV` validate |
+| **#144** | Mailserver Configuration (Dovecot) | `action=dovecotconf` — 8 options; `doveconf -n` validate |
+| **#146** | Email Disk Usage (server view) | `action=diskusage` — har account/mailbox ki asli bytes |
+
+**Fail-closed:** har option apne type ke regex se validate (size/int/number/duration/bool/text),
+`#` aur multi-line reject. Galat value par options file likhi hi nahi jati, config ek byte nahi badalti.
 
 **Ek hi command (updater + verification):**
 ```bash
-sudo alphacp-sync get 68e428eeaff8280d42bcf7f2426c7c09e5b73093 installer/panel-update.sh /tmp/acp-panel-update-0.76.3.sh 250e9a2a13bd147c65b49aa3ed38cbf977a18fc8c0c9fb238d6a4be21695d9ff && sudo bash /tmp/acp-panel-update-0.76.3.sh && sudo alphacp-sync get 7ed48684c6fb1f576976251e59e69471d916739d tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 89146a5818b005906908066777556391486c86ca8de43f1e492052b2d8a63cbc && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get 3a04b3f0d61044aa3870b176cdfbbfeb05478e38 installer/panel-update.sh /tmp/acp-panel-update-0.77.0.sh 21f5ab9941f20392fe184757d01a35e214f9b154b4f001c5bb93271293f8e8c2 && sudo bash /tmp/acp-panel-update-0.77.0.sh && sudo alphacp-sync get 1e7238c71ba0eea9ccd501a489eff00845f37bb9 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 580a0a8cc57d2b3cfd1e242726cff266c68fc3a515eb2d763b8532e0a4cfbff6 && sudo bash /tmp/s7-mail-check.sh
 ```
 
-### 1) panel-update 0.76.3
+### 1) panel-update 0.77.0
 ```bash
-sudo alphacp-sync get 68e428eeaff8280d42bcf7f2426c7c09e5b73093 installer/panel-update.sh /tmp/acp-panel-update-0.76.3.sh 250e9a2a13bd147c65b49aa3ed38cbf977a18fc8c0c9fb238d6a4be21695d9ff && sudo bash /tmp/acp-panel-update-0.76.3.sh
+sudo alphacp-sync get 3a04b3f0d61044aa3870b176cdfbbfeb05478e38 installer/panel-update.sh /tmp/acp-panel-update-0.77.0.sh 21f5ab9941f20392fe184757d01a35e214f9b154b4f001c5bb93271293f8e8c2 && sudo bash /tmp/acp-panel-update-0.77.0.sh
 ```
-- Updater SHA-256: `250e9a2a13bd147c65b49aa3ed38cbf977a18fc8c0c9fb238d6a4be21695d9ff` · banner **`updater 0.76.3`**.
-- **Fix:** Dovecot `userdb` args se `scheme=` hataya → `doveadm user <addr>` ab chalega.
-- Setup ke baad khud probe chalta hai: `setup ka dovecot userdb probe pass (Dovecot ne mailbox dhoondh li)`.
+- Updater SHA-256: `21f5ab9941f20392fe184757d01a35e214f9b154b4f001c5bb93271293f8e8c2` · banner **`updater 0.77.0`**.
 
 ### 2) Verification
 ```bash
-sudo alphacp-sync get 7ed48684c6fb1f576976251e59e69471d916739d tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 89146a5818b005906908066777556391486c86ca8de43f1e492052b2d8a63cbc && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get 1e7238c71ba0eea9ccd501a489eff00845f37bb9 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 580a0a8cc57d2b3cfd1e242726cff266c68fc3a515eb2d763b8532e0a4cfbff6 && sudo bash /tmp/s7-mail-check.sh
 ```
-- Verifier SHA-256: `89146a5818b005906908066777556391486c86ca8de43f1e492052b2d8a63cbc`.
-- Expected: **44 pass / 0 fail** · `doveadm user info@acp-mail-check.test` **ok** ·
-  `ASLI MAIL PAHUNCH GAYI` · `ASLI MAIL DELIVERY:VERIFIED` · SPF/DMARC/DKIM `dig TXT` green.
+- Verifier SHA-256: `580a0a8cc57d2b3cfd1e242726cff266c68fc3a515eb2d763b8532e0a4cfbff6`.
+- Expected: **54 pass / 0 fail** — `doveadm user` **ok** · `ASLI MAIL PAHUNCH GAYI` ·
+  naya **part H**: queue 0-fail · delivery reports · `eximconf: message_size_limit=100M ASLI exim template me likha` ·
+  `eximconf: galat value reject` · `dovecotconf: value ASLI 99-alphacp.conf me likhi` · `email disk usage` ·
+  ant me **`ASLI MAIL DELIVERY:VERIFIED`**.
 - Kuch bhi fail ho to poora dump `ACP_HOME/verify-reports/s7-diag.txt` me likha jata hai —
   wo hourly sync se main branch par aa jata hai, **main khud padh kar agla fix dunga**.
+
+### ✅ Pichla result (aapka 0.76.2 run)
+`43 pass / 1 fail / 0 skip` · **`ASLI MAIL DELIVERY:VERIFIED`** 🎉 — asli mail Maildir me pahunchi,
+catch-all redirect, autoresponder, spam list, `dig TXT` SPF + `_dmarc` + `default._domainkey` sab green.
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 

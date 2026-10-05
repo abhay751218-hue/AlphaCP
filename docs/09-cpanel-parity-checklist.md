@@ -245,12 +245,12 @@
 ### Email (server-wide)
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 141 | Mail Queue Manager | S7 | ⏳ S7 |
-| 142 | Mail Delivery Reports | S7 | ⏳ S7 |
-| 143 | Exim Configuration Manager | S7 | ⏳ S7 |
-| 144 | Mailserver Configuration (Dovecot) | S7 | ⏳ S7 |
+| 141 | Mail Queue Manager | S7 | 🟡 (0.77.0 me ban gaya: `mail.server action=queue` — asli `exim -bp` parse + -M/-Mrm/-Mf/-Mt/-qf; galat id reject — live verify pending) |
+| 142 | Mail Delivery Reports | S7 | 🟡 (0.77.0 me ban gaya: `action=reports` — asli exim mainlog se ginati + top senders — live verify pending) |
+| 143 | Exim Configuration Manager | S7 | 🟡 (0.77.0 me ban gaya: `action=eximconf` — 11 options, type-validated, template re-render + `exim4 -bV` — live verify pending) |
+| 144 | Mailserver Configuration (Dovecot) | S7 | 🟡 (0.77.0 me ban gaya: `action=dovecotconf` — 8 options, `doveconf -n` validate — live verify pending) |
 | 145 | Email Deliverability (server default) | S7 | ⏳ S7 |
-| 146 | Email Disk Usage (server view) | S7 | ⏳ S7 |
+| 146 | Email Disk Usage (server view) | S7 | 🟡 (0.77.0 me ban gaya: `action=diskusage` — per account + per mailbox asli bytes — live verify pending) |
 | 147 | SpamAssassin + Greylisting config | S7 | ⏳ S7 |
 | 148 | Address Importer (server) | S7 | ⏳ S7 |
 
