@@ -94,6 +94,12 @@ final class FakeCommandExecutor implements CommandExecutor
     public string $eximBtOutput = '';
     /** `doveadm user <address>` ka output (khali = aisa mailbox nahi) */
     public string $doveadmUserOutput = '';
+    /** `exim4 -bV` ke banner me DKIM/Content_Scanning dikhana hai? */
+    public bool $mailDkim = false;
+    /** `openssl` ke calls (DKIM key banane ke liye) */
+    public array $opensslArgvs = [];
+    /** openssl fail kare (key nahi banegi -> deliverability sirf SPF/DMARC) */
+    public bool $opensslFails = false;
     /** @var list<list<string>> mail binaries ke saare argv (exim/dovecot/doveadm/doveconf) */
     public array $mailArgvs = [];
 
@@ -179,6 +185,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'exim4', 'exim' => $this->handleExim($argv),
             'dovecot' => new CommandResult($argv, 0, "2.3.21 (47377e0c2f)\n", '', 1),
             'doveadm' => $this->handleDoveadm($argv),
+            'openssl' => $this->handleOpenssl($argv),
             'doveconf' => $this->mailDovecotConfigFails
                 ? new CommandResult($argv, 1, '', 'doveconf: Error: unknown setting', 1)
                 : new CommandResult($argv, 0, "mail_location = maildir:~/\n", '', 1),
@@ -657,12 +664,43 @@ final class FakeCommandExecutor implements CommandExecutor
     {
         $this->mailArgvs[] = $argv;
         if (($argv[1] ?? '') === '-bV') {
-            return $this->mailEximConfigFails
-                ? new CommandResult($argv, 1, '', 'Exim configuration error in line 42: unknown option', 1)
-                : new CommandResult($argv, 0, "Exim version 4.97 #2 built 01-Jan-2026 00:00:00\n", '', 1);
+            if ($this->mailEximConfigFails) {
+                return new CommandResult($argv, 1, '', 'Exim configuration error in line 42: unknown option', 1);
+            }
+            $support = $this->mailDkim
+                ? 'Support for: crypteq IPv6 Perl OpenSSL Content_Scanning DKIM DNSSEC'
+                : 'Support for: crypteq IPv6 Perl OpenSSL';
+
+            return new CommandResult($argv, 0, "Exim version 4.97 #2 built 01-Jan-2026 00:00:00\n{$support}\n", '', 1);
         }
         if (($argv[1] ?? '') === '-bt') {
             return new CommandResult($argv, 0, $this->eximBtOutput, '', 1);
+        }
+
+        return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleOpenssl(array $argv): CommandResult
+    {
+        $this->opensslArgvs[] = $argv;
+        if ($this->opensslFails) {
+            return new CommandResult($argv, 1, '', 'openssl: error while loading shared libraries', 1);
+        }
+        // genrsa -out <file> 2048  /  rsa -in <key> -pubout -out <pub>
+        $out = '';
+        for ($i = 1; $i < count($argv) - 1; $i++) {
+            if ($argv[$i] === '-out') {
+                $out = $argv[$i + 1];
+            }
+        }
+        if ($out !== '') {
+            if (($argv[1] ?? '') === 'genrsa') {
+                @file_put_contents($out, "-----BEGIN PRIVATE KEY-----\nSIMKEY\n-----END PRIVATE KEY-----\n");
+            } else {
+                // fake public key: 300+ chars taaki 255-chunk splitting bhi test ho
+                @file_put_contents($out, "-----BEGIN PUBLIC KEY-----\n" . str_repeat('QUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVo=', 8) . "\n-----END PUBLIC KEY-----\n");
+            }
         }
 
         return new CommandResult($argv, 0, '', '', 1);

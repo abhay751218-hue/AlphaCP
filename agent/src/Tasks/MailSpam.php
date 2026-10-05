@@ -7,6 +7,7 @@ use Alphacp\Agent\AccountIdentity;
 use Alphacp\Agent\AccountOs;
 use Alphacp\Agent\AccountPaths;
 use Alphacp\Agent\Mail;
+use Alphacp\Agent\MailServer;
 use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskRejectedException;
 use RuntimeException;
@@ -45,6 +46,7 @@ final class MailSpam implements TaskInterface
             'required_score' => $written['required_score'],
             'blacklist'      => count($written['blacklist']),
             'whitelist'      => count($written['whitelist']),
+            'mail_sync' => MailServer::syncIfConfigured($ctx->cmd, $ctx->log),
             'status'         => 'ok',
         ];
     }

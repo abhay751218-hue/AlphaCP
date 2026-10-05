@@ -417,7 +417,7 @@ final class BindServer
             $type = strtoupper((string) $row['type']);
             $value = trim((string) $row['value']);
             if ($type === 'TXT') {
-                $out[] = $name . ' IN TXT ' . self::quote($value);
+                $out[] = $name . ' IN TXT ' . self::quoteTxt($value);
             } elseif ($type === 'MX') {
                 $out[] = $name . ' IN MX ' . self::DEFAULT_MX_PREF . ' ' . rtrim($value, '.') . '.';
             } elseif ($type === 'CNAME') {
@@ -607,6 +607,25 @@ final class BindServer
             }
         }
         $this->tempFiles = [];
+    }
+
+    /**
+     * TXT: BIND me ek string 255 byte se lambi nahi ho sakti — DKIM (2048-bit)
+     * ki public key ~400 char ki hoti hai, isliye 255 ke tukdo me baant kar
+     * alag-alag quote karte hain (BIND/DNS unhe jod deta hai).
+     */
+    private static function quoteTxt(string $value): string
+    {
+        if (strlen($value) <= 255) {
+            return self::quote($value);
+        }
+        $chunks = str_split($value, 255) ?: [];
+        $parts = [];
+        foreach ($chunks as $chunk) {
+            $parts[] = self::quote($chunk);
+        }
+
+        return implode(' ', $parts);
     }
 
     private static function quote(string $value): string

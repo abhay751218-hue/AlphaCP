@@ -81,7 +81,12 @@ case "${1:-}" in
     if grep -q "^${addr}:" "$RECIPIENTS" 2>/dev/null; then
       echo "$addr"; echo "  router = alphacp_mailbox, transport = alphacp_maildir"
     else
-      echo "Unrouteable address"
+      dom="${addr#*@}"
+      if grep -q "^\\*@${dom}:" "${ACP_MAIL_CATCHALL:-/dev/null}" 2>/dev/null; then
+        echo "$addr"; echo "  router = alphacp_catchall, transport = <none>"
+      else
+        echo "Unrouteable address"
+      fi
     fi
     exit 0 ;;
   -odf|-odq|-oi)
@@ -102,6 +107,43 @@ case "${1:-}" in
 esac
 printf 'SIMULATED exim4 %s\n' "$*"; exit 0
 EXIMEOF
+
+# dig @127.0.0.1 <name> TXT +short  (SIM: account ke zone.json se jawab)
+cat > "$BIN/dig" <<'DIGEOF'
+#!/usr/bin/env bash
+name=""; qtype=""
+skipnext=0
+for a in "$@"; do
+  case "$a" in
+    TXT) qtype=TXT ;;
+    +short|@*) ;;
+    *) name="$a" ;;
+  esac
+done
+name="${name%.}"
+python3 - "$name" "${qtype}" <<'PY'
+import json, os, sys, glob
+want = sys.argv[1].lower().rstrip('.')
+qtype = sys.argv[2] or 'TXT'
+root = os.environ.get('SIM_ACCOUNTS_ROOT', '')
+out = []
+for z in sorted(glob.glob(os.path.join(root, '*', 'etc', 'dns', 'zone.json'))):
+    try:
+        rows = json.load(open(z))
+    except Exception:
+        continue
+    for r in rows:
+        if not isinstance(r, dict):
+            continue
+        n = str(r.get('name', '')).lower()
+        d = str(r.get('domain', '')).lower()
+        fqdn = d if n in ('@', '') else n + '.' + d
+        if fqdn == want and str(r.get('type', '')).upper() == qtype:
+            out.append('"%s"' % r.get('value', ''))
+print('\n'.join(out))
+PY
+exit 0
+DIGEOF
 
 # doveadm user <addr> -> dovecot users file se home nikaal kar
 cat > "$BIN/doveadm" <<'EOF'
@@ -185,6 +227,7 @@ def accounts():
 
 def aggregate():
     domains, recipients, aliases, users, boxes = set(), [], [], [], []
+    catchalls, vacation, spam = [], [], []
     for user in accounts():
         home = os.path.join(HOME, user)
         pfile = os.path.join(home, "etc", "mail", "passwd")
@@ -210,15 +253,70 @@ def aggregate():
                 if not line or ":" not in line or not RE_ADDR.match(line.split(":", 1)[0]):
                     continue
                 aliases.append(line)
+        # catch-all (*@domain: dest)
+        cfile = os.path.join(home, "etc", "mail", "catchall")
+        if os.path.isfile(cfile) and os.environ.get("SIM_BREAK_CATCHALL", "0") != "1":
+            for line in open(cfile):
+                line = line.strip()
+                if not line or ":" not in line:
+                    continue
+                key, dest = line.split(":", 1)
+                key, dest = key.strip().lower(), dest.strip()
+                if re.match(r"^\*@[a-z0-9.-]+$", key) and dest:
+                    catchalls.append("%s: %s" % (key, dest))
+                    domains.add(key[2:])
+        # autoresponder -> vacation files
+        vfile = os.path.join(home, "etc", "mail", "autorespond")
+        if os.path.isfile(vfile):
+            try:
+                for row in json.load(open(vfile)):
+                    addr = "%s@%s" % (row.get("local", ""), row.get("domain", ""))
+                    if not RE_ADDR.match(addr) or addr not in boxes:
+                        continue
+                    vdir = os.environ.get("ACP_MAIL_VACATION_DIR")
+                    if vdir:
+                        os.makedirs(vdir, exist_ok=True)
+                        with open(os.path.join(vdir, addr + ".eml"), "w") as f:
+                            f.write("Subject: %s\n\n%s\n" % (row.get("subject", ""), row.get("body", "")))
+                        with open(os.path.join(vdir, addr + ".repeat"), "w") as f:
+                            f.write("%sh\n" % row.get("interval_h", 168))
+                    vacation.append(addr)
+            except Exception:
+                pass
+        # spam lists -> har mailbox ke liye .deny/.allow
+        sfile = os.path.join(home, "etc", "mail", "spam.json")
+        if os.path.isfile(sfile):
+            try:
+                cfg = json.load(open(sfile))
+                sdir = os.environ.get("ACP_MAIL_SPAM_DIR")
+                for addr in boxes:
+                    for kind, key in (("deny", "blacklist"), ("allow", "whitelist")):
+                        vals = [v for v in cfg.get(key, []) if "/" not in str(v)]
+                        path = os.path.join(sdir, addr + "." + kind) if sdir else None
+                        if not path:
+                            continue
+                        os.makedirs(sdir, exist_ok=True)
+                        if vals:
+                            with open(path, "w") as f:
+                                f.write("\n".join(vals) + "\n")
+                        elif os.path.isfile(path):
+                            os.remove(path)
+                    spam.append(addr)
+            except Exception:
+                pass
     write(DOM, "".join(d + "\n" for d in sorted(domains)))
     write(RECIP, "".join(r + "\n" for r in sorted(recipients)))
     write(ALI, "".join(a + "\n" for a in sorted(aliases)))
     write(USERS, "".join(u + "\n" for u in sorted(users)))
+    write(os.environ.get("ACP_MAIL_CATCHALL", "/dev/null"), "".join(c + "\n" for c in sorted(catchalls)))
     return {
         "ok": True,
         "domains": len(domains),
         "mailboxes": len(boxes),
         "aliases": len(aliases),
+        "catchalls": len(catchalls),
+        "responders": len(vacation),
+        "spam_lists": len(spam),
     }
 
 def setup():
@@ -244,6 +342,52 @@ def verify(addr):
     routed = os.path.isfile(RECIP) and any(l.startswith(addr + ":") for l in open(RECIP))
     has = os.path.isfile(USERS) and any(l.startswith(addr + ":") for l in open(USERS))
     return {"address": addr, "routed": routed, "has_mailbox": has}
+
+def configured():
+    return os.path.isfile(os.path.join(STATE, "etc", "mail-server-configured"))
+
+
+def deliverability(username=None):
+    """SPF + DMARC + DKIM records account ki zone me (SIM break: SIM_BREAK_DNS=1 -> kuch nahi)."""
+    users = [username] if username else accounts()
+    done = []
+    for u in users:
+        zf = os.path.join(HOME, u, "etc", "dns", "zone.json")
+        dfile = os.path.join(HOME, u, "etc", "mail", "deliverability.json")
+        if not os.path.isfile(dfile):
+            continue
+        try:
+            rows = json.load(open(dfile))
+        except Exception:
+            continue
+        for row in rows:
+            dom = row.get("domain") if isinstance(row, dict) else row
+            if not dom:
+                continue
+            if os.environ.get("SIM_BREAK_DNS", "0") == "1":
+                done.append({"domain": dom, "dkim": False, "dns": {"applied": False}})
+                continue
+            existing = []
+            if os.path.isfile(zf):
+                try:
+                    existing = json.load(open(zf))
+                except Exception:
+                    existing = []
+            keep = [r for r in existing
+                    if not (r.get("type") == "TXT"
+                            and (r.get("name") == "_dmarc"
+                                 or r.get("name") == "default._domainkey"
+                                 or (r.get("name") == "@" and str(r.get("value", "")).startswith("v=spf1"))))]
+            keep.append({"domain": dom, "name": "@", "type": "TXT", "value": "v=spf1 a mx -all"})
+            keep.append({"domain": dom, "name": "_dmarc", "type": "TXT",
+                         "value": "v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:postmaster@%s" % dom})
+            keep.append({"domain": dom, "name": "default._domainkey", "type": "TXT",
+                         "value": "v=DKIM1; k=rsa; p=SIMKEY"})
+            os.makedirs(os.path.dirname(zf), exist_ok=True)
+            write(zf, json.dumps(keep, indent=2) + "\n")
+            done.append({"domain": dom, "dkim": True, "dns": {"applied": True, "records": len(keep)}})
+    return {"ok": True, "count": len(done), "domains": done, "failed": []}
+
 
 def main():
     args = sys.argv[1:]
@@ -271,6 +415,9 @@ def main():
         home = os.path.join(HOME, u)
         os.makedirs(os.path.join(home, "etc", "mail"), exist_ok=True)
         write(os.path.join(home, "etc", "account.json"), json.dumps(p, sort_keys=True))
+        # panel ki tarah: deliverability (SPF/DKIM/DMARC) is domain ke liye chahiye
+        write(os.path.join(home, "etc", "mail", "deliverability.json"),
+              json.dumps([{"domain": p.get("domain", "")}], sort_keys=True))
         emit("success", username=u, home=home)
     if kind == "account.terminate":
         u = p.get("username", "")
@@ -298,6 +445,35 @@ def main():
             existing = open(pfile).read()
         write(pfile, existing + "".join(l + "\n" for l in lines))
         emit("success", mailboxes_written=len(lines))
+    if kind == "mail.catchall":
+        u = p.get("username", "")
+        if u not in accounts():
+            emit("failed", error="account does not exist: %s" % u)
+        lines = ["*@%s: %s" % (r["domain"], r["dest"]) for r in p.get("catchalls", [])]
+        write(os.path.join(HOME, u, "etc", "mail", "catchall"), "".join(l + "\n" for l in lines))
+        sync = "skipped"
+        if configured():
+            sync = "ok (%s mailboxes)" % aggregate()["mailboxes"]
+        emit("success", catchalls=len(lines), mail_sync=sync)
+    if kind == "mail.autorespond":
+        u = p.get("username", "")
+        if u not in accounts():
+            emit("failed", error="account does not exist: %s" % u)
+        write(os.path.join(HOME, u, "etc", "mail", "autorespond"),
+              json.dumps(p.get("responders", []), sort_keys=True))
+        sync = "skipped"
+        if configured():
+            sync = "ok (%s mailboxes)" % aggregate()["mailboxes"]
+        emit("success", responders=len(p.get("responders", [])), mail_sync=sync)
+    if kind == "mail.spam":
+        u = p.get("username", "")
+        if u not in accounts():
+            emit("failed", error="account does not exist: %s" % u)
+        write(os.path.join(HOME, u, "etc", "mail", "spam.json"), json.dumps(p, sort_keys=True))
+        sync = "skipped"
+        if configured():
+            sync = "ok (%s mailboxes)" % aggregate()["mailboxes"]
+        emit("success", required_score=p.get("required_score", 5), mail_sync=sync)
     if kind == "mail.server":
         a = p.get("action", "")
         if a == "setup":
@@ -332,6 +508,8 @@ def main():
             emit("success", mailboxes=boxes, count=len(boxes))
         if a == "verify":
             emit("success", **verify(p.get("address", "")))
+        if a == "deliverability":
+            emit("success", **deliverability(p.get("username")))
         emit("failed", error="mail.server action '%s' nahi chalega" % a)
     emit("failed", error="unknown task type: %s" % kind)
 
@@ -350,7 +528,7 @@ EOF
 run_mode() {  # $1 mode, $2 expected fail or 0
   local mode="$1" efail="$2" out="" rc=0
   local SIMROOT="$WORKROOT/run-${mode}"
-  rm -rf "$SIMROOT"; mkdir -p "$SIMROOT/home" "$SIMROOT/etc/exim4" "$SIMROOT/etc/dovecot/conf.d" "$SIMROOT/state"
+  rm -rf "$SIMROOT"; mkdir -p "$SIMROOT/home" "$SIMROOT/etc/exim4" "$SIMROOT/etc/dovecot/conf.d" "$SIMROOT/state" "$SIMROOT/etc/exim4/vacation" "$SIMROOT/etc/exim4/spam"
   # exim4 package jaisa distro template (backup lene ke liye)
   cat > "$SIMROOT/etc/exim4/exim4.conf.template" <<'TPLEOF'
 # distro exim4 template (sim)
@@ -365,6 +543,11 @@ TPLEOF
   export ACP_MAIL_EXIM_RECIPIENTS="$SIMROOT/etc/exim4/alphacp-recipients"
   export ACP_MAIL_EXIM_ALIASES="$SIMROOT/etc/exim4/alphacp-aliases"
   export ACP_MAIL_DOVECOT_USERS="$SIMROOT/etc/dovecot/alphacp-users"
+  export ACP_MAIL_CATCHALL="$SIMROOT/etc/exim4/alphacp-catchall"
+  export ACP_MAIL_VACATION_DIR="$SIMROOT/etc/exim4/vacation"
+  export ACP_MAIL_SPAM_DIR="$SIMROOT/etc/exim4/spam"
+  export ACP_MAIL_DKIM_DIR="$SIMROOT/state/etc/mail/dkim"
+  export ACP_VERIFY_DIG="$BIN/dig"
   export ACP_MAIL_DOVECOT_CONF="$SIMROOT/etc/dovecot/conf.d/99-alphacp.conf"
   export ACP_MAIL_TEST_HASH='$2y$10$abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ01234'
   export ACP_VERIFY_MAIL_USER="acpmailchk"
@@ -380,13 +563,15 @@ TPLEOF
   case "$mode" in
     breakexim)     SIM_BREAK_EXIM=1; export SIM_BREAK_EXIM ;;
     breakdelivery) SIM_BREAK_DELIVERY=1; export SIM_BREAK_DELIVERY ;;
+    breakdns)      SIM_BREAK_DNS=1; export SIM_BREAK_DNS ;;
+    breakcatchall) SIM_BREAK_CATCHALL=1; export SIM_BREAK_CATCHALL ;;
   esac
 
   out="$(ACP_HOME="$ACP_HOME" bash "$(dirname "$0")/../verify/s7-mail-check.sh" 2>&1)"
   rc=$?
   if [[ "${SIM_DEBUG:-0}" == "1" ]]; then printf '%s\n' "$out"; fi
   # local vars must not leak into later modes
-  unset SIM_BREAK_EXIM SIM_BREAK_DELIVERY
+  unset SIM_BREAK_EXIM SIM_BREAK_DELIVERY SIM_BREAK_DNS SIM_BREAK_CATCHALL
   echo "$out"
   if grep -q "pass=${PASS}" <<<"out"; then :; fi
   return $rc
@@ -405,7 +590,7 @@ check() { # description, expected fail count (0 = bilkul zero, warna >=), actual
 }
 
 echo "== S7 mail server SIM =="
-for mode in good breakexim breakdelivery; do
+for mode in good breakexim breakdelivery breakdns breakcatchall; do
   want=0
   [[ "$mode" != "good" ]] && want=1
   OUT="$(run_mode "$mode" "$want")"

@@ -45,6 +45,8 @@ final class MailServer
     public const DOVEADM_PATHS = ['/usr/bin/doveadm', '/usr/sbin/doveadm', '/usr/local/bin/doveadm'];
     public const DOVECONF_PATHS = ['/usr/sbin/doveconf', '/usr/bin/doveconf', '/usr/local/sbin/doveconf'];
     public const UPDATE_EXIM_PATHS = ['/usr/sbin/update-exim4.conf', '/usr/bin/update-exim4.conf'];
+    public const OPENSSL_PATHS = ['/usr/bin/openssl', '/usr/local/bin/openssl'];
+    public const SPAMD_PATHS = ['/usr/sbin/spamd', '/usr/bin/spamd', '/usr/local/sbin/spamd'];
 
     // ---- config files (sab env-overridable: tests kabhi asli /etc ko nahi chhute) ----
     private const DEFAULT_EXIM_TEMPLATE = '/etc/exim4/exim4.conf.template';
@@ -53,11 +55,23 @@ final class MailServer
     private const DEFAULT_EXIM_ALIASES = '/etc/exim4/alphacp-aliases';
     private const DEFAULT_DOVECOT_USERS = '/etc/dovecot/alphacp-users';
     private const DEFAULT_DOVECOT_CONF = '/etc/dovecot/conf.d/99-alphacp.conf';
+    private const DEFAULT_EXIM_CATCHALL = '/etc/exim4/alphacp-catchall';
+    private const DEFAULT_VACATION_DIR = '/etc/exim4/alphacp-vacation';
+    private const DEFAULT_SPAM_DIR = '/etc/exim4/alphacp-spam';
+    private const DEFAULT_DKIM_DIR = '/usr/local/alphacp/etc/mail/dkim';
 
     private const MANAGED_BEGIN = '# >>> AlphaCP managed (mail.server) — haath se edit mat karo';
     private const MANAGED_END = '# <<< AlphaCP managed (mail.server)';
 
     public const CMD_TIMEOUT = 60;
+
+    /** DKIM selector (DNS me: <selector>._domainkey.<domain>) */
+    public const DKIM_SELECTOR = 'default';
+
+    /** DNS blacklists — sirf header + log (reject nahi: DNS issue par mail nahi gire) */
+    private const DNSBL = 'zen.spamhaus.org : bl.spamcop.net';
+    /** SPF: is server se mail in records se jaati hai (a/mx zone me maujood hain) */
+    private const SPF_RECORD = 'v=spf1 a mx -all';
 
     /** @var list<string> */
     private array $tempFiles = [];
@@ -98,6 +112,30 @@ final class MailServer
     public function dovecotUsersFile(): string
     {
         return self::pathEnv('ACP_MAIL_DOVECOT_USERS', self::DEFAULT_DOVECOT_USERS);
+    }
+
+    /** Catch-all (`*@domain: dest`) — mail.catchall task se. */
+    public function catchallFile(): string
+    {
+        return self::firstNonEmpty('ACP_MAIL_CATCHALL', self::DEFAULT_EXIM_CATCHALL);
+    }
+
+    /** Vacation (autoresponder) messages: <dir>/<address>.eml + <address>.repeat */
+    public function vacationDir(): string
+    {
+        return self::firstNonEmpty('ACP_MAIL_VACATION_DIR', self::DEFAULT_VACATION_DIR);
+    }
+
+    /** Per-mailbox spam lists: <dir>/<address>.deny , <address>.allow */
+    public function spamDir(): string
+    {
+        return self::firstNonEmpty('ACP_MAIL_SPAM_DIR', self::DEFAULT_SPAM_DIR);
+    }
+
+    /** DKIM private keys: <dir>/<domain>.key (+ <domain>.pub) */
+    public function dkimDir(): string
+    {
+        return self::firstNonEmpty('ACP_MAIL_DKIM_DIR', self::DEFAULT_DKIM_DIR);
     }
 
     public function dovecotConfFile(): string
@@ -244,13 +282,290 @@ final class MailServer
      *
      * @return array<string, int>
      */
+    /**
+     * Exim kya-kya support karta hai (`exim4 -bV` khud batata hai).
+     * DKIM signing aur SpamAssassin isi se gate hote hain — jo cheez binary
+     * support na kare, wo config me likhi hi nahi jati (fail-closed).
+     *
+     * @return array{dkim: bool, content_scanning: bool, spamd: bool}
+     */
+    public function capabilities(): array
+    {
+        $bin = self::bin('ACP_MAIL_EXIM', self::EXIM, self::EXIM_PATHS);
+        $res = $this->cmd->run([$bin, '-bV'], self::CMD_TIMEOUT);
+        $text = trim($res->stdout . ' ' . $res->stderr);
+        if ($text === '') {
+            return ['dkim' => false, 'content_scanning' => false, 'spamd' => false];
+        }
+
+        return [
+            'dkim'             => str_contains($text, 'DKIM'),
+            'content_scanning' => str_contains($text, 'Content_Scanning'),
+            'spamd'            => self::have('ACP_MAIL_SPAMD', self::SPAMD_PATHS),
+        ];
+    }
+
+    /**
+     * Mail task (mail.set / mail.forward / mail.catchall / mail.autorespond /
+     * mail.spam) ke turant baad: aggregate files dobara banao, taki naya
+     * mailbox/forwarder bina kisi alag command ke kaam kare.
+     * Mail server configured nahi hai to chupchap skip (task fail nahi hota).
+     */
+    public static function syncIfConfigured(CommandExecutor $cmd, TaskLogger $log): string
+    {
+        if (!self::isConfigured()) {
+            return 'skipped (mail server configured nahi hai — mail.server setup pehle)';
+        }
+        try {
+            $out = (new self($cmd, $log))->syncFiles();
+
+            return 'ok (' . (int) ($out['mailboxes'] ?? 0) . ' mailboxes, '
+                . (int) ($out['aliases'] ?? 0) . ' forwarders)';
+        } catch (Throwable $e) {
+            // primary task ka kaam ho chuka hai — sync ki wajah se use fail nahi karte
+            $log->info('mail sync after task failed: ' . $e->getMessage());
+
+            return 'failed: ' . $e->getMessage();
+        }
+    }
+
+    /** Updater/task isi se puchhte hain: mail server configure ho chuka hai? */
+    public static function isConfigured(): bool
+    {
+        $root = rtrim((string) (getenv('ACP_STATE_ROOT') ?: ACP_HOME), '/');
+
+        return is_file($root . '/etc/mail-server-configured');
+    }
+
+    /**
+     * mail.deliverability ko asli banana: SPF + DMARC (+ DKIM) records account
+     * ki zone me likh kar BIND ko dobara likhna — S9 live hai to `dig` se
+     * turant dikh jata hai (hamara daawa nahi, DNS ka jawab).
+     *
+     * @return array<string, mixed>
+     */
+    public function deliverability(?string $username = null): array
+    {
+        $root = AccountPaths::fromEnv()->accountsRoot;
+        $homes = [];
+        if ($username !== null) {
+            $name = strtolower(trim($username));
+            if (AccountIdentity::username($name) === null && is_dir($root . '/' . $name)) {
+                $homes[] = $root . '/' . $name;
+            }
+        } else {
+            foreach (glob($root . '/*') ?: [] as $dir) {
+                if (!is_dir($dir) || is_link($dir)) {
+                    continue;
+                }
+                if (AccountIdentity::username(basename($dir)) !== null) {
+                    continue;
+                }
+                $homes[] = $dir;
+            }
+        }
+
+        $done = [];
+        $failed = [];
+        foreach ($homes as $home) {
+            $user = basename($home);
+            $file = $home . '/etc/mail/deliverability.json';
+            if (is_link($file) || !is_file($file)) {
+                continue;
+            }
+            $rows = json_decode((string) @file_get_contents($file), true);
+            if (!is_array($rows)) {
+                continue;
+            }
+            foreach ($rows as $row) {
+                $domain = strtolower(trim((string) (is_array($row) ? ($row['domain'] ?? '') : (is_string($row) ? $row : ''))));
+                if ($domain === '' || !Dns::validDomain($domain)) {
+                    continue;
+                }
+                try {
+                    $done[] = $this->applyDeliverability($home, $user, $domain);
+                } catch (Throwable $e) {
+                    $failed[] = ['domain' => $domain, 'error' => $e->getMessage()];
+                }
+            }
+        }
+
+        return [
+            'ok'      => $failed === [],
+            'domains' => $done,
+            'failed'  => $failed,
+            'count'   => count($done),
+        ];
+    }
+
+    /**
+     * Ek domain ke liye: DKIM key (agar nahi to banao) + zone me SPF/DMARC/DKIM
+     * records + BIND zone dobara likho.
+     *
+     * @return array<string, mixed>
+     */
+    private function applyDeliverability(string $home, string $user, string $domain): array
+    {
+        $dkim = $this->ensureDkimKey($domain);
+        $selector = (string) ($dkim['selector'] ?? self::DKIM_SELECTOR);
+
+        $records = [
+            ['domain' => $domain, 'name' => '@', 'type' => 'TXT', 'value' => self::SPF_RECORD],
+            ['domain' => $domain, 'name' => '_dmarc', 'type' => 'TXT', 'value' => self::dmarcRecord($domain)],
+        ];
+        if (is_string($dkim['public'] ?? null) && $dkim['public'] !== '') {
+            $records[] = [
+                'domain' => $domain,
+                'name'   => $selector . '._domainkey',
+                'type'   => 'TXT',
+                'value'  => 'v=DKIM1; k=rsa; p=' . $dkim['public'],
+            ];
+        }
+
+        // zone.json: purane SPF/DMARC/DKIM records hatakar naye daalo
+        $zoneFile = $home . '/etc/dns/zone.json';
+        $existing = [];
+        if (is_file($zoneFile) && !is_link($zoneFile)) {
+            $decoded = json_decode((string) @file_get_contents($zoneFile), true);
+            if (is_array($decoded)) {
+                $existing = array_values($decoded);
+            }
+        }
+        $keep = [];
+        foreach ($existing as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $rowDomain = strtolower(trim((string) ($row['domain'] ?? '')));
+            $rowName = strtolower(trim((string) ($row['name'] ?? '')));
+            $rowType = strtoupper(trim((string) ($row['type'] ?? '')));
+            $rowValue = trim((string) ($row['value'] ?? ''));
+            if ($rowDomain === $domain && $rowType === 'TXT') {
+                $ours = $rowName === '_dmarc'
+                    || $rowName === $selector . '._domainkey'
+                    || ($rowName === '@' && str_starts_with($rowValue, 'v=spf1'));
+                if ($ours) {
+                    continue;   // hum inhe abhi dobara likhte hain
+                }
+            }
+            $keep[] = $row;
+        }
+
+        $merged = Dns::sanitize(array_merge($keep, $records));
+        $dir = dirname($zoneFile);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0750, true);
+        }
+        $tmp = $dir . '/.zone-' . bin2hex(random_bytes(4)) . '.tmp';
+        $body = json_encode($merged, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+        if (@file_put_contents($tmp, $body) === false || !@rename($tmp, $zoneFile)) {
+            @unlink($tmp);
+            throw new TaskRejectedException("zone.json nahi likh paye ({$domain})");
+        }
+        @chmod($zoneFile, 0640);
+        @chown($zoneFile, $user);
+        @chgrp($zoneFile, $user);
+
+        // BIND live hai to zone turant dobara likhi jayegi (`dig` se verify)
+        $dns = ['applied' => false];
+        $bind = new BindServer($this->cmd, $this->log);
+        if ($bind->installed()) {
+            try {
+                $out = $bind->writeZone($domain, $merged);
+                $dns = [
+                    'applied'  => true,
+                    'records'  => (int) ($out['records'] ?? 0),
+                    'verified' => (bool) ($out['verified'] ?? false),
+                ];
+            } catch (Throwable $e) {
+                $dns = ['applied' => false, 'error' => $e->getMessage()];
+            }
+        }
+
+        return [
+            'domain'    => $domain,
+            'dkim'      => is_string($dkim['public'] ?? null) && $dkim['public'] !== '',
+            'selector'  => $selector,
+            'dns'       => $dns,
+            'records'   => count($merged),
+        ];
+    }
+
+    /**
+     * DKIM key: hai to wahi, nahi to `openssl genrsa` se banao (2048-bit).
+     * openssl na mile to key nahi — tab sirf SPF/DMARC likhe jate hain
+     * (kabhi jhootha "DKIM on" nahi bataya jata).
+     *
+     * @return array{selector: string, public: string|null, key: string|null}
+     */
+    private function ensureDkimKey(string $domain): array
+    {
+        $dir = $this->dkimDir();
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0750, true);
+        }
+        $keyFile = $dir . '/' . $domain . '.key';
+        $pubFile = $dir . '/' . $domain . '.pub';
+
+        if (!is_file($keyFile)) {
+            $openssl = self::bin('ACP_MAIL_OPENSSL', '/usr/bin/openssl', self::OPENSSL_PATHS);
+            if (!is_executable($openssl)) {
+                return ['selector' => self::DKIM_SELECTOR, 'public' => null, 'key' => null];
+            }
+            $tmp = $dir . '/.dkim-' . bin2hex(random_bytes(4)) . '.tmp';
+            $made = $this->cmd->run([$openssl, 'genrsa', '-out', $tmp, '2048'], 120);
+            if ($made->exitCode !== 0 || !is_file($tmp)) {
+                @unlink($tmp);
+
+                return ['selector' => self::DKIM_SELECTOR, 'public' => null, 'key' => null];
+            }
+            @rename($tmp, $keyFile);
+            @chmod($keyFile, 0640);
+            @chgrp($keyFile, 'Debian-exim');
+            $pub = $this->cmd->run([$openssl, 'rsa', '-in', $keyFile, '-pubout', '-out', $pubFile], 60);
+            if ($pub->exitCode !== 0 || !is_file($pubFile)) {
+                return ['selector' => self::DKIM_SELECTOR, 'public' => null, 'key' => $keyFile];
+            }
+            @chmod($pubFile, 0644);
+        } elseif (!is_file($pubFile)) {
+            $openssl = self::bin('ACP_MAIL_OPENSSL', '/usr/bin/openssl', self::OPENSSL_PATHS);
+            $pub = $this->cmd->run([$openssl, 'rsa', '-in', $keyFile, '-pubout', '-out', $pubFile], 60);
+            if ($pub->exitCode !== 0 || !is_file($pubFile)) {
+                return ['selector' => self::DKIM_SELECTOR, 'public' => null, 'key' => $keyFile];
+            }
+        }
+
+        $pem = (string) @file_get_contents($pubFile);
+        $b64 = (string) preg_replace('/-----[A-Z ]+-----|\s+/', '', $pem);
+        if ($b64 === '' || preg_match('/^[A-Za-z0-9+\/=]+$/', $b64) !== 1) {
+            return ['selector' => self::DKIM_SELECTOR, 'public' => null, 'key' => $keyFile];
+        }
+
+        return ['selector' => self::DKIM_SELECTOR, 'public' => $b64, 'key' => $keyFile];
+    }
+
+    private static function dmarcRecord(string $domain): string
+    {
+        return 'v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:postmaster@' . $domain;
+    }
+
+    /**
+     * Har account ke ~/etc/mail/* se daemon files banao. Idempotent — kabhi bhi
+     * chala sakte ho; exim/dovecot ko restart karne ki zaroorat nahi (dono file
+     * har message/auth par padhte hain).
+     *
+     * @return array<string, mixed>
+     */
     public function syncFiles(): array
     {
         $root = AccountPaths::fromEnv()->accountsRoot;
         $users = [];
         $recipients = [];
         $aliases = [];
+        $catchalls = [];
         $domains = [];
+        $vacation = [];
+        $spam = [];
 
         foreach (glob($root . '/*') ?: [] as $dir) {
             if (!is_dir($dir) || is_link($dir)) {
@@ -261,6 +576,7 @@ final class MailServer
                 continue;
             }
             $home = $dir;
+            $ownBoxes = [];
 
             foreach ($this->readLines($home . '/etc/mail/passwd') as $line) {
                 $fields = explode(':', $line);
@@ -284,6 +600,7 @@ final class MailServer
                 $users[$addr] = $line;
                 $recipients[$addr] = $addr . ': ' . $maildir . ' ' . $uid . ' ' . $gid;
                 $domains[substr($addr, $at + 1)] = true;
+                $ownBoxes[$addr] = true;
             }
 
             foreach ($this->readLines($home . '/etc/mail/aliases') as $line) {
@@ -297,26 +614,203 @@ final class MailServer
                 if ($key === '' || $dest === '' || preg_match('/^[a-z0-9._@-]+$/', $key) !== 1) {
                     continue;
                 }
+                if (preg_match('/^[a-z0-9._@-]+$/', $dest) !== 1) {
+                    continue;   // pipe/command nahi — sirf email address
+                }
                 $aliases[$key] = $key . ': ' . $dest;
+            }
+
+            // ---- catch-all (`*@domain: dest`) ----
+            foreach ($this->readLines($home . '/etc/mail/catchall') as $line) {
+                $line = trim($line);
+                if ($line === '' || !str_contains($line, ':')) {
+                    continue;
+                }
+                [$key, $dest] = explode(':', $line, 2);
+                $key = strtolower(trim($key));
+                $dest = trim($dest);
+                if (preg_match('/^\*@[a-z0-9.-]+$/', $key) !== 1 || $dest === '') {
+                    continue;
+                }
+                if (preg_match('/^[a-z0-9._@-]+$/', $dest) !== 1) {
+                    continue;   // pipe nahi
+                }
+                $catchalls[$key] = $key . ': ' . $dest;
+                $domains[substr($key, 2)] = true;
+            }
+
+            // ---- autoresponders (vacation) ----
+            foreach ($this->readJsonList($home . '/etc/mail/autorespond') as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $local = strtolower(trim((string) ($row['local'] ?? '')));
+                $domain = strtolower(trim((string) ($row['domain'] ?? '')));
+                $subject = trim((string) ($row['subject'] ?? ''));
+                $body = trim((string) ($row['body'] ?? ''));
+                $hours = (int) ($row['interval_h'] ?? 168);
+                if ($local === '' || $domain === '' || $subject === '' || $body === '') {
+                    continue;
+                }
+                $addr = $local . '@' . $domain;
+                if (preg_match('/^[a-z0-9._-]+@[a-z0-9.-]+$/', $addr) !== 1) {
+                    continue;
+                }
+                if (!isset($users[$addr])) {
+                    continue;   // bina mailbox ke autoresponder nahi
+                }
+                $hours = $hours < 1 ? 1 : ($hours > 720 ? 720 : $hours);
+                $subject = self::oneLine($subject);
+                $vacation[$addr] = [
+                    'subject' => $subject,
+                    'body'    => $body,
+                    'repeat'  => $hours . 'h',
+                ];
+            }
+
+            // ---- spam blacklist/whitelist: account ke har mailbox par lagu ----
+            $spamCfg = $this->readJsonMap($home . '/etc/mail/spam.json');
+            if ($spamCfg !== null) {
+                foreach (array_keys($ownBoxes) as $addr) {
+                    $spam[$addr] = $spamCfg;
+                }
             }
         }
 
         ksort($users);
         ksort($recipients);
         ksort($aliases);
+        ksort($catchalls);
+        ksort($vacation);
+        ksort($spam);
         $domainList = array_keys($domains);
         sort($domainList);
 
         $this->writeManaged($this->dovecotUsersFile(), $users === [] ? '' : implode("\n", $users) . "\n", 0640, 'dovecot');
         $this->writeManaged($this->recipientsFile(), $recipients === [] ? '' : implode("\n", $recipients) . "\n", 0644);
         $this->writeManaged($this->aliasesFile(), $aliases === [] ? '' : implode("\n", $aliases) . "\n", 0644);
+        $this->writeManaged($this->catchallFile(), $catchalls === [] ? '' : implode("\n", $catchalls) . "\n", 0644);
         $this->writeManaged($this->domainsFile(), $domainList === [] ? '' : implode("\n", $domainList) . "\n", 0644);
+        $this->writeVacation($vacation);
+        $this->writeSpamLists($spam);
 
         return [
-            'domains'   => count($domainList),
-            'mailboxes' => count($users),
-            'aliases'   => count($aliases),
+            'domains'    => count($domainList),
+            'mailboxes'  => count($users),
+            'aliases'    => count($aliases),
+            'catchalls'  => count($catchalls),
+            'responders' => count($vacation),
+            'spam_lists' => count($spam),
         ];
+    }
+
+    /** @param array<string, array{subject: string, body: string, repeat: string}> $vacation */
+    private function writeVacation(array $vacation): void
+    {
+        $dir = $this->vacationDir();
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        $keep = [];
+        foreach ($vacation as $addr => $row) {
+            $eml = 'Subject: ' . $row['subject'] . "\n"
+                . 'Auto-Submitted: auto-replied' . "\n"
+                . 'Precedence: bulk' . "\n"
+                . "\n" . $row['body'] . "\n";
+            $this->writeManaged($dir . '/' . $addr . '.eml', $eml, 0644);
+            $this->writeManaged($dir . '/' . $addr . '.repeat', $row['repeat'], 0644);
+            $keep[$addr . '.eml'] = true;
+            $keep[$addr . '.repeat'] = true;
+        }
+        // purane autoresponder ke files hatana zaroori hai — warna deleted
+        // responder ke jawab jaate rahenge
+        foreach ((array) glob($dir . '/*') as $file) {
+            $name = basename((string) $file);
+            if (!isset($keep[$name]) && is_file($file)) {
+                @unlink($file);
+            }
+        }
+    }
+
+    /** @param array<string, array{deny: list<string>, allow: list<string>}> $spam */
+    private function writeSpamLists(array $spam): void
+    {
+        $dir = $this->spamDir();
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        $keep = [];
+        foreach ($spam as $addr => $cfg) {
+            foreach (['deny', 'allow'] as $kind) {
+                $lines = [];
+                foreach ($cfg[$kind] as $entry) {
+                    $entry = strtolower(trim((string) $entry));
+                    if (preg_match('/^[a-z0-9._%@*-]+$/', $entry) === 1) {
+                        $lines[] = $entry;
+                    }
+                }
+                $name = $addr . '.' . $kind;
+                $keep[$name] = true;
+                if ($lines === []) {
+                    if (is_file($dir . '/' . $name)) {
+                        @unlink($dir . '/' . $name);
+                    }
+                    continue;
+                }
+                $this->writeManaged($dir . '/' . $name, implode("\n", $lines) . "\n", 0644);
+            }
+        }
+        foreach ((array) glob($dir . '/*') as $file) {
+            $name = basename((string) $file);
+            if (!isset($keep[$name]) && is_file($file)) {
+                @unlink($file);
+            }
+        }
+    }
+
+    /** @return list<mixed> */
+    private function readJsonList(string $file): array
+    {
+        if (!is_file($file)) {
+            return [];
+        }
+        $raw = @file_get_contents($file);
+        if ($raw === false || trim($raw) === '') {
+            return [];
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? array_values($decoded) : [];
+    }
+
+    /** @return array{deny: list<string>, allow: list<string>}|null */
+    private function readJsonMap(string $file): ?array
+    {
+        if (!is_file($file)) {
+            return null;
+        }
+        $raw = @file_get_contents($file);
+        if ($raw === false || trim($raw) === '') {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) {
+            return null;
+        }
+        $deny = is_array($decoded['blacklist'] ?? null) ? array_values($decoded['blacklist']) : [];
+        $allow = is_array($decoded['whitelist'] ?? null) ? array_values($decoded['whitelist']) : [];
+        if ($deny === [] && $allow === []) {
+            return null;
+        }
+
+        return ['deny' => $deny, 'allow' => $allow];
+    }
+
+    private static function oneLine(string $text): string
+    {
+        $text = (string) preg_replace('/[\x00-\x1F\x7F]+/', ' ', $text) ?? '';
+
+        return trim(substr($text, 0, 200));
     }
 
     /**
@@ -421,6 +915,25 @@ final class MailServer
         $domains = $this->domainsFile();
         $recipients = $this->recipientsFile();
         $aliases = $this->aliasesFile();
+        $catchall = $this->catchallFile();
+        $vacation = $this->vacationDir();
+        $spamDir = $this->spamDir();
+        $dkimDir = $this->dkimDir();
+        $caps = $this->capabilities();
+        $dnsbl = self::DNSBL;
+        $dkimKey = $dkimDir . '/\$sender_address_domain.key';
+        $dkim = $caps['dkim']
+            ? "  dkim_domain = \$sender_address_domain\n"
+              . '  dkim_selector = ' . self::DKIM_SELECTOR . "\n"
+              . "  dkim_canon = relaxed\n"
+              . "  dkim_private_key = \${if exists{{$dkimKey}}{{$dkimKey}}{0}}\n"
+              . "  dkim_sign_headers = Date:From:To:Subject:Message-ID:MIME-Version:Content-Type\n"
+            : '';
+        $spamAcl = $caps['content_scanning'] && $caps['spamd']
+            ? "  deny condition = \${if >{\$spam_score_int}{80}{yes}{no}}\n"
+              . "       message = This message scored \$spam_score spam points (limit 8.0)\n"
+              . "       spam = nobody:true\n\n          "
+            : '';
 
         return <<<EXIM
         # AlphaCP managed exim4 configuration (mail.server)
@@ -451,6 +964,13 @@ final class MailServer
         acl_check_rcpt:
           accept hosts = : +relay_from_hosts
 
+          # account ki blacklist (mail.spam task) — sender blocked
+          deny senders = \${if exists{{$spamDir}/\$local_part@\$domain.deny}{wildlsearch;{$spamDir}/\$local_part@\$domain.deny}{}}
+               message = sender is blocked for this mailbox
+
+          # account ki whitelist — aage ke checks chhodo
+          accept senders = \${if exists{{$spamDir}/\$local_part@\$domain.allow}{wildlsearch;{$spamDir}/\$local_part@\$domain.allow}{}}
+
           deny domains = +local_domains
                local_parts = ^[./|] : ^.*[@%!/|`#&?] : ^.*/\\.\\./
                message = restricted characters in address
@@ -462,7 +982,12 @@ final class MailServer
           deny message = relay not permitted
 
         acl_check_data:
-          accept
+          # DNS blacklist: reject nahi, header + log (DNS slow ho to mail nahi girti)
+          warn dnslists = {$dnsbl}
+               add_header = X-AlphaCP-DNSBL: \$dnslist_domain (\$dnslist_value)
+               log_message = DNSBL hit \$dnslist_domain for \$sender_address -> \$local_part@\$domain
+
+          {$spamAcl}accept
 
         begin routers
 
@@ -476,7 +1001,21 @@ final class MailServer
           retry_use_local_part
           data = \${lookup{\$local_part@\$domain}lsearch{{$aliases}}}
 
-        # 2) asli mailbox -> Maildir (uid/gid mailbox ke hisaab se)
+        # 2) autoresponder (vacation) — unseen: mail delivery aage bhi hoti hai
+        alphacp_autoreply:
+          driver = accept
+          domains = +local_domains
+          condition = \${if exists{{$vacation}/\$local_part@\$domain.eml}{yes}{no}}
+          senders = ! ^.*-request@.* : ! ^bounce-.*@.* : ! ^.*-bounce@.* : \
+                    ! ^owner-.*@.* : ! ^postmaster@.* : ! ^webmaster@.* : \
+                    ! ^listmaster@.* : ! ^mailer-daemon@.* : ! ^root@.* : \
+                    ! ^nobody@.*
+          transport = alphacp_vacation
+          unseen
+          no_expn
+          no_verify
+
+        # 3) asli mailbox -> Maildir (uid/gid mailbox ke hisaab se)
         alphacp_mailbox:
           driver = accept
           domains = +local_domains
@@ -484,7 +1023,16 @@ final class MailServer
           transport = alphacp_maildir
           no_more
 
-        # 3) server ke apne system users (root, ubuntu, ...) — /etc/aliases bhi
+        # 4) catch-all (*@domain) — mailbox na mile to yahi aakhri rasta
+        alphacp_catchall:
+          driver = redirect
+          domains = +local_domains
+          allow_fail
+          allow_defer
+          qualify_preserve_domain
+          data = \${lookup{*@\$domain}lsearch{{$catchall}}}
+
+        # 5) server ke apne system users (root, ubuntu, ...) — /etc/aliases bhi
         system_aliases:
           driver = redirect
           allow_fail
@@ -499,7 +1047,7 @@ final class MailServer
           transport = maildir_home
           cannot_route_message = Unknown user
 
-        # 4) bahar ki duniya
+        # 6) bahar ki duniya
         dnslookup:
           driver = dnslookup
           domains = ! +local_domains
@@ -520,6 +1068,18 @@ final class MailServer
           envelope_to_add
           return_path_add
           mode = 0600
+
+        alphacp_vacation:
+          driver = autoreply
+          file = {$vacation}/\$local_part@\$domain.eml
+          file_expand
+          from = \$local_part@\$domain
+          to = \$sender_address
+          subject = \${if def:h_subject: {Re: \$h_subject:}{Automatic reply}}
+          once = /var/spool/exim4/db/alphacp-vacation-\$local_part@\$domain
+          once_repeat = \${if exists{{$vacation}/\$local_part@\$domain.repeat}{\${readfile{{$vacation}/\$local_part@\$domain.repeat}{}}}{7d}}
+          log = /var/log/exim4/vacation.log
+          return_message
 
         maildir_home:
           driver = appendfile
@@ -544,7 +1104,7 @@ final class MailServer
 
         remote_smtp:
           driver = smtp
-
+          {$dkim}
         begin retry
         *                      *           F,2h,15m; G,16h,1h,1.5; F,4d,6h
 
@@ -634,6 +1194,16 @@ final class MailServer
         $file = $dir . '/mail-server-configured';
 
         return @file_put_contents($file, 'configured ' . gmdate('c') . "\n") !== false;
+    }
+
+    private static function firstNonEmpty(string $env, string $default): string
+    {
+        $override = trim((string) (getenv($env) ?: ''));
+        if ($override !== '' && $override[0] === '/' && !str_contains($override, "\0")) {
+            return rtrim($override, '/');
+        }
+
+        return $default;
     }
 
     /** @param list<string> $paths */

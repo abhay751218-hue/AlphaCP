@@ -4504,7 +4504,10 @@ fwrite(STDOUT, "\nS7 MAIL SERVER (mail.server)\n");
 function acp_mail_harness(): array
 {
     $root = sys_get_temp_dir() . '/acp-mail-' . bin2hex(random_bytes(4));
-    $dirs = [$root . '/home', $root . '/etc/exim4', $root . '/etc/dovecot/conf.d', $root . '/alphacp'];
+    $dirs = [
+        $root . '/home', $root . '/etc/exim4', $root . '/etc/dovecot/conf.d', $root . '/alphacp',
+        $root . '/etc/exim4/vacation', $root . '/etc/exim4/spam', $root . '/alphacp/etc/mail/dkim',
+    ];
     foreach ($dirs as $dir) {
         mkdir($dir, 0755, true);
     }
@@ -4514,6 +4517,10 @@ function acp_mail_harness(): array
     putenv('ACP_MAIL_EXIM_DOMAINS=' . $root . '/etc/exim4/alphacp-domains');
     putenv('ACP_MAIL_EXIM_RECIPIENTS=' . $root . '/etc/exim4/alphacp-recipients');
     putenv('ACP_MAIL_EXIM_ALIASES=' . $root . '/etc/exim4/alphacp-aliases');
+    putenv('ACP_MAIL_CATCHALL=' . $root . '/etc/exim4/alphacp-catchall');
+    putenv('ACP_MAIL_VACATION_DIR=' . $root . '/etc/exim4/vacation');
+    putenv('ACP_MAIL_SPAM_DIR=' . $root . '/etc/exim4/spam');
+    putenv('ACP_MAIL_DKIM_DIR=' . $root . '/alphacp/etc/mail/dkim');
     putenv('ACP_MAIL_DOVECOT_USERS=' . $root . '/etc/dovecot/alphacp-users');
     putenv('ACP_MAIL_DOVECOT_CONF=' . $root . '/etc/dovecot/conf.d/99-alphacp.conf');
     // fake executor in binaries ko intercept karta hai
@@ -4552,7 +4559,9 @@ function acp_mail_cleanup(array $harness): void
     }
     foreach ([
         'ACP_MAIL_EXIM_TEMPLATE', 'ACP_MAIL_EXIM_DOMAINS', 'ACP_MAIL_EXIM_RECIPIENTS',
-        'ACP_MAIL_EXIM_ALIASES', 'ACP_MAIL_DOVECOT_USERS', 'ACP_MAIL_DOVECOT_CONF',
+        'ACP_MAIL_EXIM_ALIASES', 'ACP_MAIL_CATCHALL', 'ACP_MAIL_VACATION_DIR',
+        'ACP_MAIL_SPAM_DIR', 'ACP_MAIL_DKIM_DIR',
+        'ACP_MAIL_DOVECOT_USERS', 'ACP_MAIL_DOVECOT_CONF',
         'ACP_MAIL_EXIM', 'ACP_MAIL_DOVECOT', 'ACP_MAIL_DOVEADM', 'ACP_MAIL_DOVECONF',
         'ACP_MAIL_UPDATE_EXIM',
     ] as $name) {
@@ -4751,6 +4760,241 @@ test('mail.server schema — payload fail-closed', function (): void {
     assert_true(JsonSchema::validate($schema, ['action' => 'destroy']) !== [], 'unknown action reject');
     assert_true(JsonSchema::validate($schema, ['action' => 'verify', 'address' => '|/bin/sh']) !== [], 'hostile address reject');
     assert_true(JsonSchema::validate($schema, ['action' => 'verify', 'address' => 'a@b.test']) === [], 'sahi address pass');
+});
+
+
+fwrite(STDOUT, "\nS7 MAIL EXTRAS (catch-all / autoresponder / spam / SPF-DKIM-DMARC)\n");
+
+/** @param array{root:string,cmd:FakeCommandExecutor,ctx:TaskContext} $h */
+function acp_mail_seed_extras(array $h): void
+{
+    $root = $h['root'];
+    $hash = '$2y$10$abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ01234';
+    // alicehost: 1 mailbox + catchall + autoresponder + spam lists + deliverability
+    $home = $root . '/home/alicehost';
+    mkdir($home . '/etc/mail', 0755, true);
+    mkdir($home . '/mail/alice.test/info', 0755, true);
+    file_put_contents($home . '/etc/mail/passwd', "info@alice.test:{BLF-CRYPT}{$hash}:1001:1001::{$home}/mail/alice.test/info::\n");
+    file_put_contents($home . '/etc/mail/catchall', "*@alice.test: info@alice.test\n");
+    // pipe wala destination kabhi nahi chalna chahiye
+    file_put_contents($home . '/etc/mail/aliases', "web@alice.test: info@alice.test\n");
+    file_put_contents(
+        $home . '/etc/mail/autorespond',
+        json_encode([[
+            'local' => 'info', 'domain' => 'alice.test',
+            'subject' => "Office band hai\nInjected: evil", 'body' => "Main chutti par hu.\nKal lautunga.",
+            'interval_h' => 24,
+        ], [
+            'local' => 'ghost', 'domain' => 'alice.test',   // aisa mailbox hai hi nahi
+            'subject' => 'x', 'body' => 'y', 'interval_h' => 24,
+        ]])
+    );
+    file_put_contents($home . '/etc/mail/spam.json', json_encode([
+        'required_score' => 5,
+        'blacklist'      => ['spam@bad.test', '|/bin/sh'],
+        'whitelist'      => ['boss@good.test'],
+    ]));
+    file_put_contents($home . '/etc/mail/deliverability.json', json_encode([['domain' => 'alice.test']]));
+    mkdir($home . '/etc/dns', 0755, true);
+    file_put_contents($home . '/etc/dns/zone.json', json_encode([
+        ['domain' => 'alice.test', 'name' => '@', 'type' => 'A', 'value' => '203.0.113.10'],
+        ['domain' => 'alice.test', 'name' => 'www', 'type' => 'CNAME', 'value' => 'alice.test'],
+        ['domain' => 'alice.test', 'name' => '@', 'type' => 'TXT', 'value' => 'v=spf1 include:old -all'],
+        ['domain' => 'alice.test', 'name' => 'note', 'type' => 'TXT', 'value' => 'user ka apna note'],
+    ]));
+}
+
+test('mail.server sync — catch-all + autoresponder + spam lists (asli files)', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true($out['catchalls'] === 1, '1 catch-all hona chahiye, mile ' . (int) $out['catchalls']);
+    assert_true($out['responders'] === 1, 'sirf maujooda mailbox ka autoresponder (ghost nahi), mile ' . (int) $out['responders']);
+    assert_true($out['spam_lists'] === 1, '1 mailbox ke liye spam lists');
+
+    $catch = (string) file_get_contents($h['root'] . '/etc/exim4/alphacp-catchall');
+    assert_true(str_contains($catch, '*@alice.test: info@alice.test'), 'catchall file: ' . $catch);
+
+    $eml = (string) @file_get_contents($h['root'] . '/etc/exim4/vacation/info@alice.test.eml');
+    assert_true(str_contains($eml, 'Subject: Office band hai'), 'subject ek line me hona chahiye: ' . $eml);
+    assert_true(!str_contains($eml, "\nInjected"), 'subject me newline inject nahi hona chahiye');
+    assert_true(str_contains($eml, 'Main chutti par hu.'), 'body hona chahiye');
+    assert_true(trim((string) @file_get_contents($h['root'] . '/etc/exim4/vacation/info@alice.test.repeat')) === '24h', 'once_repeat 24h');
+    assert_true(!is_file($h['root'] . '/etc/exim4/vacation/ghost@alice.test.eml'), 'bina mailbox ke autoresponder nahi');
+
+    $deny = (string) @file_get_contents($h['root'] . '/etc/exim4/spam/info@alice.test.deny');
+    assert_true(str_contains($deny, 'spam@bad.test'), 'deny list: ' . $deny);
+    assert_true(!str_contains($deny, '/bin/sh'), 'pipe wala entry kabhi nahi likhna chahiye');
+    $allow = (string) @file_get_contents($h['root'] . '/etc/exim4/spam/info@alice.test.allow');
+    assert_true(str_contains($allow, 'boss@good.test'), 'allow list: ' . $allow);
+    acp_mail_cleanup($h);
+});
+
+test('mail.server sync — hataya hua autoresponder ka file bhi hatana padta hai', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    $stale = $h['root'] . '/etc/exim4/vacation/info@alice.test.eml';
+    assert_true(is_file($stale), 'pehli baar file bani');
+    // ab autoresponder hata do
+    file_put_contents($h['root'] . '/home/alicehost/etc/mail/autorespond', '[]');
+    (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true(!is_file($stale), 'purana vacation file hatna chahiye — warna deleted responder ke jawab jate rahenge');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — exim template me catchall/autoreply/DNSBL/spam ACL', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+    assert_true(str_contains($tpl, 'alphacp_catchall:'), 'catchall router hona chahiye');
+    assert_true(str_contains($tpl, 'alphacp_autoreply:'), 'autoreply router hona chahiye');
+    assert_true(str_contains($tpl, 'alphacp_vacation:'), 'vacation transport hona chahiye');
+    assert_true(str_contains($tpl, 'driver = autoreply'), 'autoreply driver');
+    assert_true(str_contains($tpl, 'unseen'), 'autoreply unseen hona chahiye (delivery bhi ho)');
+    assert_true(str_contains($tpl, 'wildlsearch;'), 'spam lists ACL me wildlsearch');
+    assert_true(str_contains($tpl, 'zen.spamhaus.org'), 'DNSBL hona chahiye');
+    assert_true(str_contains($tpl, 'add_header = X-AlphaCP-DNSBL'), 'DNSBL sirf header/log (reject nahi)');
+    assert_true(!str_contains($tpl, 'spam = nobody'), 'bina spamd ke SpamAssassin ACL nahi likhna chahiye');
+    // DKIM is exim build me support nahi (fake -bV me DKIM nahi) -> config me nahi
+    assert_true(!str_contains($tpl, 'dkim_private_key'), 'DKIM unsupported hone par config me nahi hona chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — DKIM: exim support kare to signing, warna fail-closed', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    $h['cmd']->mailDkim = true;
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+    assert_true(str_contains($tpl, 'dkim_private_key'), 'DKIM support par signing config honi chahiye');
+    assert_true(str_contains($tpl, 'dkim_selector = default'), 'selector default hona chahiye');
+    assert_true(str_contains($tpl, '{0}'), 'key na mile to 0 (signing off)');
+    $caps = (new MailServer($h['ctx']->cmd, $h['ctx']->log))->capabilities();
+    assert_true($caps['dkim'] === true, 'capabilities: dkim true');
+    assert_true($caps['content_scanning'] === true, 'capabilities: content_scanning true');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server deliverability — SPF + DMARC + DKIM records asli zone me', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    $out = (new MailServerSetup())->handle(['action' => 'deliverability'], $h['ctx']);
+    assert_true($out['ok'] === true, 'deliverability ok (fail: ' . json_encode($out['failed']) . ')');
+    assert_true($out['count'] === 1, '1 domain, mile ' . (int) $out['count']);
+    assert_true(($out['domains'][0]['dkim'] ?? false) === true, 'DKIM key bani honi chahiye');
+    assert_true(!empty($h['cmd']->opensslArgvs), 'openssl chalna chahiye (key banane ke liye)');
+
+    $zone = json_decode((string) file_get_contents($h['root'] . '/home/alicehost/etc/dns/zone.json'), true);
+    $byName = [];
+    foreach ($zone as $row) {
+        $byName[$row['name'] . '|' . $row['type']] = $row['value'];
+    }
+    assert_true(($byName['@|A'] ?? '') === '203.0.113.10', 'A record bacha rahe');
+    assert_true(($byName['www|CNAME'] ?? '') === 'alice.test', 'CNAME bacha rahe');
+    assert_true(($byName['note|TXT'] ?? '') === 'user ka apna note', 'user ka TXT bacha rahe');
+    assert_true(($byName['@|TXT'] ?? '') === 'v=spf1 a mx -all', 'purana SPF replace hoke naya aana chahiye: ' . ($byName['@|TXT'] ?? ''));
+    assert_true(str_starts_with((string) ($byName['_dmarc|TXT'] ?? ''), 'v=DMARC1; p=quarantine'), 'DMARC record: ' . ($byName['_dmarc|TXT'] ?? ''));
+    $dkim = (string) ($byName['default._domainkey|TXT'] ?? '');
+    assert_true(str_starts_with($dkim, 'v=DKIM1; k=rsa; p='), 'DKIM record: ' . substr($dkim, 0, 60));
+    acp_mail_cleanup($h);
+});
+
+test('mail.server deliverability — openssl na ho to jhootha DKIM nahi (sirf SPF/DMARC)', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    $h['cmd']->opensslFails = true;
+    $out = (new MailServerSetup())->handle(['action' => 'deliverability'], $h['ctx']);
+    assert_true($out['count'] === 1, 'domain process hona chahiye');
+    assert_true(($out['domains'][0]['dkim'] ?? true) === false, 'key na bane to dkim false bolna chahiye');
+    $zone = json_decode((string) file_get_contents($h['root'] . '/home/alicehost/etc/dns/zone.json'), true);
+    $names = array_column($zone, 'name');
+    assert_true(!in_array('default._domainkey', $names, true), 'bina key ke DKIM record nahi');
+    assert_true(in_array('_dmarc', $names, true), 'DMARC phir bhi likhna chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.set/mail.forward ke baad auto-sync (alag se sync command nahi)', function (): void {
+    // asli account harness (getent/useradd fake hain — warna "not an AlphaCP account")
+    $h = acp_account_harness();
+    $root = $h['root'];
+    (new \Alphacp\Agent\Tasks\AccountCreate())->handle(acp_create_payload(), $h['ctx']);
+    // mail ke env overrides usi root me
+    foreach ([
+        'ACP_MAIL_EXIM_TEMPLATE' => $root . '/etc/exim4/exim4.conf.template',
+        'ACP_MAIL_EXIM_DOMAINS' => $root . '/etc/exim4/alphacp-domains',
+        'ACP_MAIL_EXIM_RECIPIENTS' => $root . '/etc/exim4/alphacp-recipients',
+        'ACP_MAIL_EXIM_ALIASES' => $root . '/etc/exim4/alphacp-aliases',
+        'ACP_MAIL_CATCHALL' => $root . '/etc/exim4/alphacp-catchall',
+        'ACP_MAIL_VACATION_DIR' => $root . '/etc/exim4/vacation',
+        'ACP_MAIL_SPAM_DIR' => $root . '/etc/exim4/spam',
+        'ACP_MAIL_DKIM_DIR' => $root . '/alphacp/etc/mail/dkim',
+        'ACP_MAIL_DOVECOT_USERS' => $root . '/etc/dovecot/alphacp-users',
+        'ACP_MAIL_DOVECOT_CONF' => $root . '/etc/dovecot/conf.d/99-alphacp.conf',
+        'ACP_MAIL_EXIM' => $root . '/bin/exim4',
+        'ACP_MAIL_DOVECOT' => $root . '/bin/dovecot',
+        'ACP_MAIL_DOVEADM' => $root . '/bin/doveadm',
+        'ACP_MAIL_DOVECONF' => $root . '/bin/doveconf',
+        'ACP_MAIL_UPDATE_EXIM' => $root . '/bin/update-exim4.conf',
+    ] as $name => $value) {
+        putenv($name . '=' . $value);
+    }
+    mkdir($root . '/etc/exim4', 0755, true);
+    file_put_contents($root . '/etc/exim4/exim4.conf.template', "# distro template\n");
+    $hash = '$2y$10$abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ01234';
+
+    // 1) mail server configured nahi -> sync skip (mail task fail nahi hona chahiye)
+    $set1 = (new \Alphacp\Agent\Tasks\MailSet())->handle([
+        'username'  => 'alicehost',
+        'mailboxes' => [['local' => 'info', 'domain' => 'alice.test', 'hash' => $hash, 'quota_mb' => 100]],
+    ], $h['ctx']);
+    assert_true(str_contains((string) $set1['mail_sync'], 'skipped'), 'bina setup ke sync skip: ' . $set1['mail_sync']);
+
+    // 2) setup ke baad -> mail.set khud sync kare
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $set2 = (new \Alphacp\Agent\Tasks\MailSet())->handle([
+        'username'  => 'alicehost',
+        'mailboxes' => [['local' => 'sales', 'domain' => 'alice.test', 'hash' => $hash, 'quota_mb' => 100]],
+    ], $h['ctx']);
+    assert_true(str_contains((string) $set2['mail_sync'], 'ok ('), 'setup ke baad sync hona chahiye: ' . $set2['mail_sync']);
+    $users = (string) file_get_contents($root . '/etc/dovecot/alphacp-users');
+    assert_true(str_contains($users, 'sales@alice.test:'), 'naya mailbox turant aggregate me hona chahiye');
+
+    // 3) mail.forward ke baad bhi
+    $fwd = (new \Alphacp\Agent\Tasks\MailForward())->handle([
+        'username' => 'alicehost',
+        'forwards' => [['local' => 'contact', 'domain' => 'alice.test', 'dest' => 'info@alice.test']],
+    ], $h['ctx']);
+    assert_true(str_contains((string) $fwd['mail_sync'], 'ok ('), 'forward ke baad bhi sync: ' . $fwd['mail_sync']);
+    $aliases = (string) file_get_contents($root . '/etc/exim4/alphacp-aliases');
+    assert_true(str_contains($aliases, 'contact@alice.test: info@alice.test'), 'naya forwarder turant lagu: ' . $aliases);
+
+    foreach ([
+        'ACP_MAIL_EXIM_TEMPLATE', 'ACP_MAIL_EXIM_DOMAINS', 'ACP_MAIL_EXIM_RECIPIENTS',
+        'ACP_MAIL_EXIM_ALIASES', 'ACP_MAIL_CATCHALL', 'ACP_MAIL_VACATION_DIR',
+        'ACP_MAIL_SPAM_DIR', 'ACP_MAIL_DKIM_DIR', 'ACP_MAIL_DOVECOT_USERS',
+        'ACP_MAIL_DOVECOT_CONF', 'ACP_MAIL_EXIM', 'ACP_MAIL_DOVECOT',
+        'ACP_MAIL_DOVEADM', 'ACP_MAIL_DOVECONF', 'ACP_MAIL_UPDATE_EXIM',
+    ] as $name) {
+        putenv($name);
+    }
+    acp_account_cleanup($h);
+});
+
+test('S7 mail tools: openssl bhi agent allowlist me hai', function (): void {
+    $ref = new ReflectionClass(CommandRunner::class);
+    $allow = $ref->getConstant('BIN_ALLOWLIST');
+    foreach (MailServer::OPENSSL_PATHS as $path) {
+        assert_true(in_array($path, $allow, true), "allowlist me {$path} nahi hai");
+    }
+});
+
+test('mail.server schema — deliverability action allowed, galat action nahi', function (): void {
+    $schema = acp_task_registry()['mail.server']['schema'];
+    assert_true(JsonSchema::validate($schema, ['action' => 'deliverability']) === [], 'deliverability pass hona chahiye');
+    assert_true(JsonSchema::validate($schema, ['action' => 'deliverability', 'username' => 'alicehost']) === [], 'username ke saath bhi');
+    assert_true(JsonSchema::validate($schema, ['action' => 'deliverability', 'username' => '../root']) !== [], 'path traversal reject');
 });
 
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");

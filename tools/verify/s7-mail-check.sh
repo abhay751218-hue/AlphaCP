@@ -28,6 +28,9 @@ EXIM_TEMPLATE="${ACP_MAIL_EXIM_TEMPLATE:-/etc/exim4/exim4.conf.template}"
 EXIM_DOMAINS="${ACP_MAIL_EXIM_DOMAINS:-/etc/exim4/alphacp-domains}"
 EXIM_RECIPIENTS="${ACP_MAIL_EXIM_RECIPIENTS:-/etc/exim4/alphacp-recipients}"
 EXIM_ALIASES="${ACP_MAIL_EXIM_ALIASES:-/etc/exim4/alphacp-aliases}"
+EXIM_CATCHALL="${ACP_MAIL_CATCHALL:-/etc/exim4/alphacp-catchall}"
+VACATION_DIR="${ACP_MAIL_VACATION_DIR:-/etc/exim4/alphacp-vacation}"
+SPAM_DIR="${ACP_MAIL_SPAM_DIR:-/etc/exim4/alphacp-spam}"
 REPORT_DIR="${ACP_HOME}/verify-reports"
 
 PASS=0; FAIL=0; SKIP=0; TASK_IDS=""; LAST_TASK_ID=""; LAST_ERR=""; TASK_OUT=""; DONE=0
@@ -58,6 +61,7 @@ find_bin() {  # $1 tool, $2 env var, $3 preferred path
 }
 
 EXIM="$(find_bin exim4 ACP_VERIFY_EXIM /usr/sbin/exim4)"
+DIG="$(find_bin dig ACP_VERIFY_DIG /usr/bin/dig)"
 DOVEADM="$(find_bin doveadm ACP_VERIFY_DOVEADM /usr/bin/doveadm)"
 DOVECOT_BIN="$(find_bin dovecot ACP_VERIFY_DOVECOT /usr/sbin/dovecot)"
 DOVECONF_BIN="$(find_bin doveconf ACP_VERIFY_DOVECONF /usr/sbin/doveconf)"
@@ -276,6 +280,86 @@ if run_task mail.server '{"action":"destroy"}'; then
   bad "unknown action chal gaya (refuse hona chahiye tha)"
 else
   ok "unknown action refuse (${LAST_ERR:-unknown})"
+fi
+
+# ------------------------------------------------------------------ part G ----
+echo
+info "G: catch-all + autoresponder + SPF/DKIM/DMARC (asli DNS me)"
+if [[ "${CREATED_ACCOUNT}" != "1" ]]; then
+  skip "kaccha account nahi bana — ye sab check chhoda"
+else
+  # 1) catch-all
+  if run_task mail.catchall "{\"username\":\"${TEST_USER}\",\"catchalls\":[{\"domain\":\"${TEST_DOMAIN}\",\"dest\":\"info@${TEST_DOMAIN}\"}]}"; then
+    ok "catch-all set kiya gaya (task #${LAST_TASK_ID})"
+  else
+    bad "mail.catchall fail: ${LAST_ERR:-unknown}"
+  fi
+  run_task mail.server '{"action":"sync"}' >/dev/null 2>&1 || true
+  if grep -q "^\\*@${TEST_DOMAIN}:" "${EXIM_CATCHALL}" 2>/dev/null; then
+    ok "catch-all file me *@${TEST_DOMAIN} hai"
+  else
+    bad "catch-all file me entry nahi mili (${EXIM_CATCHALL})"
+  fi
+  R2="$("${EXIM}" -bt "unknown-nobody@${TEST_DOMAIN}" 2>&1 | head -3 | tr '\n' ' ')"
+  if [[ "${R2}" == *alphacp_catchall* ]]; then
+    ok "exim -bt unknown@: ${R2}"
+  else
+    bad "catch-all routing nahi mila: ${R2}"
+  fi
+
+  # 2) autoresponder (vacation)
+  if run_task mail.autorespond "{\"username\":\"${TEST_USER}\",\"responders\":[{\"local\":\"info\",\"domain\":\"${TEST_DOMAIN}\",\"subject\":\"Chutti par hu\",\"body\":\"Kal laut kar jawab dunga.\",\"interval_h\":24}]}"; then
+    ok "autoresponder set kiya gaya (task #${LAST_TASK_ID})"
+  else
+    bad "mail.autorespond fail: ${LAST_ERR:-unknown}"
+  fi
+  if [[ -f "${VACATION_DIR}/${TEST_ADDR}.eml" ]]; then
+    ok "vacation file bana: ${VACATION_DIR}/${TEST_ADDR}.eml"
+    head -1 "${VACATION_DIR}/${TEST_ADDR}.eml" | sed 's/^/       | /'
+  else
+    bad "vacation file nahi mila (${VACATION_DIR}/${TEST_ADDR}.eml)"
+  fi
+
+  # 3) spam lists
+  if run_task mail.spam "{\"username\":\"${TEST_USER}\",\"required_score\":5,\"blacklist\":[\"spam@bad.test\"],\"whitelist\":[\"boss@good.test\"]}"; then
+    ok "mail.spam set kiya gaya (task #${LAST_TASK_ID})"
+  else
+    bad "mail.spam fail: ${LAST_ERR:-unknown}"
+  fi
+  if grep -q "spam@bad.test" "${SPAM_DIR}/${TEST_ADDR}.deny" 2>/dev/null; then
+    ok "blacklist file: ${SPAM_DIR}/${TEST_ADDR}.deny"
+  else
+    bad "blacklist file nahi mili (${SPAM_DIR}/${TEST_ADDR}.deny)"
+  fi
+
+  # 4) deliverability: SPF + DMARC + DKIM records — BIND live hai to dig se verify
+  if run_task mail.server '{"action":"deliverability"}'; then
+    ok "deliverability chala (task #${LAST_TASK_ID})"
+    grep -q '"dkim": *true' <<<"${TASK_OUT}" && ok "DKIM key ban gayi (exim signing ke liye taiyar)" \
+      || skip "DKIM key nahi bani (openssl missing?) — SPF/DMARC phir bhi likhe gaye"
+  else
+    bad "deliverability fail: ${LAST_ERR:-unknown}"
+  fi
+
+  if [[ -n "${DIG}" && -x "${DIG}" ]]; then
+    SPF_TXT="$("${DIG}" @127.0.0.1 "${TEST_DOMAIN}" TXT +short 2>/dev/null | tr -d '"' | grep '^v=spf1' | head -1)"
+    if [[ -n "${SPF_TXT}" ]]; then
+      ok "dig TXT ${TEST_DOMAIN} = ${SPF_TXT}"
+    else
+      bad "dig se SPF record nahi mila (${TEST_DOMAIN} TXT)"
+      info "zone file: $(ls -1 /etc/bind/zones/db.${TEST_DOMAIN} 2>/dev/null || echo nahi-mili)"
+    fi
+    DM_TXT="$("${DIG}" @127.0.0.1 "_dmarc.${TEST_DOMAIN}" TXT +short 2>/dev/null | tr -d '"' | grep '^v=DMARC1' | head -1)"
+    [[ -n "${DM_TXT}" ]] && ok "dig TXT _dmarc = ${DM_TXT}" || bad "dig se DMARC record nahi mila"
+    DK_TXT="$("${DIG}" @127.0.0.1 "default._domainkey.${TEST_DOMAIN}" TXT +short 2>/dev/null | tr -d '"' | grep '^v=DKIM1' | head -1)"
+    if [[ -n "${DK_TXT}" ]]; then
+      ok "dig TXT default._domainkey = ${DK_TXT:0:40}... (DKIM DNS me live)"
+    else
+      skip "DKIM DNS record nahi mila (key nahi bani ya abhi pending)"
+    fi
+  else
+    skip "dig nahi mila — DNS records verify nahi hue (dnsutils install karein)"
+  fi
 fi
 
 DONE=1
