@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Audit Log')
-@section('subtitle', 'Har state change yahan aata hai — immutable (append-only)')
+@section('subtitle', 'Every state change lands here — immutable (append-only)')
 
 @section('actions')
     <form method="get" class="row">
@@ -35,7 +35,7 @@
                     <tr><td></td><td colspan="6" class="muted mono" style="font-size:12px">{{ $event->meta }}</td></tr>
                 @endif
             @empty
-                <tr><td colspan="7" class="empty">Koi audit event nahi mila.</td></tr>
+                <tr><td colspan="7" class="empty">No audit events yet.</td></tr>
             @endforelse
         </table>
     </div>
