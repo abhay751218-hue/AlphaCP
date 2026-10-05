@@ -14,40 +14,31 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-### 1) report folder saaf karo (0.71.0 wala, hourly snapshot use GitHub par na le jaye)
+### 1) panel-update 0.72.1 — S10 remote pull: "host key MISMATCH" fix
 ```bash
-sudo rm -rf /usr/local/alphacp/verify-reports && sudo alphacp-sync
+sudo alphacp-sync get 90411a8ccc74e9aac9057e5b8ae0019c62240308 installer/panel-update.sh /tmp/acp-panel-update-0.72.1.sh c08686486aa28f61f5f42255a4217e8c64d67f50de92efe865949272c617e5d9 && sudo bash /tmp/acp-panel-update-0.72.1.sh
 ```
+- Updater SHA-256: `c08686486aa28f61f5f42255a4217e8c64d67f50de92efe865949272c617e5d9`.
+- Expected: banner `updater 0.72.1` → panel **0.72.0** + agent **0.65.0** (naya bundle) → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Kya theek hua:** live check me 4 fail aaye the —
+  `FAIL pull fail: host key MISMATCH for 127.0.0.1: expected SHA256:sQITm05e…, server presented SHA256:nxzHrZ2t…`
+  (aur ek aur run me `SHA256:iS1mdD3b…`). Asli server ek saath 3 SSH keys (ed25519 + ecdsa + rsa)
+  advertise karta hai aur `ssh-keyscan` unka **order har call par badal deta hai**; agent sirf
+  *pehli line* ka fingerprint leta tha — isliye "Fingerprint lao" alag key pin karta tha aur
+  "Archive lao" alag, to pin kabhi match nahi hota.
+  Ab agent **saari** keys ke fingerprint leta hai (strongest pehle) aur pin kisi bhi se match hota
+  hai — bilkul OpenSSH jaisa. Saath hi key/password ab network call se **pehle** check hote hain,
+  to "key missing" ka sahi error milta hai ("host nahi mila" ke bajaye).
 
-### 2) panel-update 0.72.0 — S10: purane server se archive khinch lao (SSH)
+### 2) dobara live verification — ab 0 fail aana chahiye
 ```bash
-sudo alphacp-sync get 7df6dface80598f4688a714f7acae6a6cdfeabe9 installer/panel-update.sh /tmp/acp-panel-update-0.72.0.sh 5edf0af62c9c310d72e3332f2aa6acf1311032d6fb48bc7ec4eeb1c81c9f91cb && sudo bash /tmp/acp-panel-update-0.72.0.sh
+sudo alphacp-sync get 90411a8ccc74e9aac9057e5b8ae0019c62240308 tools/verify/s10-remote-pull-check.sh /tmp/acp-s10-remote-pull-check.sh 52e040400adb4fd5a5c94007c4320df4d87caf3946ee2c7a16f65f37e127133d && sudo bash /tmp/acp-s10-remote-pull-check.sh
 ```
-- Updater SHA-256: `5edf0af62c9c310d72e3332f2aa6acf1311032d6fb48bc7ec4eeb1c81c9f91cb`.
-- Expected: banner `updater 0.72.0` → panel **0.72.0** + agent **0.65.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Naya kya:** ab tak cpmove archive purane server se haath se copy karke allowlisted jagah (`/home`,
-  `/usr/local/alphacp`) rakhna padta tha — cPanel archive aksar `/root` ya `/backup` me hote hain jo
-  allowlist ke bahar hain. Ab **Transfer Tool** page par "**Purane server se archive khinch lao**" se
-  archive scp se seedha `/usr/local/alphacp/incoming` me aa jata hai:
-    - **do kadam** — pehle *Fingerprint lao* (agent sirf purane server ki SSH host key padhta hai,
-      koi download nahi), use verify karke pin karo, phir *Archive lao*. Fingerprint badle to
-      `MISMATCH` par pull ruk jata hai; bina pin ke bhi nahi chalega.
-    - **key ya password** dono chalte hain; password/private key kabhi command-line me nahi jate aur
-      job history se scrub ho jate hain. Download **atomic** hai (`.part` → sha256 match ke baad rename),
-      to adhoora archive kabhi import ko nahi milta. Bandwidth limit (`max_kbps`) bhi lag sakti hai.
-- Updater `openssh-client` install karega (zarurat ho to), `sshpass` best-effort.
-
-### 3) remote pull ki live verification (recommended)
-```bash
-sudo alphacp-sync get e5f333a12ca012cb5c4f8d27785a906f87c35665 tools/verify/s10-remote-pull-check.sh /tmp/acp-s10-remote-pull-check.sh acaa5d8325999b814d71c2d942954ee0c57c524247d175374e18f77eb330a464 && sudo bash /tmp/acp-s10-remote-pull-check.sh
-```
-- Server par **asli** scp chalta hai (localhost ko "purana server" bana kar, ek kacchi SSH key se;
-  `authorized_keys` ant me bilkul wapas). Validation bhi check hoti hai — host smuggling
-  (`-oProxyCommand`), `..` wala path, ghalat dest name, adhoora auth, galat fingerprint, galat sha256.
-- Expected last line: `=== S10 REMOTE PULL LIVE CHECK: ... pass, 0 fail, ... skip ===` (**0 fail** zaroori).
-  sshd band ho ya `PermitRootLogin=no` ho to asli-pull wala hissa `skip` ho jata hai (jhootha fail nahi).
-- Ye bhi khud report GitHub par likhta hai (`/usr/local/alphacp/verify-reports/`), to aapko kuch bhejne
-  ki zaroorat nahi — main padh loonga.
+- Expected last line: `=== S10 REMOTE PULL LIVE CHECK: … pass, 0 fail, … skip ===` (**0 fail** zaroori).
+- Ye script khud report GitHub par likh deti hai (`/usr/local/alphacp/verify-reports/`), to aapko
+  screenshot bhejne ki zaroorat nahi — main khud padh loonga.
+- Offline proof (mere paas ab 13/0): `bash tools/sim/s10-remote-pull-sim.sh` — naya **run 3**
+  keys ka order ulta karke bhi 0 fail maangta hai (LIVE bug ka regression test).
 
 ## ✅ Latest deployment (4 Oct 2026; already completed)
 
