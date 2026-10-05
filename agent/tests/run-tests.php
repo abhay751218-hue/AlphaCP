@@ -5071,6 +5071,37 @@ test('mail.server setup — exim template me deliver_drop_privilege = false', fu
     acp_mail_cleanup($h);
 });
 
+
+test('mail.server deliverability — deliverability.json na ho to bhi (mailbox domain se)', function (): void {
+    $h = acp_mail_harness();
+    $root = $h['root'];
+    $hash = '$2y$10$abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ01234';
+    $home = $root . '/home/alicehost';
+    mkdir($home . '/etc/mail', 0755, true);
+    // sirf mailbox hai, deliverability.json NAHI (panel ka page khula hi nahi)
+    file_put_contents($home . '/etc/mail/passwd', "info@alice.test:{BLF-CRYPT}{$hash}:1001:1001::{$home}/mail/alice.test/info::\n");
+    $out = (new MailServerSetup())->handle(['action' => 'deliverability'], $h['ctx']);
+    assert_true($out['count'] === 1, 'mailbox ke domain ke liye records likhne chahiye, count=' . (int) $out['count']);
+    $zone = json_decode((string) @file_get_contents($home . '/etc/dns/zone.json'), true);
+    $byName = [];
+    foreach ((array) $zone as $row) {
+        $byName[$row['name'] . '|' . $row['type']] = $row['value'];
+    }
+    assert_true(str_starts_with((string) ($byName['@|TXT'] ?? ''), 'v=spf1'), 'SPF likha jana chahiye');
+    assert_true(str_starts_with((string) ($byName['_dmarc|TXT'] ?? ''), 'v=DMARC1'), 'DMARC likha jana chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — system users ke liye mail_spool (root ki mail queue me na atke)', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+    assert_true(str_contains($tpl, 'transport = mail_spool'), 'local_user system delivery ke liye mail_spool');
+    assert_true(str_contains($tpl, 'file = /var/mail/$local_part'), 'mail_spool Debian wala path');
+    acp_mail_cleanup($h);
+});
+
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");
 fwrite(STDOUT, sprintf("passed: %d   failed: %d\n", $passed, $failed));
 exit($failed === 0 ? 0 : 1);

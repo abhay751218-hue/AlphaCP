@@ -381,22 +381,44 @@ final class MailServer
         foreach ($homes as $home) {
             $user = basename($home);
             $file = $home . '/etc/mail/deliverability.json';
-            if (is_link($file) || !is_file($file)) {
+            // deliverability.json na ho to bhi aage: mailboxes ke domains se kaam chalega
+            if (!is_file($home . '/etc/mail/passwd') && (is_link($file) || !is_file($file))) {
                 continue;
             }
-            $rows = json_decode((string) @file_get_contents($file), true);
-            if (!is_array($rows)) {
-                continue;
+            $wanted = [];
+            $rows = (is_file($file) && !is_link($file)) ? json_decode((string) @file_get_contents($file), true) : null;
+            if (is_array($rows)) {
+                foreach ($rows as $row) {
+                    $domain = strtolower(trim((string) (is_array($row) ? ($row['domain'] ?? '') : (is_string($row) ? $row : ''))));
+                    if ($domain !== '' && Dns::validDomain($domain)) {
+                        $wanted[$domain] = true;
+                    }
+                }
             }
-            foreach ($rows as $row) {
-                $domain = strtolower(trim((string) (is_array($row) ? ($row['domain'] ?? '') : (is_string($row) ? $row : ''))));
-                if ($domain === '' || !Dns::validDomain($domain)) {
+            // panel ki "Email Deliverability" page khuli na ho to deliverability.json
+            // banta hi nahi — par jin domains ke mailbox hain unhe SPF/DKIM/DMARC
+            // chahiye. Isliye mailboxes ke domains bhi jodo (cPanel yahi karta hai).
+            foreach ($this->readLines($home . '/etc/mail/passwd') as $line) {
+                $fields = explode(':', $line);
+                if (count($fields) < 6) {
                     continue;
                 }
+                $addr = strtolower(trim($fields[0]));
+                $at = strpos($addr, '@');
+                if ($at === false || preg_match('/^[a-z0-9._-]+@[a-z0-9.-]+$/', $addr) !== 1) {
+                    continue;
+                }
+                $domain = substr($addr, $at + 1);
+                if (Dns::validDomain($domain)) {
+                    $wanted[$domain] = true;
+                }
+            }
+            ksort($wanted);
+            foreach (array_keys($wanted) as $domain) {
                 try {
-                    $done[] = $this->applyDeliverability($home, $user, $domain);
+                    $done[] = $this->applyDeliverability($home, $user, (string) $domain);
                 } catch (Throwable $e) {
-                    $failed[] = ['domain' => $domain, 'error' => $e->getMessage()];
+                    $failed[] = ['domain' => (string) $domain, 'error' => $e->getMessage()];
                 }
             }
         }
@@ -1189,7 +1211,7 @@ final class MailServer
         local_user:
           driver = accept
           check_local_user
-          transport = maildir_home
+          transport = mail_spool
           cannot_route_message = Unknown user
 
         # 6) bahar ki duniya
@@ -1225,6 +1247,18 @@ final class MailServer
           once_repeat = \${if exists{{$vacation}/\$local_part@\$domain.repeat}{\${readfile{{$vacation}/\$local_part@\$domain.repeat}{}}}{7d}}
           log = /var/log/exim4/vacation.log
           return_message
+
+        # system users (root/cron ki mail) ke liye Debian wala /var/mail/<user> —
+        # maildir_home se ~/Maildir na hone par queue me atak jati thi
+        mail_spool:
+          driver = appendfile
+          file = /var/mail/\$local_part
+          delivery_date_add
+          envelope_to_add
+          return_path_add
+          group = mail
+          mode = 0660
+          mode_fail_narrower = false
 
         maildir_home:
           driver = appendfile

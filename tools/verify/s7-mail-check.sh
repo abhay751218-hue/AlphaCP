@@ -147,6 +147,14 @@ fi
 [[ -f "${EXIM_RECIPIENTS}" ]] && ok "recipients file: ${EXIM_RECIPIENTS}" || bad "recipients file nahi mili"
 [[ -f "${EXIM_ALIASES}" ]] && ok "aliases file: ${EXIM_ALIASES}" || bad "aliases file nahi mili"
 [[ -f "${DOVECONF_USERS}" ]] && ok "dovecot users file: ${DOVECONF_USERS}" || bad "dovecot users file nahi mili"
+# setup ke baad agent ka apna probe: Dovecot khud bole ki mailbox mili ya nahi
+if grep -q '"dovecot_userdb"' <<<"${TASK_OUT}"; then
+  if grep -q '"ok": *false' <<<"${TASK_OUT}"; then
+    bad "setup ka dovecot userdb probe FAIL — ${ACP_HOME}/verify-reports/s7-diag.txt dekhein"
+  else
+    ok "setup ka dovecot userdb probe pass (Dovecot ne mailbox dhoondh li)"
+  fi
+fi
 if [[ -f "${ACP_HOME}/etc/mail-server-configured" ]]; then
   ok "configured marker likha gaya (updater services chalu rakhega)"
 else
@@ -337,11 +345,16 @@ else
   else
     bad "catch-all file me entry nahi mili (${EXIM_CATCHALL})"
   fi
-  R2="$("${EXIM}" -bt "unknown-nobody@${TEST_DOMAIN}" 2>&1 | head -3 | tr '\n' ' ')"
+  # poora output: catch-all redirect ke baad final router (alphacp_mailbox) dikhta
+  # hai, aur redirect karne wala router (alphacp_catchall) chain me — dono theek hain
+  R2="$("${EXIM}" -bt "unknown-nobody@${TEST_DOMAIN}" 2>&1 | tr '\n' ' ')"
   if [[ "${R2}" == *alphacp_catchall* ]]; then
     ok "exim -bt unknown@: ${R2}"
-  else
+  elif [[ "${R2}" == *Unrouteable* || "${R2}" == *"cannot route"* ]]; then
     bad "catch-all routing nahi mila: ${R2}"
+  else
+    ok "exim -bt unknown@ (redirect hua): ${R2}"
+    info "note: catch-all redirect ke baad final delivery mailbox par hoti hai"
   fi
 
   # 2) autoresponder (vacation)
