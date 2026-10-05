@@ -63,9 +63,9 @@
 | 16 | Autoresponders | Vacation/auto reply | S7 | ✅ (autoresponders live verified: vacation file + autoreply transport) |
 | 17 | Default Address | Catch-all | S7 | ✅ (catch-all live verified: unknown@ -> mailbox redirect chain) |
 | 18 | Mailing Lists | Mailman lists | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (list+owner JSON; no mailman daemon)) |
-| 19 | Track Delivery | Delivery trace | S7 | 🟡 (0.78.0 me asli ho gaya: `mail.track` ab ASLI exim mainlog se delivery trace (aayi/pahunchi/deferred/failed) — live verify pending) |
-| 20 | Global Email Filters | Server-side filters | S7 | 🟡 (0.78.0 me asli ho gaya: account-wide Exim filter file — sabhi mailboxes par, user rule se pehle — live verify pending) |
-| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.78.0 me asli ho gaya: per-mailbox ASLI Exim filter file (`exim -bf` validate): folder save / forward / discard — live verify pending) |
+| 19 | Track Delivery | Delivery trace | S7 | 🟡 (0.78.0 code + **0.79.0 fix**: `mail.track` ASLI exim mainlog se trace — 0.78.0 live par delivery hi ruk gayi thi (`exim -bt` PANIC); 0.79.0 ke baad live verify pending) |
+| 20 | Global Email Filters | Server-side filters | S7 | 🟡 (0.78.0 code + **0.79.0 fix**: account-wide ASLI Exim filter file (pehli line `# Exim filter`, warna exim use .forward samajhta hai) — live verify pending) |
+| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.78.0 code + **0.79.0 fix**: per-mailbox ASLI Exim filter file (`exim -bf` validate; reject par `filter_errors`) + setup ke baad `exim -bt` smoke test — live verify pending) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF + DMARC + DKIM live verified: `dig TXT`, `_dmarc`, `default._domainkey` sab green) |
 | 23 | Address Importer | Bulk CSV import | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (CSV local,domain,password → mail.set; no pipe)) |
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (SpamAssassin score + blacklist/whitelist files live (0.77.0)) |
@@ -360,6 +360,12 @@
 > Isi ke saath mail queue manager, delivery reports, exim/dovecot configuration manager
 > aur email disk usage bhi asli ho gaye (cPanel #141–#146).
 > Email Filters (#20/#21) + Track Delivery (#19) 0.78.0 me ASLI Exim filter files ban gaye.
+> **0.79.0 (5 Oct, fix):** 0.78.0 ke live run (58/4) me filters ne mail delivery tod di thi
+> (har address defer — `Failed to find user "}"`; `exim -bf` ne sab filter reject kiye).
+> Do asli wajah: (1) Exim filter file ka pehla text `# Exim filter` hona chahiye;
+> (2) filter router par uid/gid ki galat brace-nesting expansion. Ab uid/gid transport
+> par, router par `condition` guard, aur setup ke baad asli `exim -bt` smoke test
+> (fail → purani config wapas + reject) to delivery aage kabhi nahi rukegi.
 
 > Note: ✅ = row ke stated behavior ke liye implementation + test proof; 🟡 = partial/JSON/config-only ya host-service integration pending. Counts 208 numbered rows ko parse karke reconcile kiye gaye hain; server deployment status hamesha `server-snapshot/STATE.md` se alag verify karein.
 > JSON settings save hona, apne aap me, mail/DNS/database/backup ka real service operation nahi maana jayega.
