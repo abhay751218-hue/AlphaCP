@@ -22,6 +22,7 @@ use Alphacp\Agent\Files;
 use Alphacp\Agent\JsonSchema;
 use Alphacp\Agent\PathGuard;
 use Alphacp\Agent\PathGuardException;
+use Alphacp\Agent\RemoteDestination;
 use Alphacp\Agent\RemotePull;
 use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskLogger;
@@ -3813,6 +3814,87 @@ test('backup.destination: unknown action refuse', function (): void {
     }
     assert_true(str_contains($msg, 'nahi chalega'), 'unknown action refuse: ' . $msg);
     acp_dest_cleanup($h);
+});
+
+// ---------------------------------------------------------------------------
+// Ye do test LIVE bug (5 Oct, 0.73.0) se paida hue: live check me har
+// destination action "binary not in agent allowlist: /usr/bin/ssh" se fail hua
+// — FakeCommandExecutor allowlist check nahi karta, isliye offline tests green
+// the. Ab dono taraf se band hai.
+// ---------------------------------------------------------------------------
+
+test('remote SSH tooling: ssh/scp/ssh-keygen/ssh-keyscan/sshpass agent allowlist me hain', function (): void {
+    $ref = new ReflectionClass(CommandRunner::class);
+    $list = $ref->getConstant('BIN_ALLOWLIST');
+    assert_true(is_array($list), 'CommandRunner allowlist mili');
+
+    $needed = [
+        RemotePull::KEYSCAN, RemotePull::KEYGEN, RemotePull::SCP, RemotePull::SSHPASS,
+        RemoteDestination::SSH, RemoteDestination::SCP, RemoteDestination::KEYGEN, RemoteDestination::SSHPASS,
+    ];
+    foreach ($needed as $bin) {
+        assert_true(in_array($bin, $list, true), "{$bin} agent allowlist me hona chahiye — nahi to task 'binary not in agent allowlist' se fail hoga");
+    }
+});
+
+test('backup.destination push: archive path destination se PEHLE check hota hai', function (): void {
+    $h = acp_dest_harness();
+    // destination save hi nahi ki — phir bhi ghalat path ka jawab "backup store" wala aana chahiye
+    $msg = '';
+    try {
+        (new BackupDestination())->handle([
+            'action'       => 'push',
+            'name'         => 'no-such-destination',
+            'archive_path' => '/etc/passwd.tar.gz',
+            '_confirm'     => 'backup.destination',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true(str_contains($msg, 'backup store'), 'galat path ka sahi error: ' . $msg);
+    assert_true(!str_contains($msg, 'nahi mili'), 'error "destination nahi mili" nahi hona chahiye: ' . $msg);
+    acp_dest_cleanup($h);
+});
+
+test('backup.destination push: verify call fail ho to bhi remote .part hatane ki koshish hoti hai', function (): void {
+    $h = acp_dest_harness();
+    acp_dest_save($h);
+    $archive = $h['saves'] . '/abc123.tar.gz';
+    file_put_contents($archive, 'real-archive-bytes-0123456789');
+    $h['cmd']->sshFails = true;              // verify wala ssh call fail
+    $msg = '';
+    try {
+        (new BackupDestination())->handle([
+            'action' => 'push', 'name' => 'offsite1', 'archive_path' => $archive, '_confirm' => 'backup.destination',
+        ], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $msg = $e->getMessage();
+    }
+    assert_true($msg !== '', 'push fail hona chahiye');
+    assert_true($h['cmd']->sshCalls >= 2, 'verify ke baad rm -f ki koshish bhi hui: calls=' . $h['cmd']->sshCalls);
+    acp_dest_cleanup($h);
+});
+
+test('agent source lint: jo file catch (Throwable kare wo use Throwable bhi kare', function (): void {
+    // 0.73.0 ka LIVE bug: RemoteDestination.php me `use Throwable;` missing tha, to
+    // namespace ke andar `catch (Throwable)` kabhi match hi nahi hua aur push ki
+    // saafai (remote .part hatana) chup-chaap skip ho gayi. Ye test dobara na ho.
+    $root = dirname(__DIR__) . '/src';
+    $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS));
+    $bad = [];
+    foreach ($files as $file) {
+        if (!$file->isFile() || $file->getExtension() !== 'php') {
+            continue;
+        }
+        $code = (string) file_get_contents($file->getPathname());
+        if (!str_contains($code, 'catch (Throwable')) {
+            continue;
+        }
+        if (preg_match('/^use Throwable;$/m', $code) !== 1) {
+            $bad[] = $file->getPathname();
+        }
+    }
+    assert_true($bad === [], 'in files me use Throwable missing hai: ' . implode(', ', $bad));
 });
 
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");

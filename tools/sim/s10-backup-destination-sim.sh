@@ -138,6 +138,19 @@ if action == 'save':
         cfg['public_key'] = public_key
     emit('success', destination=cfg, saved=True)
 
+# agent ki tarah: push me archive path destination se PEHLE check hota hai
+# (galat path ka jawab "backup store" wala aana chahiye, "destination nahi mili" nahi)
+if action == 'push':
+    src = payload.get('archive_path', '')
+    if not src.startswith('/') or '..' in src or not PATH_RE.match(src):
+        fail("archive_path galat hai")
+    if not re.match(r'^[A-Za-z0-9][A-Za-z0-9._-]*$', os.path.basename(src)) \
+       or not re.search(r'\.(tar|tar\.gz|tgz)$', src, re.I):
+        fail('sirf .tar / .tar.gz / .tgz archive push ho sakti hai')
+    real = os.path.realpath(src)
+    if not real.startswith(os.path.realpath(BACKUP_ROOT) + os.sep) or not os.path.isfile(real):
+        fail('archive %s backup store (%s) ke andar nahi hai' % (src, BACKUP_ROOT))
+
 cfg = load(name)
 if cfg is None:
     fail("destination '%s' nahi mili — pehle save karo" % name)
@@ -175,15 +188,7 @@ if action == 'browse':
 if action == 'push':
     if cfg.get('enabled') is False:
         fail("destination '%s' disabled hai" % name)
-    src = payload.get('archive_path', '')
-    if not src.startswith('/') or '..' in src or not PATH_RE.match(src):
-        fail("archive_path galat hai")
-    if not re.match(r'^[A-Za-z0-9][A-Za-z0-9._-]*$', os.path.basename(src)) \
-       or not re.search(r'\.(tar|tar\.gz|tgz)$', src, re.I):
-        fail('sirf .tar / .tar.gz / .tgz archive push ho sakti hai')
-    real = os.path.realpath(src)
-    if not real.startswith(os.path.realpath(BACKUP_ROOT) + os.sep) or not os.path.isfile(real):
-        fail('archive %s backup store (%s) ke andar nahi hai' % (src, BACKUP_ROOT))
+    real = os.path.realpath(payload['archive_path'])
     data = open(real, 'rb').read()
     d = cfg['path']
     os.makedirs(d, exist_ok=True)
@@ -274,6 +279,7 @@ set -e
 echo "${OUT1}" | grep -E 'ok |FAIL|skip|BACKUP DESTINATION LIVE CHECK' | sed 's/^/     /' | head -30 || true
 chk "run 1 exit 0" "[[ ${RC1} -eq 0 ]]"
 chk "run 1 validation refuse proof" "grep -q 'host smuggling' <<<\"${OUT1}\""
+chk "run 1 store-ke-bahar wala refuse sahi wajah se" "grep -q 'backup store ke bahar wali file (refuse:.*backup store' <<<\"${OUT1}\""
 chk "run 1 save hua" "grep -q 'destination save ho gayi' <<<\"${OUT1}\""
 chk "run 1 key 0600 store hui" "grep -q 'private key 0600' <<<\"${OUT1}\""
 chk "run 1 test chala" "grep -q 'test success' <<<\"${OUT1}\""
