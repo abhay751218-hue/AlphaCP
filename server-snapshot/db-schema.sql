@@ -968,6 +968,8 @@ CREATE TABLE `transfer_restores` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(16) NOT NULL,
   `action` varchar(16) NOT NULL,
+  `mysql` tinyint(1) NOT NULL DEFAULT 0,
+  `mysql_only` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)

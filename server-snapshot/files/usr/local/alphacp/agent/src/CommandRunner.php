@@ -52,7 +52,7 @@ final class CommandRunner implements CommandExecutor
      * @param  list<string> $argv full argv, argv[0] must be a real path in the allowlist
      * @return CommandResult
      */
-    public function run(array $argv, ?int $timeout = null, ?string $stdin = null): CommandResult
+    public function run(array $argv, ?int $timeout = null, ?string $stdin = null, ?string $stdinFile = null): CommandResult
     {
         if ($argv === []) {
             throw new RuntimeException('empty argv');
@@ -80,6 +80,28 @@ final class CommandRunner implements CommandExecutor
 
         if ($stdin !== null) {
             fwrite($pipes[0], $stdin);
+        } elseif ($stdinFile !== null) {
+            // Streamed, never buffered: SQL dumps can be hundreds of MB.
+            $in = @fopen($stdinFile, 'rb');
+            if ($in === false) {
+                fclose($pipes[0]);
+                proc_terminate($proc, defined('SIGTERM') ? SIGTERM : 15);
+                fclose($pipes[1]);
+                fclose($pipes[2]);
+                proc_close($proc);
+
+                throw new RuntimeException("cannot read stdinFile: {$stdinFile}");
+            }
+            while (!feof($in)) {
+                $chunk = fread($in, 262_144);
+                if ($chunk === false) {
+                    break;
+                }
+                if ($chunk !== '' && @fwrite($pipes[0], $chunk) === false) {
+                    break; // the client closed stdin early (its exit code tells the story)
+                }
+            }
+            fclose($in);
         }
         fclose($pipes[0]);
         stream_set_blocking($pipes[1], false);

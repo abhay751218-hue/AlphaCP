@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.70.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.70.0   (.env)
-AGENT_VERSION : 0.63.0
+panel code    : 0.71.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.71.0   (.env)
+AGENT_VERSION : 0.64.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -102,15 +102,16 @@ agent-backup-20261004024356
 agent-backup-20261004032958
 agent-backup-20261004145538
 agent-backup-20261004151423
-panel-backup-20261004032958
+agent-backup-20261005014431
 panel-backup-20261004145538
 panel-backup-20261004151423
+panel-backup-20261005014431
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -209,6 +210,7 @@ alphacp:scheduled-backups
   2026_09_29_000052_create_transfer_restores_table   [51] Ran
   2026_09_29_000053_create_transfer_reviews_table   [52] Ran
   2026_10_04_000054_create_mysql_user_tables   [53] Ran
+  2026_10_04_000055_add_mysql_restore_to_transfer_restores   [54] Ran
 ```
 
 ## Routes (web)

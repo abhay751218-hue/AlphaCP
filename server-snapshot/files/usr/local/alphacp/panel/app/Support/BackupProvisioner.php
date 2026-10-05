@@ -174,6 +174,28 @@ final class BackupProvisioner
         return Paneld::enqueue('backup.cpanel', $payload);
     }
 
+    /**
+     * S10 MySQL slice: restore the `mysql/*.sql` dumps of the SAME cPanel archive
+     * into real MariaDB databases (`<account>_<suffix>`). Destructive → `_confirm`.
+     */
+    public static function enqueueMysqlRestore(string $username, string $action, string $archivePath, string $sha256 = '', array $only = []): int
+    {
+        $payload = [
+            'username' => $username,
+            'action' => $action,
+            'archive_path' => $archivePath,
+            '_confirm' => 'db.restore',
+        ];
+        if ($sha256 !== '') {
+            $payload['sha256'] = $sha256;
+        }
+        if ($only !== []) {
+            $payload['only'] = array_values($only);
+        }
+
+        return Paneld::enqueue('db.restore', $payload);
+    }
+
     public static function enqueueReview(string $username, string $status): int
     {
         return Paneld::enqueue('backup.review', [

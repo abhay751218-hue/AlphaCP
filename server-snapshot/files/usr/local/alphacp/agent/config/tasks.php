@@ -556,6 +556,28 @@ return [
         ],
     ],
 
+    'db.restore' => [
+        'handler'     => Tasks\DbRestore::class,
+        'safety'      => 'destructive',
+        'timeout'     => 3600,
+        'confirm'     => 'db.restore',
+        'description' => 'Restore the mysql/*.sql dumps of a cPanel archive into real MariaDB databases.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'archive_path', '_confirm'],
+            'properties'           => [
+                'username'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'archive_path' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 4096],
+                'sha256'       => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'],
+                'action'       => ['type' => 'string', 'enum' => ['transfer', 'restore']],
+                'only'         => ['type' => 'array', 'maxItems' => 64, 'items' => ['type' => 'string', 'maxLength' => 16]],
+                '_confirm'     => ['type' => 'string', 'enum' => ['db.restore']],
+            ],
+        ],
+    ],
+
     'db.drop' => [
         'handler'     => Tasks\DbDrop::class,
         'safety'      => 'destructive',
