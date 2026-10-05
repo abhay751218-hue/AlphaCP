@@ -4507,6 +4507,7 @@ function acp_mail_harness(): array
     $dirs = [
         $root . '/home', $root . '/etc/exim4', $root . '/etc/dovecot/conf.d', $root . '/alphacp',
         $root . '/etc/exim4/vacation', $root . '/etc/exim4/spam', $root . '/alphacp/etc/mail/dkim',
+        $root . '/var/log/exim4',
     ];
     foreach ($dirs as $dir) {
         mkdir($dir, 0755, true);
@@ -4529,6 +4530,9 @@ function acp_mail_harness(): array
     putenv('ACP_MAIL_DOVEADM=' . $root . '/bin/doveadm');
     putenv('ACP_MAIL_DOVECONF=' . $root . '/bin/doveconf');
     putenv('ACP_MAIL_UPDATE_EXIM=' . $root . '/bin/update-exim4.conf');
+    putenv('ACP_MAIL_EXIM_OPTIONS=' . $root . '/alphacp/etc/mail/exim-options.json');
+    putenv('ACP_MAIL_DOVECOT_OPTIONS=' . $root . '/alphacp/etc/mail/dovecot-options.json');
+    putenv('ACP_MAIL_MAINLOG=' . $root . '/var/log/exim4/mainlog');
     putenv('ACP_STATE_ROOT=' . $root . '/alphacp');
     putenv('ACP_ACCOUNTS_ROOT=' . $root . '/home');
 
@@ -4564,6 +4568,7 @@ function acp_mail_cleanup(array $harness): void
         'ACP_MAIL_DOVECOT_USERS', 'ACP_MAIL_DOVECOT_CONF',
         'ACP_MAIL_EXIM', 'ACP_MAIL_DOVECOT', 'ACP_MAIL_DOVEADM', 'ACP_MAIL_DOVECONF',
         'ACP_MAIL_UPDATE_EXIM',
+        'ACP_MAIL_EXIM_OPTIONS', 'ACP_MAIL_DOVECOT_OPTIONS', 'ACP_MAIL_MAINLOG',
     ] as $name) {
         putenv($name);
     }
@@ -5115,6 +5120,257 @@ test('mail.server setup — system users ke liye mail_spool (root ki mail queue 
     $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
     assert_true(str_contains($tpl, 'transport = mail_spool'), 'local_user system delivery ke liye mail_spool');
     assert_true(str_contains($tpl, 'file = /var/mail/$local_part'), 'mail_spool Debian wala path');
+    acp_mail_cleanup($h);
+});
+
+
+fwrite(STDOUT, "\nS7 MAIL SERVER-WIDE (queue / reports / exim-dovecot config / disk usage)\n");
+
+test('mail.server queue — exim -bp parse (2 mail, ek frozen) + count', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $h['cmd']->eximBpOutput = implode("\n", [
+        '10m  1.1K 1oABCD-0000xy-1a <root@ip-172-26-4-65>',
+        '        info@acp-mail-check.test',
+        '',
+        '25m  3.2K 1oABCE-0000xz-1b <nobody@example.test> *** frozen ***',
+        '        unknown@acp-mail-check.test',
+        '',
+    ]);
+
+    $out = (new MailServerSetup())->handle(['action' => 'queue'], $h['ctx']);
+    assert_true($out['count'] === 2, '2 mail queue me hone chahiye, count=' . (int) $out['count']);
+    $items = (array) ($out['items'] ?? []);
+    assert_true(($items[0]['id'] ?? '') === '1oABCD-0000xy-1a', 'pehla message id');
+    assert_true(($items[0]['sender'] ?? '') === 'root@ip-172-26-4-65', 'sender <...> se nikalna chahiye');
+    assert_true(in_array('info@acp-mail-check.test', (array) ($items[0]['recipients'] ?? []), true), 'recipient line parse honi chahiye');
+    assert_true(($items[0]['frozen'] ?? null) === false, 'pehla frozen nahi hona chahiye');
+    assert_true(($items[1]['frozen'] ?? null) === true, 'doosra frozen hona chahiye');
+    assert_true(($items[1]['age'] ?? '') === '25m', 'age parse hona chahiye');
+    assert_true(($items[1]['size'] ?? '') === '3.2K', 'size parse hona chahiye');
+
+    $count = (new MailServerSetup())->handle(['action' => 'queue', 'op' => 'count'], $h['ctx']);
+    assert_true(($count['count'] ?? -1) === 2, 'count op bhi 2 bole');
+
+    // khali queue
+    $h['cmd']->eximBpOutput = "The mail queue is empty.\n";
+    $empty = (new MailServerSetup())->handle(['action' => 'queue'], $h['ctx']);
+    assert_true($empty['count'] === 0, 'khali queue 0');
+    assert_true($empty['note'] !== null, 'khali queue par note hona chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server queue — deliver/remove asli id se, khatarnak id reject', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+
+    $out = (new MailServerSetup())->handle(
+        ['action' => 'queue', 'op' => 'deliver', 'id' => '1oABCD-0000xy-1a'],
+        $h['ctx'],
+    );
+    assert_true($out['ok'] === true, 'deliver chalna chahiye');
+    assert_true(($h['cmd']->eximQueueArgvs[0][1] ?? '') === '-M', 'exim -M hi bheja jana chahiye');
+    assert_true(($h['cmd']->eximQueueArgvs[0][2] ?? '') === '1oABCD-0000xy-1a', 'id wahi jayega');
+
+    $out = (new MailServerSetup())->handle(
+        ['action' => 'queue', 'op' => 'remove', 'id' => '1oABCD-0000xy-1a'],
+        $h['ctx'],
+    );
+    assert_true(($out['op'] ?? '') === 'remove', 'remove op');
+    assert_true(($h['cmd']->eximQueueArgvs[1][1] ?? '') === '-Mrm', 'exim -Mrm');
+
+    $threw = false;
+    try {
+        (new MailServerSetup())->handle(
+            ['action' => 'queue', 'op' => 'remove', 'id' => '../../etc/passwd'],
+            $h['ctx'],
+        );
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'asli message id');
+    }
+    assert_true($threw, 'path-traversal id reject hona chahiye');
+
+    $threw = false;
+    try {
+        (new MailServerSetup())->handle(['action' => 'queue', 'op' => 'nuke'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'nahi chalega');
+    }
+    assert_true($threw, 'namalum op reject hona chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server reports — asli mainlog se ginati (arrived/delivered/deferred/failed/rejected)', function (): void {
+    $h = acp_mail_harness();
+    $log = $h['root'] . '/var/log/exim4/mainlog';
+    file_put_contents($log, implode("\n", [
+        '2026-10-05 10:00:01 1oAAAA-000001-AA <= root@ip-172-26-4-65 U=root P=local S=500',
+        '2026-10-05 10:00:02 1oAAAA-000001-AA => info@acp-mail-check.test R=alphacp_mailbox T=alphacp_maildir',
+        '2026-10-05 10:00:02 1oAAAA-000001-AA Completed',
+        '2026-10-05 10:01:01 1oBBBB-000002-AB <= sender@remote.test H=mx.remote.test [10.0.0.1] P=esmtp S=900',
+        '2026-10-05 10:01:05 1oBBBB-000002-AB == gone@nowhere.test R=dnslookup T=remote_smtp defer (-42): host not found',
+        '2026-10-05 10:02:00 1oCCCC-000003-AC <= spam@remote.test P=esmtp S=100',
+        '2026-10-05 10:02:00 1oCCCC-000003-AC H=bad.test [10.0.0.2]: rejected RCPT info@x.test: relay not permitted',
+        '2026-10-05 10:03:00 1oDDDD-000004-AD <= bounce@x.test P=local S=10',
+        '2026-10-05 10:03:00 1oDDDD-000004-AD ** nope@nowhere.test R=dnslookup: host not found',
+        '',
+    ]));
+
+    $out = (new MailServerSetup())->handle(['action' => 'reports'], $h['ctx']);
+    assert_true($out['ok'] === true, 'mainlog milna chahiye');
+    $c = (array) ($out['counts'] ?? []);
+    assert_true(($c['arrived'] ?? 0) === 4, 'arrived=4, mila ' . (int) ($c['arrived'] ?? 0));
+    assert_true(($c['delivered'] ?? 0) === 1, 'delivered=1, mila ' . (int) ($c['delivered'] ?? 0));
+    assert_true(($c['deferred'] ?? 0) === 1, 'deferred=1');
+    assert_true(($c['failed'] ?? 0) === 1, 'failed=1');
+    assert_true(($c['rejected'] ?? 0) === 1, 'rejected=1');
+    assert_true(($c['completed'] ?? 0) === 1, 'completed=1');
+    $senders = (array) ($out['top_senders'] ?? []);
+    assert_true($senders !== [], 'top_senders khali nahi hona chahiye');
+    assert_true(($senders[0]['address'] ?? '') !== '', 'top sender ka address hona chahiye');
+
+    $filtered = (new MailServerSetup())->handle(['action' => 'reports', 'search' => 'nowhere.test'], $h['ctx']);
+    assert_true(($filtered['entries_total'] ?? -1) === 2, 'search se sirf 2 entry milni chahiye, mili ' . (int) ($filtered['entries_total'] ?? -1));
+    acp_mail_cleanup($h);
+});
+
+test('mail.server reports — log na mile to jhoothi report nahi', function (): void {
+    $h = acp_mail_harness();
+    @unlink($h['root'] . '/var/log/exim4/mainlog');
+    $out = (new MailServerSetup())->handle(['action' => 'reports'], $h['ctx']);
+    assert_true($out['ok'] === false, 'log nahi mila to ok=false');
+    assert_true(str_contains((string) ($out['error'] ?? ''), 'mainlog nahi mila'), 'wajah batani chahiye');
+    assert_true(($out['counts'] ?? null) === [], 'ginati khali honi chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server eximconf — option set karne par template me asli value', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+
+    $show = (new MailServerSetup())->handle(['action' => 'eximconf'], $h['ctx']);
+    assert_true($show['applied'] === false, 'bina set ke sirf dikhana chahiye');
+    assert_true(($show['options']['message_size_limit'] ?? '') === '50M', 'default 50M');
+    assert_true(in_array('smtp_accept_max', (array) ($show['allowed'] ?? []), true), 'allowed list honi chahiye');
+    assert_true(in_array('spam_score_limit', (array) ($show['allowed'] ?? []), true), 'spam limit bhi allowed');
+
+    $out = (new MailServerSetup())->handle([
+        'action' => 'eximconf',
+        'set'    => ['message_size_limit' => '100M', 'queue_run_max' => '10', 'smtp_accept_max' => '250'],
+    ], $h['ctx']);
+    assert_true($out['applied'] === true, 'apply hona chahiye');
+    assert_true(($out['options']['message_size_limit'] ?? '') === '100M', 'option 100M');
+    $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+    assert_true(str_contains($tpl, 'message_size_limit = 100M'), 'template me 100M hona chahiye');
+    assert_true(str_contains($tpl, 'queue_run_max = 10'), 'template me queue_run_max = 10');
+    assert_true(str_contains($tpl, 'smtp_accept_max = 250'), 'template me smtp_accept_max = 250');
+    // $smtp_active_hostname exim ka variable hai — option value me waisa hi bachna chahiye
+    assert_true(
+        str_contains($tpl, 'smtp_banner = $smtp_active_hostname ESMTP AlphaCP'),
+        'smtp_banner me $smtp_active_hostname waisa hi rehna chahiye',
+    );
+    assert_true(is_file($h['root'] . '/alphacp/etc/mail/exim-options.json'), 'options file likhni chahiye');
+
+    // dobara read karne par wahi value (panel restart ke baad bhi)
+    $again = (new MailServerSetup())->handle(['action' => 'eximconf'], $h['ctx']);
+    assert_true(($again['options']['queue_run_max'] ?? '') === '10', 'value file se wapas aani chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server eximconf — galat value reject, config kharaab na ho (fail-closed)', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $before = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+
+    foreach ([
+        ['message_size_limit' => '50X'],        // size galat
+        ['queue_run_max' => '5; rm -rf /'],     // command injection
+        ['timeout_frozen_after' => '7'],        // duration me unit chahiye
+        ['kuch_bhi' => '100'],                  // allowed nahi
+        ['smtp_banner' => "line1\nline2"],      // multi-line = config tod dega
+        ['smtp_accept_max' => '-5'],            // negative
+    ] as $bad) {
+        $threw = false;
+        try {
+            (new MailServerSetup())->handle(['action' => 'eximconf', 'set' => $bad], $h['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'reject hona chahiye: ' . (string) json_encode($bad));
+    }
+
+    assert_true(!is_file($h['root'] . '/alphacp/etc/mail/exim-options.json'), 'galat value par options file nahi likhni chahiye');
+    assert_true(
+        (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template') === $before,
+        'template bilkul nahi badalna chahiye',
+    );
+    acp_mail_cleanup($h);
+});
+
+test('mail.server dovecotconf — option set karne par 99-alphacp.conf me asli value', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+
+    $out = (new MailServerSetup())->handle([
+        'action' => 'dovecotconf',
+        'set'    => [
+            'mail_max_userip_connections' => '20',
+            'protocols'                   => 'imap',
+            'disable_plaintext_auth'      => true,
+        ],
+    ], $h['ctx']);
+    assert_true($out['applied'] === true, 'apply hona chahiye');
+    assert_true(($out['options']['disable_plaintext_auth'] ?? '') === 'yes', 'bool true -> yes');
+
+    $conf = (string) file_get_contents($h['root'] . '/etc/dovecot/conf.d/99-alphacp.conf');
+    assert_true(str_contains($conf, 'mail_max_userip_connections = 20'), 'conf me mail_max_userip_connections = 20');
+    assert_true(str_contains($conf, "\nprotocols = imap\n"), 'conf me protocols = imap');
+    assert_true(str_contains($conf, 'disable_plaintext_auth = yes'), 'conf me disable_plaintext_auth = yes');
+
+    $threw = false;
+    try {
+        (new MailServerSetup())->handle(
+            ['action' => 'dovecotconf', 'set' => ['protocols' => 'imap # comment']],
+            $h['ctx'],
+        );
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, "'#' wali value reject honi chahiye (config comment ban jayega)");
+    acp_mail_cleanup($h);
+});
+
+test('mail.server diskusage — account ki mail jagah asli bytes me', function (): void {
+    $h = acp_mail_harness();
+    $root = $h['root'];
+    $box = $root . '/home/alicehost/mail/alice.test/info/new';
+    mkdir($box, 0755, true);
+    file_put_contents($box . '/1696500000.M1P2Q3.host', str_repeat('x', 2048));
+    $box2 = $root . '/home/bobhost/mail/bob.test/support/new';
+    mkdir($box2, 0755, true);
+    file_put_contents($box2 . '/1696500001.M1P2Q4.host', str_repeat('y', 1024));
+
+    $out = (new MailServerSetup())->handle(['action' => 'diskusage'], $h['ctx']);
+    assert_true(($out['account_count'] ?? -1) === 2, '2 account mail ke saath, mile ' . (int) ($out['account_count'] ?? -1));
+    assert_true(($out['total_bytes'] ?? 0) >= 3072, 'total_bytes >= 3072, mila ' . (int) ($out['total_bytes'] ?? 0));
+
+    $byName = [];
+    foreach ((array) ($out['accounts'] ?? []) as $row) {
+        $byName[(string) ($row['username'] ?? '')] = $row;
+    }
+    assert_true(($byName['alicehost']['bytes'] ?? 0) >= 2048, 'alicehost ki mail >= 2048 bytes');
+    assert_true(
+        ($byName['alicehost']['mailboxes'][0]['address'] ?? '') === 'info@alice.test',
+        'mailbox address local@domain hona chahiye, mila ' . (string) ($byName['alicehost']['mailboxes'][0]['address'] ?? ''),
+    );
+
+    $one = (new MailServerSetup())->handle(['action' => 'diskusage', 'username' => 'bobhost'], $h['ctx']);
+    assert_true(($one['account_count'] ?? -1) === 1, 'username filter se sirf 1 account');
     acp_mail_cleanup($h);
 });
 

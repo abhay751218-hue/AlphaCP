@@ -412,6 +412,89 @@ else
   fi
 fi
 
+# ------------------------------------------------------------------ part H ----
+echo
+info "H: server-wide — mail queue / delivery reports / exim+dovecot config / disk usage"
+
+# cPanel #141 — Mail Queue Manager
+if run_task mail.server '{"action":"queue"}'; then
+  QCOUNT="$(grep -o '"count": *[0-9]*' <<<"${TASK_OUT}" | grep -o '[0-9]*' | head -1)"
+  ok "mail queue (cPanel #141) — abhi ${QCOUNT:-0} mail pending"
+else
+  bad "mail.server queue fail: ${LAST_ERR:-unknown}"
+fi
+if run_task mail.server '{"action":"queue","op":"count"}'; then
+  ok "queue count action chala"
+else
+  bad "queue count fail: ${LAST_ERR:-unknown}"
+fi
+# khatarnak id reject hona hi chahiye (shell injection se bachav)
+if run_task mail.server '{"action":"queue","op":"remove","id":"../../etc/passwd"}'; then
+  bad "queue: khatarnak message id reject nahi hui (fail-closed tuta)"
+else
+  ok "queue: khatarnak message id reject (galat id se kuch nahi chalta)"
+fi
+
+# cPanel #142 — Mail Delivery Reports (asli exim mainlog se)
+if run_task mail.server '{"action":"reports","limit":20}'; then
+  if grep -q '"ok": false' <<<"${TASK_OUT}"; then
+    skip "delivery reports: exim mainlog nahi mila (abhi tak koi mail log nahi bana)"
+  else
+    ARRIVED="$(grep -o '"arrived": *[0-9]*' <<<"${TASK_OUT}" | grep -o '[0-9]*' | head -1)"
+    DELIVERED="$(grep -o '"delivered": *[0-9]*' <<<"${TASK_OUT}" | grep -o '[0-9]*' | head -1)"
+    ok "delivery reports (cPanel #142) — mainlog se ginati: aayi=${ARRIVED:-0}, pahunchi=${DELIVERED:-0}"
+  fi
+else
+  bad "mail.server reports fail: ${LAST_ERR:-unknown}"
+fi
+
+# cPanel #143 — Exim Configuration Manager
+if run_task mail.server '{"action":"eximconf"}'; then
+  ok "eximconf: maujuda options + allowed list dikhaye"
+else
+  bad "eximconf (read) fail: ${LAST_ERR:-unknown}"
+fi
+if run_task mail.server '{"action":"eximconf","set":{"message_size_limit":"100M"}}'; then
+  if grep -q 'message_size_limit = 100M' "${EXIM_TEMPLATE}" 2>/dev/null; then
+    ok "eximconf (cPanel #143): message_size_limit=100M ASLI exim template me likha"
+  else
+    bad "eximconf: value template me nahi mili (${EXIM_TEMPLATE})"
+  fi
+  run_task mail.server '{"action":"eximconf","set":{"message_size_limit":"50M"}}' >/dev/null 2>&1
+  if grep -q 'message_size_limit = 50M' "${EXIM_TEMPLATE}" 2>/dev/null; then
+    ok "eximconf: wapas 50M (idempotent — dobara likhna surakshit)"
+  else
+    bad "eximconf: wapas 50M nahi hua"
+  fi
+else
+  bad "eximconf set fail: ${LAST_ERR:-unknown}"
+fi
+if run_task mail.server '{"action":"eximconf","set":{"message_size_limit":"50X"}}'; then
+  bad "eximconf: galat value reject nahi hui (fail-closed tuta — exim kharaab ho sakta tha)"
+else
+  ok "eximconf: galat value reject (config kharaab hone se bacha)"
+fi
+
+# cPanel #144 — Mailserver Configuration (Dovecot)
+if run_task mail.server '{"action":"dovecotconf","set":{"mail_max_userip_connections":"20"}}'; then
+  if grep -q 'mail_max_userip_connections = 20' "${DOVECONF_FILE}" 2>/dev/null; then
+    ok "dovecotconf (cPanel #144): value ASLI ${DOVECONF_FILE} me likhi"
+  else
+    bad "dovecotconf: value conf me nahi mili (${DOVECONF_FILE})"
+  fi
+else
+  bad "dovecotconf set fail: ${LAST_ERR:-unknown}"
+fi
+
+# cPanel #146 — Email Disk Usage (server view)
+if run_task mail.server '{"action":"diskusage"}'; then
+  TOTAL="$(grep -o '"total_bytes": *[0-9]*' <<<"${TASK_OUT}" | grep -o '[0-9]*' | head -1)"
+  ACCS="$(grep -o '"account_count": *[0-9]*' <<<"${TASK_OUT}" | grep -o '[0-9]*' | head -1)"
+  ok "email disk usage (cPanel #146): ${ACCS:-0} account, kul ${TOTAL:-0} bytes mail"
+else
+  bad "diskusage fail: ${LAST_ERR:-unknown}"
+fi
+
 DONE=1
 echo
 echo "=== S7 MAIL SERVER LIVE CHECK: ${PASS} pass, ${FAIL} fail, ${SKIP} skip ==="

@@ -389,6 +389,266 @@ def deliverability(username=None):
     return {"ok": True, "count": len(done), "domains": done, "failed": []}
 
 
+EXIM_SPEC = {
+    "message_size_limit": ("size", "50M"),
+    "smtp_banner": ("text", "\$smtp_active_hostname ESMTP AlphaCP"),
+    "smtp_accept_max": ("int", "100"),
+    "smtp_accept_max_per_host": ("int", "10"),
+    "queue_run_max": ("int", "5"),
+    "remote_max_parallel": ("int", "2"),
+    "timeout_frozen_after": ("duration", "7d"),
+    "ignore_bounce_errors_after": ("duration", "2d"),
+    "deliver_queue_load_max": ("number", "8.0"),
+    "queue_only_load": ("number", "12.0"),
+    "spam_score_limit": ("int", "80"),
+}
+DOVECOT_SPEC = {
+    "protocols": ("text", "imap pop3"),
+    "mail_max_userip_connections": ("int", "10"),
+    "maildir_copy_with_hardlinks": ("bool", "yes"),
+    "disable_plaintext_auth": ("bool", "no"),
+    "pop3_uidl_format": ("text", "%08Xu%08Xv"),
+    "imap_idle_notify_interval": ("int", "24"),
+    "mailbox_idle_check_interval": ("int", "30"),
+    "login_greeting": ("text", "AlphaCP IMAP/POP3 ready."),
+}
+PAT = {
+    "size": re.compile(r"^\d{1,8}[KMGkmg]?\$"),
+    "int": re.compile(r"^\d{1,9}\$"),
+    "number": re.compile(r"^\d{1,5}(\.\d{1,2})?\$"),
+    "duration": re.compile(r"^\d{1,5}[smhdw]\$"),
+    "bool": re.compile(r"^(yes|no)\$"),
+    "text": re.compile(r"^[ -\x7e]{1,200}\$"),
+}
+RE_QHEAD = re.compile(
+    r"^\s*(?:(\d+[smhdw])\s+)?(\d+(?:\.\d+)?[KMGkmg]?B?)\s+"
+    r"([0-9A-Za-z]{6}-[0-9A-Za-z]{6}-[0-9A-Za-z]{2})([A-Za-z-]*)\s*(.*)\$"
+)
+
+
+def load_opts(path, spec):
+    out = dict((k, v[1]) for k, v in spec.items())
+    if os.path.isfile(path):
+        try:
+            for k, v in json.load(open(path)).items():
+                sv = str(v)
+                if k in spec and PAT[spec[k][0]].match(sv) and "#" not in sv:
+                    out[k] = sv
+        except Exception:
+            pass
+    return out
+
+
+def apply_opts(kind, setmap):
+    if kind == "exim":
+        spec = EXIM_SPEC
+        path = os.environ.get("ACP_MAIL_EXIM_OPTIONS") or os.path.join(STATE, "etc", "mail", "exim-options.json")
+        target = TPL
+    else:
+        spec = DOVECOT_SPEC
+        path = os.environ.get("ACP_MAIL_DOVECOT_OPTIONS") or os.path.join(STATE, "etc", "mail", "dovecot-options.json")
+        target = DC
+    if not setmap:
+        return {"file": path, "options": load_opts(path, spec),
+                "defaults": dict((k, v[1]) for k, v in spec.items()),
+                "allowed": sorted(spec), "applied": False}
+    errors = []
+    merged = load_opts(path, spec)
+    for k, v in setmap.items():
+        if k not in spec:
+            errors.append("'%s' koi mail option nahi hai" % k)
+            continue
+        sv = ("yes" if v else "no") if isinstance(v, bool) else str(v)
+        if spec[k][0] == "bool":
+            low = sv.lower()
+            if low in ("1", "true", "yes", "on"):
+                sv = "yes"
+            elif low in ("0", "false", "no", "off"):
+                sv = "no"
+        if not PAT[spec[k][0]].match(sv) or "#" in sv:
+            errors.append("'%s' = '%s' galat hai (%s chahiye)" % (k, sv, spec[k][0]))
+            continue
+        merged[k] = sv
+    if errors:
+        emit("failed", error="option reject: " + " | ".join(errors))
+    write(path, json.dumps(merged, indent=2, sort_keys=True) + "\n")
+    body = open(target).read() if os.path.isfile(target) else ""
+    for k in setmap:
+        if k not in merged:
+            continue
+        body2 = re.sub(r"(?m)^%s = .*\$" % re.escape(k), "%s = %s" % (k, merged[k]), body)
+        if body2 == body and ("%s = " % k) not in body:
+            body2 = body + "\n%s = %s\n" % (k, merged[k])
+        body = body2
+    write(target, body)
+    extra = {"generated": True, "exim_config": "ok"} if kind == "exim" else {"dovecot_config": "ok"}
+    out = {"file": path, "options": merged, "allowed": sorted(spec), "applied": True}
+    out.update(extra)
+    return out
+
+
+def queue(op="list", mid=""):
+    op = (op or "list").lower()
+    qfile = os.environ.get("SIM_MAILQ_FILE", "")
+    text = open(qfile).read() if qfile and os.path.isfile(qfile) else ""
+    items = []
+    cur = None
+    for line in text.splitlines():
+        m = RE_QHEAD.match(line)
+        if m:
+            if cur is not None:
+                items.append(cur)
+            sender = ""
+            sm = re.search(r"<([^>]*)>", m.group(5))
+            if sm:
+                sender = sm.group(1)
+            elif m.group(5).strip():
+                sender = m.group(5).split()[0]
+            cur = {"id": m.group(3), "age": m.group(1), "size": m.group(2),
+                   "sender": sender.lower(), "recipients": [], "frozen": "frozen" in line}
+            continue
+        if cur is None:
+            continue
+        rm = re.match(r"^\s+<?([^\s<>]+)>?", line)
+        if rm:
+            to = rm.group(1).strip("<>,;").lower()
+            if to and to not in cur["recipients"]:
+                cur["recipients"].append(to)
+    if cur is not None:
+        items.append(cur)
+    if op in ("deliver", "remove", "freeze", "thaw"):
+        if not re.match(r"^[0-9A-Za-z]{6}-[0-9A-Za-z]{6}-[0-9A-Za-z]{2}\$", mid or ""):
+            emit("failed", error="queue %s ke liye asli message id chahiye" % op)
+        return {"op": op, "id": mid, "ok": True, "output": "", "error": None, "queue": {"count": len(items), "items": items}}
+    if op == "flush":
+        return {"op": "flush", "ok": True, "error": None, "queue": {"count": len(items), "items": items}}
+    if op == "count":
+        return {"op": "count", "count": len(items), "ok": True, "error": None}
+    if op != "list":
+        emit("failed", error="queue op '%s' nahi chalega" % op)
+    return {"op": "list", "ok": True, "error": None, "count": len(items), "items": items,
+            "note": None if items else "queue khali hai"}
+
+
+def reports(limit=50, search=""):
+    cands = [os.environ.get("ACP_MAIL_MAINLOG", "")] or []
+    if not cands:
+        cands = ["/var/log/exim4/mainlog", "/var/log/exim/mainlog", "/var/log/maillog", "/var/log/mail.log"]
+    path = None
+    for c in cands:
+        if c and os.path.isfile(c):
+            path = c
+            break
+    if not path:
+        return {"ok": False, "error": "exim mainlog nahi mila", "counts": {},
+                "entries": [], "top_senders": [], "top_recipients": []}
+    counts = {"arrived": 0, "delivered": 0, "redirected": 0, "deferred": 0,
+              "failed": 0, "completed": 0, "rejected": 0, "frozen": 0}
+    senders, recipients, entries = {}, {}, []
+    for line in open(path):
+        m = re.match(r"^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(?:\.\d+)?\s+(\S+)\s+(.*)\$", line.rstrip("\n"))
+        if not m:
+            continue
+        rest = m.group(3)
+        kind, addr = None, None
+        mm = re.match(r"^<=\s+(\S+)", rest)
+        if mm:
+            kind, addr = "arrived", mm.group(1).strip("<>,;").lower()
+            senders[addr] = senders.get(addr, 0) + 1
+        if kind is None:
+            mm = re.match(r"^=>\s+(\S+)", rest)
+            if mm:
+                kind, addr = "delivered", mm.group(1).strip("<>,;").lower()
+                recipients[addr] = recipients.get(addr, 0) + 1
+        if kind is None:
+            mm = re.match(r"^->\s+(\S+)", rest)
+            if mm:
+                kind, addr = "redirected", mm.group(1).strip("<>,;").lower()
+        if kind is None:
+            mm = re.match(r"^==\s+(\S+)", rest)
+            if mm:
+                kind, addr = "deferred", mm.group(1).strip("<>,;").lower()
+        if kind is None:
+            mm = re.match(r"^\*\*\s+(\S+)", rest)
+            if mm:
+                kind, addr = "failed", mm.group(1).strip("<>,;").lower()
+        if kind is None:
+            if rest.startswith("Completed"):
+                kind = "completed"
+            elif "frozen" in rest:
+                kind = "frozen"
+            elif re.search(r"\brejected\b", rest):
+                kind = "rejected"
+        if kind is None:
+            continue
+        counts[kind] = counts.get(kind, 0) + 1
+        if search and search.lower() not in line.lower():
+            continue
+        entries.append({"time": m.group(1), "id": m.group(2), "kind": kind,
+                        "address": addr, "text": rest[:200]})
+    return {"ok": True, "file": path, "lines_scanned": len(open(path).read().splitlines()),
+            "counts": counts,
+            "top_senders": [{"address": a, "count": c} for a, c in sorted(senders.items(), key=lambda x: -x[1])[:10]],
+            "top_recipients": [{"address": a, "count": c} for a, c in sorted(recipients.items(), key=lambda x: -x[1])[:10]],
+            "entries": entries[-int(limit or 50):], "entries_total": len(entries)}
+
+
+def dirbytes(path, depth=0):
+    if depth > 8 or not os.path.isdir(path) or os.path.islink(path):
+        return 0
+    total = 0
+    try:
+        names = os.listdir(path)
+    except Exception:
+        return 0
+    for name in names:
+        fp = os.path.join(path, name)
+        if os.path.islink(fp):
+            continue
+        if os.path.isdir(fp):
+            total += dirbytes(fp, depth + 1)
+        elif os.path.isfile(fp):
+            try:
+                total += os.path.getsize(fp)
+            except Exception:
+                pass
+    return total
+
+
+def diskusage(username=None):
+    accs = []
+    for u in accounts():
+        if username and u != username:
+            continue
+        mail = os.path.join(HOME, u, "mail")
+        if not os.path.isdir(mail):
+            continue
+        boxes = []
+        try:
+            doms = sorted(os.listdir(mail))
+        except Exception:
+            doms = []
+        for d in doms:
+            dp = os.path.join(mail, d)
+            if not os.path.isdir(dp):
+                continue
+            try:
+                locals_ = sorted(os.listdir(dp))
+            except Exception:
+                locals_ = []
+            for l in locals_:
+                lp = os.path.join(dp, l)
+                if os.path.isdir(lp):
+                    boxes.append({"address": "%s@%s" % (l, d), "bytes": dirbytes(lp)})
+        boxes.sort(key=lambda r: -r["bytes"])
+        accs.append({"username": u, "bytes": dirbytes(mail), "mailboxes": boxes,
+                     "mailbox_count": len(boxes)})
+    accs.sort(key=lambda r: -r["bytes"])
+    return {"ok": True, "accounts_root": HOME, "accounts": accs,
+            "account_count": len(accs), "total_bytes": sum(a["bytes"] for a in accs),
+            "total_human": "%d B" % sum(a["bytes"] for a in accs)}
+
+
 def main():
     args = sys.argv[1:]
     kind = payload = None
@@ -508,6 +768,16 @@ def main():
             emit("success", mailboxes=boxes, count=len(boxes))
         if a == "verify":
             emit("success", **verify(p.get("address", "")))
+        if a == "queue":
+            emit("success", **queue(p.get("op", "list"), p.get("id", "")))
+        if a == "reports":
+            emit("success", **reports(p.get("limit", 50), p.get("search", "")))
+        if a == "eximconf":
+            emit("success", **apply_opts("exim", p.get("set")))
+        if a == "dovecotconf":
+            emit("success", **apply_opts("dovecot", p.get("set")))
+        if a == "diskusage":
+            emit("success", **diskusage(p.get("username")))
         if a == "deliverability":
             emit("success", **deliverability(p.get("username")))
         emit("failed", error="mail.server action '%s' nahi chalega" % a)
@@ -558,6 +828,24 @@ TPLEOF
   export ACP_VERIFY_DOVECOT="$BIN/dovecot"
   export ACP_VERIFY_DOVECONF="$BIN/doveconf"
   export ACP_VERIFY_ALLOW_NONROOT=1
+  # SIM: exim mainlog (delivery reports) + mail queue (queue manager)
+  mkdir -p "$SIMROOT/var/log/exim4"
+  cat > "$SIMROOT/var/log/exim4/mainlog" <<'LOGEOF'
+2026-10-05 10:00:01 1oAAAA-000001-AA <= root@ip-172-26-4-65 U=root P=local S=500
+2026-10-05 10:00:02 1oAAAA-000001-AA => info@acp-mail-check.test R=alphacp_mailbox T=alphacp_maildir
+2026-10-05 10:00:02 1oAAAA-000001-AA Completed
+2026-10-05 10:01:01 1oBBBB-000002-AB <= sender@acp-mail-check.test P=esmtp S=900
+2026-10-05 10:01:05 1oBBBB-000002-AB == gone@nowhere.test R=dnslookup T=remote_smtp defer (-42)
+LOGEOF
+  cat > "$SIMROOT/etc/exim4/sim-mailq" <<'QEOF'
+10m  1.1K 1oABCD-0000xy-1a <root@ip-172-26-4-65>
+        info@acp-mail-check.test
+
+25m  3.2K 1oABCE-0000xz-1b <nobody@example.test> *** frozen ***
+        unknown@acp-mail-check.test
+QEOF
+  export ACP_MAIL_MAINLOG="$SIMROOT/var/log/exim4/mainlog"
+  export SIM_MAILQ_FILE="$SIMROOT/etc/exim4/sim-mailq"
   export SIM_BREAK_EXIM=0
   export SIM_BREAK_DELIVERY=0
   case "$mode" in

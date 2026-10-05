@@ -92,6 +92,12 @@ final class FakeCommandExecutor implements CommandExecutor
     public bool $mailDovecotConfigFails = false;
     /** `exim4 -bt <address>` ka output (asli routing jawab) */
     public string $eximBtOutput = '';
+    /** `exim4 -bp` (mailq) ka output — Mail Queue Manager isi se parse karta hai */
+    public string $eximBpOutput = "The mail queue is empty.\n";
+    /** queue ke mutation (`-M` / `-Mrm` / `-Mf` / `-Mt`) fail karein */
+    public bool $eximQueueMutationFails = false;
+    /** @var list<list<string>> queue/delivery ke liye chale hue exim argv */
+    public array $eximQueueArgvs = [];
     /** `doveadm user <address>` ka output (khali = aisa mailbox nahi) */
     public string $doveadmUserOutput = '';
     /** pehli N `doveadm user` call fail kare (0644-relax path test karne ke liye) */
@@ -693,6 +699,18 @@ final class FakeCommandExecutor implements CommandExecutor
         }
         if (($argv[1] ?? '') === '-bt') {
             return new CommandResult($argv, 0, $this->eximBtOutput, '', 1);
+        }
+        if (($argv[1] ?? '') === '-bp') {
+            return new CommandResult($argv, 0, $this->eximBpOutput, '', 1);
+        }
+        // queue par action: -M (deliver) / -Mrm (remove) / -Mf (freeze) / -Mt (thaw) / -qf (flush)
+        if (in_array((string) ($argv[1] ?? ''), ['-M', '-Mrm', '-Mf', '-Mt', '-qf'], true)) {
+            $this->eximQueueArgvs[] = $argv;
+            if ($this->eximQueueMutationFails) {
+                return new CommandResult($argv, 1, '', 'exim: failed to open message', 1);
+            }
+
+            return new CommandResult($argv, 0, '', '', 1);
         }
 
         return new CommandResult($argv, 0, '', '', 1);

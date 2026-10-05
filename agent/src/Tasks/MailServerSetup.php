@@ -40,8 +40,23 @@ final class MailServerSetup implements TaskInterface
                 'deliverability' => $server->deliverability(
                     trim((string) ($payload['username'] ?? '')) === '' ? null : strtolower(trim((string) $payload['username']))
                 ),
+                // ---- S7 server-wide (cPanel #141/#142/#143/#144/#146) ----
+                'queue'   => $server->queue(
+                    (string) ($payload['op'] ?? 'list'),
+                    (string) ($payload['id'] ?? ''),
+                ),
+                'reports' => $server->reports(
+                    (int) ($payload['limit'] ?? 50),
+                    (string) ($payload['search'] ?? ''),
+                ),
+                'eximconf'    => $server->eximConf(self::setPayload($payload)),
+                'dovecotconf' => $server->dovecotConf(self::setPayload($payload)),
+                'diskusage'   => $server->diskUsage(
+                    trim((string) ($payload['username'] ?? '')) === '' ? null : strtolower(trim((string) $payload['username']))
+                ),
                 default  => throw new TaskRejectedException(
-                    "mail.server action '{$action}' nahi chalega (status/setup/sync/list/verify)"
+                    "mail.server action '{$action}' nahi chalega "
+                    . '(status/setup/sync/list/verify/deliverability/queue/reports/eximconf/dovecotconf/diskusage)'
                 ),
             };
         } catch (TaskRejectedException $e) {
@@ -51,6 +66,23 @@ final class MailServerSetup implements TaskInterface
         }
 
         return ['action' => $action] + $out;
+    }
+
+    /**
+     * `set` payload: null (sirf dikhao) ya option=>value ka map.
+     *
+     * @param  array<string, mixed> $payload
+     * @return array<string, mixed>|null
+     */
+    private static function setPayload(array $payload): ?array
+    {
+        $set = $payload['set'] ?? null;
+        if (!is_array($set)) {
+            return null;
+        }
+
+        /** @var array<string, mixed> $set */
+        return $set;
     }
 
     /** @return array<string, mixed> */
