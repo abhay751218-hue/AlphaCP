@@ -12,50 +12,37 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ Abhi chalani hai (NEXT STEP) — 4 Oct 2026
+## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-### 1) panel-update 0.71.0 — S10: cpmove MySQL restore
+### 1) verify-report folder saaf karo (hourly snapshot use GitHub par na le jaye)
+```bash
+sudo rm -rf /usr/local/alphacp/verify-reports && sudo alphacp-sync
+```
+- S10 live check apni report `/usr/local/alphacp/verify-reports/*.txt` me likhta hai (taaki natija
+  khud GitHub se padha ja sake). Kaam ho gaya to folder hata do — sync ke baad repo bhi saaf.
+
+### 2) 0.71.0 dobara chalana ho to (idempotent — zaroori nahi)
 ```bash
 sudo alphacp-sync get ff8e7079f173f2ab78422de84c33ed5717bf7677 installer/panel-update.sh /tmp/acp-panel-update-0.71.0.sh b744348c82239f0bd255bee5648bdc0230da4a9b76b1c9e23f0b724c11200640 && sudo bash /tmp/acp-panel-update-0.71.0.sh
 ```
-- Updater SHA-256: `b744348c82239f0bd255bee5648bdc0230da4a9b76b1c9e23f0b724c11200640`.
 - Expected: banner `updater 0.71.0` → panel **0.71.0** + agent **0.64.0** → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Naya kya:** cPanel import ka doosra hissa — pehle archive se sirf **home** aata tha, ab
-  `cpmove-<user>/mysql/*.sql` dumps bhi **asli MariaDB** databases me restore hote hain
-  (`<acct>_<suffix>`, utf8mb4). Panel me **Transfer Tool** aur **Transfer or Restore** dono pages par
-  naya option **"MySQL databases bhi restore karo"** (+ chaho to sirf kuch databases: `mysql_only`).
-  Pehle sab dumps **stage + sanitise** hote hain, phir MariaDB ko chhua jata hai — hostile archive se
-  aadhe-adhure databases nahi bante. Apne database ke `USE`/`DROP|CREATE DATABASE` lines strip hote
-  hain (mysqldump ka normal shape); **doosre database ka naam, `INTO OUTFILE`, `LOAD DATA`, `GRANT`,
-  `CREATE/DROP USER`, `SET GLOBAL` → poora dump refuse**. Dumps client ko **stream** hote hain (RAM me
-  nahi), staging hamesha delete. S8 ka sab kuch (Databases/MySQL Users) waise hi kaam karta rahega.
-
-### 2) S10 live verification (recommended — ek hi command, sab khud saaf karta hai)
-```bash
-sudo alphacp-sync get 439d59144799b83c6417ea8e9e6700c1037349b4 tools/verify/s10-mysql-restore-check.sh /tmp/acp-s10-mysql-restore-check.sh 613ff75a0ec4b089221323a573665a02758e7c04c3b076eee74c13f45a408068 && sudo bash /tmp/acp-s10-mysql-restore-check.sh
-```
-- Server par **asli tar.gz** archive banata hai (homedir + `mysql/<acct>_acpverify.sql`), `db.restore`
-  se import karta hai, aur **asli MariaDB** se verify karta hai — database bana? table bani? rows gine?
-  row content sahi? koi MariaDB **user** na bane? Phir ek **hostile** archive (doosre database ka naam)
-  refuse hone par koi database na bane — ye bhi check hota hai. Ant me sab saaf (dono database drop,
-  archive dir delete, temp account terminate — `trap` me bhi).
-- Expected last line: `=== S10 MYSQL RESTORE LIVE CHECK: 18 pass, 0 fail ===`.
-- **Kuch batane ki zaroorat nahi:** script apni poori report `/usr/local/alphacp/verify-reports/s10-<stamp>.txt`
-  me likh deti hai; `alphacp-sync` ka hourly snapshot use GitHub par le jata hai — to natija main khud
-  padh leta hoon (bas command chala do, chahe to phone band kar do).
-
-- **Agar isme koi FAIL aaye** to ye read-only diagnostic chalao (server par kuch nahi badalta) aur
-  uska output bhej do — isme asli wajah likhi hoti hai (version, `db.restore` allowlist, archive dir,
-  panel account ↔ asli Linux user, MariaDB root, pichle db.restore tasks, bacha-khucha):
-```bash
-sudo alphacp-sync get 1035d1e68d5bf1cfbe8e35e4b7b27d3a451a4727 tools/verify/s10-diag.sh /tmp/acp-s10-diag.sh 75e9f863b1afa189a67aac9f2e8bdddbc76088448f7cfed6bf93802ccf94dc7c && sudo bash /tmp/acp-s10-diag.sh
-```
-- Chaaho to ye step skip karo — update khud-tested hai (panel **437/0** + 6 wasm-skip, update-sim
-  **234/234**, provision-sim **109/109**, mysql-sim **PASS**, s10-mysql-restore-sim **20/0**).
-
-- Ye 0.70.1 (agent useradd fix) ke upar baithta hai — purani command dobara chalane ki zaroorat nahi.
+- **Ye deploy ho chuka hai (5 Oct 01:44Z)** aur live verify bhi ho gaya: `s10-mysql-restore-check.sh`
+  → **18 pass / 0 fail** (tasks #213–#218) — asli MariaDB me database + table + 3 rows import, hostile
+  dump aur galat sha256 refuse, cleanup safal. Dobara chalane ki zaroorat sirf tab hai jab koi
+  problem ho ya naya server ho.
 
 ## ✅ Latest deployment (4 Oct 2026; already completed)
+
+### panel-update 0.71.0 — S10: cpmove MySQL restore (deployed 5 Oct 01:44Z, live-verified 02:24Z)
+```bash
+sudo alphacp-sync get ff8e7079f173f2ab78422de84c33ed5717bf7677 installer/panel-update.sh /tmp/acp-panel-update-0.71.0.sh b744348c82239f0bd255bee5648bdc0230da4a9b76b1c9e23f0b724c11200640 && sudo bash /tmp/acp-panel-update-0.71.0.sh
+```
+- **Live result:** panel **0.71.0** + agent **0.64.0**, HTTP 200; migration `2026_10_04_000055` Ran;
+  `s10-mysql-restore-check.sh` → **18 pass / 0 fail** (tasks #213–#218) — cpmove archive ke
+  `mysql/*.sql` dumps asli MariaDB databases me restore hue (3 rows tak verify), hostile dump aur
+  galat sha256 refuse hue, aur ant me sab saaf.
+- Iske pehle do live-check bugs the (dono sirf `tools/` me the, agent/panel nahi): archive `/tmp` me
+  ban raha tha (allowlist ke bahar) aur account aisa chuna ja raha tha jiska Linux user hi nahi tha.
 
 ### panel-update 0.70.1 — agent 0.63.0: useradd GECOS fix (deployed 4 Oct, 15:14Z)
 ```bash

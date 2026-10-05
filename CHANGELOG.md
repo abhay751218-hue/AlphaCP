@@ -21,6 +21,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
     - result me per-database report (bytes, created?, dump name) + skipped reasons; Review Transfers
       page ab `db.restore` jobs bhi dikhata hai.
   Migration `2026_10_04_000055` (`transfer_restores.mysql`, `.mysql_only`). Updater me S10 ship-check.
+  **LIVE VERIFIED (5 Oct 02:24Z, AWS server):** `tools/verify/s10-mysql-restore-check.sh` →
+  **18 pass / 0 fail** (tasks #213–#218) — asli MariaDB me `acpv5xodbb_acpverify` database + table +
+  **3 rows** import hue (content tak match), hostile dump (doosre database ka naam) **refuse**,
+  galat sha256 **refuse**, panel ka apna database salamat, aur ant me `db.drop` + `account.terminate`
+  se sab saaf. Server ki apni snapshot (`main`) ne bhi confirm kiya: panel 0.71.0 / agent 0.64.0,
+  HTTP 200, migration `…000055` Ran.
   **Live-check fix (tools only, koi naya release nahi):** `s10-mysql-restore-check.sh` archive
   `/tmp` me banata tha, jabki `db.restore` ka PathGuard sirf `/home` + `/usr/local/alphacp`
   allowlisted roots padhta hai — isliye live check ka har `db.restore` reject ho raha tha. Ab
