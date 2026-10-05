@@ -14,37 +14,35 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-### 1) panel-update 0.73.1 — destinations ke LIVE fix (sirf agent badla hai)
+### 1) panel-update 0.74.0 — S9 BIND9, ASLI DNS zones
+```bash
+sudo alphacp-sync get 7c67db1eb34d9a12b103cf9d21c104cb69394981 installer/panel-update.sh /tmp/acp-panel-update-0.74.0.sh 5509b25bd8240973141758fb5461dcbd1227a3c292b9c58d6ed9ed423b112e8a && sudo bash /tmp/acp-panel-update-0.74.0.sh
+```
+- Updater SHA-256: `5509b25bd8240973141758fb5461dcbd1227a3c292b9c58d6ed9ed423b112e8a`.
+- Expected: banner `updater 0.74.0` → panel **0.74.0** + agent **0.65.0** (naya bundle)
+  → `bind9 + bind9-utils + dnsutils install ho rahe hain` → `==> UPDATE COMPLETE ✅` → HTTP 200.
+- **Kya badla:** ab tak DNS records sirf JSON me likhe jate the ("no BIND rewrite"). Ab
+  `dns.bind` task ASLI zone file likhta hai — `named-checkzone` ke gate ke baad, phir
+  `rndc reload`, phir `dig @127.0.0.1 <zone> SOA` se verify. Panel ka Zone Editor, DNS
+  Zone Manager aur Nameserver selection sab isi ko queue karte hain.
+
+### 2) BIND9 ki live verification (asli named, asli dig)
+```bash
+sudo alphacp-sync get 7c67db1eb34d9a12b103cf9d21c104cb69394981 tools/verify/s9-bind-check.sh /tmp/acp-s9-bind-check.sh 9e380ae98f55a6ec545220df2da9ea50d3a6d1c33ade390e0c538326cce36af9 && sudo bash /tmp/acp-s9-bind-check.sh
+```
+- Expected last line: `=== S9 BIND9 LIVE CHECK: 35 pass, 0 fail, 0 skip ===`.
+- Kaccha zone (`acp-bind-check.test`) ban kar ant me apne aap hat jata hai.
+- Offline proof (mere paas **35/0**): `bash tools/sim/s9-bind-sim.sh` → 3/0.
+
+## ✅ Latest deployment (5 Oct 2026; already completed)
+
+### panel-update 0.73.1 — S10 destinations ka LIVE fix (aapne chalaya: 3no green)
 ```bash
 sudo alphacp-sync get 884054a0dfe4c19d8bbd2b134bca7af4f3c242d4 installer/panel-update.sh /tmp/acp-panel-update-0.73.1.sh 04b7fee5c9d5f1a09d9182a00868a278e7598e31edf6b7d23b425b6431534890 && sudo bash /tmp/acp-panel-update-0.73.1.sh
 ```
-- Updater SHA-256: `04b7fee5c9d5f1a09d9182a00868a278e7598e31edf6b7d23b425b6431534890`.
-- Expected: banner `updater 0.73.1` → panel **0.73.0** + agent **0.65.0** (naya bundle) → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Kya theek hua (aapke 6 fail):** 
-    1. `binary not in agent allowlist: /usr/bin/ssh` — `backup.pull` ko sirf `scp` chahiye tha, par
-       destination ka *Test / Push / List* door ke server par **command** bhi chalata hai (mkdir,
-       sha256sum, ls). `ssh` ab agent ki allowlist me hai (aur ek naya test hai jo aage aisi bhool rokta hai).
-    2. **adhoori `.part` file remote par reh gayi** — scp upload ke baad verify fail hone par door ke
-       server se `.part` hatani chahiye thi. Ab har failure par `rm -f` ki koshish hoti hai (best-effort).
-    3. (chhupi hui wajah) `RemoteDestination.php` me `use Throwable;` missing tha — namespace ke andar
-       `catch (Throwable)` tabhi match karta hai jab import ho; isliye upar wali saafai chup-chaap skip
-       ho rahi thi. Ab import hai + poore `agent/src` ke liye lint test hai.
-- Panel code 0.73.0 wahi rahega (badla hi nahi), sirf agent bundle.
+- **Live result:** 3no commands green — panel 0.73.0 + agent 0.65.0, destinations 25/0, remote-pull 0 fail.
+- Fix: `/usr/bin/ssh` allowlist me, remote `.part` hamesha saaf, `use Throwable` import + poore agent ke liye lint test.
 
-### 2) destinations ki live verification dobara (ab 0 fail aana chahiye)
-```bash
-sudo alphacp-sync get 884054a0dfe4c19d8bbd2b134bca7af4f3c242d4 tools/verify/s10-backup-destination-check.sh /tmp/acp-s10-dest-check.sh 6747ba69f797985c839d1a2c460104f431a6d3a09e8e68228718b1afe49f51e8 && sudo bash /tmp/acp-s10-dest-check.sh
-```
-- Expected last line: `=== S10 BACKUP DESTINATION LIVE CHECK: 25 pass, 0 fail, 0 skip ===`.
-- Offline proof (mere paas **22/0**): `bash tools/sim/s10-backup-destination-sim.sh`.
-
-### 3) (ek minat) kal wala remote-pull fix bhi confirm kar lo
-```bash
-sudo alphacp-sync get 884054a0dfe4c19d8bbd2b134bca7af4f3c242d4 tools/verify/s10-remote-pull-check.sh /tmp/acp-s10-remote-pull-check.sh 52e040400adb4fd5a5c94007c4320df4d87caf3946ee2c7a16f65f37e127133d && sudo bash /tmp/acp-s10-remote-pull-check.sh
-```
-- Expected: `=== S10 REMOTE PULL LIVE CHECK: ... pass, 0 fail, ... skip ===`.
-
-## ✅ Latest deployment (5 Oct 2026; already completed)
 
 ### panel-update 0.73.0 — S10 remote backup destinations (deployed 5 Oct 05:39Z)
 ```bash
