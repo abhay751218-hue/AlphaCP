@@ -74,6 +74,23 @@ final class CommandRunner implements CommandExecutor
         '/usr/sbin/dig',
         '/bin/dig',
         '/usr/local/bin/dig',
+        // S7 mail (mail.server): config generate/validate, IMAP/POP3, user lookup.
+        // Dono (/usr/sbin + /usr/bin) — 0.73.1 wali `ssh` bhool dobara na ho.
+        '/usr/sbin/exim4',
+        '/usr/bin/exim4',
+        '/usr/sbin/exim',
+        '/usr/local/sbin/exim4',
+        '/usr/sbin/dovecot',
+        '/usr/bin/dovecot',
+        '/usr/local/sbin/dovecot',
+        '/usr/bin/doveadm',
+        '/usr/sbin/doveadm',
+        '/usr/local/bin/doveadm',
+        '/usr/sbin/doveconf',
+        '/usr/bin/doveconf',
+        '/usr/local/sbin/doveconf',
+        '/usr/sbin/update-exim4.conf',
+        '/usr/bin/update-exim4.conf',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

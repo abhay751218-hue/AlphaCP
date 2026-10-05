@@ -83,6 +83,20 @@ final class FakeCommandExecutor implements CommandExecutor
     public string $sshStderr = '';
     public bool $sshFails = false;
 
+    // ---- S7 mail (mail.server): Exim4 + Dovecot ----
+    /** `exim4 -bV` fail kare (kharaab config) */
+    public bool $mailEximConfigFails = false;
+    /** `update-exim4.conf` fail kare */
+    public bool $mailEximGenerateFails = false;
+    /** `doveconf -n` fail kare */
+    public bool $mailDovecotConfigFails = false;
+    /** `exim4 -bt <address>` ka output (asli routing jawab) */
+    public string $eximBtOutput = '';
+    /** `doveadm user <address>` ka output (khali = aisa mailbox nahi) */
+    public string $doveadmUserOutput = '';
+    /** @var list<list<string>> mail binaries ke saare argv (exim/dovecot/doveadm/doveconf) */
+    public array $mailArgvs = [];
+
     // ---- S9 BIND9 (dns.bind) ----
     /** `named-checkconf` fails when set (bad managed options block) */
     public bool $bindCheckconfFails = false;
@@ -144,7 +158,8 @@ final class FakeCommandExecutor implements CommandExecutor
             'useradd' => $this->useradd($argv),
             'userdel' => $this->userdel($argv),
             'usermod' => $this->usermod($argv),
-            'setquota', 'systemctl' => new CommandResult($argv, 0, "fake {$bin} ok\n", '', 1),
+            'setquota' => new CommandResult($argv, 0, "fake {$bin} ok\n", '', 1),
+            'systemctl' => new CommandResult($argv, 0, (($argv[1] ?? '') === 'is-active' ? "active\n" : "fake systemctl ok\n"), '', 1),
             'crontab' => $this->handleCrontab($argv, $stdin),
             'certbot' => $this->handleCertbot($argv),
             'tar' => $this->handleTar($argv),
@@ -161,6 +176,15 @@ final class FakeCommandExecutor implements CommandExecutor
             'rndc' => $this->handleRndc($argv),
             'dig' => $this->handleDig($argv),
             'hostname' => new CommandResult($argv, 0, $this->hostnameI, '', 1),
+            'exim4', 'exim' => $this->handleExim($argv),
+            'dovecot' => new CommandResult($argv, 0, "2.3.21 (47377e0c2f)\n", '', 1),
+            'doveadm' => $this->handleDoveadm($argv),
+            'doveconf' => $this->mailDovecotConfigFails
+                ? new CommandResult($argv, 1, '', 'doveconf: Error: unknown setting', 1)
+                : new CommandResult($argv, 0, "mail_location = maildir:~/\n", '', 1),
+            'update-exim4.conf' => $this->mailEximGenerateFails
+                ? new CommandResult($argv, 1, '', 'update-exim4.conf: failed to generate', 1)
+                : new CommandResult($argv, 0, '', '', 1),
             default => new CommandResult($argv, 0, '', '', 1),
         };
     }
@@ -626,5 +650,29 @@ final class FakeCommandExecutor implements CommandExecutor
         }
 
         return new CommandResult($argv, 0, $stdout, '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleExim(array $argv): CommandResult
+    {
+        $this->mailArgvs[] = $argv;
+        if (($argv[1] ?? '') === '-bV') {
+            return $this->mailEximConfigFails
+                ? new CommandResult($argv, 1, '', 'Exim configuration error in line 42: unknown option', 1)
+                : new CommandResult($argv, 0, "Exim version 4.97 #2 built 01-Jan-2026 00:00:00\n", '', 1);
+        }
+        if (($argv[1] ?? '') === '-bt') {
+            return new CommandResult($argv, 0, $this->eximBtOutput, '', 1);
+        }
+
+        return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleDoveadm(array $argv): CommandResult
+    {
+        $this->mailArgvs[] = $argv;
+
+        return new CommandResult($argv, 0, $this->doveadmUserOutput, '', 1);
     }
 }

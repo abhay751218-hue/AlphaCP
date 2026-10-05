@@ -87,6 +87,8 @@ use Alphacp\Agent\Tasks\ForwardSet;
 use Alphacp\Agent\Tasks\SyncSet;
 use Alphacp\Agent\Tasks\NameserverSet;
 use Alphacp\Agent\BindServer;
+use Alphacp\Agent\MailServer;
+use Alphacp\Agent\Tasks\MailServerSetup;
 use Alphacp\Agent\Tasks\BindSetup;
 use Alphacp\Agent\Tasks\BackupCreate;
 use Alphacp\Agent\Tasks\BackupArchiveCreate;
@@ -248,7 +250,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -4493,6 +4495,262 @@ test('BindServer renderZone — zone injection impossible (quote/escape)', funct
     );
     assert_true(str_contains($body, 'x IN TXT "say \\"hi\\" \\\\ ok"'), 'TXT me quote/backslash escape hone chahiye: ' . $body);
     assert_true(substr_count($body, "\n") === 5, 'SOA + NS + glue A + 1 record + trailing newline');
+});
+
+
+fwrite(STDOUT, "\nS7 MAIL SERVER (mail.server)\n");
+
+/** @return array{root:string,cmd:FakeCommandExecutor,ctx:TaskContext} */
+function acp_mail_harness(): array
+{
+    $root = sys_get_temp_dir() . '/acp-mail-' . bin2hex(random_bytes(4));
+    $dirs = [$root . '/home', $root . '/etc/exim4', $root . '/etc/dovecot/conf.d', $root . '/alphacp'];
+    foreach ($dirs as $dir) {
+        mkdir($dir, 0755, true);
+    }
+    // distro jaisi exim template (backup lene ke liye)
+    file_put_contents($root . '/etc/exim4/exim4.conf.template', "# distro exim template\n");
+    putenv('ACP_MAIL_EXIM_TEMPLATE=' . $root . '/etc/exim4/exim4.conf.template');
+    putenv('ACP_MAIL_EXIM_DOMAINS=' . $root . '/etc/exim4/alphacp-domains');
+    putenv('ACP_MAIL_EXIM_RECIPIENTS=' . $root . '/etc/exim4/alphacp-recipients');
+    putenv('ACP_MAIL_EXIM_ALIASES=' . $root . '/etc/exim4/alphacp-aliases');
+    putenv('ACP_MAIL_DOVECOT_USERS=' . $root . '/etc/dovecot/alphacp-users');
+    putenv('ACP_MAIL_DOVECOT_CONF=' . $root . '/etc/dovecot/conf.d/99-alphacp.conf');
+    // fake executor in binaries ko intercept karta hai
+    putenv('ACP_MAIL_EXIM=' . $root . '/bin/exim4');
+    putenv('ACP_MAIL_DOVECOT=' . $root . '/bin/dovecot');
+    putenv('ACP_MAIL_DOVEADM=' . $root . '/bin/doveadm');
+    putenv('ACP_MAIL_DOVECONF=' . $root . '/bin/doveconf');
+    putenv('ACP_MAIL_UPDATE_EXIM=' . $root . '/bin/update-exim4.conf');
+    putenv('ACP_STATE_ROOT=' . $root . '/alphacp');
+    putenv('ACP_ACCOUNTS_ROOT=' . $root . '/home');
+
+    $cmd = new FakeCommandExecutor();
+    $log = new TaskLogger(new PDO('sqlite::memory:'), null, false);
+    $ctx = new TaskContext(
+        log: $log,
+        cmd: $cmd,
+        paths: new PathGuard($dirs),
+        taskId: null,
+        taskRow: null,
+    );
+
+    return ['root' => $root, 'cmd' => $cmd, 'ctx' => $ctx];
+}
+
+/** @param array{root:string} $harness */
+function acp_mail_cleanup(array $harness): void
+{
+    $root = $harness['root'];
+    if (is_dir($root)) {
+        $it = new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS);
+        $files = new RecursiveIteratorIterator($it, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($files as $file) {
+            $file->isDir() ? @rmdir($file->getPathname()) : @unlink($file->getPathname());
+        }
+        @rmdir($root);
+    }
+    foreach ([
+        'ACP_MAIL_EXIM_TEMPLATE', 'ACP_MAIL_EXIM_DOMAINS', 'ACP_MAIL_EXIM_RECIPIENTS',
+        'ACP_MAIL_EXIM_ALIASES', 'ACP_MAIL_DOVECOT_USERS', 'ACP_MAIL_DOVECOT_CONF',
+        'ACP_MAIL_EXIM', 'ACP_MAIL_DOVECOT', 'ACP_MAIL_DOVEADM', 'ACP_MAIL_DOVECONF',
+        'ACP_MAIL_UPDATE_EXIM',
+    ] as $name) {
+        putenv($name);
+    }
+}
+
+/** Do account: alicehost (2 mailbox + 1 forwarder) aur bobhost (1 mailbox). */
+function acp_mail_seed_accounts(string $root): void
+{
+    $hash = '$2y$10$abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ012345';
+    $base = [
+        'alicehost' => [
+            'passwd' => [
+                "info@alice.test:{BLF-CRYPT}{$hash}:1001:1001::{$root}/home/alicehost/mail/alice.test/info::",
+                "sales@alice.test:{BLF-CRYPT}{$hash}:1001:1001::{$root}/home/alicehost/mail/alice.test/sales::userdb_quota_rule=*:storage=1024M",
+                // doosre account ka maildir — kabhi accept nahi hona chahiye
+                "steal@alice.test:{BLF-CRYPT}{$hash}:1001:1001::{$root}/home/bobhost/mail/bob.test/steal::",
+            ],
+            'aliases' => [
+                'contact@alice.test: info@alice.test',
+                'bad@alice.test:',
+            ],
+        ],
+        'bobhost' => [
+            'passwd' => [
+                "info@bob.test:{BLF-CRYPT}{$hash}:1002:1002::{$root}/home/bobhost/mail/bob.test/info::",
+                "garbage-line-without-fields",
+            ],
+            'aliases' => [],
+        ],
+    ];
+    foreach ($base as $user => $files) {
+        $dir = $root . '/home/' . $user . '/etc/mail';
+        mkdir($dir, 0755, true);
+        file_put_contents($dir . '/passwd', implode("\n", $files['passwd']) . "\n");
+        file_put_contents($dir . '/aliases', implode("\n", $files['aliases']) . "\n");
+    }
+}
+
+test('mail.server sync — sab accounts ke mailbox/forwarder aggregate (doosre ka maildir nahi)', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true($out['mailboxes'] === 3, '3 valid mailbox (chori wala chhutna chahiye), mile ' . (int) $out['mailboxes']);
+    assert_true($out['domains'] === 2, '2 domains: alice.test + bob.test');
+    assert_true($out['aliases'] === 1, '1 valid forwarder (khali dest wala chhut jana chahiye)');
+
+    $users = (string) file_get_contents($h['root'] . '/etc/dovecot/alphacp-users');
+    assert_true(str_contains($users, 'info@alice.test:'));
+    assert_true(!str_contains($users, 'steal@alice.test'), 'doosre account ka maildir kabhi nahi aana chahiye');
+    assert_true(!str_contains($users, 'garbage-line'), 'bekaar line ignore honi chahiye');
+
+    $rec = (string) file_get_contents($h['root'] . '/etc/exim4/alphacp-recipients');
+    assert_true(str_contains($rec, 'info@alice.test: ' . $h['root'] . '/home/alicehost/mail/alice.test/info 1001 1001'), 'recipients line: ' . $rec);
+    assert_true(str_contains($rec, '1024M') === false, 'recipients me quota nahi hota');
+
+    $dom = (string) file_get_contents($h['root'] . '/etc/exim4/alphacp-domains');
+    assert_true(str_contains($dom, 'alice.test') && str_contains($dom, 'bob.test'));
+
+    $al = (string) file_get_contents($h['root'] . '/etc/exim4/alphacp-aliases');
+    assert_true(str_contains($al, 'contact@alice.test: info@alice.test'));
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — config validate hone ke baad hi apply (warn: mail band na ho)', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    $out = (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    assert_true($out['ok'] === true);
+    assert_true(is_file($h['root'] . '/etc/dovecot/conf.d/99-alphacp.conf'));
+    assert_true(is_file($h['root'] . '/etc/exim4/exim4.conf.template.acp-orig'), 'asli template ki backup honi chahiye');
+    assert_true(is_file($h['root'] . '/alphacp/etc/mail-server-configured'), 'configured marker likhna chahiye');
+    $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+    assert_true(str_contains($tpl, 'alphacp_maildir:'), 'exim transport hona chahiye');
+    assert_true(str_contains($tpl, 'alphacp_mailbox:'), 'exim router hona chahiye');
+    assert_true(str_contains($tpl, 'deny message = relay not permitted'), 'open relay band hona chahiye');
+    $dov = (string) file_get_contents($h['root'] . '/etc/dovecot/conf.d/99-alphacp.conf');
+    assert_true(str_contains($dov, 'driver = passwd-file'));
+    assert_true(str_contains($dov, 'mail_location = maildir:~/'), 'Maildir location hona chahiye');
+    // systemctl enable/restart dono services ke liye chale
+    $line = implode(' ', array_map(static fn (array $a): string => implode(' ', $a), $h['cmd']->calls));
+    assert_true(str_contains($line, 'systemctl enable exim4'));
+    assert_true(str_contains($line, 'systemctl enable dovecot'));
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — kharaab exim config ho to purani template wapas', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    $h['cmd']->mailEximConfigFails = true;
+    $threw = false;
+    try {
+        (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'exim config reject');
+    }
+    assert_true($threw, 'kharaab config par reject hona chahiye');
+    $restored = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+    assert_true($restored === "# distro exim template\n", 'purani template wapas aani chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server verify — asli exim routing + doveadm mailbox (jhoothi ok nahi)', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+
+    $h['cmd']->eximBtOutput = "info@alice.test\n  router = alphacp_mailbox, transport = alphacp_maildir\n";
+    $h['cmd']->doveadmUserOutput = "field value\nuid 1001\ngid 1001\nhome {$h['root']}/home/alicehost/mail/alice.test/info\n";
+    $v = (new MailServerSetup())->handle(['action' => 'verify', 'address' => 'info@alice.test'], $h['ctx']);
+    assert_true($v['routed'] === true, 'routing milna chahiye');
+    assert_true($v['has_mailbox'] === true, 'doveadm se mailbox milna chahiye');
+
+    // ab exim bole "unrouteable" -> verified false hona chahiye
+    $h['cmd']->eximBtOutput = "Unrouteable address\n";
+    $h['cmd']->doveadmUserOutput = '';
+    $bad = (new MailServerSetup())->handle(['action' => 'verify', 'address' => 'ghost@alice.test'], $h['ctx']);
+    assert_true($bad['routed'] === false, 'Unrouteable par routed false hona chahiye');
+    assert_true($bad['has_mailbox'] === false);
+
+    // galat address reject
+    $threw = false;
+    try {
+        (new MailServerSetup())->handle(['action' => 'verify', 'address' => '|/bin/sh@x'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'hostile address reject hona chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server status/list — sachchi report (installed na ho to bhi)', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_accounts($h['root']);
+    $st = (new MailServerSetup())->handle(['action' => 'status'], $h['ctx']);
+    assert_true($st['installed'] === true, 'env override ke saath installed true');
+    assert_true($st['exim_config'] === 'ok', 'exim config ok: ' . json_encode($st['exim_config']));
+    assert_true($st['dovecot_config'] === 'ok', 'dovecot config ok: ' . json_encode($st['dovecot_config']));
+    assert_true(($st['services']['exim4'] ?? false) === true, 'exim4 active: ' . json_encode($st['services']));
+    assert_true($st['mailboxes'] === 0, 'abhi sync nahi hua to 0 (mile ' . (int) $st['mailboxes'] . ')');
+
+    (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    $st2 = (new MailServerSetup())->handle(['action' => 'status'], $h['ctx']);
+    assert_true($st2['mailboxes'] === 3);
+    assert_true($st2['domains'] === 2);
+
+    $list = (new MailServerSetup())->handle(['action' => 'list'], $h['ctx']);
+    assert_true($list['count'] === 3);
+    assert_true(in_array('info@alice.test', $list['mailboxes'], true));
+    assert_true(in_array('info@bob.test', $list['mailboxes'], true));
+    assert_true(!in_array('steal@alice.test', $list['mailboxes'], true));
+
+    // ab binaries hi na hon (env hata do, asli path sandbox me maujood nahi)
+    foreach (['ACP_MAIL_EXIM', 'ACP_MAIL_DOVECOT', 'ACP_MAIL_DOVEADM'] as $k) {
+        putenv($k);
+    }
+    $none = (new MailServerSetup())->handle(['action' => 'status'], $h['ctx']);
+    assert_true($none['installed'] === false, 'bina binaries ke installed false hona chahiye');
+    assert_true(isset($none['error']));
+    acp_mail_cleanup($h);
+});
+
+test('mail.server — galat action reject', function (): void {
+    $h = acp_mail_harness();
+    $threw = false;
+    try {
+        (new MailServerSetup())->handle(['action' => 'nuclear'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'unknown action reject hona chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('S7 mail tools: har possible path agent allowlist me hai', function (): void {
+    $ref = new ReflectionClass(CommandRunner::class);
+    $allow = $ref->getConstant('BIN_ALLOWLIST');
+    foreach ([
+        'exim4' => MailServer::EXIM_PATHS,
+        'dovecot' => MailServer::DOVECOT_PATHS,
+        'doveadm' => MailServer::DOVEADM_PATHS,
+        'doveconf' => MailServer::DOVECONF_PATHS,
+        'update-exim4.conf' => MailServer::UPDATE_EXIM_PATHS,
+    ] as $tool => $paths) {
+        foreach ($paths as $path) {
+            assert_true(in_array($path, $allow, true), "allowlist me {$path} nahi hai ({tool})");
+        }
+    }
+});
+
+test('mail.server schema — payload fail-closed', function (): void {
+    $schema = acp_task_registry()['mail.server']['schema'];
+    assert_true(JsonSchema::validate($schema, ['action' => 'status']) === [], 'status pass hona chahiye');
+    assert_true(JsonSchema::validate($schema, ['action' => 'status', 'evil' => 1]) !== [], 'extra key reject');
+    assert_true(JsonSchema::validate($schema, ['action' => 'destroy']) !== [], 'unknown action reject');
+    assert_true(JsonSchema::validate($schema, ['action' => 'verify', 'address' => '|/bin/sh']) !== [], 'hostile address reject');
+    assert_true(JsonSchema::validate($schema, ['action' => 'verify', 'address' => 'a@b.test']) === [], 'sahi address pass');
 });
 
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");

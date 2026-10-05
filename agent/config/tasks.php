@@ -1110,6 +1110,25 @@ return [
         ],
     ],
 
+    // S7: Exim4 + Dovecot — asli mail. Panel/agent mailboxes (bcrypt + Maildir)
+    // pehle se likhte hain; yahi task unhe daemons tak pahunchata hai.
+    'mail.server' => [
+        'handler'     => Tasks\MailServerSetup::class,
+        'safety'      => 'mutating',
+        'timeout'     => 180,
+        'description' => 'Exim4 + Dovecot: status/setup/sync/list/verify (config validated before apply).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['action'],
+            'properties'           => [
+                'action'  => ['type' => 'string', 'enum' => ['status', 'setup', 'sync', 'list', 'verify']],
+                'address' => ['type' => 'string', 'maxLength' => 190, 'pattern' => '^[a-z0-9._-]+@[a-z0-9.-]+$'],
+            ],
+        ],
+    ],
+
     'mail.set' => [
         'handler'     => Tasks\MailSet::class,
         'safety'      => 'mutating',

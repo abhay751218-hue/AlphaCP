@@ -1,0 +1,299 @@
+#!/usr/bin/env bash
+# =============================================================================
+# AlphaCP S7 — LIVE verification: Exim4 + Dovecot (mail.server)
+# Server par ROOT ke saath chalao. Sab kuch apne aap saaf ho jata hai.
+#
+#   A) preconditions — exim4/dovecot/doveadm binaries (path auto-detect)
+#   B) setup          — config likhi gayi (backup ke saath), validate, start
+#   C) config proof   — `exim4 -bV` + `doveconf -n` (asli daemons khud bolein)
+#   D) services       — exim4/dovecot active, port 25/143 sun rahe hain
+#   E) ASLI MAIL      — mailbox banao, `exim4 -bt` se routing, phir mail bhej kar
+#                       Maildir me file dhoondho (sabse bada saboot)
+#   F) sync/verify/list/status
+#
+# Kaccha account: ${TEST_USER} (${TEST_DOMAIN}) — ant me terminate ho jata hai.
+# =============================================================================
+set -uo pipefail
+
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"; export ACP_HOME
+PHP_BIN="${ACP_PHP:-$(command -v php8.4 || command -v php || true)}"
+PANELD="${ACP_VERIFY_PANELD:-${ACP_HOME}/agent/bin/paneld}"
+TEST_USER="${ACP_VERIFY_MAIL_USER:-acpmailchk}"
+TEST_DOMAIN="${ACP_VERIFY_MAIL_DOMAIN:-acp-mail-check.test}"
+TEST_ADDR="info@${TEST_DOMAIN}"
+# paths: agent jis env override ko maanta hai wahi yahan (SIM me bhi chale)
+DOVECONF_USERS="${ACP_MAIL_DOVECOT_USERS:-/etc/dovecot/alphacp-users}"
+DOVECONF_FILE="${ACP_MAIL_DOVECOT_CONF:-/etc/dovecot/conf.d/99-alphacp.conf}"
+EXIM_TEMPLATE="${ACP_MAIL_EXIM_TEMPLATE:-/etc/exim4/exim4.conf.template}"
+EXIM_DOMAINS="${ACP_MAIL_EXIM_DOMAINS:-/etc/exim4/alphacp-domains}"
+EXIM_RECIPIENTS="${ACP_MAIL_EXIM_RECIPIENTS:-/etc/exim4/alphacp-recipients}"
+EXIM_ALIASES="${ACP_MAIL_EXIM_ALIASES:-/etc/exim4/alphacp-aliases}"
+REPORT_DIR="${ACP_HOME}/verify-reports"
+
+PASS=0; FAIL=0; SKIP=0; TASK_IDS=""; LAST_TASK_ID=""; LAST_ERR=""; TASK_OUT=""; DONE=0
+CREATED_ACCOUNT=0; LIVE_MAIL=0
+ok()   { PASS=$((PASS+1)); printf '  \033[32mok\033[0m   %s\n' "$1"; }
+bad()  { FAIL=$((FAIL+1)); printf '  \033[31mFAIL\033[0m %s\n' "$1"; }
+skip() { SKIP=$((SKIP+1)); printf '  \033[33mskip\033[0m %s\n' "$1"; }
+info() { printf '  --   %s\n' "$1"; }
+
+if [[ "${ACP_VERIFY_ALLOW_NONROOT:-0}" != "1" && "$(id -u)" -ne 0 ]]; then
+  echo "root ke saath chalao: sudo bash $0"; exit 1
+fi
+[[ -x "${PANELD}" ]] || { echo "paneld nahi mila: ${PANELD}"; exit 1; }
+grep -q "'mail[.]server'" "${ACP_HOME}/agent/config/tasks.php" 2>/dev/null \
+  || { echo "agent me mail.server task nahi hai — pehle 0.75.0 update karo"; exit 1; }
+
+find_bin() {  # $1 tool, $2 env var, $3 preferred path
+  local tool="$1" envvar="$2" pref="$3" envval="" found="" d=""
+  envval="$(printenv "${envvar}" 2>/dev/null || true)"
+  if [[ -n "${envval}" ]]; then printf '%s' "${envval}"; return 0; fi
+  if [[ -n "${pref}" && -x "${pref}" ]]; then printf '%s' "${pref}"; return 0; fi
+  found="$(command -v "${tool}" 2>/dev/null || true)"
+  if [[ -n "${found}" && -x "${found}" ]]; then printf '%s' "${found}"; return 0; fi
+  for d in /usr/sbin /usr/bin /sbin /bin /usr/local/sbin /usr/local/bin; do
+    if [[ -x "${d}/${tool}" ]]; then printf '%s' "${d}/${tool}"; return 0; fi
+  done
+  printf ''
+}
+
+EXIM="$(find_bin exim4 ACP_VERIFY_EXIM /usr/sbin/exim4)"
+DOVEADM="$(find_bin doveadm ACP_VERIFY_DOVEADM /usr/bin/doveadm)"
+DOVECOT_BIN="$(find_bin dovecot ACP_VERIFY_DOVECOT /usr/sbin/dovecot)"
+DOVECONF_BIN="$(find_bin doveconf ACP_VERIFY_DOVECONF /usr/sbin/doveconf)"
+
+cleanup() {
+  if [[ "${DONE}" != "1" ]]; then info "cleanup (script beech me ruka)"; fi
+  if [[ "${CREATED_ACCOUNT}" == "1" ]]; then
+    "${RUNNER[@]}" --run account.terminate "{\"username\":\"${TEST_USER}\",\"_confirm\":\"account.terminate\"}" >/dev/null 2>&1 || true
+  fi
+  "${RUNNER[@]}" --run mail.server '{"action":"sync"}' >/dev/null 2>&1 || true
+  return 0
+}
+trap cleanup EXIT
+
+RUNNER=()
+if [[ -n "${PHP_BIN}" && -x "${PHP_BIN}" ]]; then
+  RUNNER=("${PHP_BIN}" "${PANELD}")
+elif [[ -x "${PANELD}" ]]; then
+  RUNNER=("${PANELD}")
+else
+  echo "php binary nahi mila (ACP_PHP=... set karo) aur paneld executable bhi nahi"; exit 1
+fi
+
+run_task() {  # type payload -> 0/1 ; LAST_TASK_ID + LAST_ERR + TASK_OUT set
+  local type="$1" payload="$2" out
+  out="$("${RUNNER[@]}" --run "${type}" "${payload}" 2>&1)"
+  TASK_OUT="${out}"
+  LAST_TASK_ID="$(grep -o '"task_id": *[0-9]*' <<<"${out}" | grep -o '[0-9]*' | head -1)"
+  [[ -n "${LAST_TASK_ID}" ]] && TASK_IDS="${TASK_IDS}${TASK_IDS:+, }${type}#${LAST_TASK_ID}"
+  if grep -q '"status": "success"' <<<"${out}"; then
+    LAST_ERR=""
+    return 0
+  fi
+  LAST_ERR="$(grep -o '"error": *"[^"]*"' <<<"${out}" | head -1 | sed 's/.*"error": *"//; s/"$//')"
+  [[ -z "${LAST_ERR}" ]] && LAST_ERR="$(tail -1 <<<"${out}")"
+  return 1
+}
+
+echo "=== S7 MAIL SERVER LIVE CHECK ==="
+info "ACP_HOME : ${ACP_HOME}"
+info "test addr: ${TEST_ADDR}"
+echo
+
+# ------------------------------------------------------------------ part A ----
+info "A: preconditions (exim4 + dovecot installed?)"
+MISSING=""
+for b in "${EXIM}" "${DOVEADM}" "${DOVECOT_BIN}"; do
+  [[ -n "${b}" && -x "${b}" ]] || MISSING="${MISSING} ${b:-<nahi-mila>}"
+done
+if [[ -n "${MISSING}" ]]; then
+  bad "mail tools nahi mile:${MISSING}"
+  info "Fix: sudo apt-get install -y exim4 exim4-daemon-light dovecot-core dovecot-imapd dovecot-pop3d"
+  info "command -v exim4 : $(command -v exim4 2>/dev/null || echo NAHI-MILA)"
+  info "command -v dovecot: $(command -v dovecot 2>/dev/null || echo NAHI-MILA)"
+  echo; echo "=== S7 MAIL SERVER LIVE CHECK: ${PASS} pass, ${FAIL} fail, ${SKIP} skip ==="
+  DONE=1; exit 1
+fi
+ok "exim4: ${EXIM}"
+ok "dovecot: ${DOVECOT_BIN}"
+ok "doveadm: ${DOVEADM}"
+ok "agent me mail.server task registered"
+
+# ------------------------------------------------------------------ part B ----
+echo
+info "B: mail.server setup (config + services)"
+if run_task mail.server '{"action":"setup"}'; then
+  ok "setup success (task #${LAST_TASK_ID})"
+else
+  bad "setup fail: ${LAST_ERR:-unknown}"
+fi
+[[ -f "${DOVECONF_FILE}" ]] && ok "dovecot managed conf: ${DOVECONF_FILE}" || bad "dovecot conf nahi mili"
+[[ -f "${EXIM_TEMPLATE}.acp-orig" ]] && ok "asli exim template ki backup hai" || bad "exim template backup nahi mili"
+[[ -f "${EXIM_DOMAINS}" ]] && ok "domains file: ${EXIM_DOMAINS}" || bad "domains file nahi mili"
+[[ -f "${EXIM_RECIPIENTS}" ]] && ok "recipients file: ${EXIM_RECIPIENTS}" || bad "recipients file nahi mili"
+[[ -f "${EXIM_ALIASES}" ]] && ok "aliases file: ${EXIM_ALIASES}" || bad "aliases file nahi mili"
+[[ -f "${DOVECONF_USERS}" ]] && ok "dovecot users file: ${DOVECONF_USERS}" || bad "dovecot users file nahi mili"
+if [[ -f "${ACP_HOME}/etc/mail-server-configured" ]]; then
+  ok "configured marker likha gaya (updater services chalu rakhega)"
+else
+  bad "configured marker nahi mila"
+fi
+
+# ------------------------------------------------------------------ part C ----
+echo
+info "C: config asli daemons se validate"
+if "${EXIM}" -bV >/dev/null 2>&1; then
+  ok "exim4 -bV pass: $("${EXIM}" -bV 2>/dev/null | head -1)"
+else
+  bad "exim4 -bV fail: $("${EXIM}" -bV 2>&1 | head -3 | tr '\n' ' ')"
+fi
+if [[ -n "${DOVECONF_BIN}" && -x "${DOVECONF_BIN}" ]]; then
+  if "${DOVECONF_BIN}" -n >/dev/null 2>&1; then
+    ok "doveconf -n pass"
+  else
+    bad "doveconf -n fail: $("${DOVECONF_BIN}" -n 2>&1 | head -3 | tr '\n' ' ')"
+  fi
+fi
+
+# ------------------------------------------------------------------ part D ----
+echo
+info "D: services chal rahe hain?"
+for u in exim4 dovecot; do
+  if [[ "$(systemctl is-active "$u" 2>/dev/null)" == "active" ]]; then
+    ok "${u} service active"
+  else
+    bad "${u} service active NAHI"
+    info "journalctl ${u}: $(journalctl -u "${u}" -n 8 --no-pager 2>/dev/null | tail -5 | tr '\n' ' ')"
+  fi
+done
+P25="$(ss -lnt 2>/dev/null | grep -c ':25 ')"
+P143="$(ss -lnt 2>/dev/null | grep -c ':143 ')"
+if [[ "${P25}" -gt 0 ]]; then ok "port 25 (SMTP) sun raha hai"; else skip "port 25 nahi sun raha (AWS security group ya local_interfaces check karo)"; fi
+if [[ "${P143}" -gt 0 ]]; then ok "port 143 (IMAP) sun raha hai"; else skip "port 143 nahi sun raha (Dovecot abhi localhost-only hai — S7 slice 2 me TLS ke saath khulega)"; fi
+
+# ------------------------------------------------------------------ part E ----
+echo
+info "E: ASLI MAIL — mailbox banao, routing test karo, mail bhejo"
+HASH="${ACP_MAIL_TEST_HASH:-}"
+if [[ -z "${HASH}" && -n "${PHP_BIN}" && -x "${PHP_BIN}" ]]; then
+  HASH="$("${PHP_BIN}" -r 'echo password_hash("AcpMailTest123", PASSWORD_BCRYPT);' 2>/dev/null)"
+fi
+if [[ ! "${HASH}" =~ ^\$2[ayb]\$[0-9]{2}\$[A-Za-z0-9./]{53}$ ]]; then
+  skip "bcrypt hash nahi ban paaya (php missing?) — real delivery test chhoda"
+else
+  SHADOW="$(openssl passwd -6 'AcpMailTest123' 2>/dev/null || echo '$6$rounds=5000$01234567$abcdefghijklmnopqrstuv')"
+  if run_task account.create "{\"username\":\"${TEST_USER}\",\"domain\":\"${TEST_DOMAIN}\",\"shadow_hash\":\"${SHADOW}\",\"quota_mb\":256,\"php_version\":\"8.4\"}"; then
+    ok "kaccha account ban gaya (task #${LAST_TASK_ID})"
+    CREATED_ACCOUNT=1
+  else
+    skip "kaccha account nahi ban paaya (${LAST_ERR:-unknown}) — real delivery test chhoda"
+  fi
+
+  if [[ "${CREATED_ACCOUNT}" == "1" ]]; then
+    if run_task mail.set "{\"username\":\"${TEST_USER}\",\"mailboxes\":[{\"local\":\"info\",\"domain\":\"${TEST_DOMAIN}\",\"hash\":\"${HASH}\",\"quota_mb\":100}]}"; then
+      ok "mailbox ban gaya (task #${LAST_TASK_ID})"
+    else
+      bad "mail.set fail: ${LAST_ERR:-unknown}"
+    fi
+    if run_task mail.server '{"action":"sync"}'; then
+      ok "sync ne mailbox aggregate kar liya (task #${LAST_TASK_ID})"
+    else
+      bad "sync fail: ${LAST_ERR:-unknown}"
+    fi
+    if grep -q "^${TEST_ADDR}:" "${DOVECONF_USERS}" 2>/dev/null; then
+      ok "dovecot users file me ${TEST_ADDR} hai"
+    else
+      bad "dovecot users file me ${TEST_ADDR} nahi mila"
+    fi
+    if grep -q "^${TEST_DOMAIN}$" "${EXIM_DOMAINS}" 2>/dev/null; then
+      ok "exim local domains me ${TEST_DOMAIN} hai"
+    else
+      bad "exim domains file me ${TEST_DOMAIN} nahi mila"
+    fi
+
+    # 1) routing test (asli exim)
+    ROUTE="$("${EXIM}" -bt "${TEST_ADDR}" 2>&1 | head -3 | tr '\n' ' ')"
+    if [[ "${ROUTE}" == *alphacp_maildir* || "${ROUTE}" == *alphacp_mailbox* ]]; then
+      ok "exim -bt: ${ROUTE}"
+    else
+      bad "exim -bt galat: ${ROUTE}"
+    fi
+
+    # 2) dovecot mailbox lookup
+    if "${DOVEADM}" user "${TEST_ADDR}" >/dev/null 2>&1; then
+      ok "doveadm user ${TEST_ADDR}: $("${DOVEADM}" user "${TEST_ADDR}" 2>/dev/null | tr '\n' ' ')"
+    else
+      bad "doveadm user ${TEST_ADDR} fail: $("${DOVEADM}" user "${TEST_ADDR}" 2>&1 | head -2 | tr '\n' ' ')"
+    fi
+
+    # 3) ASLI DELIVERY — mail bhejo aur Maildir me file dhoondho
+    # Maildir ka pata khud Dovecot se poochha (hardcode nahi — sim me bhi chale)
+    MAILDIR="$("${DOVEADM}" user "${TEST_ADDR}" 2>/dev/null | awk '/^home[[:space:]]/ {print $2}' | head -1)"
+    [[ -z "${MAILDIR}" ]] && MAILDIR="/home/${TEST_USER}/mail/${TEST_DOMAIN}/info"
+    info "maildir (doveadm se): ${MAILDIR}"
+    BEFORE="$(ls -1 "${MAILDIR}/new" 2>/dev/null | wc -l)"
+    printf 'Subject: AlphaCP S7 test\nFrom: root@%s\n\nHello from the S7 live check.\n' "$(hostname -f 2>/dev/null || hostname)" \
+      | "${EXIM}" -odf -oem "${TEST_ADDR}" >/dev/null 2>&1
+    sleep 1
+    AFTER="$(ls -1 "${MAILDIR}/new" 2>/dev/null | wc -l)"
+    if [[ "${AFTER}" -gt "${BEFORE}" ]]; then
+      ok "ASLI MAIL PAHUNCH GAYI → ${MAILDIR}/new (${BEFORE} se ${AFTER})"
+      LIVE_MAIL=1
+      head -5 "${MAILDIR}/new/$(ls -1t "${MAILDIR}/new" | head -1)" 2>/dev/null | sed 's/^/       | /'
+    else
+      bad "mail Maildir me nahi pahunchi (${MAILDIR}/new me koi naya file nahi)"
+      info "exim mainlog: $(tail -12 /var/log/exim4/mainlog 2>/dev/null | tr '\n' ' ')"
+      info "exim paniclog: $(tail -6 /var/log/exim4/paniclog 2>/dev/null | tr '\n' ' ')"
+      info "exim -bt     : ${ROUTE}"
+      info "maildir perms: $(ls -ld "${MAILDIR}" "${MAILDIR}/new" 2>&1 | tr '\n' ' ')"
+      info "exim user    : $("${EXIM}" -bP exim_user 2>/dev/null | tr '\n' ' ')"
+      info "setuid bit   : $(ls -l "${EXIM}" 2>/dev/null)"
+    fi
+  fi
+fi
+
+# ------------------------------------------------------------------ part F ----
+echo
+info "F: verify / list / status"
+if run_task mail.server "{\"action\":\"verify\",\"address\":\"${TEST_ADDR}\"}"; then
+  ok "verify action chala (task #${LAST_TASK_ID})"
+else
+  bad "verify fail: ${LAST_ERR:-unknown}"
+fi
+if run_task mail.server '{"action":"list"}'; then
+  ok "list action chala (task #${LAST_TASK_ID})"
+else
+  bad "list fail: ${LAST_ERR:-unknown}"
+fi
+if run_task mail.server '{"action":"status"}'; then
+  ok "status action chala (task #${LAST_TASK_ID})"
+  grep -q '"installed": *true' <<<"${TASK_OUT}" && ok "status: installed = true" || bad "status me installed true nahi mila"
+else
+  bad "status fail: ${LAST_ERR:-unknown}"
+fi
+if run_task mail.server '{"action":"destroy"}'; then
+  bad "unknown action chal gaya (refuse hona chahiye tha)"
+else
+  ok "unknown action refuse (${LAST_ERR:-unknown})"
+fi
+
+DONE=1
+echo
+echo "=== S7 MAIL SERVER LIVE CHECK: ${PASS} pass, ${FAIL} fail, ${SKIP} skip ==="
+info "tasks: ${TASK_IDS}"
+[[ "${LIVE_MAIL}" == "1" ]] && info "ASLI MAIL DELIVERY:VERIFIED" || info "ASLI MAIL DELIVERY:NOT-VERIFIED"
+
+if mkdir -p "${REPORT_DIR}" 2>/dev/null; then
+  {
+    echo "=== S7 MAIL SERVER LIVE CHECK ($(date -u +%Y-%m-%dT%H:%M:%SZ)) ==="
+    echo "pass=${PASS} fail=${FAIL} skip=${SKIP}"
+    echo "tasks: ${TASK_IDS}"
+    echo "live_mail_delivery=$([[ "${LIVE_MAIL}" == "1" ]] && echo YES || echo NO)"
+    echo "tools: exim=${EXIM} dovecot=${DOVECOT_BIN} doveadm=${DOVEADM}"
+    echo "mailboxes: $(grep -c ':' "${DOVECONF_USERS}" 2>/dev/null || echo 0)"
+    echo "domains: $(wc -l < "${EXIM_DOMAINS}" 2>/dev/null || echo 0)"
+  } > "${REPORT_DIR}/s7-mail-check.txt" 2>/dev/null || true
+fi
+
+[[ ${FAIL} -eq 0 ]]
