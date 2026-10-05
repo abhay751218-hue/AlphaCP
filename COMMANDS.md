@@ -14,27 +14,31 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-### 1) panel-update 0.74.0 — S9 BIND9, ASLI DNS zones
+### 1) panel-update 0.74.1 — BIND tools ka sahi path (0.74.0 ke baad chalao)
 ```bash
-sudo alphacp-sync get 7c67db1eb34d9a12b103cf9d21c104cb69394981 installer/panel-update.sh /tmp/acp-panel-update-0.74.0.sh 5509b25bd8240973141758fb5461dcbd1227a3c292b9c58d6ed9ed423b112e8a && sudo bash /tmp/acp-panel-update-0.74.0.sh
+sudo alphacp-sync get c26bef61aa320d3fa5841dd9f4eb3932a94dcb44 installer/panel-update.sh /tmp/acp-panel-update-0.74.1.sh 5fdefb521ef6a1e7540ed38de69fc748fccfead64d17bab428443cde018c0c0c && sudo bash /tmp/acp-panel-update-0.74.1.sh
 ```
-- Updater SHA-256: `5509b25bd8240973141758fb5461dcbd1227a3c292b9c58d6ed9ed423b112e8a`.
-- Expected: banner `updater 0.74.0` → panel **0.74.0** + agent **0.65.0** (naya bundle)
-  → `bind9 + bind9-utils + dnsutils install ho rahe hain` → `==> UPDATE COMPLETE ✅` → HTTP 200.
-- **Kya badla:** ab tak DNS records sirf JSON me likhe jate the ("no BIND rewrite"). Ab
-  `dns.bind` task ASLI zone file likhta hai — `named-checkzone` ke gate ke baad, phir
-  `rndc reload`, phir `dig @127.0.0.1 <zone> SOA` se verify. Panel ka Zone Editor, DNS
-  Zone Manager aur Nameserver selection sab isi ko queue karte hain.
+- Updater SHA-256: `5fdefb521ef6a1e7540ed38de69fc748fccfead64d17bab428443cde018c0c0c`.
+- Expected: banner `updater 0.74.1` → `bind9 present (checkconf=/usr/bin/named-checkconf …)` → panel 0.74.0 (badla nahi) + agent naya bundle → `==> UPDATE COMPLETE ✅`.
+- **0.74.0 me kya gadbad thi:** Ubuntu 24.04 `named-checkconf`/`named-checkzone` ko **/usr/bin** me rakhta hai (`rndc` /usr/sbin me). Agent sirf `/usr/sbin` dhoondh raha tha → `dns.bind` ko tools nahi mil rahe the. Ab agent **sab candidates** dhoondhta hai aur allowlist me dono path hain.
 
 ### 2) BIND9 ki live verification (asli named, asli dig)
 ```bash
-sudo alphacp-sync get 7c67db1eb34d9a12b103cf9d21c104cb69394981 tools/verify/s9-bind-check.sh /tmp/acp-s9-bind-check.sh 9e380ae98f55a6ec545220df2da9ea50d3a6d1c33ade390e0c538326cce36af9 && sudo bash /tmp/acp-s9-bind-check.sh
+sudo alphacp-sync get c26bef61aa320d3fa5841dd9f4eb3932a94dcb44 tools/verify/s9-bind-check.sh /tmp/acp-s9-bind-check.sh 1c3e1c780d12dc823ce916ab76d29a836e3a36746f50f9fe15b1c03c5247a679 && sudo bash /tmp/acp-s9-bind-check.sh
 ```
-- Expected last line: `=== S9 BIND9 LIVE CHECK: 35 pass, 0 fail, 0 skip ===`.
+- Expected last line: `=== S9 BIND9 LIVE CHECK: 38 pass, 0 fail, 0 skip ===`.
+- Script pehle khud tools ki jagah print karegi (`named-checkconf: /usr/bin/...`), aur agar kuch miss ho to poori diagnosis.
 - Kaccha zone (`acp-bind-check.test`) ban kar ant me apne aap hat jata hai.
-- Offline proof (mere paas **35/0**): `bash tools/sim/s9-bind-sim.sh` → 3/0.
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
+
+### panel-update 0.74.0 — S9 BIND9, asli DNS zones (aapne chalaya: green)
+```bash
+sudo alphacp-sync get 7c67db1eb34d9a12b103cf9d21c104cb69394981 installer/panel-update.sh /tmp/acp-panel-update-0.74.0.sh 5509b25bd8240973141758fb5461dcbd1227a3c292b9c58d6ed9ed423b112e8a && sudo bash /tmp/acp-panel-update-0.74.0.sh
+```
+- **Live result:** panel **0.74.0** + agent **0.65.0**, `bind9 installed`, HTTP **200**.
+- Path ki wajah se verify script ko `named-checkconf` nahi mila — fix **0.74.1** me (upar dekho).
+
 
 ### panel-update 0.73.1 — S10 destinations ka LIVE fix (aapne chalaya: 3no green)
 ```bash
