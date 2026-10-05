@@ -14,23 +14,36 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-### 1) panel-update 0.74.1 — BIND tools ka sahi path (0.74.0 ke baad chalao)
+### 1) panel-update 0.74.2 — naya zone ab `rndc reconfig` se serve hota hai
 ```bash
-sudo alphacp-sync get c26bef61aa320d3fa5841dd9f4eb3932a94dcb44 installer/panel-update.sh /tmp/acp-panel-update-0.74.1.sh 5fdefb521ef6a1e7540ed38de69fc748fccfead64d17bab428443cde018c0c0c && sudo bash /tmp/acp-panel-update-0.74.1.sh
+sudo alphacp-sync get 91a8b89925374d678a408a6e38ef0ddaa8d47ace installer/panel-update.sh /tmp/acp-panel-update-0.74.2.sh 8a1a1202d1e4b81a45b08506d8c651737fd6cde7f9264c8e4e074578bc08649a && sudo bash /tmp/acp-panel-update-0.74.2.sh
 ```
-- Updater SHA-256: `5fdefb521ef6a1e7540ed38de69fc748fccfead64d17bab428443cde018c0c0c`.
-- Expected: banner `updater 0.74.1` → `bind9 present (checkconf=/usr/bin/named-checkconf …)` → panel 0.74.0 (badla nahi) + agent naya bundle → `==> UPDATE COMPLETE ✅`.
-- **0.74.0 me kya gadbad thi:** Ubuntu 24.04 `named-checkconf`/`named-checkzone` ko **/usr/bin** me rakhta hai (`rndc` /usr/sbin me). Agent sirf `/usr/sbin` dhoondh raha tha → `dns.bind` ko tools nahi mil rahe the. Ab agent **sab candidates** dhoondhta hai aur allowlist me dono path hain.
+- Updater SHA-256: `8a1a1202d1e4b81a45b08506d8c651737fd6cde7f9264c8e4e074578bc08649a`.
+- Expected: banner `updater 0.74.2` → panel 0.74.0 (badla nahi) + naya agent bundle → `==> UPDATE COMPLETE ✅`.
+- **0.74.1 me kya bacha tha:** zone file ban rahi thi, `named-checkzone` pass ho raha tha, par
+  `dig` khamosh tha. Wajah: **naya** zone `named.conf` me aane ke baad sirf `rndc reload <zone>`
+  kaafi nahi — `rndc reconfig` chahiye (tabhi named naya zone padhta hai). Ab agent pehle
+  `reconfig`, phir `reload`, aur dig se jawab na mile to ek baar dobara koshish karta hai.
+- Saath hi: setup/status ab `named_running` batata hai — named chalu na ho to chup-chaap "ok" nahi.
 
 ### 2) BIND9 ki live verification (asli named, asli dig)
 ```bash
-sudo alphacp-sync get c26bef61aa320d3fa5841dd9f4eb3932a94dcb44 tools/verify/s9-bind-check.sh /tmp/acp-s9-bind-check.sh 1c3e1c780d12dc823ce916ab76d29a836e3a36746f50f9fe15b1c03c5247a679 && sudo bash /tmp/acp-s9-bind-check.sh
+sudo alphacp-sync get 91a8b89925374d678a408a6e38ef0ddaa8d47ace tools/verify/s9-bind-check.sh /tmp/acp-s9-bind-check.sh bfffc48d109fb36fb293b6e779b677e17ad55232acbba60c477f7a866de12e0c && sudo bash /tmp/acp-s9-bind-check.sh
 ```
-- Expected last line: `=== S9 BIND9 LIVE CHECK: 38 pass, 0 fail, 0 skip ===`.
-- Script pehle khud tools ki jagah print karegi (`named-checkconf: /usr/bin/...`), aur agar kuch miss ho to poori diagnosis.
-- Kaccha zone (`acp-bind-check.test`) ban kar ant me apne aap hat jata hai.
+- Expected last line: `=== S9 BIND9 LIVE CHECK: 40 pass, 0 fail, 0 skip ===`.
+- Ab ye check `named` service ko khud start karne ki koshish karega, aur agar phir bhi
+  `dig` khamosh rahe to **poori diagnosis** print karega (rndc reload/reconfig, journalctl,
+  port 53, zone file head) — wahi copy mujhe bhej dena.
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
+
+### panel-update 0.74.1 — BIND tools ka sahi path (aapne chalaya: green)
+```bash
+sudo alphacp-sync get c26bef61aa320d3fa5841dd9f4eb3932a94dcb44 installer/panel-update.sh /tmp/acp-panel-update-0.74.1.sh 5fdefb521ef6a1e7540ed38de69fc748fccfead64d17bab428443cde018c0c0c && sudo bash /tmp/acp-panel-update-0.74.1.sh
+```
+- **Live result:** `bind9 present (checkconf=/usr/bin/named-checkconf checkzone=/usr/bin/named-checkzone rndc=/usr/sbin/rndc dig=/usr/bin/dig)` — path wali problem khatam.
+- Verify 31/5/1 tha (marker check jhootha FAIL + `rndc reconfig` ki kami) — fix **0.74.2** me.
+
 
 ### panel-update 0.74.0 — S9 BIND9, asli DNS zones (aapne chalaya: green)
 ```bash
