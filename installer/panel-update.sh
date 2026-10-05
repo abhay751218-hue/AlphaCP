@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.81.0  ·  default panel bundle 0.74.0  ·  agent 0.81.0  ·  alphacp-sync v1.2
+# updater 0.81.1  ·  default panel bundle 0.74.0  ·  agent 0.81.1  ·  alphacp-sync v1.2
 #
+# 0.81.1: S7 #20/#21 live filter fix — Exim opens user filters as the mailbox uid/gid;
+#         make ~/etc searchable by that identity with search-only permissions (no listing).
+#         Regression reproduces root-owned 0750 ~/etc -> Exim EACCES, then verifies folder save
+#         and discard with real Exim 4.97 after the path permission correction.
 # 0.81.0: S7 #147 SpamAssassin + greylistd (explicit opt-in, default OFF).
 #         Exim daemon-light -> daemon-heavy (Content_Scanning), spamassassin/spamc/
 #         greylistd packages installed. `mail.server spamassassin` manages the local
@@ -179,17 +183,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.81.0"
+UPDATER_VERSION="0.81.1"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.74.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
 BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-2654506a92e7f975d0d468afc16873803e992f3d}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
 BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7396d88339f2d716889dc72058eded0e0e156f47668656b28a1c998dc479f4b5}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.81.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-fb7de77bf2dea57563fb1a018f2c704501bee082}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.81.1}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-33660a15b70376385579bdbb251c5adf2e991e1e}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-55f3cc0cc2a69df4a1015464f1677c2347de67703d60005ad2ea545acbf53c73}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-b0614835d4790a68ce328c93e74fdb3d21d78b64eeb51641b7b64273e582ed5f}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -578,7 +582,7 @@ if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
         else
           warn "deliverability fail — SPF/DKIM/DMARC records nahi likhe gaye (email phir bhi chalega)"
         fi
-        info "verify: alphacp-sync get <commit> tools/verify/s7-mail-check.sh /tmp/s7.sh <sha> && sudo bash /tmp/s7.sh"
+        info "verify: alphacp-sync get 31726394519c03332e29715c3ed37d1b4cc73d41 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh eed20adcbc77550d2407f81ed82a6373b9b00bc6a09ce220139915f25d4b53fc && sudo bash /tmp/s7-mail-check.sh"
       else
         systemctl stop exim4 >/dev/null 2>&1 || true
         systemctl stop dovecot >/dev/null 2>&1 || true

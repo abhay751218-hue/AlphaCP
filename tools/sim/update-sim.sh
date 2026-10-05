@@ -18,6 +18,7 @@
 set -uo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 UPDATER="${REPO}/installer/panel-update.sh"
+UPDATER_VER="$(sed -n 's/^UPDATER_VERSION="\([^"]*\)"$/\1/p' "${UPDATER}" | head -1)"
 ART="${ART:-$(ls -1 "${REPO}"/artifacts/panel-code-*.tar.gz | sort -V | tail -1)}"
 ART_VER="$(basename "${ART}" .tar.gz)"; ART_VER="${ART_VER#panel-code-}"
 U=/tmp/updsim
@@ -37,6 +38,7 @@ TMPV="$(mktemp -d)"; unzip -q -o "${REPO}/alphacp-code-bundle.zip" artifacts/pan
 cp "${TMPV}/artifacts/panel-bundle-0.3.0.tar.gz" "${U}/vendor-bundle.tar.gz"; rm -rf "${TMPV}"
 cp "${ART}" "${U}/artifact.tar.gz"
 AGENT_ART="${AGENT_ART:-$(ls -1 "${REPO}"/artifacts/agent-*.tar.gz | sort -V | tail -1)}"
+AGENT_VER="$(basename "${AGENT_ART}" .tar.gz)"; AGENT_VER="${AGENT_VER#agent-}"
 cp "${AGENT_ART}" "${U}/agent.tar.gz"
 cp "${REPO}/installer/alphacp-sync.sh" "${U}/sync-v11.sh"
 SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
@@ -116,7 +118,7 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.72.0'" grep -q "updater 0.72.0" "${U}/update-U1.out"
+chk "banner 'updater ${UPDATER_VER}'" grep -q "updater ${UPDATER_VER}" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -125,7 +127,7 @@ chk "'alphacp-sync v1.2 install hua' dikha" grep -q "alphacp-sync v1.2 install h
 chk "'Update complete'" grep -q "UPDATE COMPLETE" "${U}/update-U1.out"
 chk "download commit-pinned URL se (branch nahi)" grep -qE "download https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/[0-9a-f]{40}/" "${U}/state/calls.log"
 chk "MANIFEST version = ${ART_VER}" test "$(panel_ver)" = "${ART_VER}"
-chk ".env ACP_VERSION=${ART_VER}" grep -q "^ACP_VERSION=${ART_VER}$" "${PANEL}/.env"
+chk ".env ACP_VERSION=${UPDATER_VER}" grep -q "^ACP_VERSION=${UPDATER_VER}$" "${PANEL}/.env"
 chk "APP_KEY same (sessions/encryption safe)" test "$(grep '^APP_KEY=' "${PANEL}/.env")" = "${APPKEY_BEFORE}"
 chk ".env 0640 alphacp" test "$(stat -c '%a %U' "${PANEL}/.env")" = "640 alphacp"
 chk "update ke baad HTTP 200" test "$(http_now)" = 200
@@ -195,7 +197,7 @@ chk "TransferToolController present (0.62.0)" test -f "${PANEL}/app/Http/Control
 chk "TransferRestoreController present (0.63.0)" test -f "${PANEL}/app/Http/Controllers/TransferRestoreController.php"
 chk "TransferReviewController present (0.64.0)" test -f "${PANEL}/app/Http/Controllers/TransferReviewController.php"
 chk "BackupController has archive download endpoint (0.65.0)" grep -q "function download" "${PANEL}/app/Http/Controllers/BackupController.php"
-chk "agent 0.65.0 Bootstrap" grep -q "ACP_AGENT_VERSION', '0.65.0'" "${ACP_HOME}/agent/src/Bootstrap.php"
+chk "agent ${AGENT_VER} Bootstrap" grep -q "ACP_AGENT_VERSION', '${AGENT_VER}'" "${ACP_HOME}/agent/src/Bootstrap.php"
 chk "backup.extract task shipped (0.67.0)" grep -q "'backup.extract' =>" "${ACP_HOME}/agent/config/tasks.php"
 chk "symlink guard shipped (0.66.0)" grep -q "assertNoSymlink" "${ACP_HOME}/agent/src/PathGuard.php"
 chk "scheduler command shipped (0.68.0)" test -f "${PANEL}/app/Console/Commands/ScheduledBackupsCommand.php"
@@ -266,7 +268,7 @@ chk "backup.archive in paneld allowlist" grep -q "backup.archive" "${ACP_HOME}/a
 chk "tar binary allowlisted" grep -q "'/usr/bin/tar'" "${ACP_HOME}/agent/src/CommandRunner.php"
 chk "issueLetsEncrypt in agent" grep -q "issueLetsEncrypt" "${ACP_HOME}/agent/src/AccountOs.php"
 chk "suspended page installed" test -f "${ACP_HOME}/share/suspended/index.html"
-chk ".env ACP_AGENT_VERSION=0.65.0" grep -q "^ACP_AGENT_VERSION=0.65.0$" "${PANEL}/.env"
+chk ".env ACP_AGENT_VERSION=${AGENT_VER}" grep -q "^ACP_AGENT_VERSION=${AGENT_VER}$" "${PANEL}/.env"
 FPM_POOL="/etc/php/8.4/fpm/pool.d/alphacp.conf"
 chk "PHP-FPM open_basedir includes the dedicated backup subtree" grep -Fq "${ACP_HOME}/backups" "${FPM_POOL}"
 chk "PHP-FPM open_basedir does not expose the ACP_HOME root" bash -c "! grep -Fq '${ACP_HOME}:' '${FPM_POOL}'"
