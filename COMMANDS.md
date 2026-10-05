@@ -12,63 +12,64 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
+## ✅ Abhi chalani hai (NEXT STEP) — S7 #147, 0.81.0
 
-> **0.80.0 = mail delivery ka ASLI fix.** 0.79.0 chalane ke baad `exim -bV` hi reject ho gaya
-> (`"user" or "check_local_user" must be set with allow_filter`) → setup fail → purani config
-> wapas → `exim -bt` **R: nonlocal** (mail abhi bhi band hai). Is baar maine andaza nahi lagaya:
-> **sandbox me asli exim 4.97 build kiya** (PCRE2 + gcc, source GitHub se) aur har hypothesis
-> test kiya. Chaar asli galtiyan mili — chaaron fix. Ab **10/10 real-exim test green** hain.
+> **0.81.0 me S7 #147 (SpamAssassin + greylistd) code complete hai aur asli Exim 4.97 par 20/0 tests green hain.**
+> 0.80.0 ke mail-delivery fixes bhi is updater me hain. Is release me Exim `daemon-light` ko
+> `daemon-heavy` (`Content_Scanning`) par upgrade karte hain; `spamassassin`, `spamc`, aur
+> `greylistd` bhi ensure hote hain. Dono naye filters **default OFF** rahenge; update script
+> unke services ko stop/disable rakhegi jab tak aap opt-in nahi karte. SpamAssassin ka spamd
+> loopback-only hai; greylistd Unix socket use karta hai, koi naya public port nahi.
 
-### 🛠 0.80.0 — asli exim se pakdi gayi 4 galtiyan
-| # | Kya toota tha | Asli wajah (exim 4.97 ne khud bataya) | Ab |
-|---|---|---|---|
-| **1** | 0.79.0: `exim -bV` reject → setup fail → mail `nonlocal` | `allow_filter` ke saath `user` (ya `check_local_user`) **hona hi chahiye**. 0.78.0 ke "Failed to find user }" se bachne ke liye `user` hata diya tha | Router par `user`/`group` wahi SAFE extract idiom se (0.78.0 wali `{$value}{}` nesting ke bina) |
-| **2** | filter chalu tha par mail `.filtered/` ki jagah **inbox** me ja rahi thi (`=> <maildir> R=alphacp_userfilter T=address_directory`) | transport `address_directory` par `directory`/`user`/`group` set karne se filter ke `save` ka path **override** ho jata hai | Transport sirf `maildir_format + create_directory`; path aur uid/gid filter/router se milte hain |
-| **3** | lookup file missing → har mail par **PANIC log** | `${lookup … lsearch{file}}` file missing par *defer-like* fail karta hai, decline nahi | `require_files = <filters file>` pehle check (static path, kabhi fail nahi) |
-| **4** | `require_files` akela → `defer (-1): "" is not an absolute path` → **mail queue me atak gayi** | file maujood par is address ka filter na ho to `file = ""` ho jata hai | `require_files` **+** `condition` dono |
+### Kya verify kiya — bina guess kiye
+- SpamAssassin active-path ko **asli Exim + protocol-compatible fake spamd** se test kiya:
+  score 9.5 → `X-Spam-Score` + SMTP 550; score 4.2 → header + delivery; spamd down → fail-open delivery.
+- Greylistd official `--grey` socket response ko asli Exim se test kiya: `true` → SMTP 451,
+  `false` → accepted, socket down → fail-open, null sender → bypass. Filter delivery tests bhi saath.
+- Regression suites: **agent 207/0**, S7 mail SIM **5/0**, updater SIM **12/0**, S9 BIND SIM **3/0**,
+  real Exim **20/0**. `panel-tests.sh` nahi chalaya — panel code is release me badla nahi.
 
-**Aur ek safety:** config reject hone par ab **PRISTINE (distro) template wapas nahi** aati —
-`.acp-prev` (aakhri kaam karne wali AlphaCP config) wapas aati hai, warna hi `.acp-orig`.
-0.79.0 me pristine wapas aane se exim me alphacp routers hi nahi bache the.
-
-**Version display fix (aapka sawal):** panel ab **`0.80.0`** dikhayega — `ACP_AGENT_VERSION`
-ab release ke sath chalta hai (0.65.0 → 0.80.0) aur updater `.env` me `ACP_VERSION` = release
-version likhta hai. (Panel *code bundle* 0.74.0 hi hai — wo tabhi badalta hai jab panel ka code
-badle; UI me ab release number dikhta hai.)
-
-### 1) panel-update 0.80.0
+### 1) Updater 0.81.0
 ```bash
-sudo alphacp-sync get a309bf5db2557e8b2058569aefff3298a633e779 installer/panel-update.sh /tmp/acp-panel-update-0.80.0.sh 9c5f8d1c2c8205130ab49e2709a88b831736b42b5d8f12443360f88815ff8a82 && sudo bash /tmp/acp-panel-update-0.80.0.sh
+sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 installer/panel-update.sh /tmp/acp-panel-update-0.81.0.sh afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c && sudo bash /tmp/acp-panel-update-0.81.0.sh
 ```
-- Updater SHA-256: `9c5f8d1c2c8205130ab49e2709a88b831736b42b5d8f12443360f88815ff8a82` · banner **`updater 0.80.0`** · `Panel bundle: 0.74.0 · agent: 0.80.0`.
-- Updater `mail.server setup` chalata hai: purani template ki jagah nayi (router + transport theek),
-  `exim4 -bV` → **`exim -bt` smoke test** → restart. Ab wapas pristine nahi.
+- Updater SHA-256: `afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c` · banner **`updater 0.81.0`** · `Panel bundle: 0.74.0 · agent: 0.81.0`.
+- Agent tar pinned to commit `fb7de77bf2dea57563fb1a018f2c704501bee082`, SHA-256
+  `55f3cc0cc2a69df4a1015464f1677c2347de67703d60005ad2ea545acbf53c73`.
+- Updater mail setup `exim4 -bV` + real `exim -bt` smoke check ke baad hi services restart karta hai.
+  SpamAssassin/greylistd **start nahi honge** jab tak unke options explicitly enable na hon.
 
-### 2) Verification
+### 2) Existing live mail — #19/#20/#21, 0.80 fixes included
 ```bash
-sudo alphacp-sync get a261f757ecb61aac56ff1ee999e844627d361fd8 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 2e20f1430ded828097cc548d9fd8df409cda4389df16f50fcb4242c2b6011af9 && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh a69b06062cdaf66ead7a9be9bec019d4ef7aafd68f5ad467874c0002fb06ecd7 && sudo bash /tmp/s7-mail-check.sh
 ```
-- Verifier SHA-256: `2e20f1430ded828097cc548d9fd8df409cda4389df16f50fcb4242c2b6011af9`.
-- Expected: **62 pass / 0 fail** · ant me **`ASLI MAIL DELIVERY:VERIFIED`**. Part I me:
-  1. `sync ne Exim filter banaya (N mailbox ke liye)` — N ≥ 1
-  2. `Exim filter file mili (lookup: /etc/exim4/alphacp-filters)`
-  3. `exim -bt <addr>: Maildir tak pahunch rahi hai` (koi PANIC/defer/nonlocal nahi)
-  4. `FILTER KAAM KAR GAYA (#21): 'acpfilter' wali mail …/.filtered/new me (0 se 1)` +
-     `DISCARD KAAM KAR GAYA (#21)` + `mail.track (#19): ASLI exim mainlog se trace`
-- Fail ho to poora dump (`filter_errors` ke saath) `ACP_HOME/verify-reports/s7-diag.txt` me —
-  hourly sync se aa jata hai, main khud padh kar fix dunga.
+- Verifier SHA-256: `a69b06062cdaf66ead7a9be9bec019d4ef7aafd68f5ad467874c0002fb06ecd7`.
+- Expected: **62 pass / 0 fail** + `ASLI MAIL DELIVERY:VERIFIED`. Temporary test account cleanup automatic hai.
+- Failure diagnostics `${ACP_HOME}/verify-reports/s7-diag.txt` me likhe jayenge; hourly `alphacp-sync` ke baad file aa jayegi.
 
-### 3) Ya dono ek hi command me
+### 3) #147 — SpamAssassin/greylistd status (read-only; features enable nahi hote)
 ```bash
-sudo alphacp-sync get a309bf5db2557e8b2058569aefff3298a633e779 installer/panel-update.sh /tmp/acp-panel-update-0.80.0.sh 9c5f8d1c2c8205130ab49e2709a88b831736b42b5d8f12443360f88815ff8a82 && sudo bash /tmp/acp-panel-update-0.80.0.sh && sudo alphacp-sync get a261f757ecb61aac56ff1ee999e844627d361fd8 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 2e20f1430ded828097cc548d9fd8df409cda4389df16f50fcb4242c2b6011af9 && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-spam-check.sh /tmp/s7-spam-check.sh e775b853066cb4a966e359bda54a9f0026faa91de48d7d7bcaac16783035eb86 && sudo bash /tmp/s7-spam-check.sh
+```
+- Verifier SHA-256: `e775b853066cb4a966e359bda54a9f0026faa91de48d7d7bcaac16783035eb86`.
+- Expected: **8 pass / 0 fail / 0 skip** + `S7 SPAMASSASSIN + GREYLIST:STATUS-VERIFIED` (Ubuntu packages install hue hon).
+- Ye check settings ko nahi badalta; SpamAssassin aur greylisting off hi rehte hain. #147 enable karna ho to
+  `docs/modules/email.md` me opt-in commands hain. Greylisting first-time external mail ko 451 dekar delay karegi.
+- Report `${ACP_HOME}/verify-reports/s7-spam-check.txt` me milegi.
+
+### 4) Ek hi command me updater + dono verifiers
+```bash
+sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 installer/panel-update.sh /tmp/acp-panel-update-0.81.0.sh afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c && sudo bash /tmp/acp-panel-update-0.81.0.sh && sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh a69b06062cdaf66ead7a9be9bec019d4ef7aafd68f5ad467874c0002fb06ecd7 && sudo bash /tmp/s7-mail-check.sh && sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-spam-check.sh /tmp/s7-spam-check.sh e775b853066cb4a966e359bda54a9f0026faa91de48d7d7bcaac16783035eb86 && sudo bash /tmp/s7-spam-check.sh
 ```
 
-### ✅ Pichle results
-- **0.79.0: 50 pass / 8 fail** — `ASLI MAIL DELIVERY:NOT-VERIFIED` (`exim -bV` reject → purani
-  config wapas → exim me alphacp routers hi nahi bache → har address `nonlocal`). Yahi 0.80.0 me fix.
-- **0.78.0: 58/4** (filters ne delivery tod di: `Failed to find user "}"`) — 0.79.0/0.80.0 me fix.
-- **0.77.0: 54/0** (aakhri baar delivery green thi).
+### Roadmap / kitna baaki hai
+- Checklist abhi **50 ✅ / 57 🟡 / 92 ⏳ / 9 🔵** (208 rows) hai; project tab complete jab required rows 100% ✅.
+- Is updater ke baad live verify pending: #19/#20/#21 mail delivery aur #147 SpamAssassin/greylistd status.
+- S7 me abhi build karna: #18 Mailing Lists, #23/#148 Address Importer, #25 Encryption, #26 BoxTrapper,
+  #27 Calendar & Contacts, #29 Roundcube Webmail, #145 server deliverability. #147 ka code complete hai; live verify baaki.
+- Phir S10 ke bache hue mail import + cpmove DNS-zone import; uske baad S11 Metrics → S12 Billing →
+  S13 Security Center (18) → S14 app installer/WP Toolkit → S15 reseller, multi-server, DNS cluster.
+- **0.80.0 standalone command ab superseded hai**; 0.81.0 updater me uske filter-router / delivery fixes bhi hain.
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 
@@ -285,12 +286,12 @@ Har naye feature/fix ke saath yahan ek nayi row aayegi:
 ### ❌ 0.79.0 — MAT CHALAO (config reject -> mail nonlocal)
 `… get 4ee552a3135233d9614afe234733db1fc76c6b62 installer/panel-update.sh … bb749fc072c90aad…`
 — isme `allow_filter` se `user` hata diya gaya tha, jisse `exim -bV` hi reject ho gaya.
-**0.80.0 chalao** (upar NEXT STEP). 0.78.0/0.79.0 ab sirf history me hain.
+**0.81.0 chalao** (upar NEXT STEP; 0.80 mail fix bhi isme hai). 0.78.0/0.79.0 ab sirf history me hain.
 
 ### ❌ 0.78.0 — MAT CHALAO (mail delivery todtata hai)
 `alphacp-sync get 222a113863cd3e1426cb816f76f5e5aca693e43a installer/panel-update.sh /tmp/acp-panel-update-0.78.0.sh 53b775235f1e9531a26d26f3e06c5a48649173865b9dd3f0da2ed7955de92aa8`
 — iske filters ne live server par **har address defer** kar diya (`Failed to find user "}"`).
-**0.79.0 chalao** (upar NEXT STEP), wo isi ka fix hai. 0.78.0 ab sirf history me hai.
+**0.81.0 chalao** (upar NEXT STEP), isme 0.78/0.79/0.80 ke mail fixes hain. 0.78.0 ab sirf history me hai.
 
 | Purani command | Kyun |
 |---|---|
