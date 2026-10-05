@@ -205,6 +205,22 @@ chk "run 3 me koi task hi nahi chala" "! grep -q 'db.restore task success' <<<\"
 chk "run 3 state saaf" "[[ \$(python3 -c 'import json,os; s=json.load(open(os.environ[\"ACP_FAKE_STATE\"])); print(len(s[\"databases\"]), len(s[\"accounts\"]))') == '1 0' ]]"
 rm -rf /tmp/acp-s10sim-outside 2>/dev/null || true
 
+# ------------------------------------------------------------------ run 4 -----
+# Panel DB me account hai par uska Linux user nahi (purane/adbure rows) -> script ko us
+# account ko CHHOD kar apna temp account banana chahiye, warna db.restore
+# "Linux user ... is not an AlphaCP account" ke saath reject ho jata hai.
+echo
+echo "-- run 4: panel row hai par Linux user nahi -> temp account use kare"
+reset_state
+python3 -c 'import json,os; s=json.load(open(os.environ["ACP_FAKE_STATE"])); s["accounts"]["ghostacct"]="active"; json.dump(s, open(os.environ["ACP_FAKE_STATE"],"w"))'
+set +e
+OUT4="$(bash tools/verify/s10-mysql-restore-check.sh 2>&1)"; RC4=$?
+set -e
+echo "${OUT4}" | grep -E 'ok |FAIL|LIVE CHECK|nahi mila' | sed 's/^/     /' | head -8
+chk "run 4 exit 0" "[[ ${RC4} -eq 0 ]]"
+chk "run 4 me ghost account use nahi hua" "! grep -q 'ghostacct_acpverify' <<<\"${OUT4}\""
+chk "run 4 end me sirf purani ghostacct row bachi" "[[ \$(python3 -c 'import json,os; s=json.load(open(os.environ[\"ACP_FAKE_STATE\"])); print(len(s[\"databases\"]), \",\".join(sorted(s[\"accounts\"])))') == '1 ghostacct' ]]"
+
 echo
 echo "=== S10-MYSQL-RESTORE-SIM: ${PASS} pass, ${FAIL} fail ==="
 [[ ${FAIL} -eq 0 ]]

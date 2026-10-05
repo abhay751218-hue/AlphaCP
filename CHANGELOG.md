@@ -26,8 +26,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   allowlisted roots padhta hai — isliye live check ka har `db.restore` reject ho raha tha. Ab
   archive default `${ACP_HOME}/var/s10-verify` me banta hai aur script **archive banane se pehle**
   allowlist check karke saaf message ke saath rukti hai. Sim me naya **run 3** ye regression
-  pakadta hai (fake paneld bhi ab PathGuard mirror karta hai): s10-mysql-restore-sim **12/0**,
-  live check **18 pass / 0 fail**.
+  pakadta hai (fake paneld bhi ab PathGuard mirror karta hai). Doosra live-check fix: account
+  chunte waqt ab **panel row + asli Linux user (GECOS AlphaCP)** dono chahiye — sirf panel row
+  hone par `db.restore` "is not an AlphaCP account" reject karta hai; aisa koi account na mile
+  to script khud temp account banata hai. Sim: **15/0** (naye run 3/run 4), live check **18 pass / 0 fail**.
   Tests: panel **437/0** (+6 wasm-skip), update-sim **234/234** (naya U10: db.restore + panel wiring + migration), provision-sim **109/109**, mysql-sim PASS (S8), commands-check 10/0.
 
 - **0.70.1 — live-verify fix: `useradd` GECOS colon (4 Oct)** — panel **0.70.0**, agent **0.63.0**.

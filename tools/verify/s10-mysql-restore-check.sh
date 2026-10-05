@@ -44,7 +44,17 @@ sql() { "${CLIENT}" -N -B -e "$1" 2>&1; }
 
 ACCT="${ACP_VERIFY_ACCOUNT:-}"
 if [[ -z "${ACCT}" ]]; then
-  ACCT="$(sql "SELECT username FROM ${DBN}.accounts WHERE status='active' ORDER BY id LIMIT 1")"
+  # Panel DB me account ho par Linux user na ho to db.restore reject karta hai
+  # ("Linux user ... is not an AlphaCP account") — isliye aisa account chuno jo DONO
+  # jagah maujood ho (panel row + asli Linux user jiska GECOS AlphaCP marker ho).
+  CAND="$(sql "SELECT username FROM ${DBN}.accounts WHERE status='active' ORDER BY id")"
+  for c in ${CAND}; do
+    [[ "${c}" =~ ^[a-z][a-z0-9]{2,15}$ ]] || continue
+    id -u "${c}" >/dev/null 2>&1 || continue
+    getent passwd "${c}" 2>/dev/null | grep -q 'AlphaCP' || continue
+    ACCT="${c}"; break
+  done
+  [[ -n "${ACCT}" ]] || info "panel DB me koi aisa active account nahi mila jiska Linux user bhi ho"
 fi
 if [[ -z "${ACCT}" || "${ACCT}" == *ERROR* ]]; then
   if [[ "${ACP_VERIFY_NO_CREATE:-0}" == "1" ]]; then
