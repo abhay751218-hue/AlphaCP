@@ -1,5 +1,5 @@
-=== S9 BIND9 LIVE CHECK (2026-10-05T07:45:52Z) ===
-pass=37 fail=1 skip=1
-tasks: dns.bind#303, dns.bind#304, dns.bind#305, dns.bind#306, dns.bind#307, dns.bind#308, dns.bind#309, dns.bind#310, dns.bind#311, dns.bind#312, dns.bind#313
+=== S9 BIND9 LIVE CHECK (2026-10-05T07:51:16Z) ===
+pass=38 fail=0 skip=1
+tasks: dns.bind#315, dns.bind#316, dns.bind#317, dns.bind#318, dns.bind#319, dns.bind#320, dns.bind#321, dns.bind#322, dns.bind#323, dns.bind#324, dns.bind#325
 zones: 0
 tools: checkconf=/usr/bin/named-checkconf checkzone=/usr/bin/named-checkzone rndc=/usr/sbin/rndc dig=/usr/bin/dig
