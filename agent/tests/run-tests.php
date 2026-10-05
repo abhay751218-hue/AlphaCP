@@ -4507,7 +4507,7 @@ function acp_mail_harness(): array
     $dirs = [
         $root . '/home', $root . '/etc/exim4', $root . '/etc/dovecot/conf.d', $root . '/alphacp',
         $root . '/etc/exim4/vacation', $root . '/etc/exim4/spam', $root . '/alphacp/etc/mail/dkim',
-        $root . '/var/log/exim4',
+        $root . '/var/log/exim4', $root . '/etc/spamassassin', $root . '/run/greylistd',
     ];
     foreach ($dirs as $dir) {
         mkdir($dir, 0755, true);
@@ -4533,6 +4533,8 @@ function acp_mail_harness(): array
     putenv('ACP_MAIL_UPDATE_EXIM=' . $root . '/bin/update-exim4.conf');
     putenv('ACP_MAIL_EXIM_OPTIONS=' . $root . '/alphacp/etc/mail/exim-options.json');
     putenv('ACP_MAIL_DOVECOT_OPTIONS=' . $root . '/alphacp/etc/mail/dovecot-options.json');
+    putenv('ACP_MAIL_SPAMASSASSIN_CONF=' . $root . '/etc/spamassassin/local.cf');
+    putenv('ACP_MAIL_GREYLISTD_SOCKET=' . $root . '/run/greylistd/socket');
     putenv('ACP_MAIL_MAINLOG=' . $root . '/var/log/exim4/mainlog');
     putenv('ACP_STATE_ROOT=' . $root . '/alphacp');
     putenv('ACP_ACCOUNTS_ROOT=' . $root . '/home');
@@ -4783,6 +4785,12 @@ test('mail.server schema — payload fail-closed', function (): void {
     assert_true(JsonSchema::validate($schema, ['action' => 'destroy']) !== [], 'unknown action reject');
     assert_true(JsonSchema::validate($schema, ['action' => 'verify', 'address' => '|/bin/sh']) !== [], 'hostile address reject');
     assert_true(JsonSchema::validate($schema, ['action' => 'verify', 'address' => 'a@b.test']) === [], 'sahi address pass');
+    assert_true(JsonSchema::validate($schema, [
+        'action' => 'spamassassin', 'enabled' => true, 'required_score' => 6.5,
+        'reject_score' => 0, 'greylisting' => false,
+    ]) === [], 'SpamAssassin + greylisting ka valid payload pass');
+    assert_true(JsonSchema::validate($schema, ['action' => 'spamassassin', 'enabled' => 'yes']) !== [], 'boolean field me string reject');
+    assert_true(JsonSchema::validate($schema, ['action' => 'spamassassin', 'reject_score' => 31]) !== [], 'reject score limit se bahar reject');
 });
 
 
@@ -4883,6 +4891,182 @@ test('mail.server setup — exim template me catchall/autoreply/DNSBL/spam ACL',
     // DKIM is exim build me support nahi (fake -bV me DKIM nahi) -> config me nahi
     assert_true(!str_contains($tpl, 'dkim_private_key'), 'DKIM unsupported hone par config me nahi hona chahiye');
     acp_mail_cleanup($h);
+});
+
+test('mail.server spamassassin — score/header config, score zero tag-only, service start', function (): void {
+    $h = acp_mail_harness();
+    $oldSpamd = getenv('ACP_MAIL_SPAMD');
+    putenv('ACP_MAIL_SPAMD=' . $h['root'] . '/bin/spamd');
+    try {
+        $h['cmd']->mailDkim = true; // fake -bV: Content_Scanning + DKIM
+        $h['cmd']->systemctlStates['spamassassin'] = 'inactive';
+        $localCf = $h['root'] . '/etc/spamassassin/local.cf';
+        file_put_contents($localCf, "# administrator note\nrequired_score 5.0\nclear_report_template\n");
+        (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+
+        $out = (new MailServerSetup())->handle([
+            'action' => 'spamassassin',
+            'enabled' => true,
+            'required_score' => 6.5,
+            'reject_score' => 0,
+        ], $h['ctx']);
+        assert_true(($out['status'] ?? '') === 'ok', 'SpamAssassin config safal');
+        assert_true(($out['spam']['enabled'] ?? false) === true, 'enabled status');
+        assert_true((float) ($out['spam']['reject_score'] ?? -1) === 0.0, 'zero ka matlab tag-only: ' . var_export($out['spam']['reject_score'] ?? null, true));
+        assert_true(($h['cmd']->systemctlStates['spamassassin'] ?? '') === 'active', 'spamd service start hua');
+
+        $calls = implode("\n", array_map(static fn (array $a): string => implode(' ', $a), $h['cmd']->calls));
+        assert_true(str_contains($calls, 'systemctl enable spamassassin'), 'spamd boot par enable');
+        assert_true(str_contains($calls, 'systemctl start spamassassin'), 'spamd start');
+        assert_true(str_contains($h['cmd']->spamAssassinConfAtServiceChange['start'] ?? '', 'required_score 6.5'), 'spamd start se pehle local.cf score likhi gayi');
+
+        // Existing spamd ko required_score edit ke baad restart karna zaroori hai,
+        // warna us process me purani local.cf cached rehti hai.
+        $scoreUpdate = (new MailServerSetup())->handle([
+            'action' => 'spamassassin', 'required_score' => 7.0,
+        ], $h['ctx']);
+        assert_true(($scoreUpdate['spam']['required_score'] ?? 0.0) === 7.0, 'naya score status me');
+        $calls = implode("\n", array_map(static fn (array $a): string => implode(' ', $a), $h['cmd']->calls));
+        assert_true(str_contains($calls, 'systemctl restart spamassassin'), 'required_score change par running spamd restart');
+        assert_true(str_contains($h['cmd']->spamAssassinConfAtServiceChange['restart'] ?? '', 'required_score 7.0'), 'restart se pehle local.cf update');
+
+        $cf = (string) file_get_contents($localCf);
+        assert_true(str_contains($cf, '# administrator note') && str_contains($cf, 'clear_report_template'), 'local.cf ka user data bacha');
+        assert_true(str_contains($cf, 'required_score 7.0'), 'latest required_score write');
+        assert_true(($out['spam']['required_score'] ?? 0.0) === 6.5, 'status last required_score dikhata hai');
+
+        $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+        assert_true(str_contains($tpl, 'warn spam = nobody:true/defer_ok'), 'SpamAssassin scan fail-open syntax');
+        assert_true(str_contains($tpl, 'add_header = X-Spam-Score:'), 'score header');
+        $acl = strstr($tpl, 'acl_check_data:');
+        $acl = is_string($acl) ? substr($acl, 0, (int) strpos($acl, 'begin routers')) : '';
+        assert_true(!str_contains($acl, 'rejected as spam'), 'reject_score=0 kisi mail ko reject nahi kare');
+    } finally {
+        if ($oldSpamd === false) {
+            putenv('ACP_MAIL_SPAMD');
+        } else {
+            putenv('ACP_MAIL_SPAMD=' . $oldSpamd);
+        }
+        acp_mail_cleanup($h);
+    }
+});
+
+test('mail.server spamassassin — content scanning unsupported ho to setting apply nahi hoti', function (): void {
+    $h = acp_mail_harness();
+    $oldSpamd = getenv('ACP_MAIL_SPAMD');
+    putenv('ACP_MAIL_SPAMD=' . $h['root'] . '/bin/spamd');
+    try {
+        $h['cmd']->mailDkim = false; // exim4-daemon-light: no Content_Scanning
+        (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+        $before = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+        $threw = false;
+        try {
+            (new MailServerSetup())->handle(['action' => 'spamassassin', 'enabled' => true], $h['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = str_contains($e->getMessage(), 'exim4-daemon-heavy');
+        }
+        assert_true($threw, 'unsupported exim par feature enable reject');
+        assert_true(!is_file($h['root'] . '/alphacp/etc/mail/exim-options.json'), 'options file mutate nahi hui');
+        assert_true((string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template') === $before, 'purani template byte-for-byte');
+        assert_true(($h['cmd']->systemctlStates['spamassassin'] ?? 'inactive') === 'inactive', 'spamd start nahi hua');
+    } finally {
+        if ($oldSpamd === false) {
+            putenv('ACP_MAIL_SPAMD');
+        } else {
+            putenv('ACP_MAIL_SPAMD=' . $oldSpamd);
+        }
+        acp_mail_cleanup($h);
+    }
+});
+
+test('mail.server spamassassin — Exim validation fail ho to options/local.cf/service rollback', function (): void {
+    $h = acp_mail_harness();
+    $oldSpamd = getenv('ACP_MAIL_SPAMD');
+    putenv('ACP_MAIL_SPAMD=' . $h['root'] . '/bin/spamd');
+    try {
+        $h['cmd']->mailDkim = true;
+        $h['cmd']->systemctlStates['spamassassin'] = 'inactive';
+        $localCf = $h['root'] . '/etc/spamassassin/local.cf';
+        file_put_contents($localCf, "# keep exactly\nrequired_score 4.5\n");
+        (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+        $beforeTemplate = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+        $beforeLocalCf = (string) file_get_contents($localCf);
+        $h['cmd']->mailEximGenerateFails = true;
+
+        $threw = false;
+        try {
+            (new MailServerSetup())->handle([
+                'action' => 'spamassassin', 'enabled' => true,
+                'required_score' => 6.5, 'reject_score' => 9.0,
+            ], $h['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = str_contains($e->getMessage(), 'exim config reject');
+        }
+        assert_true($threw, 'bad generated Exim config reject');
+        assert_true(!is_file($h['root'] . '/alphacp/etc/mail/exim-options.json'), 'new Exim options rolled back');
+        assert_true((string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template') === $beforeTemplate, 'previous Exim template restored');
+        assert_true((string) file_get_contents($localCf) === $beforeLocalCf, 'local.cf bytes rolled back');
+        assert_true(($h['cmd']->systemctlStates['spamassassin'] ?? '') === 'inactive', 'newly started spamd stopped after rollback');
+    } finally {
+        if ($oldSpamd === false) {
+            putenv('ACP_MAIL_SPAMD');
+        } else {
+            putenv('ACP_MAIL_SPAMD=' . $oldSpamd);
+        }
+        acp_mail_cleanup($h);
+    }
+});
+
+test('mail.server greylisting — greylistd socket, recipient verification, trusted senders', function (): void {
+    $h = acp_mail_harness();
+    $socket = $h['root'] . '/run/greylistd/socket';
+    file_put_contents($socket, 'test socket marker'); // file_exists contract; real host has a Unix socket
+    try {
+        $h['cmd']->systemctlStates['greylistd'] = 'inactive';
+        (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+        $out = (new MailServerSetup())->handle([
+            'action' => 'spamassassin',
+            'greylisting' => true,
+        ], $h['ctx']);
+        assert_true(($out['spam']['greylisting'] ?? false) === true, 'greylisting config enabled');
+        assert_true(($out['spam']['greylisting_active'] ?? false) === true, 'greylistd + socket active');
+        assert_true(($h['cmd']->systemctlStates['greylistd'] ?? '') === 'active', 'greylistd service start hua');
+
+        $calls = implode("\n", array_map(static fn (array $a): string => implode(' ', $a), $h['cmd']->calls));
+        assert_true(str_contains($calls, 'systemctl enable greylistd'), 'greylistd boot par enable');
+        assert_true(str_contains($calls, 'systemctl start greylistd'), 'greylistd start');
+
+        $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+        assert_true(str_contains($tpl, '--grey $sender_host_address $sender_address $local_part@$domain'), 'official --grey triplet query');
+        assert_true(str_contains($tpl, 'verify = recipient'), 'unknown mailbox pe 451 greylist na kare');
+        assert_true(str_contains($tpl, '!senders = :'), 'empty sender / DSN greylist na ho');
+        assert_true(str_contains($tpl, '!hosts = : +relay_from_hosts'), 'trusted relay greylist na ho');
+        assert_true(str_contains($tpl, '!authenticated = *'), 'SMTP AUTH user greylist na ho');
+        assert_true(str_contains($tpl, $socket), 'socket path env se render hua');
+    } finally {
+        acp_mail_cleanup($h);
+    }
+});
+
+test('mail.server greylisting — socket absent ho to option save/restart nahi hota', function (): void {
+    $h = acp_mail_harness();
+    try {
+        $h['cmd']->systemctlStates['greylistd'] = 'inactive';
+        (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+        $before = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+        $threw = false;
+        try {
+            (new MailServerSetup())->handle(['action' => 'spamassassin', 'greylisting' => true], $h['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = str_contains($e->getMessage(), 'Unix socket nahi mila');
+        }
+        assert_true($threw, 'socket absent par fail safely');
+        assert_true(!is_file($h['root'] . '/alphacp/etc/mail/exim-options.json'), 'greylisting option mutate nahi hui');
+        assert_true((string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template') === $before, 'purani template byte-for-byte');
+        assert_true(($h['cmd']->systemctlStates['greylistd'] ?? '') === 'inactive', 'naya greylistd service stop hua');
+    } finally {
+        acp_mail_cleanup($h);
+    }
 });
 
 test('mail.server setup — DKIM: exim support kare to signing, warna fail-closed', function (): void {
@@ -5258,6 +5442,8 @@ test('mail.server eximconf — option set karne par template me asli value', fun
     assert_true(($show['options']['message_size_limit'] ?? '') === '50M', 'default 50M');
     assert_true(in_array('smtp_accept_max', (array) ($show['allowed'] ?? []), true), 'allowed list honi chahiye');
     assert_true(in_array('spam_score_limit', (array) ($show['allowed'] ?? []), true), 'spam limit bhi allowed');
+    assert_true(!in_array('spam_enabled', (array) ($show['allowed'] ?? []), true), 'spam toggle dedicated safe action se hi');
+    assert_true(!in_array('greylisting', (array) ($show['allowed'] ?? []), true), 'greylisting dedicated safe action se hi');
 
     $out = (new MailServerSetup())->handle([
         'action' => 'eximconf',
@@ -5295,6 +5481,8 @@ test('mail.server eximconf — galat value reject, config kharaab na ho (fail-cl
         ['kuch_bhi' => '100'],                  // allowed nahi
         ['smtp_banner' => "line1\nline2"],      // multi-line = config tod dega
         ['smtp_accept_max' => '-5'],            // negative
+        ['spam_enabled' => true],                // service must be managed with ACL
+        ['greylisting' => true],                 // service must be managed with ACL
     ] as $bad) {
         $threw = false;
         try {

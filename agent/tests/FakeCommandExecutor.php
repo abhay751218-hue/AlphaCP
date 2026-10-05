@@ -116,6 +116,10 @@ final class FakeCommandExecutor implements CommandExecutor
     public bool $opensslFails = false;
     /** @var list<list<string>> mail binaries ke saare argv (exim/dovecot/doveadm/doveconf) */
     public array $mailArgvs = [];
+    /** @var array<string, string> systemd unit => active/inactive; absent defaults active */
+    public array $systemctlStates = [];
+    /** @var array<string, string> SpamAssassin local.cf bytes observed at start/restart */
+    public array $spamAssassinConfAtServiceChange = [];
 
     // ---- S9 BIND9 (dns.bind) ----
     /** `named-checkconf` fails when set (bad managed options block) */
@@ -179,7 +183,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'userdel' => $this->userdel($argv),
             'usermod' => $this->usermod($argv),
             'setquota' => new CommandResult($argv, 0, "fake {$bin} ok\n", '', 1),
-            'systemctl' => new CommandResult($argv, 0, self::systemctlOut($argv), '', 1),
+            'systemctl' => new CommandResult($argv, 0, $this->systemctlOut($argv), '', 1),
             'crontab' => $this->handleCrontab($argv, $stdin),
             'certbot' => $this->handleCertbot($argv),
             'tar' => $this->handleTar($argv),
@@ -674,12 +678,25 @@ final class FakeCommandExecutor implements CommandExecutor
     }
 
     /** @param list<string> $argv */
-    private static function systemctlOut(array $argv): string
+    private function systemctlOut(array $argv): string
     {
-        if (($argv[1] ?? '') === 'is-active') {
-            return "active\n";
+        $verb = (string) ($argv[1] ?? '');
+        $unit = (string) ($argv[2] ?? '');
+        if ($verb === 'is-active') {
+            return ($this->systemctlStates[$unit] ?? 'active') . "\n";
         }
-        if (($argv[1] ?? '') === 'show' && in_array('-p', $argv, true)) {
+        if (in_array($verb, ['start', 'restart'], true) && $unit !== '') {
+            $this->systemctlStates[$unit] = 'active';
+            if ($unit === 'spamassassin') {
+                $conf = (string) (getenv('ACP_MAIL_SPAMASSASSIN_CONF') ?: '');
+                $this->spamAssassinConfAtServiceChange[$verb] = $conf !== '' && is_file($conf)
+                    ? (string) file_get_contents($conf)
+                    : '';
+            }
+        } elseif ($verb === 'stop' && $unit !== '') {
+            $this->systemctlStates[$unit] = 'inactive';
+        }
+        if ($verb === 'show' && in_array('-p', $argv, true)) {
             // exim4 unit kis user se chalta hai (mail.server root chahta hai)
             return trim((string) (getenv('SIM_EXIM_UNIT_USER') ?: 'root')) . "\n";
         }
