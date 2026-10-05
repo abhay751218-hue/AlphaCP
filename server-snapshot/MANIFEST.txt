@@ -7285,6 +7285,8 @@
 /usr/local/alphacp/var/install.state
 /usr/local/alphacp/var/panel-admin.txt
 /usr/local/alphacp/var/panel-appkey.txt
+/usr/local/alphacp/var/s10-verify/index.html
+/usr/local/alphacp/verify-reports/s10-backup-destination-check.txt
 /var/www/alphacp-default/check.php
 /var/www/alphacp-default/index.html
 /var/www/alphacp-default/robots.txt
