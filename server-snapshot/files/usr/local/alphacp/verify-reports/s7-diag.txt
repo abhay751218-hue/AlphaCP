@@ -1,1 +1,96 @@
-S7 mail diagnostics — 2026-10-05T11:08:40Z host=ip-172-26-4-65
+S7 mail diagnostics — 2026-10-05T11:43:24Z host=ip-172-26-4-65
+
+=== DELIVERY FAIL diagnostics (info@acp-mail-check.test) ===
+$ ls -ld /home/acpmailchk /home/acpmailchk/mail /home/acpmailchk/mail/acp-mail-check.test /home/acpmailchk/mail/acp-mail-check.test/info /home/acpmailchk/mail/acp-mail-check.test/info/new /home/acpmailchk/mail/acp-mail-check.test/info/tmp
+    drwxr-x--x 7 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk
+    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail
+    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail/acp-mail-check.test
+    drwx------ 5 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail/acp-mail-check.test/info
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail/acp-mail-check.test/info/new
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail/acp-mail-check.test/info/tmp
+--- exim kis user se chal raha hai ---
+systemctl show User : 
+exim -bP exim_user  : exim_user = Debian-exim
+exim -bP deliver_drop_privilege : no_deliver_drop_privilege
+setuid bit          : -rwsr-xr-x 1 root root 1677232 Sep 22 18:24 /usr/sbin/exim4
+running daemon uid  : Debian-exim 
+--- mailbox user likh sakta hai? (setuid path) ---
+HAA (acpmailchk likh sakta hai)
+--- Debian-exim likh sakta hai? (bina setuid path) ---
+NAHI — Debian-exim ko permission nahi (setuid zaroori hai)
+--- exim mainlog (aakhri 25) ---
+2026-10-05 11:38:50 1xDg13-00000002TYw-1pGc == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+2026-10-05 11:38:50 End queue run: pid=603235
+2026-10-05 11:42:59 Warning: purging the environment.
+ Suggested action: use keep_environment.
+2026-10-05 11:42:59 Warning: No server certificate defined; will use a selfsigned one.
+ Suggested action: either install a certificate or change tls_advertise_hosts option
+2026-10-05 11:42:59 exim 4.97 daemon started: pid=604388, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
+2026-10-05 11:43:00 Start queue run: pid=604566
+2026-10-05 11:43:00 1xDfcU-00000002S8n-3C1V == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+2026-10-05 11:43:00 1xDg13-00000002TYw-1pGc == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+2026-10-05 11:43:00 End queue run: pid=604566
+2026-10-05 11:43:27 Warning: purging the environment.
+ Suggested action: use keep_environment.
+2026-10-05 11:43:27 Warning: No server certificate defined; will use a selfsigned one.
+ Suggested action: either install a certificate or change tls_advertise_hosts option
+2026-10-05 11:43:27 exim 4.97 daemon started: pid=607924, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
+2026-10-05 11:43:28 Start queue run: pid=608044
+2026-10-05 11:43:28 1xDfcU-00000002S8n-3C1V == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+2026-10-05 11:43:28 1xDg13-00000002TYw-1pGc == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+2026-10-05 11:43:28 End queue run: pid=608044
+2026-10-05 11:43:31 Warning: purging the environment.
+ Suggested action: use keep_environment.
+2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm <= root@ip-172-26-4-65 U=root P=local S=366
+2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm == info@acp-mail-check.test R=alphacp_userfilter defer (-1): Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+--- mail.server sync ka natija (repair) ---
+[INFO   ] running mail.server (safety=mutating, attempt 1)
+[INFO   ] done in 6ms
+
+{
+    "task_id": 411,
+    "status": "success",
+    "duration_ms": 6,
+    "result": {
+        "action": "sync",
+        "domains": 1,
+        "mailboxes": 1,
+        "aliases": 0,
+
+=== FILTER FILE diagnostics ===
+$ cat /etc/exim4/alphacp-filters
+
+
+=== FILTER (folder) FAIL diagnostics ===
+$ cat 
+    cat: '': No such file or directory
+$ ls -la /home/acpmailchk/mail/acp-mail-check.test/info
+    total 24
+    drwx------ 6 acpmailchk acpmailchk 4096 Oct  5 11:43 .
+    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 11:43 ..
+    drwx------ 5 acpmailchk acpmailchk 4096 Oct  5 11:43 .filtered
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 cur
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 new
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 tmp
+$ tail -30 /var/log/exim4/mainlog
+    2026-10-05 11:43:28 End queue run: pid=608044
+    2026-10-05 11:43:31 Warning: purging the environment.
+     Suggested action: use keep_environment.
+    2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm <= root@ip-172-26-4-65 U=root P=local S=366
+    2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+    2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm == info@acp-mail-check.test R=alphacp_userfilter defer (-1): Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+    2026-10-05 11:43:34 Warning: purging the environment.
+     Suggested action: use keep_environment.
+    2026-10-05 11:43:34 Warning: purging the environment.
+     Suggested action: use keep_environment.
+    2026-10-05 11:43:34 Warning: purging the environment.
+     Suggested action: use keep_environment.
+    2026-10-05 11:43:34 Warning: No server certificate defined; will use a selfsigned one.
+     Suggested action: either install a certificate or change tls_advertise_hosts option
+    2026-10-05 11:43:34 exim 4.97 daemon started: pid=609009, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
+    2026-10-05 11:43:35 Warning: purging the environment.
+     Suggested action: use keep_environment.
+    2026-10-05 11:43:35 Warning: No server certificate defined; will use a selfsigned one.
+     Suggested action: either install a certificate or change tls_advertise_hosts option
+    2026-10-05 11:43:35 exim 4.97 daemon started: pid=609513, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
