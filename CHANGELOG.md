@@ -21,7 +21,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
     - validation: host (FQDN/IP, `-oProxyCommand` jaisi smuggling reject), remote path (absolute,
       `..` ke bina), dest name (sirf `.tar/.tar.gz/.tgz`), port, `max_kbps` (bandwidth limit), overwrite.
   Updater `openssh-client` install karta hai (`sshpass` best-effort — na ho to key auth hi chalega).
-  Tests: provision-sim **120/109 → 120/0** (11 naye agent tests), panel **—**, update-sim **—** (naya U11).
+  Tests: provision-sim **120/0** (11 naye agent tests), panel **442/0** (+6 wasm-skip; 5 naye
+  remote-pull tests), update-sim **247/247** (naya U11), s10-remote-pull-sim **11/0**,
+  commands-check 10/0.
 
 - **S10 — MySQL dumps from a cPanel archive (4 Oct)** — panel **0.71.0**, agent **0.64.0**.
   WHM Transfer or Restore page ka naya checkbox (**default on**) archive ke `mysql/<user>_<db>.sql`
