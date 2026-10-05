@@ -158,17 +158,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.72.1"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.72.0}"
+UPDATER_VERSION="0.73.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.73.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-350b040adc9239ac50654545a7dc6c98ccca6e85}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-44262cf0e4efe1168452b6d04d86a68d04304642}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-6c19b42cc9928368a70b2fd4b2805b0b1bef01cd41f365aec3c94bbd0706cafa}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-dbd5fc017b820b0d73a38a6a77379f36d3c7e6a1fa5763dc0ac8bb943ac5900f}"
 AGENT_VERSION="${ACP_AGENT_VERSION:-0.65.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-350b040adc9239ac50654545a7dc6c98ccca6e85}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-44262cf0e4efe1168452b6d04d86a68d04304642}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-bd3b81bee0193f622975a10bf8444a5d6b9741572a9810a5eb696aff79f6eb5d}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-eb19fc4577d93a228e02ee59ddd8657ea040bf3855f52140e7e60fd24de07583}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -404,12 +404,13 @@ if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]] && [[ ! -x /usr/bin/mariadb && ! -x /
   fi
 fi
 
-# S10 remote pull: scp/ssh-keyscan/ssh-keygen chahiye (openssh-client). sshpass sirf
-# password auth ke liye — na mile to key auth chalta rahega (agent saaf message dega).
+# S10 remote pull + remote backup destinations: scp/ssh/ssh-keyscan/ssh-keygen
+# chahiye (openssh-client). sshpass sirf password auth ke liye — na mile to key
+# auth chalta rahega (agent saaf message dega).
 if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
   if command -v apt-get >/dev/null 2>&1; then
-    if [[ ! -x /usr/bin/scp || ! -x /usr/bin/ssh-keyscan || ! -x /usr/bin/ssh-keygen ]]; then
-      info "openssh-client install ho raha hai (remote pull: scp/ssh-keyscan)"
+    if [[ ! -x /usr/bin/scp || ! -x /usr/bin/ssh || ! -x /usr/bin/ssh-keyscan || ! -x /usr/bin/ssh-keygen ]]; then
+      info "openssh-client install ho raha hai (remote pull + backup destinations: scp/ssh/ssh-keyscan)"
       if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openssh-client >>"${LOG_FILE}" 2>&1; then
         ok "openssh-client installed"
       else
