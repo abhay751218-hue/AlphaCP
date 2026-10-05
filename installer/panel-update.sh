@@ -158,7 +158,7 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.74.3"
+UPDATER_VERSION="0.74.4"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.74.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
 BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-2654506a92e7f975d0d468afc16873803e992f3d}"
@@ -478,6 +478,58 @@ if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
     fi
   else
     warn "certbot missing (apt-get nahi) — AutoSSL later"
+  fi
+fi
+
+# S7 Email: Exim4 (MTA) + Dovecot (IMAP/POP3). Packages abhi install hote hain,
+# configuration agle release me (`mail.server` task) — tabhi service enable hogi.
+# Abhi install isliye: agle release me sirf config likhna aur verify karna bache,
+# aur apt ka waqt (sabse dheema hissa) abhi nikal jaye.
+if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
+  MAIL_MISSING=""
+  for b in /usr/sbin/exim4 /usr/sbin/dovecot; do
+    [[ -x "${b}" ]] || MAIL_MISSING="${MAIL_MISSING} ${b}"
+  done
+  if [[ -z "${MAIL_MISSING}" ]]; then
+    ok "mail server packages present (exim4=$(/usr/sbin/exim4 -bV 2>/dev/null | head -1 | awk '{print $3}') dovecot=$(/usr/sbin/dovecot --version 2>/dev/null))"
+  elif command -v apt-get >/dev/null 2>&1; then
+    info "exim4 + dovecot install ho rahe hain (S7: asli email)"
+    # debconf ke sawaal chup karane ke liye (warn: interactive prompt na aaye)
+    {
+      echo "exim4-config exim4/dc_eximconfig_configtype select internet"
+      echo "exim4-config exim4/dc_mailname string $(hostname -f 2>/dev/null || hostname)"
+      echo "exim4-config exim4/dc_local_interfaces string 127.0.0.1 ; ::1"
+      echo "exim4-config exim4/dc_other_hostnames string"
+      echo "exim4-config exim4/dc_localdelivery select maildir_home"
+      echo "exim4-config exim4/dc_use_split_config boolean false"
+      echo "exim4-config exim4/dc_relay_domains string"
+      echo "exim4-config exim4/dc_relay_nets string"
+      echo "exim4-config exim4/dc_smarthost string"
+      echo "exim4-config exim4/dc_minimaldns boolean false"
+      echo "exim4-config exim4/no_config boolean false"
+    } | debconf-set-selections >/dev/null 2>&1 || true
+    if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq exim4 exim4-daemon-light dovecot-core dovecot-imapd dovecot-pop3d >>"${LOG_FILE}" 2>&1; then
+      ok "exim4 + dovecot installed"
+    else
+      warn "mail packages install fail — S7 email config agle release me dobara koshish karega"
+    fi
+  else
+    warn "exim4/dovecot missing (apt-get nahi) — S7 email nahi chalega"
+  fi
+
+  # Configuration abhi adhuri hai: agle release (`mail.server`) tak service band
+  # rahe — adha-configured mail server public port 25 par na khula rahe.
+  if [[ -x /usr/sbin/exim4 || -x /usr/sbin/dovecot ]]; then
+    MAIL_VERSIONS="exim4=$(/usr/sbin/exim4 -bV 2>/dev/null | head -1 | awk '{print $3}') dovecot=$(/usr/sbin/dovecot --version 2>/dev/null)"
+    if [[ ! -f "${ACP_HOME}/etc/mail-server-configured" ]]; then
+      systemctl stop exim4 >/dev/null 2>&1 || true
+      systemctl stop dovecot >/dev/null 2>&1 || true
+      systemctl disable exim4 >/dev/null 2>&1 || true
+      systemctl disable dovecot >/dev/null 2>&1 || true
+      info "mail services abhi band hain — agle release me configure hoke start honge (${MAIL_VERSIONS})"
+    else
+      ok "mail server pehle se configured hai (${MAIL_VERSIONS})"
+    fi
   fi
 fi
 
