@@ -12,42 +12,39 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ Abhi chalani hai (NEXT STEP) — S7 #147, 0.81.0
+## ✅ NEXT STEP — S7 mail filter live diagnosis (0.81.0 already deployed)
 
-> **0.81.0 me S7 #147 (SpamAssassin + greylistd) code complete hai aur asli Exim 4.97 par 20/0 tests green hain.**
-> 0.80.0 ke mail-delivery fixes bhi is updater me hain. Is release me Exim `daemon-light` ko
-> `daemon-heavy` (`Content_Scanning`) par upgrade karte hain; `spamassassin`, `spamc`, aur
-> `greylistd` bhi ensure hote hain. Dono naye filters **default OFF** rahenge; update script
-> unke services ko stop/disable rakhegi jab tak aap opt-in nahi karte. SpamAssassin ka spamd
-> loopback-only hai; greylistd Unix socket use karta hai, koi naya public port nahi.
+> **Aapka live output confirms:** updater 0.81.0 completed (panel 0.74.0, agent 0.81.0). The mail check
+> returned **61 pass / 1 fail**; the failing case is per-mailbox folder filtering (`.filtered/new` stayed 0).
+> You report the same failure after 0.80.0, so this must be resolved before #20/#21 are marked green.
+> Base mail-to-inbox delivery and the real Exim `mail.track` check passed. The old verifier's
+> `ASLI MAIL DELIVERY:VERIFIED` line meant only that base inbox test passed—not that all S7 checks passed;
+> the updated verifier makes that distinction explicit and captures Exim's verbose delivery evidence.
 
-### Kya verify kiya — bina guess kiye
-- SpamAssassin active-path ko **asli Exim + protocol-compatible fake spamd** se test kiya:
-  score 9.5 → `X-Spam-Score` + SMTP 550; score 4.2 → header + delivery; spamd down → fail-open delivery.
-- Greylistd official `--grey` socket response ko asli Exim se test kiya: `true` → SMTP 451,
-  `false` → accepted, socket down → fail-open, null sender → bypass. Filter delivery tests bhi saath.
-- Regression suites: **agent 207/0**, S7 mail SIM **5/0**, updater SIM **12/0**, S9 BIND SIM **3/0**,
-  real Exim **20/0**. `panel-tests.sh` nahi chalaya — panel code is release me badla nahi.
+**Do not rerun the 0.81 updater.** The next command is only the revised, commit-pinned mail verifier.
+Its exact file hash was calculated from the pushed commit below.
 
-### 1) Updater 0.81.0
+### 0.81.0 release verification (local)
+- SpamAssassin active-path tested with real Exim + protocol-compatible fake spamd: score 9.5 →
+  `X-Spam-Score` + SMTP 550; score 4.2 → header + delivery; spamd down → fail-open delivery.
+- Greylistd official `--grey` socket response tested with real Exim: `true` → SMTP 451, `false` → accepted,
+  socket down → fail-open, null sender → bypass. Local Exim folder-filter tests also pass.
+- Agent suite **207/0**, S7 mail simulation **7/0**, updater simulation **12/0**, S9 BIND simulation **3/0**;
+  real Exim folder/discard tests pass with `-v` and assert the actual router/transport result.
+  `panel-tests.sh` was not run because panel code was untouched.
+
+### 1) Revised mail verifier — #19/#20/#21 diagnosis; no panel update
 ```bash
-sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 installer/panel-update.sh /tmp/acp-panel-update-0.81.0.sh afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c && sudo bash /tmp/acp-panel-update-0.81.0.sh
+sudo alphacp-sync get 31726394519c03332e29715c3ed37d1b4cc73d41 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh eed20adcbc77550d2407f81ed82a6373b9b00bc6a09ce220139915f25d4b53fc && sudo bash /tmp/s7-mail-check.sh
 ```
-- Updater SHA-256: `afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c` · banner **`updater 0.81.0`** · `Panel bundle: 0.74.0 · agent: 0.81.0`.
-- Agent tar pinned to commit `fb7de77bf2dea57563fb1a018f2c704501bee082`, SHA-256
-  `55f3cc0cc2a69df4a1015464f1677c2347de67703d60005ad2ea545acbf53c73`.
-- Updater mail setup `exim4 -bV` + real `exim -bt` smoke check ke baad hi services restart karta hai.
-  SpamAssassin/greylistd **start nahi honge** jab tak unke options explicitly enable na hon.
+- Verifier commit: `31726394519c03332e29715c3ed37d1b4cc73d41` · SHA-256:
+  `eed20adcbc77550d2407f81ed82a6373b9b00bc6a09ce220139915f25d4b53fc`. It captures Exim `-v` output,
+  exit code, `-bf` result for the exact synthetic subject, transport config, Maildir ownership, queue,
+  and only the new mainlog lines. It also requires proof that folder-save and discard actions actually ran.
+- Temporary test account cleanup remains automatic. Failure details go to
+  `${ACP_HOME}/verify-reports/s7-diag.txt`; summary goes to `s7-mail-check.txt` for hourly sync.
 
-### 2) Existing live mail — #19/#20/#21, 0.80 fixes included
-```bash
-sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh a69b06062cdaf66ead7a9be9bec019d4ef7aafd68f5ad467874c0002fb06ecd7 && sudo bash /tmp/s7-mail-check.sh
-```
-- Verifier SHA-256: `a69b06062cdaf66ead7a9be9bec019d4ef7aafd68f5ad467874c0002fb06ecd7`.
-- Expected: **62 pass / 0 fail** + `ASLI MAIL DELIVERY:VERIFIED`. Temporary test account cleanup automatic hai.
-- Failure diagnostics `${ACP_HOME}/verify-reports/s7-diag.txt` me likhe jayenge; hourly `alphacp-sync` ke baad file aa jayegi.
-
-### 3) #147 — SpamAssassin/greylistd status (read-only; features enable nahi hote)
+### 2) #147 — SpamAssassin/greylistd status (read-only; features enable nahi hote; next after mail check)
 ```bash
 sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-spam-check.sh /tmp/s7-spam-check.sh e775b853066cb4a966e359bda54a9f0026faa91de48d7d7bcaac16783035eb86 && sudo bash /tmp/s7-spam-check.sh
 ```
@@ -57,19 +54,26 @@ sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-s
   `docs/modules/email.md` me opt-in commands hain. Greylisting first-time external mail ko 451 dekar delay karegi.
 - Report `${ACP_HOME}/verify-reports/s7-spam-check.txt` me milegi.
 
-### 4) Ek hi command me updater + dono verifiers
+### Previous step — updater 0.81.0 (completed on server; do not rerun)
 ```bash
-sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 installer/panel-update.sh /tmp/acp-panel-update-0.81.0.sh afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c && sudo bash /tmp/acp-panel-update-0.81.0.sh && sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh a69b06062cdaf66ead7a9be9bec019d4ef7aafd68f5ad467874c0002fb06ecd7 && sudo bash /tmp/s7-mail-check.sh && sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-spam-check.sh /tmp/s7-spam-check.sh e775b853066cb4a966e359bda54a9f0026faa91de48d7d7bcaac16783035eb86 && sudo bash /tmp/s7-spam-check.sh
+sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 installer/panel-update.sh /tmp/acp-panel-update-0.81.0.sh afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c && sudo bash /tmp/acp-panel-update-0.81.0.sh
 ```
+- **Live result:** `UPDATE COMPLETE`; panel **0.74.0**, agent **0.81.0**; `alphacp-sync` pushed server snapshot.
+- Updater SHA-256: `afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c` · banner **`updater 0.81.0`** · `Panel bundle: 0.74.0 · agent: 0.81.0`.
+- Agent tar pinned to commit `fb7de77bf2dea57563fb1a018f2c704501bee082`, SHA-256
+  `55f3cc0cc2a69df4a1015464f1677c2347de67703d60005ad2ea545acbf53c73`.
+- Updater mail setup `exim4 -bV` + real `exim -bt` smoke check ke baad hi services restart karta hai.
+  SpamAssassin/greylistd **start nahi honge** jab tak unke options explicitly enable na hon.
 
 ### Roadmap / kitna baaki hai
-- Checklist abhi **50 ✅ / 57 🟡 / 92 ⏳ / 9 🔵** (208 rows) hai; project tab complete jab required rows 100% ✅.
-- Is updater ke baad live verify pending: #19/#20/#21 mail delivery aur #147 SpamAssassin/greylistd status.
+- Checklist abhi **52 ✅ / 56 🟡 / 92 ⏳ / 9 🔵** (209 rows; `38b` included) hai; project tab complete jab required rows 100% ✅.
+- Live: #19 mail tracking passed; #20 global filters unverified; #21 folder-save failed (same failure reported after 0.80.0 and 0.81.0); #147 read-only status verifier abhi pending.
 - S7 me abhi build karna: #18 Mailing Lists, #23/#148 Address Importer, #25 Encryption, #26 BoxTrapper,
   #27 Calendar & Contacts, #29 Roundcube Webmail, #145 server deliverability. #147 ka code complete hai; live verify baaki.
 - Phir S10 ke bache hue mail import + cpmove DNS-zone import; uske baad S11 Metrics → S12 Billing →
   S13 Security Center (18) → S14 app installer/WP Toolkit → S15 reseller, multi-server, DNS cluster.
-- **0.80.0 standalone command ab superseded hai**; 0.81.0 updater me uske filter-router / delivery fixes bhi hain.
+- **Correction:** 0.80.0 was live-run; its mail verifier also returned **61 pass / 1 fail** on folder filtering.
+  The 0.81.0 update did not clear that failure. Do not mark #20/#21 complete until the revised live test passes.
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 

@@ -17,8 +17,8 @@ PASS=0; FAIL=0
 ok()   { PASS=$((PASS+1)); printf '  ok   %s\n' "$1"; }
 bad()  { FAIL=$((FAIL+1)); printf '  FAIL %s\n' "$1"; }
 
-CMD_FILE="COMMANDS.md"
-[[ -f "${CMD_FILE}" ]] || { echo "COMMANDS.md nahi mila"; exit 1; }
+CMD_FILE="${COMMANDS_CHECK_FILE:-COMMANDS.md}"
+[[ -f "${CMD_FILE}" ]] || { echo "${CMD_FILE} nahi mila"; exit 1; }
 
 # ---------------------------------------------------------------- parse -------
 # Us section ka pehla alphacp-sync get line jo "NEXT STEP" ke baad aata hai.
@@ -60,50 +60,72 @@ else
   bad "sha256 mismatch: COMMANDS.md me ${SHA:0:16}…, par commit ke file me ${GOT:0:16}… — purana file pin hua hai"
 fi
 
-# file ko temp me rakho (aage ke andar ke pins check karne ke liye)
+# Pinned file ko temp me rakho. Updaters ke embedded artifact pins aur standalone
+# diagnostic verifiers ke shell behavior alag se validate hote hain.
 WORK="$(mktemp -d)"; trap 'rm -rf "${WORK}"' EXIT
-git cat-file -p "${COMMIT}:${PATH_IN_REPO}" > "${WORK}/updater.sh"
+COMMAND_FILE="${WORK}/command.sh"
+git cat-file -p "${COMMIT}:${PATH_IN_REPO}" > "${COMMAND_FILE}"
 
-# ---------------------------------------------------------------- version -----
-FILE_VER="$(sed -n 's/^UPDATER_VERSION="\(.*\)"$/\1/p' "${WORK}/updater.sh" | head -1)"
-if [[ -n "${EXPECT_VERSION}" && "${FILE_VER}" == "${EXPECT_VERSION}" ]]; then
-  ok "updater version banner = ${FILE_VER}"
+if [[ "${PATH_IN_REPO}" == "installer/panel-update.sh" ]]; then
+  # --------------------------------------------------------------- updater ---
+  FILE_VER="$(sed -n 's/^UPDATER_VERSION="\(.*\)"$/\1/p' "${COMMAND_FILE}" | head -1)"
+  if [[ -n "${EXPECT_VERSION}" && "${FILE_VER}" == "${EXPECT_VERSION}" ]]; then
+    ok "updater version banner = ${FILE_VER}"
+  else
+    bad "version mismatch: command ka naam '${EXPECT_VERSION}', file ke andar '${FILE_VER:-<none>}'"
+  fi
+
+  banner="$(grep -m1 '^# updater ' "${COMMAND_FILE}" || true)"
+  grep -q "updater ${FILE_VER}" <<<"${banner}" && ok "banner comment = ${banner#\# }" || bad "banner comment galat: ${banner}"
+
+  PANEL_VERSION="$(sed -n 's/^PANEL_VERSION="\${ACP_PANEL_VERSION:-\(.*\)}"$/\1/p' "${COMMAND_FILE}" | head -1)"
+  AGENT_VERSION="$(sed -n 's/^AGENT_VERSION="\${ACP_AGENT_VERSION:-\(.*\)}"$/\1/p' "${COMMAND_FILE}" | head -1)"
+  BUNDLE_COMMIT="$(sed -n 's/^BUNDLE_COMMIT="\${ACP_PANEL_BUNDLE_COMMIT:-\([0-9a-f]\{40\}\)}"$/\1/p' "${COMMAND_FILE}" | head -1)"
+  BUNDLE_SHA="$(sed -n 's/^BUNDLE_SHA256="\${ACP_PANEL_BUNDLE_SHA256:-\([0-9a-f]\{64\}\)}"$/\1/p' "${COMMAND_FILE}" | head -1)"
+  AGENT_COMMIT="$(sed -n 's/^AGENT_COMMIT="\${ACP_AGENT_BUNDLE_COMMIT:-\([0-9a-f]\{40\}\)}"$/\1/p' "${COMMAND_FILE}" | head -1)"
+  AGENT_SHA="$(sed -n 's/^AGENT_SHA256="\${ACP_AGENT_BUNDLE_SHA256:-\([0-9a-f]\{64\}\)}"$/\1/p' "${COMMAND_FILE}" | head -1)"
+
+  check_artifact() {  # name commit path sha
+    local name="$1" commit="$2" path="$3" sha="$4"
+    if [[ -z "${commit}" || -z "${sha}" ]]; then bad "${name}: pin missing"; return; fi
+    if ! git cat-file -e "${commit}:${path}" 2>/dev/null; then
+      bad "${name}: ${path} commit ${commit:0:12} me nahi hai"; return
+    fi
+    local got; got="$(git cat-file -p "${commit}:${path}" | sha256sum | cut -d' ' -f1)"
+    if [[ "${got}" == "${sha}" ]]; then
+      ok "${name}: ${path} @ ${commit:0:12} sha256 match"
+    else
+      bad "${name}: sha mismatch (pin ${sha:0:16}…, file ${got:0:16}…)"
+    fi
+    if git merge-base --is-ancestor "${commit}" origin/arena/01a10111-alphacp 2>/dev/null; then
+      ok "${name}: artifact commit push ho chuka hai"
+    else
+      bad "${name}: artifact commit ${commit:0:12} origin par nahi"
+    fi
+  }
+
+  check_artifact "panel ${PANEL_VERSION:-?}" "${BUNDLE_COMMIT}" "artifacts/panel-code-${PANEL_VERSION}.tar.gz" "${BUNDLE_SHA}"
+  check_artifact "agent ${AGENT_VERSION:-?}" "${AGENT_COMMIT}" "artifacts/agent-${AGENT_VERSION}.tar.gz" "${AGENT_SHA}"
 else
-  bad "version mismatch: command ka naam '${EXPECT_VERSION}', file ke andar '${FILE_VER:-<none>}'"
+  # ---------------------------------------------------------- standalone tool -
+  if [[ "${PATH_IN_REPO}" != tools/verify/*.sh ]]; then
+    bad "NEXT command must pin panel-update.sh or a standalone tools/verify/*.sh script"
+  elif bash -n "${COMMAND_FILE}"; then
+    ok "pinned verifier script passes bash -n"
+  else
+    bad "pinned verifier script has a Bash syntax error"
+  fi
+
+  if [[ "${PATH_IN_REPO}" == "tools/verify/s7-mail-check.sh" ]]; then
+    if grep -q 'FULL S7 MAIL CHECK: FAIL' "${COMMAND_FILE}" \
+      && grep -q 'filter_failure_diagnostics' "${COMMAND_FILE}" \
+      && grep -q -- ' -v ' "${COMMAND_FILE}"; then
+      ok "S7 verifier fails closed and records Exim verbose filter evidence"
+    else
+      bad "S7 verifier lacks fail-closed status or Exim verbose diagnostics"
+    fi
+  fi
 fi
-
-banner="$(grep -m1 '^# updater ' "${WORK}/updater.sh" || true)"
-grep -q "updater ${FILE_VER}" <<<"${banner}" && ok "banner comment = ${banner#\# }" || bad "banner comment galat: ${banner}"
-
-# --------------------------------------------------- embedded artifact pins ---
-PANEL_VERSION="$(sed -n 's/^PANEL_VERSION="\${ACP_PANEL_VERSION:-\(.*\)}"$/\1/p' "${WORK}/updater.sh" | head -1)"
-AGENT_VERSION="$(sed -n 's/^AGENT_VERSION="\${ACP_AGENT_VERSION:-\(.*\)}"$/\1/p' "${WORK}/updater.sh" | head -1)"
-BUNDLE_COMMIT="$(sed -n 's/^BUNDLE_COMMIT="\${ACP_PANEL_BUNDLE_COMMIT:-\([0-9a-f]\{40\}\)}"$/\1/p' "${WORK}/updater.sh" | head -1)"
-BUNDLE_SHA="$(sed -n 's/^BUNDLE_SHA256="\${ACP_PANEL_BUNDLE_SHA256:-\([0-9a-f]\{64\}\)}"$/\1/p' "${WORK}/updater.sh" | head -1)"
-AGENT_COMMIT="$(sed -n 's/^AGENT_COMMIT="\${ACP_AGENT_BUNDLE_COMMIT:-\([0-9a-f]\{40\}\)}"$/\1/p' "${WORK}/updater.sh" | head -1)"
-AGENT_SHA="$(sed -n 's/^AGENT_SHA256="\${ACP_AGENT_BUNDLE_SHA256:-\([0-9a-f]\{64\}\)}"$/\1/p' "${WORK}/updater.sh" | head -1)"
-
-check_artifact() {  # name commit path sha
-  local name="$1" commit="$2" path="$3" sha="$4"
-  if [[ -z "${commit}" || -z "${sha}" ]]; then bad "${name}: pin missing"; return; fi
-  if ! git cat-file -e "${commit}:${path}" 2>/dev/null; then
-    bad "${name}: ${path} commit ${commit:0:12} me nahi hai"; return
-  fi
-  local got; got="$(git cat-file -p "${commit}:${path}" | sha256sum | cut -d' ' -f1)"
-  if [[ "${got}" == "${sha}" ]]; then
-    ok "${name}: ${path} @ ${commit:0:12} sha256 match"
-  else
-    bad "${name}: sha mismatch (pin ${sha:0:16}…, file ${got:0:16}…)"
-  fi
-  if git merge-base --is-ancestor "${commit}" origin/arena/01a10111-alphacp 2>/dev/null; then
-    ok "${name}: artifact commit push ho chuka hai"
-  else
-    bad "${name}: artifact commit ${commit:0:12} origin par nahi"
-  fi
-}
-
-check_artifact "panel ${PANEL_VERSION:-?}" "${BUNDLE_COMMIT}" "artifacts/panel-code-${PANEL_VERSION}.tar.gz" "${BUNDLE_SHA}"
-check_artifact "agent ${AGENT_VERSION:-?}" "${AGENT_COMMIT}" "artifacts/agent-${AGENT_VERSION}.tar.gz" "${AGENT_SHA}"
 
 # ------------------------------------------------ measured numbers nahi khaali -
 if grep -q 'update-sim \*\*—' <<<"${NEXT_BLOCK}" || grep -q 'panel \*\*—' <<<"${NEXT_BLOCK}"; then
