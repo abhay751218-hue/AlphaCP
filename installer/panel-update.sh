@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.71.0  ·  default panel bundle 0.71.0  ·  agent 0.64.0  ·  alphacp-sync v1.2
+# updater 0.72.0  ·  default panel bundle 0.72.0  ·  agent 0.65.0  ·  alphacp-sync v1.2
 #
 # 0.71.0: S10 — cpmove MySQL restore (`db.restore`: two-phase sanitised import, dumps streamed)
 # 0.70.1: agent fix — useradd GECOS comment me colon (“Create Account” asli host par fail hota tha)
+# 0.72.0: S10 — remote pull: cpmove archive purane server se SSH (scp) se lao (host key pinning,
+#         password/key auth, atomic download) — panel 0.72.0 + agent 0.65.0; openssh-client install
+# 0.71.0: S10 — cpmove archive ke mysql/*.sql dumps asli MariaDB me restore (db.restore);
+#         panel 0.71.0 + agent 0.64.0
 # 0.70.0: S8 — real MariaDB databases/users/GRANTs (socket-auth client, SQL on stdin) + MySQL Users page
 # 0.69.0: S10 — real cPanel account import (cpmove/legacy/nested, sha256-verified, home swap,
 #         pre-restore copy) + transfer/restore job history + import drop dir (FPM read allowlist)
@@ -154,17 +158,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.71.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.71.0}"
+UPDATER_VERSION="0.72.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.72.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-e1df33775f05fe0c6df39a941834d0a9cf41080f}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-1f0ba51b0a9f943a0f60a9c30388707ad19a6b2b}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-31db8c7b241f60fbe07921a3f58b5406bc40e82f0ae4a87097b4426029d02f6a}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.64.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-e1df33775f05fe0c6df39a941834d0a9cf41080f}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-6c19b42cc9928368a70b2fd4b2805b0b1bef01cd41f365aec3c94bbd0706cafa}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.65.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-1f0ba51b0a9f943a0f60a9c30388707ad19a6b2b}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-89c0ebd32d048ba0f4577da79537824ec5cb7c929da3e13c8ec50183592320e4}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-8bbcd23ef5ea37cb88939fdb78eddb9c8089b48e71596c23d89b2f44829faea8}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
@@ -382,6 +386,7 @@ fi
 grep -q 'issueLetsEncrypt' "${AGENT_ROOT}/src/AccountOs.php" || die "agent AutoSSL (issueLetsEncrypt) missing"
 grep -q "'db.user.create'" "${AGENT_ROOT}/config/tasks.php" || die "agent S8 MariaDB tasks missing"
 grep -q "'db.restore'" "${AGENT_ROOT}/config/tasks.php" || die "agent S10 MySQL restore task missing"
+grep -q "'backup.pull'" "${AGENT_ROOT}/config/tasks.php" || die "agent S10 remote pull task missing"
 
 # S8: the agent talks to MariaDB through the client binary (socket auth, SQL on
 # stdin). Install it when it is missing; the admin MariaDB server is assumed to
@@ -396,6 +401,28 @@ if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]] && [[ ! -x /usr/bin/mariadb && ! -x /
     fi
   else
     warn "mariadb-client missing (apt-get nahi) — db.* tasks client ke bina chalenge nahi"
+  fi
+fi
+
+# S10 remote pull: scp/ssh-keyscan/ssh-keygen chahiye (openssh-client). sshpass sirf
+# password auth ke liye — na mile to key auth chalta rahega (agent saaf message dega).
+if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
+  if command -v apt-get >/dev/null 2>&1; then
+    if [[ ! -x /usr/bin/scp || ! -x /usr/bin/ssh-keyscan || ! -x /usr/bin/ssh-keygen ]]; then
+      info "openssh-client install ho raha hai (remote pull: scp/ssh-keyscan)"
+      if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq openssh-client >>"${LOG_FILE}" 2>&1; then
+        ok "openssh-client installed"
+      else
+        warn "openssh-client install fail — backup.pull (remote se archive lana) kaam nahi karega"
+      fi
+    fi
+    if [[ ! -x /usr/bin/sshpass ]]; then
+      if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq sshpass >>"${LOG_FILE}" 2>&1; then
+        ok "sshpass installed (password auth ke liye)"
+      else
+        warn "sshpass install nahi hua — remote pull sirf SSH key auth se chalega (theek hai)"
+      fi
+    fi
   fi
 fi
 
@@ -425,6 +452,10 @@ grep -q "db[.]restore" "${NEW_PANEL}/app/Support/BackupProvisioner.php" \
   || die "panel db.restore wiring missing"
 grep -q "mysql_only" "${NEW_PANEL}/resources/views/transfer-restore/index.blade.php" \
   || die "panel cPanel MySQL restore option missing"
+grep -q "enqueueRemotePull" "${NEW_PANEL}/app/Support/BackupProvisioner.php" \
+  || die "panel remote pull wiring missing"
+grep -q "transfer-tool.pull" "${NEW_PANEL}/routes/web.php" \
+  || die "panel remote pull routes missing"
 grep -q '"laravel/framework": "\^13' "${NEW_PANEL}/composer.json" \
   || die "new artifact Laravel 13 nahi hai"
 
