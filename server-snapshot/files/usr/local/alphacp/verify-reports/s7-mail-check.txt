@@ -1,6 +1,6 @@
-=== S7 MAIL SERVER LIVE CHECK (2026-10-05T10:01:51Z) ===
-pass=29 fail=2 skip=0
-tasks: mail.server#332, account.create#333, mail.set#334, mail.server#335, mail.server#336, mail.server#337, mail.server#338, mail.server#339
+=== S7 MAIL SERVER LIVE CHECK (2026-10-05T10:09:05Z) ===
+pass=36 fail=5 skip=2
+tasks: mail.server#344, account.create#345, mail.set#346, mail.server#347, mail.server#348, mail.server#349, mail.server#350, mail.server#351, mail.catchall#352, mail.server#353, mail.autorespond#354, mail.spam#355, mail.server#356
 live_mail_delivery=NO
 tools: exim=/usr/sbin/exim4 dovecot=/usr/sbin/dovecot doveadm=/usr/bin/doveadm
 mailboxes: 1
