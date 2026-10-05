@@ -221,6 +221,20 @@ chk "run 4 exit 0" "[[ ${RC4} -eq 0 ]]"
 chk "run 4 me ghost account use nahi hua" "! grep -q 'ghostacct_acpverify' <<<\"${OUT4}\""
 chk "run 4 end me sirf purani ghostacct row bachi" "[[ \$(python3 -c 'import json,os; s=json.load(open(os.environ[\"ACP_FAKE_STATE\"])); print(len(s[\"databases\"]), \",\".join(sorted(s[\"accounts\"])))') == '1 ghostacct' ]]"
 
+# ------------------------------------------------------------------ run 5 -----
+# s10-diag.sh READ-ONLY hai aur bina AlphaCP install ke bhi saaf output dena chahiye
+# (server par admins ko bhejna padta hai — beech me crash nahi hona chahiye).
+echo
+echo "-- run 5: s10-diag.sh bina ACP install ke bhi chalna chahiye (read-only)"
+set +e
+OUT5="$(ACP_HOME=/tmp/acp-diag-nonext ACP_PHP=/bin/bash bash tools/verify/s10-diag.sh 2>&1)"; RC5=$?
+set -e
+echo "${OUT5}" | head -6 | sed 's/^/     /'
+chk "run 5 exit 0" "[[ ${RC5} -eq 0 ]]"
+chk "run 5 output complete" "grep -q '== END ==' <<<\"${OUT5}\""
+chk "run 5 me koi bash error nahi" "! grep -qiE 'command not found|unbound variable' <<<\"${OUT5}\""
+rm -rf /tmp/acp-diag-nonext 2>/dev/null || true
+
 echo
 echo "=== S10-MYSQL-RESTORE-SIM: ${PASS} pass, ${FAIL} fail ==="
 [[ ${FAIL} -eq 0 ]]
