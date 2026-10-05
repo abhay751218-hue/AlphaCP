@@ -4518,6 +4518,7 @@ function acp_mail_harness(): array
     putenv('ACP_MAIL_EXIM_DOMAINS=' . $root . '/etc/exim4/alphacp-domains');
     putenv('ACP_MAIL_EXIM_RECIPIENTS=' . $root . '/etc/exim4/alphacp-recipients');
     putenv('ACP_MAIL_EXIM_ALIASES=' . $root . '/etc/exim4/alphacp-aliases');
+    putenv('ACP_MAIL_FILTERS=' . $root . '/etc/exim4/alphacp-filters');
     putenv('ACP_MAIL_CATCHALL=' . $root . '/etc/exim4/alphacp-catchall');
     putenv('ACP_MAIL_VACATION_DIR=' . $root . '/etc/exim4/vacation');
     putenv('ACP_MAIL_SPAM_DIR=' . $root . '/etc/exim4/spam');
@@ -4569,6 +4570,7 @@ function acp_mail_cleanup(array $harness): void
         'ACP_MAIL_EXIM', 'ACP_MAIL_DOVECOT', 'ACP_MAIL_DOVEADM', 'ACP_MAIL_DOVECONF',
         'ACP_MAIL_UPDATE_EXIM',
         'ACP_MAIL_EXIM_OPTIONS', 'ACP_MAIL_DOVECOT_OPTIONS', 'ACP_MAIL_MAINLOG',
+        'ACP_MAIL_FILTERS',
     ] as $name) {
         putenv($name);
     }
@@ -5374,6 +5376,164 @@ test('mail.server diskusage — account ki mail jagah asli bytes me', function (
     acp_mail_cleanup($h);
 });
 
+
+fwrite(STDOUT, "\nS7 EMAIL FILTERS + TRACK (asli Exim filter files)\n");
+
+/** mailbox + filter JSON ke saath ek account (alicehost / info@alice.test). */
+function acp_mail_seed_filter_account(array $h): string
+{
+    $root = $h['root'];
+    $hash = '$2y$10$abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ01234';
+    $home = $root . '/home/alicehost';
+    mkdir($home . '/mail/alice.test/info/new', 0755, true);
+    mkdir($home . '/etc/mail', 0755, true);
+    file_put_contents(
+        $home . '/etc/mail/passwd',
+        "info@alice.test:{BLF-CRYPT}{$hash}:1001:1001::{$home}/mail/alice.test/info::\n"
+    );
+
+    return $home;
+}
+
+test('mail.server sync — email filters se ASLI Exim filter file ban ti hai', function (): void {
+    $h = acp_mail_harness();
+    $home = acp_mail_seed_filter_account($h);
+    file_put_contents($home . '/etc/mail/filters', (string) json_encode([
+        ['local' => 'info', 'domain' => 'alice.test', 'field' => 'subject', 'needle' => 'winner', 'action' => 'folder', 'folder' => 'junk'],
+        ['local' => 'info', 'domain' => 'alice.test', 'field' => 'from', 'needle' => 'spammer', 'action' => 'discard'],
+        ['local' => 'info', 'domain' => 'alice.test', 'field' => 'to', 'needle' => 'sales', 'action' => 'forward', 'dest' => 'sales@other.test'],
+    ]));
+    file_put_contents($home . '/etc/mail/global-filters.json', (string) json_encode([
+        ['domain' => 'alice.test', 'field' => 'from', 'needle' => 'boss', 'action' => 'folder', 'folder' => 'boss'],
+    ]));
+
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true(($out['filters'] ?? -1) === 1, '1 mailbox ke liye filter banana chahiye, bana ' . (int) ($out['filters'] ?? -1));
+
+    $lookup = (string) file_get_contents($h['root'] . '/etc/exim4/alphacp-filters');
+    assert_true(str_contains($lookup, 'info@alice.test: '), 'lookup file me address hona chahiye');
+
+    $filter = (string) file_get_contents($home . '/etc/mail/filter.d/info@alice.test.filter');
+    // Exim filter language — ye asli syntax hai jo exim chalaata hai
+    assert_true(str_contains($filter, 'if error_message then finish endif'), 'bounce loop se bachav hona chahiye');
+    assert_true(str_contains($filter, 'if $header_from: contains "boss" then'), 'account-wide (global) rule pehle');
+    assert_true(str_contains($filter, 'save "' . $home . '/mail/alice.test/info/.boss/"'), 'global folder save');
+    assert_true(str_contains($filter, 'if $header_subject: contains "winner" then'), 'per-mailbox rule');
+    assert_true(str_contains($filter, 'save "' . $home . '/mail/alice.test/info/.junk/"'), 'folder me save');
+    assert_true(str_contains($filter, 'seen finish'), 'discard = seen finish');
+    assert_true(str_contains($filter, 'deliver "sales@other.test"'), 'forward = deliver');
+    // global rule user rule se PEHLE aana chahiye
+    assert_true(strpos($filter, 'boss') < strpos($filter, 'winner'), 'account-wide rule pehle lagu hona chahiye');
+
+    // folder pehle se bana hona chahiye (IMAP me turant dikhe + exim -bf ko mile)
+    foreach (['.boss', '.junk'] as $folder) {
+        assert_true(is_dir($home . '/mail/alice.test/info/' . $folder . '/new'), "{$folder} Maildir banana chahiye");
+    }
+
+    // `exim -bf` se validate kiya gaya (fail-closed ka saboot)
+    assert_true($h['cmd']->eximFilterArgvs !== [], 'exim -bf se filter validate hona chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server sync — kharaab filter reject ho jaye to delivery chalti rahe (fail-closed)', function (): void {
+    $h = acp_mail_harness();
+    $home = acp_mail_seed_filter_account($h);
+    file_put_contents($home . '/etc/mail/filters', (string) json_encode([
+        ['local' => 'info', 'domain' => 'alice.test', 'field' => 'subject', 'needle' => 'x', 'action' => 'folder', 'folder' => 'junk'],
+    ]));
+    $h['cmd']->eximFilterFails = true;   // `exim -bf` mana kar de
+
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true(($out['filters'] ?? -1) === 0, 'kharaab filter install nahi hona chahiye, count=' . (int) ($out['filters'] ?? -1));
+    assert_true(
+        (string) file_get_contents($h['root'] . '/etc/exim4/alphacp-filters') === '',
+        'lookup file khali rehni chahiye (mail delivery bina filter ke chalti rahe)',
+    );
+    assert_true(($out['mailboxes'] ?? 0) === 1, 'mailbox aggregate phir bhi hona chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('email filter — khatarnak needle/pipe kabhi filter file me nahi jata', function (): void {
+    $h = acp_mail_harness();
+    $home = acp_mail_seed_filter_account($h);
+    file_put_contents($home . '/etc/mail/filters', (string) json_encode([
+        ['local' => 'info', 'domain' => 'alice.test', 'field' => 'subject', 'needle' => 'ok', 'action' => 'folder', 'folder' => 'junk'],
+        // sanitizer inhe reject karta hai, par double-check: agent bhi filter me nahi likhe
+        ['local' => 'info', 'domain' => 'alice.test', 'field' => 'subject', 'needle' => 'ok', 'action' => 'pipe', 'folder' => ''],
+        ['local' => 'info', 'domain' => 'alice.test', 'field' => 'subject', 'needle' => 'ok', 'action' => 'folder', 'folder' => '../../etc'],
+    ]));
+
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true(($out['filters'] ?? -1) === 1, 'sirf wahi rule jo chal sakta hai');
+    $filter = (string) @file_get_contents($home . '/etc/mail/filter.d/info@alice.test.filter');
+    assert_true(!str_contains($filter, 'pipe'), 'pipe command kabhi nahi');
+    assert_true(!str_contains($filter, '../'), 'path traversal kabhi nahi');
+    assert_true(!str_contains($filter, '${run'), 'exim expansion kabhi nahi');
+    acp_mail_cleanup($h);
+});
+
+test('email filter — forward khud ko ho to loop nahi (rule chhod diya jaye)', function (): void {
+    $h = acp_mail_harness();
+    $home = acp_mail_seed_filter_account($h);
+    file_put_contents($home . '/etc/mail/filters', (string) json_encode([
+        ['local' => 'info', 'domain' => 'alice.test', 'field' => 'subject', 'needle' => 'x', 'action' => 'forward', 'dest' => 'info@alice.test'],
+    ]));
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true(($out['filters'] ?? -1) === 0, 'khud ko forward = loop, rule chhod dena chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.track — ASLI exim mainlog se delivery trace (cPanel #19)', function (): void {
+    $h = acp_mail_harness();
+    // AccountOs ko lagta hai ki alicehost hamara account hai (getent fake)
+    $h['cmd']->users['alicehost'] = AccountOs::GECOS_MARKER . ' alice.test';
+    acp_mail_seed_filter_account($h);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    file_put_contents($h['root'] . '/var/log/exim4/mainlog', implode("\n", [
+        '2026-10-05 10:00:01 1oAAAA-000001-AA <= sender@remote.test P=esmtp S=500',
+        '2026-10-05 10:00:02 1oAAAA-000001-AA => info@alice.test R=alphacp_userfilter T=address_directory',
+        '2026-10-05 10:00:02 1oAAAA-000001-AA Completed',
+        '2026-10-05 10:01:01 1oBBBB-000002-AB <= other@remote.test P=esmtp S=500',
+        '2026-10-05 10:01:02 1oBBBB-000002-AB == gone@nowhere.test defer (-42)',
+        '',
+    ]));
+
+    $out = (new MailTrack())->handle(['username' => 'alicehost', 'query' => 'info@alice.test'], $h['ctx']);
+    assert_true(($out['status'] ?? '') === 'ok', 'track chalna chahiye');
+    $log = (array) ($out['log'] ?? []);
+    assert_true($log['ok'] === true, 'mainlog se trace milna chahiye: ' . (string) ($log['error'] ?? ''));
+    assert_true(($log['address'] ?? '') === 'info@alice.test', 'address');
+    assert_true(($log['summary']['delivered'] ?? 0) === 1, '1 mail pahunchi, mili ' . (int) ($log['summary']['delivered'] ?? 0));
+    assert_true(($log['hits_total'] ?? 0) === 1, 'sirf is address ki entry, mili ' . (int) ($log['hits_total'] ?? 0));
+
+    $threw = false;
+    try {
+        (new MailTrack())->handle(['username' => 'alicehost', 'query' => 'not-an-address'], $h['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'galat address reject hona chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — exim template me filter router + address_directory transport', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_filter_account($h);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+    assert_true(str_contains($tpl, 'alphacp_userfilter:'), 'filter router hona chahiye');
+    assert_true(str_contains($tpl, 'allow_filter'), 'Exim filter file chalana allowed hona chahiye');
+    assert_true(str_contains($tpl, 'directory_transport = address_directory'), 'filter ke save ke liye transport');
+    assert_true(str_contains($tpl, 'address_directory:'), 'address_directory transport hona chahiye');
+    assert_true(str_contains($tpl, 'create_directory'), 'folder khud ban jana chahiye');
+    // filter router mailbox router se pehle aana chahiye
+    assert_true(
+        strpos($tpl, 'alphacp_userfilter:') < strpos($tpl, 'alphacp_mailbox:'),
+        'filter pehle chalna chahiye, phir mailbox delivery',
+    );
+    acp_mail_cleanup($h);
+});
+
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");
 fwrite(STDOUT, sprintf("passed: %d   failed: %d\n", $passed, $failed));
 exit($failed === 0 ? 0 : 1);
@@ -5404,6 +5564,17 @@ function acp_account_harness(): array
     putenv('ACP_FAKE_SETQUOTA=1');
     putenv('ACP_STATE_ROOT=' . $root . '/alphacp');
     putenv('ACP_MYSQL_CLIENT=/usr/bin/mariadb'); // fake executor intercepts it
+    // mail sync (mail.set/mail.forward ke baad auto-sync) bhi isi harness me chalti hai
+    mkdir($root . '/etc/exim4', 0755, true);
+    putenv('ACP_MAIL_FILTERS=' . $root . '/etc/exim4/alphacp-filters');
+    putenv('ACP_MAIL_EXIM_RECIPIENTS=' . $root . '/etc/exim4/alphacp-recipients');
+    putenv('ACP_MAIL_EXIM_DOMAINS=' . $root . '/etc/exim4/alphacp-domains');
+    putenv('ACP_MAIL_EXIM_ALIASES=' . $root . '/etc/exim4/alphacp-aliases');
+    putenv('ACP_MAIL_CATCHALL=' . $root . '/etc/exim4/alphacp-catchall');
+    putenv('ACP_MAIL_DOVECOT_USERS=' . $root . '/etc/dovecot/alphacp-users');
+    putenv('ACP_MAIL_VACATION_DIR=' . $root . '/etc/exim4/vacation');
+    putenv('ACP_MAIL_SPAM_DIR=' . $root . '/etc/exim4/spam');
+    putenv('ACP_MAIL_DKIM_DIR=' . $root . '/alphacp/etc/mail/dkim');
 
     $cmd = new FakeCommandExecutor();
     $log = new TaskLogger(new PDO('sqlite::memory:'), null, false);
@@ -5433,6 +5604,9 @@ function acp_account_cleanup(array $harness): void
         'ACP_ACCOUNTS_ROOT', 'ACP_APACHE_SITES', 'ACP_APACHE_ENABLED', 'ACP_PHP_POOL_DIR',
         'ACP_SUSPENDED_ROOT', 'ACP_PHP_FPM_SERVICE', 'ACP_APACHE_SERVICE', 'ACP_NOLOGIN',
         'ACP_PHP_VERSION', 'ACP_FAKE_SETQUOTA',
+        'ACP_MAIL_FILTERS', 'ACP_MAIL_EXIM_RECIPIENTS', 'ACP_MAIL_EXIM_DOMAINS',
+        'ACP_MAIL_EXIM_ALIASES', 'ACP_MAIL_CATCHALL', 'ACP_MAIL_DOVECOT_USERS',
+        'ACP_MAIL_VACATION_DIR', 'ACP_MAIL_SPAM_DIR', 'ACP_MAIL_DKIM_DIR',
     ] as $name) {
         putenv($name);
     }

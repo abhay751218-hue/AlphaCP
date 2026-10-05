@@ -29,6 +29,7 @@ EXIM_DOMAINS="${ACP_MAIL_EXIM_DOMAINS:-/etc/exim4/alphacp-domains}"
 EXIM_RECIPIENTS="${ACP_MAIL_EXIM_RECIPIENTS:-/etc/exim4/alphacp-recipients}"
 EXIM_ALIASES="${ACP_MAIL_EXIM_ALIASES:-/etc/exim4/alphacp-aliases}"
 EXIM_CATCHALL="${ACP_MAIL_CATCHALL:-/etc/exim4/alphacp-catchall}"
+EXIM_FILTERS="${ACP_MAIL_FILTERS:-/etc/exim4/alphacp-filters}"
 VACATION_DIR="${ACP_MAIL_VACATION_DIR:-/etc/exim4/alphacp-vacation}"
 SPAM_DIR="${ACP_MAIL_SPAM_DIR:-/etc/exim4/alphacp-spam}"
 REPORT_DIR="${ACP_HOME}/verify-reports"
@@ -493,6 +494,102 @@ if run_task mail.server '{"action":"diskusage"}'; then
   ok "email disk usage (cPanel #146): ${ACCS:-0} account, kul ${TOTAL:-0} bytes mail"
 else
   bad "diskusage fail: ${LAST_ERR:-unknown}"
+fi
+
+# ------------------------------------------------------------------ part I ----
+echo
+info "I: email filters (asli Exim filter files) + track delivery"
+
+if [[ "${CREATED_ACCOUNT}" != "1" ]]; then
+  skip "email filters: kaccha account nahi bana — filter test chhoda"
+else
+  MAILDIR_LINE="$(grep -m1 "^${TEST_ADDR}:" "${EXIM_RECIPIENTS}" 2>/dev/null)"
+  MAILDIR="$(printf '%s' "${MAILDIR_LINE}" | sed 's/^[^:]*: *//' | awk '{print $1}')"
+  if [[ -z "${MAILDIR}" || ! -d "${MAILDIR}/new" ]]; then
+    skip "email filters: maildir nahi mila (${MAILDIR:-khali})"
+  else
+    # ---- cPanel #21: per-mailbox filter (subject me 'acpfilter' -> .filtered folder) ----
+    if run_task mail.filter "{\"username\":\"${TEST_USER}\",\"filters\":[{\"local\":\"info\",\"domain\":\"${TEST_DOMAIN}\",\"field\":\"subject\",\"needle\":\"acpfilter\",\"action\":\"folder\",\"folder\":\"filtered\"}]}"; then
+      ok "mail.filter: filter set ho gaya (task #${LAST_TASK_ID})"
+    else
+      bad "mail.filter fail: ${LAST_ERR:-unknown}"
+    fi
+    if run_task mail.server '{"action":"sync"}'; then
+      FCOUNT="$(grep -o '"filters": *[0-9]*' <<<"${TASK_OUT}" | grep -o '[0-9]*' | head -1)"
+      ok "sync ne Exim filter banaya (${FCOUNT:-0} mailbox ke liye)"
+    else
+      bad "sync (filters) fail: ${LAST_ERR:-unknown}"
+    fi
+
+    FILTER_PATH="$(sed -n "s#^${TEST_ADDR}: ##p" "${EXIM_FILTERS}" 2>/dev/null | head -1)"
+    if [[ -n "${FILTER_PATH}" && -f "${FILTER_PATH}" ]]; then
+      ok "Exim filter file bani: ${FILTER_PATH}"
+      RULES="$(grep -c 'header_' "${FILTER_PATH}" 2>/dev/null || echo 0)"
+      info "filter me ${RULES} rule: $(grep -o 'contains \"[^\"]*\"' "${FILTER_PATH}" 2>/dev/null | tr '\n' ' ')"
+    else
+      bad "Exim filter file nahi mili (lookup: ${EXIM_FILTERS})"
+      diagsec "FILTER FILE diagnostics"
+      diagcmd cat "${EXIM_FILTERS}"
+    fi
+
+    # ---- ASLI mail 1: filter wali mail .filtered folder me jaani chahiye ----
+    BEFORE_FOLDER="$(ls -1 "${MAILDIR}/.filtered/new" 2>/dev/null | wc -l | tr -d ' ')"
+    printf 'Subject: acpfilter test\nFrom: root@%s\n\nFilter wali mail.\n' "$(hostname -f 2>/dev/null || hostname)" \
+      | "${EXIM}" -odf -oem "${TEST_ADDR}" >/dev/null 2>&1
+    sleep 1
+    AFTER_FOLDER="$(ls -1 "${MAILDIR}/.filtered/new" 2>/dev/null | wc -l | tr -d ' ')"
+    if [[ "${AFTER_FOLDER}" -gt "${BEFORE_FOLDER}" ]]; then
+      ok "FILTER KAAM KAR GAYA (#21): 'acpfilter' wali mail ${MAILDIR}/.filtered/new me (${BEFORE_FOLDER} se ${AFTER_FOLDER})"
+    else
+      bad "filter ne mail folder me nahi daali (.filtered/new: ${BEFORE_FOLDER} -> ${AFTER_FOLDER})"
+      diagsec "FILTER (folder) FAIL diagnostics"
+      diagcmd cat "${FILTER_PATH}"
+      diagcmd ls -la "${MAILDIR}"
+      diagcmd tail -30 /var/log/exim4/mainlog
+    fi
+
+    # ---- cPanel #21: discard filter (mail inbox me nahi aani chahiye) ----
+    if run_task mail.filter "{\"username\":\"${TEST_USER}\",\"filters\":[{\"local\":\"info\",\"domain\":\"${TEST_DOMAIN}\",\"field\":\"subject\",\"needle\":\"acpdiscard\",\"action\":\"discard\"}]}"; then
+      ok "mail.filter: discard filter set ho gaya"
+    else
+      bad "mail.filter (discard) fail: ${LAST_ERR:-unknown}"
+    fi
+    run_task mail.server '{"action":"sync"}' >/dev/null 2>&1
+    BEFORE_INBOX="$(ls -1 "${MAILDIR}/new" 2>/dev/null | wc -l | tr -d ' ')"
+    printf 'Subject: acpdiscard test\nFrom: root@%s\n\nYe mail discard honi chahiye.\n' "$(hostname -f 2>/dev/null || hostname)" \
+      | "${EXIM}" -odf -oem "${TEST_ADDR}" >/dev/null 2>&1
+    sleep 1
+    AFTER_INBOX="$(ls -1 "${MAILDIR}/new" 2>/dev/null | wc -l | tr -d ' ')"
+    if [[ "${AFTER_INBOX}" == "${BEFORE_INBOX}" ]]; then
+      ok "DISCARD KAAM KAR GAYA (#21): 'acpdiscard' wali mail inbox me nahi aayi (${AFTER_INBOX} hi rahi)"
+    else
+      bad "discard filter kaam nahi kiya (inbox ${BEFORE_INBOX} -> ${AFTER_INBOX})"
+      diagsec "FILTER (discard) FAIL diagnostics"
+      diagcmd cat "${FILTER_PATH}"
+      diagcmd tail -30 /var/log/exim4/mainlog
+    fi
+
+    # ---- cPanel #19: Track Delivery (asli exim mainlog) ----
+    if run_task mail.track "{\"username\":\"${TEST_USER}\",\"query\":\"${TEST_ADDR}\"}"; then
+      if grep -q '"ok": true' <<<"${TASK_OUT}"; then
+        HITS="$(grep -o '"hits_total": *[0-9]*' <<<"${TASK_OUT}" | grep -o '[0-9]*' | head -1)"
+        ok "mail.track (#19): ASLI exim mainlog se trace (${HITS:-0} entry)"
+      else
+        skip "mail.track: mainlog me is address ka record abhi nahi (mail bhejne ke turant baad aa jata hai)"
+      fi
+    else
+      bad "mail.track fail: ${LAST_ERR:-unknown}"
+    fi
+
+    # ---- saaf safai: test filters hata do (account wapas normal) ----
+    run_task mail.filter "{\"username\":\"${TEST_USER}\",\"filters\":[]}" >/dev/null 2>&1
+    run_task mail.server '{"action":"sync"}' >/dev/null 2>&1
+    if [[ ! -s "${EXIM_FILTERS}" ]]; then
+      ok "test filters hat gaye (lookup file khali — account wapas normal)"
+    else
+      bad "filters hatane ke baad bhi lookup file me entry hai: $(cat "${EXIM_FILTERS}")"
+    fi
+  fi
 fi
 
 DONE=1

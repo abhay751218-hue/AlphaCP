@@ -102,8 +102,55 @@ case "${1:-}" in
       echo "sim: mailbox directory nahi mila ($addr -> $dir)" >&2; exit 1
     fi
     body="$(cat)"
+    # S7 email filters (#20/#21): Exim filter file ko SIM me bhi chalao
+    # (asli server par ye kaam exim ka `alphacp_userfilter` router karta hai).
+    # NOTE: heredoc stdin ko override kar deta hai, isliye message file se padha jata hai.
+    FM="${ACP_MAIL_FILTERS:-/etc/exim4/alphacp-filters}"
+    if [[ -n "$addr" && -f "$FM" ]]; then
+      FP="$(sed -n "s#^${addr}: ##p" "$FM" 2>/dev/null | head -1)"
+      if [[ -n "$FP" && -f "$FP" ]]; then
+        MSG_TMP="$(mktemp)"
+        printf '%s\n' "$body" > "$MSG_TMP"
+        RES="$(python3 - "$FP" "$MSG_TMP" <<'PYEOF'
+import sys, re
+NL = chr(10)
+fpath, msgfile = sys.argv[1], sys.argv[2]
+msg = open(msgfile).read()
+head = msg.split(NL + NL, 1)[0]
+fields = {}
+for line in head.splitlines():
+    m = re.match(r"^([A-Za-z-]+):\s*(.*)$", line)
+    if m:
+        fields[m.group(1).lower()] = m.group(2)
+text = open(fpath).read()
+pat = r'if [$]header_([a-z]+): contains "([^"]*)" then' + NL + r'((?:[ \t]+.*' + NL + r')+?)endif'
+for m in re.finditer(pat, text):
+    field, needle, block = m.group(1), m.group(2).lower(), m.group(3)
+    if needle not in fields.get(field, "").lower():
+        continue
+    if "seen finish" in block:
+        print("DISCARD"); break
+    sm = re.search(r'save "([^"]+)"', block)
+    if sm:
+        print("FOLDER " + sm.group(1)); break
+    dm = re.search(r'deliver "([^"]+)"', block)
+    if dm:
+        print("FORWARD " + dm.group(1)); break
+PYEOF
+)"
+        rm -f "$MSG_TMP"
+        case "$RES" in
+          DISCARD)    exit 0 ;;
+          FOLDER\ *)  d="${RES#FOLDER }"; mkdir -p "$d/new" "$d/cur" "$d/tmp"
+                      printf '%s\n' "$body" > "$d/new/msg.$RANDOM.$RANDOM"; exit 0 ;;
+          FORWARD\ *) exit 0 ;;
+        esac
+      fi
+    fi
     printf '%s\n' "$body" > "$dir/new/msg.$RANDOM.$RANDOM"
     exit 0 ;;
+
+
 esac
 printf 'SIMULATED exim4 %s\n' "$*"; exit 0
 EXIMEOF
@@ -317,6 +364,7 @@ def aggregate():
         "catchalls": len(catchalls),
         "responders": len(vacation),
         "spam_lists": len(spam),
+        "filters": build_filters(),
     }
 
 def setup():
@@ -334,6 +382,8 @@ def setup():
     write(os.path.join(STATE, "etc", "mail-server-configured"), "ok\n")
     res["exim_config"] = "ok"
     res["dovecot_config"] = "ok"
+    if "filters" not in res:
+        res["filters"] = 0
     return res
 
 def verify(addr):
@@ -649,6 +699,102 @@ def diskusage(username=None):
             "total_human": "%d B" % sum(a["bytes"] for a in accs)}
 
 
+def build_filters():
+    """Email filters (cPanel #20 account-wide + #21 per-mailbox): panel ke JSON se
+    ASLI Exim filter file — wahi syntax jo agent banata hai."""
+    NL = chr(10)
+    fmap = {}
+    for u in accounts():
+        home = os.path.join(HOME, u)
+        grows, urows = [], []
+        gfile = os.path.join(home, "etc", "mail", "global-filters.json")
+        ufile = os.path.join(home, "etc", "mail", "filters")
+        if os.path.isfile(gfile):
+            try:
+                grows = json.load(open(gfile))
+            except Exception:
+                grows = []
+        if os.path.isfile(ufile):
+            try:
+                urows = json.load(open(ufile))
+            except Exception:
+                urows = []
+        if not grows and not urows:
+            continue
+        boxes = {}
+        pfile = os.path.join(home, "etc", "mail", "passwd")
+        if os.path.isfile(pfile):
+            for line in open(pfile):
+                line = line.strip()
+                if not line or ":" not in line:
+                    continue
+                f = line.split(":")
+                if len(f) < 7:
+                    continue
+                if RE_ADDR.match(f[0]):
+                    boxes[f[0]] = f[5]
+        for addr in sorted(boxes):
+            mdir = boxes[addr]
+            rules = list(grows) + [r for r in urows
+                                   if isinstance(r, dict)
+                                   and "%s@%s" % (r.get("local", ""), r.get("domain", "")) == addr]
+            if not rules:
+                continue
+            lines = ["# AlphaCP managed filter (SIM)", "# mailbox: %s" % addr, "",
+                     "if error_message then finish endif", ""]
+            n = 0
+            for r in rules:
+                if not isinstance(r, dict):
+                    continue
+                field = str(r.get("field", "")).lower()
+                needle = str(r.get("needle", "")).strip()
+                action = str(r.get("action", "")).lower()
+                if field not in ("from", "subject", "to"):
+                    continue
+                if not needle or not re.match(r"^[a-zA-Z0-9 .,_@+-]+$", needle):
+                    continue
+                cond = "if " + chr(36) + 'header_%s: contains "%s" then' % (field, needle)
+                if action == "discard":
+                    lines += [cond, "  seen finish", "endif", ""]
+                    n += 1
+                elif action == "folder":
+                    folder = str(r.get("folder", "")).strip().lower()
+                    if not folder or not re.match(r"^[a-z0-9._-]+$", folder):
+                        continue
+                    lines += [cond, '  save "%s/.%s/"' % (mdir.rstrip("/"), folder),
+                              "  finish", "endif", ""]
+                    n += 1
+                    os.makedirs(os.path.join(mdir, "." + folder, "new"), exist_ok=True)
+                elif action == "forward":
+                    dest = str(r.get("dest", "")).strip().lower()
+                    if not dest or dest == addr or not RE_ADDR.match(dest):
+                        continue
+                    lines += [cond, '  deliver "%s"' % dest, "  finish", "endif", ""]
+                    n += 1
+            if n == 0:
+                continue
+            path = os.path.join(home, "etc", "mail", "filter.d", addr + ".filter")
+            write(path, NL.join(lines) + NL)
+            fmap[addr] = path
+    write(os.environ.get("ACP_MAIL_FILTERS", "/etc/exim4/alphacp-filters"),
+          "".join("%s: %s" % (a, p) + NL for a, p in sorted(fmap.items())))
+    return len(fmap)
+
+
+def track(query):
+    """Track Delivery (cPanel #19) — asli exim mainlog me is address ka safar."""
+    rep = reports(500, query)
+    if not rep.get("ok"):
+        return {"ok": False, "address": query, "source": "exim mainlog",
+                "error": rep.get("error", "mainlog nahi mila"), "hits": [], "summary": {}}
+    summary = {}
+    for e in rep["entries"]:
+        summary[e["kind"]] = summary.get(e["kind"], 0) + 1
+    return {"ok": True, "address": query, "source": "exim mainlog",
+            "file": rep.get("file"), "hits": rep["entries"],
+            "hits_total": len(rep["entries"]), "summary": summary}
+
+
 def main():
     args = sys.argv[1:]
     kind = payload = None
@@ -734,6 +880,18 @@ def main():
         if configured():
             sync = "ok (%s mailboxes)" % aggregate()["mailboxes"]
         emit("success", required_score=p.get("required_score", 5), mail_sync=sync)
+    if kind == "mail.filter":
+        u = p.get("username", "")
+        if u not in accounts():
+            emit("failed", error="account does not exist: %s" % u)
+        write(os.path.join(HOME, u, "etc", "mail", "filters"),
+              json.dumps(p.get("filters", []), sort_keys=True))
+        sync = "skipped"
+        if configured():
+            sync = "ok (%s filters)" % aggregate()["filters"]
+        emit("success", filters=len(p.get("filters", [])), mail_sync=sync)
+    if kind == "mail.track":
+        emit("success", **track(p.get("query", "")))
     if kind == "mail.server":
         a = p.get("action", "")
         if a == "setup":
@@ -846,6 +1004,7 @@ LOGEOF
 QEOF
   export ACP_MAIL_MAINLOG="$SIMROOT/var/log/exim4/mainlog"
   export SIM_MAILQ_FILE="$SIMROOT/etc/exim4/sim-mailq"
+  export ACP_MAIL_FILTERS="$SIMROOT/etc/exim4/alphacp-filters"
   export SIM_BREAK_EXIM=0
   export SIM_BREAK_DELIVERY=0
   case "$mode" in

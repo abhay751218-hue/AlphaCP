@@ -59,6 +59,7 @@ final class MailServer
     private const DEFAULT_VACATION_DIR = '/etc/exim4/alphacp-vacation';
     private const DEFAULT_SPAM_DIR = '/etc/exim4/alphacp-spam';
     private const DEFAULT_DKIM_DIR = '/usr/local/alphacp/etc/mail/dkim';
+    private const DEFAULT_EXIM_FILTERS = '/etc/exim4/alphacp-filters';
     private const DEFAULT_EXIM_OPTIONS = '/usr/local/alphacp/etc/mail/exim-options.json';
     private const DEFAULT_DOVECOT_OPTIONS = '/usr/local/alphacp/etc/mail/dovecot-options.json';
 
@@ -108,6 +109,9 @@ final class MailServer
 
     /** DKIM selector (DNS me: <selector>._domainkey.<domain>) */
     public const DKIM_SELECTOR = 'default';
+
+    /** `exim -bf` ko chhota sa test message chahiye (filter validate karne ke liye) */
+    private const FILTER_TEST_MESSAGE = "From: alphacp@localhost\nTo: filter-test@localhost\nSubject: filter test\n\nbody\n";
 
     /** DNS blacklists — sirf header + log (reject nahi: DNS issue par mail nahi gire) */
     private const DNSBL = 'zen.spamhaus.org : bl.spamcop.net';
@@ -182,6 +186,12 @@ final class MailServer
     public function dovecotConfFile(): string
     {
         return self::pathEnv('ACP_MAIL_DOVECOT_CONF', self::DEFAULT_DOVECOT_CONF);
+    }
+
+    /** Email filters lookup: `address: /path/to/exim.filter` */
+    public function filtersFile(): string
+    {
+        return self::pathEnv('ACP_MAIL_FILTERS', self::DEFAULT_EXIM_FILTERS);
     }
 
     public function eximOptionsFile(): string
@@ -345,6 +355,7 @@ final class MailServer
             'domains'     => $agg['domains'],
             'mailboxes'   => $agg['mailboxes'],
             'aliases'     => $agg['aliases'],
+            'filters'     => $agg['filters'],
             'exim_config' => $status['exim_config'] ?? null,
             'dovecot_config' => $status['dovecot_config'] ?? null,
             'dovecot_userdb' => $userdb,
@@ -664,6 +675,7 @@ final class MailServer
         $domains = [];
         $vacation = [];
         $spam = [];
+        $filters = [];
 
         foreach (glob($root . '/*') ?: [] as $dir) {
             if (!is_dir($dir) || is_link($dir)) {
@@ -675,6 +687,7 @@ final class MailServer
             }
             $home = $dir;
             $ownBoxes = [];
+            $boxInfo = [];
 
             foreach ($this->readLines($home . '/etc/mail/passwd') as $line) {
                 $fields = explode(':', $line);
@@ -699,6 +712,7 @@ final class MailServer
                 $recipients[$addr] = $addr . ': ' . $maildir . ' ' . $uid . ' ' . $gid;
                 $domains[substr($addr, $at + 1)] = true;
                 $ownBoxes[$addr] = true;
+                $boxInfo[$addr] = ['maildir' => $maildir, 'uid' => $uid, 'gid' => $gid];
             }
 
             foreach ($this->readLines($home . '/etc/mail/aliases') as $line) {
@@ -773,6 +787,49 @@ final class MailServer
                     $spam[$addr] = $spamCfg;
                 }
             }
+
+            // ---- email filters (cPanel #20 account-wide + #21 per-mailbox) ----
+            // Panel ke JSON se ASLI Exim filter file; `exim -bf` se validate.
+            $globalRows = $this->readJsonList($home . '/etc/mail/global-filters.json');
+            $userRows = $this->readJsonList($home . '/etc/mail/filters');
+            if ($globalRows !== [] || $userRows !== []) {
+                $perBox = [];
+                foreach ($userRows as $row) {
+                    if (!is_array($row)) {
+                        continue;
+                    }
+                    $addr = strtolower(trim((string) ($row['local'] ?? '') . '@' . (string) ($row['domain'] ?? '')));
+                    if (isset($boxInfo[$addr])) {
+                        $perBox[$addr][] = $row;
+                    }
+                }
+                foreach ($boxInfo as $addr => $info) {
+                    $rows = array_merge($globalRows, $perBox[$addr] ?? []);
+                    $maildir = (string) $info['maildir'];
+                    $uid = (int) $info['uid'];
+                    $gid = (int) $info['gid'];
+                    $body = $this->renderEximFilter((string) $addr, $maildir, $globalRows, $perBox[$addr] ?? []);
+                    if ($body === '') {
+                        continue;
+                    }
+                    // folder action wale rules ke liye Maildir subfolder pehle se
+                    // bana do — IMAP me turant dikhe, aur `exim -bf` bhi mile.
+                    foreach ($rows as $row) {
+                        if (!is_array($row) || (string) ($row['action'] ?? '') !== 'folder') {
+                            continue;
+                        }
+                        $folder = strtolower(trim((string) ($row['folder'] ?? '')));
+                        if ($folder !== '' && preg_match('/^[a-z0-9._-]+$/', $folder) === 1) {
+                            $this->ensureMaildirFolder($maildir, $folder, $uid, $gid);
+                        }
+                    }
+                    $path = $home . '/etc/mail/filter.d/' . $addr . '.filter';
+                    if (!$this->writeFilterFile($path, $body, (string) $addr, $uid, $gid)) {
+                        continue;   // galat filter = delivery chalti rahegi, filter nahi lagega
+                    }
+                    $filters[(string) $addr] = $addr . ': ' . $path;
+                }
+            }
         }
 
         ksort($users);
@@ -781,6 +838,7 @@ final class MailServer
         ksort($catchalls);
         ksort($vacation);
         ksort($spam);
+        ksort($filters);
         $domainList = array_keys($domains);
         sort($domainList);
 
@@ -791,6 +849,7 @@ final class MailServer
         $this->writeManaged($this->domainsFile(), $domainList === [] ? '' : implode("\n", $domainList) . "\n", 0644);
         $this->writeVacation($vacation);
         $this->writeSpamLists($spam);
+        $this->writeManaged($this->filtersFile(), $filters === [] ? '' : implode("\n", $filters) . "\n", 0644);
         $fixed = $this->repairMaildirs($recipients);
 
         return [
@@ -800,6 +859,7 @@ final class MailServer
             'catchalls'      => count($catchalls),
             'responders'     => count($vacation),
             'spam_lists'     => count($spam),
+            'filters'        => count($filters),
             'maildirs_fixed' => $fixed,
         ];
     }
@@ -1092,6 +1152,225 @@ final class MailServer
         }
 
         return $out;
+    }
+
+    // ------------------------------------------------------- email filters ----
+
+    /**
+     * Email Filters — cPanel #21 (per-mailbox) + #20 (account-wide).
+     *
+     * Panel JSON se **ASLI Exim filter file** banti hai (Exim filter language),
+     * jise `exim -bf` se validate karne ke baad hi install kiya jata hai.
+     * Delivery se pehle router `alphacp_userfilter` ise chalata hai, to:
+     *   save    -> mail sidhi Maildir folder me (IMAP me dikhta hai)
+     *   deliver -> doosre address par forward
+     *   seen finish -> discard (kabhi inbox me nahi aati)
+     *
+     * Fail-closed: `exim -bf` galat bole to filter install hota hi nahi
+     * (mail delivery chalti rahegi, sirf filter nahi lagega).
+     *
+     * @param  list<array<string, mixed>> $globalRows  account-wide rules (pehle lagu)
+     * @param  list<array<string, mixed>> $userRows    is mailbox ke apne rules
+     * @return string  khali = koi chalne layak rule nahi (file hi nahi banani)
+     */
+    public function renderEximFilter(string $addr, string $maildir, array $globalRows, array $userRows): string
+    {
+        $out = [
+            '# AlphaCP managed filter — haath se edit mat karo',
+            '# mailbox: ' . $addr,
+            '# banaya gaya: panel ke Email Filters (#20 account-wide + #21 per-mailbox) se',
+            '# har mail sync par dobara likha jata hai.',
+            '',
+            'if error_message then finish endif',
+            '',
+        ];
+        $rules = 0;
+        foreach ([$globalRows, $userRows] as $group) {
+            foreach ($group as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                $lines = $this->filterRule($addr, $maildir, $row);
+                if ($lines === []) {
+                    continue;
+                }
+                foreach ($lines as $line) {
+                    $out[] = $line;
+                }
+                $out[] = '';
+                $rules++;
+            }
+        }
+        if ($rules === 0) {
+            return '';
+        }
+
+        return implode("\n", $out) . "\n";
+    }
+
+    /**
+     * Ek filter rule se Exim filter language ka `if … then … endif` block.
+     *
+     * @param  array<string, mixed> $row
+     * @return list<string>  khali = rule chalne layak nahi (chhod do)
+     */
+    private function filterRule(string $addr, string $maildir, array $row): array
+    {
+        $field = strtolower(trim((string) ($row['field'] ?? '')));
+        $needle = trim((string) ($row['needle'] ?? ''));
+        $action = strtolower(trim((string) ($row['action'] ?? '')));
+        if (!in_array($field, ['from', 'subject', 'to'], true)) {
+            return [];
+        }
+        // needle me quote/khaas character nahi — Exim filter string me surakshit
+        if ($needle === '' || preg_match('/^[a-zA-Z0-9 .,_@+-]+$/', $needle) !== 1) {
+            return [];
+        }
+        $cond = 'if $header_' . $field . ': contains "' . $needle . '" then';
+
+        if ($action === 'discard') {
+            return [$cond, '  seen finish', 'endif'];
+        }
+        if ($action === 'folder') {
+            $folder = strtolower(trim((string) ($row['folder'] ?? '')));
+            if ($folder === '' || preg_match('/^[a-z0-9._-]+$/', $folder) !== 1) {
+                return [];
+            }
+            // Maildir++ layout: .Folder/ — Dovecot IMAP me "Folder" dikhta hai
+            return [$cond, '  save "' . rtrim($maildir, '/') . '/.' . $folder . '/"', '  finish', 'endif'];
+        }
+        if ($action === 'forward') {
+            $dest = strtolower(trim((string) ($row['dest'] ?? '')));
+            if ($dest === '' || $dest === $addr || preg_match('/^[a-z0-9._-]+@[a-z0-9.-]+$/', $dest) !== 1) {
+                return [];   // khud ko forward = loop
+            }
+
+            return [$cond, '  deliver "' . $dest . '"', '  finish', 'endif'];
+        }
+
+        return [];
+    }
+
+    /**
+     * Filter file likho — par sirf tab jab `exim -bf` use VALID bole.
+     * Galat filter se poora mail server nahi rukna chahiye: reject ho to
+     * purani file wapas / naye filter ke bina delivery chalti rahe.
+     */
+    private function writeFilterFile(string $path, string $body, string $addr, int $uid, int $gid): bool
+    {
+        $dir = dirname($path);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        $tmp = $dir . '/.acp-filter-' . bin2hex(random_bytes(4)) . '.tmp';
+        $this->tempFiles[] = $tmp;
+        if (@file_put_contents($tmp, $body) === false) {
+            return false;
+        }
+        @chmod($tmp, 0640);
+        if ($uid > 0) {
+            @chown($tmp, $uid);
+            if ($gid > 0) {
+                @chgrp($tmp, $gid);
+            }
+        }
+        // Exim khud bole: `exim -bf <filter>` (galat syntax = non-zero exit)
+        $probe = $this->cmd->run([$this->eximBin(), '-bf', $tmp, '-f', $addr], self::CMD_TIMEOUT, self::FILTER_TEST_MESSAGE);
+        if (!$probe->ok()) {
+            @unlink($tmp);
+            $this->log->warning(
+                'email filter reject (exim -bf): ' . $addr . ' -> ' . self::oneLine($probe->stderr . ' ' . $probe->stdout)
+            );
+
+            return false;
+        }
+        if (!@rename($tmp, $path)) {
+            @unlink($tmp);
+
+            return false;
+        }
+        @chmod($path, 0640);
+
+        return true;
+    }
+
+    /** Maildir subfolder pehle se bana do — IMAP me turant dikhe. */
+    private function ensureMaildirFolder(string $maildir, string $folder, int $uid, int $gid): void
+    {
+        $target = rtrim($maildir, '/') . '/.' . $folder;
+        foreach (['', '/cur', '/new', '/tmp'] as $leaf) {
+            $dir = $target . $leaf;
+            if (is_dir($dir)) {
+                continue;
+            }
+            @mkdir($dir, 0700, true);
+        }
+        if ($uid > 0) {
+            @chown($target, $uid);
+            if ($gid > 0) {
+                @chgrp($target, $gid);
+            }
+            foreach (['/cur', '/new', '/tmp'] as $leaf) {
+                @chown($target . $leaf, $uid);
+                if ($gid > 0) {
+                    @chgrp($target . $leaf, $gid);
+                }
+            }
+        }
+    }
+
+    /**
+     * Track Delivery (cPanel #19) — asli exim mainlog me is address ka safar.
+     * Pehle ye sirf JSON me dhoondhta tha; ab log khud jawab deta hai.
+     *
+     * @return array<string, mixed>
+     */
+    public function track(string $address, int $limit = 100): array
+    {
+        $addr = strtolower(trim($address));
+        if (preg_match('/^[a-z0-9._%+-]+@[a-z0-9.-]+$/', $addr) !== 1) {
+            throw new TaskRejectedException("track: '{$address}' sahi email address nahi hai");
+        }
+        $limit = max(1, min(500, $limit));
+        $report = $this->reports($limit * 10, $addr);
+        if (($report['ok'] ?? false) !== true) {
+            return [
+                'ok'      => false,
+                'address' => $addr,
+                'source'  => 'exim mainlog',
+                'error'   => (string) ($report['error'] ?? 'exim mainlog nahi mila'),
+                'hits'    => [],
+                'summary' => [],
+            ];
+        }
+        $hits = [];
+        $summary = [];
+        foreach ((array) ($report['entries'] ?? []) as $entry) {
+            $kind = (string) ($entry['kind'] ?? '');
+            $hits[] = [
+                'id'      => (string) ($entry['id'] ?? ''),
+                'time'    => (string) ($entry['time'] ?? ''),
+                'kind'    => $kind,
+                'address' => $entry['address'] ?? null,
+                'text'    => (string) ($entry['text'] ?? ''),
+            ];
+            $summary[$kind] = ($summary[$kind] ?? 0) + 1;
+        }
+
+        return [
+            'ok'         => true,
+            'address'    => $addr,
+            'source'     => 'exim mainlog',
+            'file'       => $report['file'] ?? null,
+            'hits'       => array_slice($hits, -$limit),
+            'hits_total' => count($hits),
+            'summary'    => $summary,
+        ];
+    }
+
+    private function eximBin(): string
+    {
+        return self::bin('ACP_MAIL_EXIM', self::EXIM, self::EXIM_PATHS);
     }
 
     // ---------------------------------------- queue / reports / configuration ----
@@ -1824,6 +2103,7 @@ final class MailServer
             : '';
         $opts = $this->eximOptions();
         $spamLimit = (string) $opts['spam_score_limit'];
+        $filtersFile = $this->filtersFile();
         $spamAcl = $caps['content_scanning'] && $caps['spamd']
             ? "  deny condition = \${if >{\$spam_score_int}{{$spamLimit}}{yes}{no}}\n"
               . "       message = This message scored \$spam_score spam points (limit 8.0)\n"
@@ -1908,7 +2188,27 @@ final class MailServer
           retry_use_local_part
           data = \${lookup{\$local_part@\$domain}lsearch{{$aliases}}}
 
-        # 2) autoresponder (vacation) — unseen: mail delivery aage bhi hoti hai
+        # 2) email filters (cPanel #20 account-wide + #21 per-mailbox)
+        # Panel ke JSON se ASLI Exim filter file banta hai (`exim -bf` se validate);
+        # delivery se pehle yahi chalta hai — save (folder) / deliver (forward) /
+        # seen finish (discard). Kharaab filter kabhi install hi nahi hota.
+        alphacp_userfilter:
+          driver = redirect
+          domains = +local_domains
+          allow_filter
+          allow_defer
+          allow_fail
+          file = \${lookup{\$local_part@\$domain}lsearch{{$filtersFile}}}
+          directory_transport = address_directory
+          file_transport = address_file
+          pipe_transport = address_pipe
+          user = \${extract{2}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}{\$value}{}}}
+          group = \${extract{3}{ }{\${lookup{\$local_part@\$domain}lsearch{{$recipients}}}{\$value}{}}}
+          no_verify
+          no_expn
+          check_ancestor
+
+        # 3) autoresponder (vacation) — unseen: mail delivery aage bhi hoti hai
         alphacp_autoreply:
           driver = accept
           domains = +local_domains
@@ -1922,7 +2222,7 @@ final class MailServer
           no_expn
           no_verify
 
-        # 3) asli mailbox -> Maildir (uid/gid mailbox ke hisaab se)
+        # 4) asli mailbox -> Maildir (uid/gid mailbox ke hisaab se)
         alphacp_mailbox:
           driver = accept
           domains = +local_domains
@@ -1930,7 +2230,7 @@ final class MailServer
           transport = alphacp_maildir
           no_more
 
-        # 4) catch-all (*@domain) — mailbox na mile to yahi aakhri rasta
+        # 5) catch-all (*@domain) — mailbox na mile to yahi aakhri rasta
         alphacp_catchall:
           driver = redirect
           domains = +local_domains
@@ -1939,7 +2239,7 @@ final class MailServer
           qualify_preserve_domain
           data = \${lookup{*@\$domain}lsearch{{$catchall}}}
 
-        # 5) server ke apne system users (root, ubuntu, ...) — /etc/aliases bhi
+        # 6) server ke apne system users (root, ubuntu, ...) — /etc/aliases bhi
         system_aliases:
           driver = redirect
           allow_fail
@@ -1954,7 +2254,7 @@ final class MailServer
           transport = mail_spool
           cannot_route_message = Unknown user
 
-        # 6) bahar ki duniya
+        # 7) bahar ki duniya
         dnslookup:
           driver = dnslookup
           domains = ! +local_domains
@@ -2010,6 +2310,19 @@ final class MailServer
           user = \$local_part
           group = mail
           mode = 0600
+
+        # Filter ke `save` command ke liye (redirect router ka directory_transport).
+        # maildir_format + create_directory: .Folder/ khud ban jata hai, aur Dovecot
+        # use IMAP me "Folder" ke naam se dikhata hai (Maildir++ layout).
+        address_directory:
+          driver = appendfile
+          maildir_format
+          create_directory
+          delivery_date_add
+          envelope_to_add
+          return_path_add
+          mode = 0700
+          mode_fail_narrower = false
 
         address_file:
           driver = appendfile

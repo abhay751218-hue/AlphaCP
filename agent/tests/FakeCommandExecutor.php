@@ -96,6 +96,10 @@ final class FakeCommandExecutor implements CommandExecutor
     public string $eximBpOutput = "The mail queue is empty.\n";
     /** queue ke mutation (`-M` / `-Mrm` / `-Mf` / `-Mt`) fail karein */
     public bool $eximQueueMutationFails = false;
+    /** `exim -bf <filter>` galat bole (kharaab filter = install nahi hona chahiye) */
+    public bool $eximFilterFails = false;
+    /** @var list<list<string>> `exim -bf` ke saare argv (filter validation proof) */
+    public array $eximFilterArgvs = [];
     /** @var list<list<string>> queue/delivery ke liye chale hue exim argv */
     public array $eximQueueArgvs = [];
     /** `doveadm user <address>` ka output (khali = aisa mailbox nahi) */
@@ -702,6 +706,14 @@ final class FakeCommandExecutor implements CommandExecutor
         }
         if (($argv[1] ?? '') === '-bp') {
             return new CommandResult($argv, 0, $this->eximBpOutput, '', 1);
+        }
+        if (($argv[1] ?? '') === '-bf') {
+            $this->eximFilterArgvs[] = $argv;
+            if ($this->eximFilterFails) {
+                return new CommandResult($argv, 1, '', 'exim: filter error: unknown filter command', 1);
+            }
+
+            return new CommandResult($argv, 0, '', '', 1);
         }
         // queue par action: -M (deliver) / -Mrm (remove) / -Mf (freeze) / -Mt (thaw) / -qf (flush)
         if (in_array((string) ($argv[1] ?? ''), ['-M', '-Mrm', '-Mf', '-Mt', '-qf'], true)) {
