@@ -14,40 +14,43 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP) — 5 Oct 2026
 
-> Aapne 0.76.0 chalaya (36 pass / 5 fail) — **0.76.1 + 0.76.2 me sabke fix hain**.
-> Niche wala **ek hi command** chalao: 0.76.2 = 0.76.1 (maildir + dovecot probe) +
-> deliverability fix + mail_spool fix. 0.75.0/0.76.0 supersede.
+> Aapne **0.76.2** chalaya → **43 pass / 1 fail / 0 skip** · **`ASLI MAIL DELIVERY:VERIFIED`** 🎉
+> (asli mail Maildir me pahunchi, catch-all redirect, autoresponder, spam list,
+> `dig TXT` SPF + `_dmarc` + `default._domainkey` — sab green).
+> **Sirf ek fail bacha tha: `doveadm user`** — uski asli wajah mil gayi aur fix ho gaya.
+
+### ❌ 0.76.2 ka akela fail — kya tha
+```
+auth-worker: Error: passwd-file scheme=BLF-CRYPT /etc/dovecot/alphacp-users:
+             open(scheme=BLF-CRYPT /etc/dovecot/alphacp-users) failed: No such file or directory
+```
+Dovecot 2.3 ke **official docs** me likha hai: *"**scheme=** … **This is available only for passdb.**"*
+Hamara rendered `userdb` block bhi `args = scheme=BLF-CRYPT /etc/dovecot/alphacp-users` likh raha tha →
+Dovecot us **poore string ko filename** samajh baitha → userdb dead → `Auth USER lookup failed`.
+**Fix:** `userdb` me se `scheme=` hata diya (hash me `{BLF-CRYPT}` prefix pehle se hai, to scheme ki zarurat hi nahi).
+`passdb` me `scheme=` rehne diya — wahan ye sahi hai.
 
 **Ek hi command (updater + verification):**
 ```bash
-sudo alphacp-sync get 2f7aa63724fc11f84d0fc1b8582ab5d81adbd32b installer/panel-update.sh /tmp/acp-panel-update-0.76.2.sh a4f051179a2a8ea9f196dba1b9125a9ef9508486b4754d32563a9a82821b87d9 && sudo bash /tmp/acp-panel-update-0.76.2.sh && sudo alphacp-sync get e2ba1f662049dda3641ae37162219fbe86fdee62 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 89146a5818b005906908066777556391486c86ca8de43f1e492052b2d8a63cbc && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get 68e428eeaff8280d42bcf7f2426c7c09e5b73093 installer/panel-update.sh /tmp/acp-panel-update-0.76.3.sh 250e9a2a13bd147c65b49aa3ed38cbf977a18fc8c0c9fb238d6a4be21695d9ff && sudo bash /tmp/acp-panel-update-0.76.3.sh && sudo alphacp-sync get 7ed48684c6fb1f576976251e59e69471d916739d tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 89146a5818b005906908066777556391486c86ca8de43f1e492052b2d8a63cbc && sudo bash /tmp/s7-mail-check.sh
 ```
 
-### 1) panel-update 0.76.2
+### 1) panel-update 0.76.3
 ```bash
-sudo alphacp-sync get 2f7aa63724fc11f84d0fc1b8582ab5d81adbd32b installer/panel-update.sh /tmp/acp-panel-update-0.76.2.sh a4f051179a2a8ea9f196dba1b9125a9ef9508486b4754d32563a9a82821b87d9 && sudo bash /tmp/acp-panel-update-0.76.2.sh
+sudo alphacp-sync get 68e428eeaff8280d42bcf7f2426c7c09e5b73093 installer/panel-update.sh /tmp/acp-panel-update-0.76.3.sh 250e9a2a13bd147c65b49aa3ed38cbf977a18fc8c0c9fb238d6a4be21695d9ff && sudo bash /tmp/acp-panel-update-0.76.3.sh
 ```
-- Updater SHA-256: `a4f051179a2a8ea9f196dba1b9125a9ef9508486b4754d32563a9a82821b87d9` · banner **`updater 0.76.2`**.
-- **Aapke 5 fail ke fix:**
-  1. *Maildir parent root:root 0700* → har sync par self-healing repair (uid/gid + 0700).
-     Ye ek hi wajah thi **dono** bade fail ki — mail delivery (exim `stat()` denied) aur
-     `doveadm user` (Dovecot ko home accessible chahiye).
-  2. *Exim root delivery* → `deliver_drop_privilege = false` + (zarurat par) systemd drop-in `User=root`.
-  3. *`doveadm user` fail* → setup ke baad khud probe; file na padh paye to 0644 relax; fail = report me `dovecot_userdb.ok=false` (chhupaya nahi).
-  4. *catch-all FAIL* → verify script ab poora redirect chain dekhta hai (pehle galat fail ho raha tha; catch-all redirect ke baad delivery mailbox par hoti hai).
-  5. *SPF/DMARC/DKIM + dig fail* → deliverability ab `deliverability.json` ke bina bhi chalta hai (mailboxes ke domains se).
-- Bonus: `root@ip-...` ki cron mail ab `/var/mail/root` me jayegi (`mail_spool`) — queue me nahi atkegi.
+- Updater SHA-256: `250e9a2a13bd147c65b49aa3ed38cbf977a18fc8c0c9fb238d6a4be21695d9ff` · banner **`updater 0.76.3`**.
+- **Fix:** Dovecot `userdb` args se `scheme=` hataya → `doveadm user <addr>` ab chalega.
+- Setup ke baad khud probe chalta hai: `setup ka dovecot userdb probe pass (Dovecot ne mailbox dhoondh li)`.
 
 ### 2) Verification
 ```bash
-sudo alphacp-sync get e2ba1f662049dda3641ae37162219fbe86fdee62 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 89146a5818b005906908066777556391486c86ca8de43f1e492052b2d8a63cbc && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get 7ed48684c6fb1f576976251e59e69471d916739d tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh 89146a5818b005906908066777556391486c86ca8de43f1e492052b2d8a63cbc && sudo bash /tmp/s7-mail-check.sh
 ```
 - Verifier SHA-256: `89146a5818b005906908066777556391486c86ca8de43f1e492052b2d8a63cbc`.
-- Expected: **`ASLI MAIL PAHUNCH GAYI`** · **`doveadm user` ok** · `setup ka dovecot userdb probe pass` ·
-  `exim -bt unknown@ → alphacp_catchall` · `vacation file bana` ·
-  `dig TXT = v=spf1 a mx -all` · `dig TXT _dmarc = v=DMARC1…` · `dig TXT default._domainkey = v=DKIM1…` ·
-  **`ASLI MAIL DELIVERY:VERIFIED`**.
-- Kuch bhi fail ho to poora dump `${ACP_HOME}/verify-reports/s7-diag.txt` me likha jata hai —
+- Expected: **44 pass / 0 fail** · `doveadm user info@acp-mail-check.test` **ok** ·
+  `ASLI MAIL PAHUNCH GAYI` · `ASLI MAIL DELIVERY:VERIFIED` · SPF/DMARC/DKIM `dig TXT` green.
+- Kuch bhi fail ho to poora dump `ACP_HOME/verify-reports/s7-diag.txt` me likha jata hai —
   wo hourly sync se main branch par aa jata hai, **main khud padh kar agla fix dunga**.
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
