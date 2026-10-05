@@ -29,6 +29,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `tools/verify/s10-backup-destination-check.sh` live check (**25** checks).
 
 ### Fixed
+- **S7 #20/#21 — Exim user-filter permission fix candidate (agent 0.81.1, 5 Oct)** — live diagnostics
+  showed Exim 4.97 opening the per-mailbox filter as the mailbox uid/gid and deferring with `Permission denied`;
+  `exim -bf` as root had only validated syntax. The agent now checks `~/etc` and grants the mailbox identity
+  search-only traversal (account-group execute-only when possible; execute-only fallback, no read/list),
+  with regression coverage for a root-owned `0750` parent. Release 0.81.1 is pushed; live deployment and
+  post-update S7 verification are still pending, so #20/#21 are not marked complete.
+
 - **S10 remote pull: `host key MISMATCH` har baar (5 Oct, live server par 14 pass / 4 fail)** —
   asli server ek saath 3 SSH keys (ed25519 + ecdsa + rsa) advertise karta hai aur `ssh-keyscan` unka
   **order har call par badal deta hai**. Agent sirf *pehli line* ka fingerprint leta tha, isliye

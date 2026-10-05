@@ -12,68 +12,65 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ NEXT STEP — S7 mail filter live diagnosis (0.81.0 already deployed)
+## ✅ NEXT STEP — S7 Exim user-filter permission fix (0.81.1)
 
-> **Aapka live output confirms:** updater 0.81.0 completed (panel 0.74.0, agent 0.81.0). The mail check
-> returned **61 pass / 1 fail**; the failing case is per-mailbox folder filtering (`.filtered/new` stayed 0).
-> You report the same failure after 0.80.0, so this must be resolved before #20/#21 are marked green.
-> Base mail-to-inbox delivery and the real Exim `mail.track` check passed. The old verifier's
-> `ASLI MAIL DELIVERY:VERIFIED` line meant only that base inbox test passed—not that all S7 checks passed;
-> the updated verifier makes that distinction explicit and captures Exim's verbose delivery evidence.
+> **Live diagnosis is conclusive:** the same folder-filter failure was present after 0.80.0 and 0.81.0.
+> The revised verifier then returned **60 pass / 2 fail**. Exim 4.97's `-v` output says it cannot open
+> `/home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter`: `Permission denied
+> (euid=1001 egid=1001)`. `exim -bf` as root accepts the rule, but delivery runs as the mailbox uid.
+> The filter and `.filtered/` Maildir exist; Exim defers both folder and discard test messages because
+> it cannot traverse the root-owned `~/etc` parent. This is the actual permission failure—not path taint.
 
-**Do not rerun the 0.81 updater.** The next command is only the revised, commit-pinned mail verifier.
-Its exact file hash was calculated from the pushed commit below.
+The 0.81.1 agent fix ensures the mailbox identity can **search** through `~/etc` (account-group
+execute-only when possible; execute-only fallback otherwise—no read/list permission), then verifies the
+mode. It includes a regression for the root-owned `0750` parent. **It is pushed but is not yet deployed
+or live-verified.** #20/#21 stay 🟡 until the new live mail verifier returns zero failures.
 
-### 0.81.0 release verification (local)
-- SpamAssassin active-path tested with real Exim + protocol-compatible fake spamd: score 9.5 →
-  `X-Spam-Score` + SMTP 550; score 4.2 → header + delivery; spamd down → fail-open delivery.
-- Greylistd official `--grey` socket response tested with real Exim: `true` → SMTP 451, `false` → accepted,
-  socket down → fail-open, null sender → bypass. Local Exim folder-filter tests also pass.
-- Agent suite **207/0**, S7 mail simulation **7/0**, updater simulation **12/0**, S9 BIND simulation **3/0**;
-  real Exim folder/discard tests pass with `-v` and assert the actual router/transport result.
-  `panel-tests.sh` was not run because panel code was untouched.
+### 1) Deploy the pinned 0.81.1 updater (no panel bundle change)
+```bash
+sudo alphacp-sync get 68e64ce4b578c13ad929adb0bab865f8317f3a6f installer/panel-update.sh /tmp/acp-panel-update-0.81.1.sh 656db4911e1a72f00569f1d83544b34771123dac763d44b338703fc3dbb63c13 && sudo bash /tmp/acp-panel-update-0.81.1.sh
+```
+- Pin check: **10 pass / 0 fail** — pushed commit, updater SHA, 0.81.1 banner, panel bundle and agent bundle pins all match.
+- Agent bundle: commit `33660a15b70376385579bdbb251c5adf2e991e1e`, SHA-256
+  `b0614835d4790a68ce328c93e74fdb3d21d78b64eeb51641b7b64273e582ed5f`.
+- Panel stays **0.74.0**; this updater ships agent **0.81.1**. SpamAssassin/greylistd remain opt-in/off.
+  Do not rerun 0.80.0 or 0.81.0.
 
-### 1) Revised mail verifier — #19/#20/#21 diagnosis; no panel update
+### 2) After `UPDATE COMPLETE`, rerun the pinned S7 live verifier
 ```bash
 sudo alphacp-sync get 31726394519c03332e29715c3ed37d1b4cc73d41 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh eed20adcbc77550d2407f81ed82a6373b9b00bc6a09ce220139915f25d4b53fc && sudo bash /tmp/s7-mail-check.sh
 ```
-- Verifier commit: `31726394519c03332e29715c3ed37d1b4cc73d41` · SHA-256:
-  `eed20adcbc77550d2407f81ed82a6373b9b00bc6a09ce220139915f25d4b53fc`. It captures Exim `-v` output,
-  exit code, `-bf` result for the exact synthetic subject, transport config, Maildir ownership, queue,
-  and only the new mainlog lines. It also requires proof that folder-save and discard actions actually ran.
-- Temporary test account cleanup remains automatic. Failure details go to
-  `${ACP_HOME}/verify-reports/s7-diag.txt`; summary goes to `s7-mail-check.txt` for hourly sync.
+- It captures the exact Exim `-v` route/status and checks folder-save, discard, inbox counts, queue and new mainlog lines.
+- Reports: `${ACP_HOME}/verify-reports/s7-mail-check.txt` and `s7-diag.txt` (hourly sync carries them to GitHub).
+- If either filter check still fails, paste the full `FILTER delivery diagnostics` section; do not mark #20/#21 complete.
 
-### 2) #147 — SpamAssassin/greylistd status (read-only; features enable nahi hote; next after mail check)
+### Local checks for this release
+- Pinned updater guard **10/0**, S7 mail SIM **7/0**, S7 updater simulation **12/0**, updater shell syntax,
+  and updater/agent artifact SHA checks passed. Agent suite via PHP-WASM: **207 pass / 0 fail** (pre-existing
+  non-fatal PHP warnings were printed).
+- The real-Exim regression was **skipped** here because the custom Exim test binary is unavailable.
+  The commit adds coverage for the root-owned `0750` parent; the post-update live verifier is still required.
+
+### Next after S7 mail passes — #147 status (read-only)
 ```bash
 sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 tools/verify/s7-spam-check.sh /tmp/s7-spam-check.sh e775b853066cb4a966e359bda54a9f0026faa91de48d7d7bcaac16783035eb86 && sudo bash /tmp/s7-spam-check.sh
 ```
-- Verifier SHA-256: `e775b853066cb4a966e359bda54a9f0026faa91de48d7d7bcaac16783035eb86`.
-- Expected: **8 pass / 0 fail / 0 skip** + `S7 SPAMASSASSIN + GREYLIST:STATUS-VERIFIED` (Ubuntu packages install hue hon).
-- Ye check settings ko nahi badalta; SpamAssassin aur greylisting off hi rehte hain. #147 enable karna ho to
-  `docs/modules/email.md` me opt-in commands hain. Greylisting first-time external mail ko 451 dekar delay karegi.
-- Report `${ACP_HOME}/verify-reports/s7-spam-check.txt` me milegi.
+- Expected by that verifier: **8 pass / 0 fail / 0 skip**. It does not enable SpamAssassin or greylisting.
 
-### Previous step — updater 0.81.0 (completed on server; do not rerun)
-```bash
-sudo alphacp-sync get f15c4b03adc6f3e242a6ee00871cd38997cb1142 installer/panel-update.sh /tmp/acp-panel-update-0.81.0.sh afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c && sudo bash /tmp/acp-panel-update-0.81.0.sh
-```
-- **Live result:** `UPDATE COMPLETE`; panel **0.74.0**, agent **0.81.0**; `alphacp-sync` pushed server snapshot.
-- Updater SHA-256: `afb4a7b207549e2f02728360e8d9cb6d19e1b5a8034203f8c00ab0ddbe4d602c` · banner **`updater 0.81.0`** · `Panel bundle: 0.74.0 · agent: 0.81.0`.
-- Agent tar pinned to commit `fb7de77bf2dea57563fb1a018f2c704501bee082`, SHA-256
-  `55f3cc0cc2a69df4a1015464f1677c2347de67703d60005ad2ea545acbf53c73`.
-- Updater mail setup `exim4 -bV` + real `exim -bt` smoke check ke baad hi services restart karta hai.
-  SpamAssassin/greylistd **start nahi honge** jab tak unke options explicitly enable na hon.
+### Previous live release — 0.81.0 (historical; do not rerun)
+- Live result after the update was `UPDATE COMPLETE`, panel **0.74.0**, agent **0.81.0**.
+- Its old verifier showed **61 pass / 1 fail**; you confirmed the same failure on 0.80.0.
+  The revised verifier exposed the underlying EACCES and split it into two failed filter actions.
+- The earlier local 0.81.0 checks were agent suite **207/0**, S7 mail SIM **7/0**, updater SIM **12/0**,
+  S9 BIND SIM **3/0**, and real Exim **15/0/1 skip** (SpamAssassin ACL unavailable in that Exim build).
 
 ### Roadmap / kitna baaki hai
-- Checklist abhi **52 ✅ / 56 🟡 / 92 ⏳ / 9 🔵** (209 rows; `38b` included) hai; project tab complete jab required rows 100% ✅.
-- Live: #19 mail tracking passed; #20 global filters unverified; #21 folder-save failed (same failure reported after 0.80.0 and 0.81.0); #147 read-only status verifier abhi pending.
+- Checklist abhi **50 ✅ / 56 🟡 / 92 ⏳ / 10 🔵** (208 rows) hai; project tab complete jab required rows 100% ✅.
+- Live: #19 mail tracking passed; #20 global filters and #21 folder/discard filters remain unverified after the permission fix; #147 read-only status verifier pending.
 - S7 me abhi build karna: #18 Mailing Lists, #23/#148 Address Importer, #25 Encryption, #26 BoxTrapper,
   #27 Calendar & Contacts, #29 Roundcube Webmail, #145 server deliverability. #147 ka code complete hai; live verify baaki.
 - Phir S10 ke bache hue mail import + cpmove DNS-zone import; uske baad S11 Metrics → S12 Billing →
   S13 Security Center (18) → S14 app installer/WP Toolkit → S15 reseller, multi-server, DNS cluster.
-- **Correction:** 0.80.0 was live-run; its mail verifier also returned **61 pass / 1 fail** on folder filtering.
-  The 0.81.0 update did not clear that failure. Do not mark #20/#21 complete until the revised live test passes.
 
 ## ✅ Latest deployment (5 Oct 2026; already completed)
 
@@ -290,12 +287,12 @@ Har naye feature/fix ke saath yahan ek nayi row aayegi:
 ### ❌ 0.79.0 — MAT CHALAO (config reject -> mail nonlocal)
 `… get 4ee552a3135233d9614afe234733db1fc76c6b62 installer/panel-update.sh … bb749fc072c90aad…`
 — isme `allow_filter` se `user` hata diya gaya tha, jisse `exim -bV` hi reject ho gaya.
-**0.81.0 chalao** (upar NEXT STEP; 0.80 mail fix bhi isme hai). 0.78.0/0.79.0 ab sirf history me hain.
+**0.81.1 chalao** (upar NEXT STEP; 0.81.1 me live filter permission fix hai). 0.78.0/0.79.0 ab sirf history me hain.
 
 ### ❌ 0.78.0 — MAT CHALAO (mail delivery todtata hai)
 `alphacp-sync get 222a113863cd3e1426cb816f76f5e5aca693e43a installer/panel-update.sh /tmp/acp-panel-update-0.78.0.sh 53b775235f1e9531a26d26f3e06c5a48649173865b9dd3f0da2ed7955de92aa8`
 — iske filters ne live server par **har address defer** kar diya (`Failed to find user "}"`).
-**0.81.0 chalao** (upar NEXT STEP), isme 0.78/0.79/0.80 ke mail fixes hain. 0.78.0 ab sirf history me hai.
+**0.81.1 chalao** (upar NEXT STEP), isme 0.78/0.79/0.80 mail fixes aur userfilter permission fix hai. 0.78.0 ab sirf history me hai.
 
 | Purani command | Kyun |
 |---|---|
