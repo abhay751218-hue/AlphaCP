@@ -59,6 +59,47 @@ final class MailServer
     private const DEFAULT_VACATION_DIR = '/etc/exim4/alphacp-vacation';
     private const DEFAULT_SPAM_DIR = '/etc/exim4/alphacp-spam';
     private const DEFAULT_DKIM_DIR = '/usr/local/alphacp/etc/mail/dkim';
+    private const DEFAULT_EXIM_OPTIONS = '/usr/local/alphacp/etc/mail/exim-options.json';
+    private const DEFAULT_DOVECOT_OPTIONS = '/usr/local/alphacp/etc/mail/dovecot-options.json';
+
+    /** Exim ke log — distro ke hisaab se alag jagah milte hain (pehla jo mile) */
+    private const MAINLOG_CANDIDATES = [
+        '/var/log/exim4/mainlog',
+        '/var/log/exim/mainlog',
+        '/var/log/maillog',
+        '/var/log/mail.log',
+    ];
+
+    /**
+     * Exim Configuration Manager (cPanel #143).
+     * key => [type, default] — type se hi value validate hoti hai (fail-closed).
+     * Galat value likhne se exim chalu nahi hota, isliye har option ka apna regex hai.
+     */
+    private const EXIM_OPTION_SPEC = [
+        'message_size_limit'         => ['size', '50M'],
+        'smtp_banner'                => ['text', '$smtp_active_hostname ESMTP AlphaCP'],
+        'smtp_accept_max'            => ['int', '100'],
+        'smtp_accept_max_per_host'   => ['int', '10'],
+        'queue_run_max'              => ['int', '5'],
+        'remote_max_parallel'        => ['int', '2'],
+        'timeout_frozen_after'       => ['duration', '7d'],
+        'ignore_bounce_errors_after' => ['duration', '2d'],
+        'deliver_queue_load_max'     => ['number', '8.0'],
+        'queue_only_load'            => ['number', '12.0'],
+        'spam_score_limit'           => ['int', '80'],
+    ];
+
+    /** Mailserver Configuration / Dovecot (cPanel #144) */
+    private const DOVECOT_OPTION_SPEC = [
+        'protocols'                   => ['text', 'imap pop3'],
+        'mail_max_userip_connections' => ['int', '10'],
+        'maildir_copy_with_hardlinks' => ['bool', 'yes'],
+        'disable_plaintext_auth'      => ['bool', 'no'],
+        'pop3_uidl_format'            => ['text', '%08Xu%08Xv'],
+        'imap_idle_notify_interval'   => ['int', '24'],
+        'mailbox_idle_check_interval' => ['int', '30'],
+        'login_greeting'              => ['text', 'AlphaCP IMAP/POP3 ready.'],
+    ];
 
     private const MANAGED_BEGIN = '# >>> AlphaCP managed (mail.server) — haath se edit mat karo';
     private const MANAGED_END = '# <<< AlphaCP managed (mail.server)';
@@ -141,6 +182,30 @@ final class MailServer
     public function dovecotConfFile(): string
     {
         return self::pathEnv('ACP_MAIL_DOVECOT_CONF', self::DEFAULT_DOVECOT_CONF);
+    }
+
+    public function eximOptionsFile(): string
+    {
+        return self::pathEnv('ACP_MAIL_EXIM_OPTIONS', self::DEFAULT_EXIM_OPTIONS);
+    }
+
+    public function dovecotOptionsFile(): string
+    {
+        return self::pathEnv('ACP_MAIL_DOVECOT_OPTIONS', self::DEFAULT_DOVECOT_OPTIONS);
+    }
+
+    /** Exim mainlog (mail delivery reports isi se bante hain). Na mile to null. */
+    public function mainlogFile(): ?string
+    {
+        $env = self::pathEnv('ACP_MAIL_MAINLOG', '');
+        $candidates = $env !== '' ? [$env] : self::MAINLOG_CANDIDATES;
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate) && is_readable($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
     }
 
     private static function pathEnv(string $key, string $default): string
@@ -1029,11 +1094,666 @@ final class MailServer
         return $out;
     }
 
+    // ---------------------------------------- queue / reports / configuration ----
+
+    /**
+     * Mail Queue Manager (cPanel #141) — `exim -bp` (mailq) ka asli jawab, aur
+     * zaroorat par queue par action: deliver / remove / freeze / thaw / flush.
+     *
+     * @return array<string, mixed>
+     */
+    public function queue(string $op = 'list', string $id = ''): array
+    {
+        if (!$this->installed()) {
+            throw new TaskRejectedException('exim4 nahi mila — mail queue dekhne ke liye exim chahiye');
+        }
+        $op = strtolower(trim($op));
+        if ($op === '') {
+            $op = 'list';
+        }
+        $exim = self::bin('ACP_MAIL_EXIM', self::EXIM, self::EXIM_PATHS);
+        $mutations = ['deliver' => ['-M'], 'remove' => ['-Mrm'], 'freeze' => ['-Mf'], 'thaw' => ['-Mt']];
+
+        if (isset($mutations[$op])) {
+            $id = trim($id);
+            if (!self::validQueueId($id)) {
+                throw new TaskRejectedException(
+                    "queue {$op} ke liye asli message id chahiye (jaise 1oABCD-0000xy-1a) — '{$id}' nahi chalega"
+                );
+            }
+            $res = $this->cmd->run(array_merge([$exim], $mutations[$op], [$id]), self::CMD_TIMEOUT);
+
+            return [
+                'op'     => $op,
+                'id'     => $id,
+                'ok'     => $res->ok(),
+                'output' => self::oneLine(trim((string) $res->stdout)),
+                'error'  => $res->ok() ? null : self::cleanError($res),
+                'queue'  => $this->listQueue(),
+            ];
+        }
+
+        if ($op === 'flush') {
+            $res = $this->cmd->run([$exim, '-qf'], self::CMD_TIMEOUT);
+
+            return [
+                'op'    => 'flush',
+                'ok'    => $res->ok(),
+                'error' => $res->ok() ? null : self::cleanError($res),
+                'queue' => $this->listQueue(),
+            ];
+        }
+
+        if ($op !== 'list' && $op !== 'count') {
+            throw new TaskRejectedException("queue op '{$op}' nahi chalega (list/count/deliver/remove/freeze/thaw/flush)");
+        }
+
+        $queue = $this->listQueue();
+        if ($op === 'count') {
+            return ['op' => 'count', 'count' => $queue['count'], 'ok' => $queue['ok'], 'error' => $queue['error']];
+        }
+
+        return ['op' => 'list'] + $queue;
+    }
+
+    /**
+     * `exim -bp` ko padh kar queue ka asli haal (kitne mail pending, kiske liye).
+     *
+     * @return array<string, mixed>
+     */
+    public function listQueue(): array
+    {
+        $exim = self::bin('ACP_MAIL_EXIM', self::EXIM, self::EXIM_PATHS);
+        $res = $this->cmd->run([$exim, '-bp'], self::CMD_TIMEOUT);
+        $items = [];
+        $current = null;
+
+        foreach (preg_split('/\R/', trim((string) $res->stdout)) ?: [] as $line) {
+            if (trim($line) === '') {
+                continue;
+            }
+            $m = [];
+            $isHead = (bool) preg_match(
+                '/^\s*(?:(?P<age>\d+[smhdw])\s+)?(?P<size>\d+(?:\.\d+)?[KMGkmg]?B?)\s+'
+                . '(?P<id>[0-9A-Za-z]{6}-[0-9A-Za-z]{6}-[0-9A-Za-z]{2})(?P<flags>[A-Za-z-]*)\s*(?P<rest>.*)$/',
+                $line,
+                $m,
+            );
+            if ($isHead) {
+                if ($current !== null) {
+                    $items[] = $current;
+                }
+                $rest = (string) ($m['rest'] ?? '');
+                $sender = '';
+                $sm = [];
+                if (preg_match('/<([^>]*)>/', $rest, $sm)) {
+                    $sender = trim((string) $sm[1]);
+                } elseif (trim($rest) !== '') {
+                    $sender = trim((string) (explode(' ', trim($rest))[0] ?? ''));
+                }
+                $current = [
+                    'id'         => (string) ($m['id'] ?? ''),
+                    'age'        => ($m['age'] ?? '') !== '' ? (string) $m['age'] : null,
+                    'size'       => (string) ($m['size'] ?? ''),
+                    'sender'     => strtolower($sender),
+                    'recipients' => [],
+                    'frozen'     => str_contains($line, 'frozen'),
+                ];
+                continue;
+            }
+            if ($current === null) {
+                continue;
+            }
+            $rm = [];
+            if (preg_match('/^\s+<?([^\s<>]+)>?/', $line, $rm)) {
+                $to = strtolower(trim(trim((string) $rm[1]), '<>,;'));
+                if ($to !== '' && !in_array($to, $current['recipients'], true)) {
+                    $current['recipients'][] = $to;
+                }
+            }
+        }
+        if ($current !== null) {
+            $items[] = $current;
+        }
+
+        return [
+            'ok'    => $res->ok(),
+            'error' => $res->ok() ? null : self::cleanError($res),
+            'count' => count($items),
+            'items' => $items,
+            'note'  => $items === [] ? 'queue khali hai (koi mail pending nahi)' : null,
+        ];
+    }
+
+    /**
+     * Mail Delivery Reports (cPanel #142) — asli exim mainlog se ginati:
+     * kitni mail aayi, pahunchi, deferred/failed hui. Hamara daawa nahi, log ka jawab.
+     *
+     * @return array<string, mixed>
+     */
+    public function reports(int $limit = 50, string $search = ''): array
+    {
+        $file = $this->mainlogFile();
+        if ($file === null) {
+            return [
+                'ok'             => false,
+                'error'          => 'exim mainlog nahi mila (dhoondha: ' . implode(', ', self::MAINLOG_CANDIDATES) . ')',
+                'counts'         => [],
+                'entries'        => [],
+                'top_senders'    => [],
+                'top_recipients' => [],
+            ];
+        }
+
+        $limit = max(1, min(500, $limit));
+        $search = strtolower(trim($search));
+        $lines = preg_split('/\R/', $this->tailText($file)) ?: [];
+        $counts = [
+            'arrived' => 0, 'delivered' => 0, 'redirected' => 0, 'deferred' => 0,
+            'failed'  => 0, 'completed' => 0, 'rejected'   => 0, 'frozen'   => 0,
+        ];
+        $senders = [];
+        $recipients = [];
+        $entries = [];
+
+        foreach ($lines as $line) {
+            $m = [];
+            if (!preg_match('/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})(?:\.\d+)?\s+(\S+)\s+(.*)$/', $line, $m)) {
+                continue;
+            }
+            $rest = (string) ($m[3] ?? '');
+            $kind = null;
+            $addr = null;
+            $mm = [];
+            if (preg_match('/^<=\s+(\S+)/', $rest, $mm)) {
+                $kind = 'arrived';
+                $addr = self::cleanAddr((string) $mm[1]);
+                $senders[$addr] = ($senders[$addr] ?? 0) + 1;
+            } elseif (preg_match('/^=>\s+(\S+)/', $rest, $mm)) {
+                $kind = 'delivered';
+                $addr = self::cleanAddr((string) $mm[1]);
+                $recipients[$addr] = ($recipients[$addr] ?? 0) + 1;
+            } elseif (preg_match('/^->\s+(\S+)/', $rest, $mm)) {
+                $kind = 'redirected';
+                $addr = self::cleanAddr((string) $mm[1]);
+            } elseif (preg_match('/^==\s+(\S+)/', $rest, $mm)) {
+                $kind = 'deferred';
+                $addr = self::cleanAddr((string) $mm[1]);
+            } elseif (preg_match('/^\*\*\s+(\S+)/', $rest, $mm)) {
+                $kind = 'failed';
+                $addr = self::cleanAddr((string) $mm[1]);
+            } elseif (str_starts_with($rest, 'Completed')) {
+                $kind = 'completed';
+            } elseif (str_contains($rest, 'frozen')) {
+                $kind = 'frozen';
+            } elseif (preg_match('/\brejected\b/i', $rest)) {
+                $kind = 'rejected';
+            }
+            if ($kind === null) {
+                continue;
+            }
+            $counts[$kind] = ($counts[$kind] ?? 0) + 1;
+            if ($search !== '' && !str_contains(strtolower($line), $search)) {
+                continue;
+            }
+            $entries[] = [
+                'time'    => (string) ($m[1] ?? ''),
+                'id'      => (string) ($m[2] ?? ''),
+                'kind'    => $kind,
+                'address' => $addr,
+                'text'    => self::oneLine($rest),
+            ];
+        }
+
+        arsort($senders);
+        arsort($recipients);
+
+        return [
+            'ok'             => true,
+            'file'           => $file,
+            'lines_scanned'  => count($lines),
+            'counts'         => $counts,
+            'top_senders'    => self::topCounts($senders, 10),
+            'top_recipients' => self::topCounts($recipients, 10),
+            'entries'        => array_slice($entries, -$limit),
+            'entries_total'  => count($entries),
+        ];
+    }
+
+    /**
+     * Email Disk Usage — server view (cPanel #146): har account aur har mailbox
+     * ki mail jagah, asli bytes me (symlinks follow nahi hote).
+     *
+     * @return array<string, mixed>
+     */
+    public function diskUsage(?string $username = null): array
+    {
+        $root = AccountPaths::fromEnv()->accountsRoot;
+        $accounts = [];
+        $total = 0;
+        $name = $username === null ? null : strtolower(trim($username));
+
+        foreach (glob($root . '/*') ?: [] as $dir) {
+            if (!is_dir($dir) || is_link($dir)) {
+                continue;
+            }
+            $user = basename($dir);
+            if ($name !== null && $user !== $name) {
+                continue;
+            }
+            $mail = $dir . '/mail';
+            if (!is_dir($mail)) {
+                continue;
+            }
+            $mailboxes = [];
+            foreach (glob($mail . '/*/*') ?: [] as $box) {
+                if (!is_dir($box) || is_link($box)) {
+                    continue;
+                }
+                $mailboxes[] = [
+                    'address' => basename($box) . '@' . basename((string) dirname($box)),
+                    'bytes'   => $this->dirBytes($box),
+                ];
+            }
+            usort($mailboxes, static fn (array $a, array $b): int => ($b['bytes'] <=> $a['bytes']));
+            $accountBytes = $this->dirBytes($mail);
+            $total += $accountBytes;
+            $accounts[] = [
+                'username'      => $user,
+                'bytes'         => $accountBytes,
+                'mailboxes'     => $mailboxes,
+                'mailbox_count' => count($mailboxes),
+            ];
+        }
+        usort($accounts, static fn (array $a, array $b): int => ($b['bytes'] <=> $a['bytes']));
+
+        return [
+            'ok'            => true,
+            'accounts_root' => $root,
+            'accounts'      => $accounts,
+            'account_count' => count($accounts),
+            'total_bytes'   => $total,
+            'total_human'   => self::humanBytes($total),
+        ];
+    }
+
+    /**
+     * Exim Configuration Manager (cPanel #143).
+     * $set = null → sirf dikhao; array → validate → likho → template dobara banao
+     * (update-exim4.conf + `exim4 -bV`; fail ho to purani config wapas).
+     *
+     * @param  array<string, mixed>|null $set
+     * @return array<string, mixed>
+     */
+    public function eximConf(?array $set = null): array
+    {
+        $file = $this->eximOptionsFile();
+        $allowed = array_keys(self::EXIM_OPTION_SPEC);
+        $out = [
+            'file'     => $file,
+            'options'  => $this->eximOptions(),
+            'defaults' => self::specDefaults(self::EXIM_OPTION_SPEC),
+            'allowed'  => $allowed,
+            'applied'  => false,
+        ];
+        if ($set === null) {
+            return $out;
+        }
+        if ($set === []) {
+            throw new TaskRejectedException('eximconf: koi option nahi diya (allowed: ' . implode(', ', $allowed) . ')');
+        }
+        if (!$this->installed() || !self::isConfigured()) {
+            throw new TaskRejectedException(
+                'Exim config tabhi badalte hain jab mail server configure ho — pehle mail.server setup chalao'
+            );
+        }
+        [$merged, $errors] = self::validateOptions($set, self::EXIM_OPTION_SPEC, $out['options']);
+        if ($errors !== []) {
+            throw new TaskRejectedException('exim option reject: ' . implode(' | ', $errors));
+        }
+        $this->writeJson($file, $merged);
+
+        return array_merge($out, $this->applyEximTemplate(), ['options' => $merged, 'applied' => true]);
+    }
+
+    /**
+     * Mailserver Configuration / Dovecot (cPanel #144).
+     * $set = null → sirf dikhao; array → validate → likho → conf dobara banao
+     * (`doveconf -n`; fail ho to purani conf wapas).
+     *
+     * @param  array<string, mixed>|null $set
+     * @return array<string, mixed>
+     */
+    public function dovecotConf(?array $set = null): array
+    {
+        $file = $this->dovecotOptionsFile();
+        $allowed = array_keys(self::DOVECOT_OPTION_SPEC);
+        $out = [
+            'file'     => $file,
+            'options'  => $this->dovecotOptions(),
+            'defaults' => self::specDefaults(self::DOVECOT_OPTION_SPEC),
+            'allowed'  => $allowed,
+            'applied'  => false,
+        ];
+        if ($set === null) {
+            return $out;
+        }
+        if ($set === []) {
+            throw new TaskRejectedException('dovecotconf: koi option nahi diya (allowed: ' . implode(', ', $allowed) . ')');
+        }
+        if (!$this->installed()) {
+            throw new TaskRejectedException('dovecot nahi mila — pehle mail.server setup chalao');
+        }
+        [$merged, $errors] = self::validateOptions($set, self::DOVECOT_OPTION_SPEC, $out['options']);
+        if ($errors !== []) {
+            throw new TaskRejectedException('dovecot option reject: ' . implode(' | ', $errors));
+        }
+        $this->writeJson($file, $merged);
+
+        return array_merge($out, $this->applyDovecotConfig(), ['options' => $merged, 'applied' => true]);
+    }
+
+    /** @return array<string, string> */
+    public function eximOptions(): array
+    {
+        return $this->loadOptions($this->eximOptionsFile(), self::EXIM_OPTION_SPEC);
+    }
+
+    /** @return array<string, string> */
+    public function dovecotOptions(): array
+    {
+        return $this->loadOptions($this->dovecotOptionsFile(), self::DOVECOT_OPTION_SPEC);
+    }
+
+    /**
+     * Managed Exim template dobara likho: backup (pehli baar) → likho → validate
+     * (`update-exim4.conf` + `exim4 -bV`) → fail ho to purani wapas → restart.
+     *
+     * @return array<string, mixed>
+     */
+    private function applyEximTemplate(): array
+    {
+        if (is_file($this->eximTemplate()) && !is_file($this->eximTemplateBackup())) {
+            @copy($this->eximTemplate(), $this->eximTemplateBackup());
+        }
+        $this->writeManaged($this->eximTemplate(), $this->renderEximTemplate(), 0644);
+        $generate = $this->cmd->run(
+            [self::bin('ACP_MAIL_UPDATE_EXIM', self::UPDATE_EXIM, self::UPDATE_EXIM_PATHS)],
+            self::CMD_TIMEOUT,
+        );
+        $check = $this->cmd->run([self::bin('ACP_MAIL_EXIM', self::EXIM, self::EXIM_PATHS), '-bV'], self::CMD_TIMEOUT);
+        if (!$generate->ok() || !$check->ok()) {
+            $this->restoreEximTemplate();
+            throw new TaskRejectedException(
+                'exim config reject (purani config wapas): ' . self::cleanError($generate) . ' / ' . self::cleanError($check)
+            );
+        }
+        $this->cmd->run(['/bin/systemctl', 'restart', 'exim4'], self::CMD_TIMEOUT);
+
+        return ['generated' => true, 'exim_config' => self::firstLine((string) $check->stdout)];
+    }
+
+    /** @return array<string, mixed> */
+    private function applyDovecotConfig(): array
+    {
+        $file = $this->dovecotConfFile();
+        $previous = is_file($file) ? (string) @file_get_contents($file) : null;
+        $this->writeManaged($file, $this->renderDovecotConf(), 0644);
+        $check = $this->cmd->run(
+            [self::bin('ACP_MAIL_DOVECONF', self::DOVECONF, self::DOVECONF_PATHS), '-n'],
+            self::CMD_TIMEOUT,
+        );
+        if (!$check->ok()) {
+            if ($previous !== null) {
+                @file_put_contents($file, $previous);
+            } else {
+                @unlink($file);
+            }
+            throw new TaskRejectedException('dovecot config reject (purani conf wapas): ' . self::cleanError($check));
+        }
+        $this->cmd->run(['/bin/systemctl', 'restart', 'dovecot'], self::CMD_TIMEOUT);
+
+        return ['dovecot_config' => 'ok', 'dovecot_userdb' => $this->probeDovecotUserdb()];
+    }
+
+    /**
+     * @param  array<string, array{0: string, 1: string}> $spec
+     * @return array<string, string>
+     */
+    private function loadOptions(string $file, array $spec): array
+    {
+        $out = self::specDefaults($spec);
+        if (!is_file($file)) {
+            return $out;
+        }
+        $raw = @file_get_contents($file);
+        if (!is_string($raw) || trim($raw) === '') {
+            return $out;
+        }
+        $decoded = json_decode($raw, true);
+        if (!is_array($decoded)) {
+            return $out;
+        }
+        foreach (array_keys($spec) as $key) {
+            if (!array_key_exists($key, $decoded)) {
+                continue;
+            }
+            [$value, $error] = self::validateOption((string) $key, $decoded[$key], $spec);
+            if ($error === null && $value !== null) {
+                $out[$key] = $value;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  array<string, mixed>                       $in
+     * @param  array<string, array{0: string, 1: string}> $spec
+     * @param  array<string, string>                      $base
+     * @return array{0: array<string, string>, 1: list<string>}
+     */
+    private static function validateOptions(array $in, array $spec, array $base): array
+    {
+        $merged = $base + self::specDefaults($spec);
+        $errors = [];
+        foreach ($in as $key => $value) {
+            $key = (string) $key;
+            [$clean, $error] = self::validateOption($key, $value, $spec);
+            if ($error !== null) {
+                $errors[] = $error;
+                continue;
+            }
+            $merged[$key] = (string) $clean;
+        }
+
+        return [$merged, $errors];
+    }
+
+    /**
+     * Har option ki value uske type ke regex se validate hoti hai (fail-closed):
+     * galat value exim/dovecot ko chalu hone se rok deti hai, isliye seedha reject.
+     *
+     * @param  array<string, array{0: string, 1: string}> $spec
+     * @return array{0: ?string, 1: ?string}
+     */
+    private static function validateOption(string $key, mixed $value, array $spec): array
+    {
+        if (!isset($spec[$key])) {
+            return [null, "'{$key}' koi mail option nahi hai (allowed: " . implode(', ', array_keys($spec)) . ')'];
+        }
+        $type = (string) $spec[$key][0];
+        if (is_bool($value)) {
+            $value = $value ? 'yes' : 'no';
+        }
+        $value = is_scalar($value) ? trim((string) $value) : '';
+        if ($value === '') {
+            return [null, "'{$key}' khali nahi ho sakta"];
+        }
+        if ($type === 'bool') {
+            $lower = strtolower($value);
+            if (in_array($lower, ['1', 'true', 'yes', 'on'], true)) {
+                $value = 'yes';
+            } elseif (in_array($lower, ['0', 'false', 'no', 'off'], true)) {
+                $value = 'no';
+            }
+        }
+        $patterns = [
+            'size'     => '/^\d{1,8}[KMGkmg]?$/',
+            'int'      => '/^\d{1,9}$/',
+            'number'   => '/^\d{1,5}(\.\d{1,2})?$/',
+            'duration' => '/^\d{1,5}[smhdw]$/',
+            'bool'     => '/^(yes|no)$/',
+            'text'     => '/^[ -\x7e]{1,200}$/',
+        ];
+        if (!isset($patterns[$type]) || !preg_match($patterns[$type], $value)) {
+            return [null, "'{$key}' = '{$value}' galat hai ({$type} chahiye)"];
+        }
+        // '#' config file me comment shuru kar deta hai — option value me mana hai.
+        if (str_contains($value, '#')) {
+            return [null, "'{$key}' me '#' nahi ho sakta (config comment ban jayega)"];
+        }
+
+        return [$value, null];
+    }
+
+    /**
+     * @param  array<string, array{0: string, 1: string}> $spec
+     * @return array<string, string>
+     */
+    private static function specDefaults(array $spec): array
+    {
+        $out = [];
+        foreach ($spec as $key => $def) {
+            $out[(string) $key] = (string) ($def[1] ?? '');
+        }
+
+        return $out;
+    }
+
+    /** @param array<string, string> $data */
+    private function writeJson(string $file, array $data): void
+    {
+        $dir = dirname($file);
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        ksort($data);
+        $body = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        if ($body === false) {
+            throw new TaskRejectedException("mail options file nahi ban saki: {$file}");
+        }
+        $tmp = $dir . '/.acp-mailopts-' . bin2hex(random_bytes(4)) . '.tmp';
+        $this->tempFiles[] = $tmp;
+        if (@file_put_contents($tmp, $body . "\n") === false) {
+            throw new TaskRejectedException("mail options temp file nahi likhi ja saki: {$tmp}");
+        }
+        @chmod($tmp, 0644);
+        if (!@rename($tmp, $file)) {
+            @unlink($tmp);
+            throw new TaskRejectedException("mail options file nahi likhi ja saki: {$file}");
+        }
+        @chmod($file, 0644);
+    }
+
+    /** Log ka aakhiri hissa (bada log poori tarah memory me nahi aata). */
+    private function tailText(string $file, int $bytes = 524288): string
+    {
+        $size = @filesize($file);
+        if (!is_int($size) || $size <= 0) {
+            return '';
+        }
+        $fh = @fopen($file, 'rb');
+        if ($fh === false) {
+            return '';
+        }
+        if ($size > $bytes) {
+            fseek($fh, $size - $bytes);
+            fgets($fh); // adhoori pehli line chhod do
+        }
+        $text = (string) stream_get_contents($fh);
+        fclose($fh);
+
+        return $text;
+    }
+
+    /** Symlink follow NAHI hota (safety) — mail tree me symlink ho to skip. */
+    private function dirBytes(string $dir, int $depth = 0): int
+    {
+        if ($depth > 8 || !is_dir($dir) || is_link($dir)) {
+            return 0;
+        }
+        $bytes = 0;
+        $fh = @opendir($dir);
+        if ($fh === false) {
+            return 0;
+        }
+        while (($entry = readdir($fh)) !== false) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            $path = $dir . '/' . $entry;
+            if (is_link($path)) {
+                continue;
+            }
+            if (is_dir($path)) {
+                $bytes += $this->dirBytes($path, $depth + 1);
+                continue;
+            }
+            $size = @filesize($path);
+            if (is_int($size) && $size > 0) {
+                $bytes += $size;
+            }
+        }
+        closedir($fh);
+
+        return $bytes;
+    }
+
+    private static function validQueueId(string $id): bool
+    {
+        return (bool) preg_match('/^[0-9A-Za-z]{6}-[0-9A-Za-z]{6}-[0-9A-Za-z]{2}$/', $id);
+    }
+
+    private static function cleanAddr(string $addr): string
+    {
+        return strtolower(trim(trim($addr), "<>,;"));
+    }
+
+    /** @param array<string, int> $map @return list<array{address: string, count: int}> */
+    private static function topCounts(array $map, int $limit): array
+    {
+        $out = [];
+        foreach (array_slice($map, 0, $limit, true) as $addr => $count) {
+            $address = (string) $addr;
+            if ($address === '') {
+                continue;
+            }
+            $out[] = ['address' => $address, 'count' => (int) $count];
+        }
+
+        return $out;
+    }
+
+    private static function humanBytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $value = (float) $bytes;
+        $i = 0;
+        while ($value >= 1024.0 && $i < count($units) - 1) {
+            $value /= 1024.0;
+            $i++;
+        }
+
+        return $i === 0 ? $bytes . ' B' : sprintf('%.1f %s', $value, $units[$i]);
+    }
+
     // ------------------------------------------------------------ rendering ----
 
     private function renderDovecotConf(): string
     {
         $users = $this->dovecotUsersFile();
+        $opts = $this->dovecotOptions();
         $lines = [
             self::MANAGED_BEGIN,
             '# AlphaCP S7 — virtual mailboxes jo panel banata hai',
@@ -1042,18 +1762,28 @@ final class MailServer
             '  driver = passwd-file',
             '  args = scheme=BLF-CRYPT ' . $users,
             '}',
+            '# NOTE: "scheme=" sirf passdb ke liye hai (Dovecot 2.3 docs).',
+            '# userdb args me scheme= likhne se Dovecot poore string ko FILENAME',
+            '# samajh leta hai -> open("scheme=... /etc/...") No such file or directory.',
             'userdb {',
             '  driver = passwd-file',
-            '  args = scheme=BLF-CRYPT ' . $users,
+            '  args = ' . $users,
             '}',
             '# mailbox khud Maildir hai (home field usi ko point karta hai)',
             'mail_location = maildir:~/',
             'mail_home = %h',
-            'protocols = imap pop3',
+            'protocols = ' . $opts['protocols'],
             'listen = 127.0.0.1, ::1',
-            'disable_plaintext_auth = no',
+            'disable_plaintext_auth = ' . $opts['disable_plaintext_auth'],
             'auth_mechanisms = plain login',
             'mail_plugins = $mail_plugins quota',
+            '# Mailserver Configuration (cPanel #144) — panel se set kiye gaye options',
+            'mail_max_userip_connections = ' . $opts['mail_max_userip_connections'],
+            'maildir_copy_with_hardlinks = ' . $opts['maildir_copy_with_hardlinks'],
+            'pop3_uidl_format = ' . $opts['pop3_uidl_format'],
+            'imap_idle_notify_interval = ' . $opts['imap_idle_notify_interval'] . ' mins',
+            'mailbox_idle_check_interval = ' . $opts['mailbox_idle_check_interval'] . ' secs',
+            'login_greeting = ' . $opts['login_greeting'],
             'protocol imap {',
             '  mail_plugins = $mail_plugins imap_quota',
             '}',
@@ -1092,8 +1822,10 @@ final class MailServer
               . "  dkim_private_key = \${if exists{{$dkimKey}}{{$dkimKey}}{0}}\n"
               . "  dkim_sign_headers = Date:From:To:Subject:Message-ID:MIME-Version:Content-Type\n"
             : '';
+        $opts = $this->eximOptions();
+        $spamLimit = (string) $opts['spam_score_limit'];
         $spamAcl = $caps['content_scanning'] && $caps['spamd']
-            ? "  deny condition = \${if >{\$spam_score_int}{80}{yes}{no}}\n"
+            ? "  deny condition = \${if >{\$spam_score_int}{{$spamLimit}}{yes}{no}}\n"
               . "       message = This message scored \$spam_score spam points (limit 8.0)\n"
               . "       spam = nobody:true\n\n          "
             : '';
@@ -1121,10 +1853,18 @@ final class MailServer
         host_lookup = *
         rfc1413_hosts =
         rfc1413_query_timeout = 0s
-        ignore_bounce_errors_after = 2d
-        timeout_frozen_after = 7d
-        smtp_banner = \$smtp_active_hostname ESMTP AlphaCP
-        message_size_limit = 50M
+        ignore_bounce_errors_after = {$opts['ignore_bounce_errors_after']}
+        timeout_frozen_after = {$opts['timeout_frozen_after']}
+        smtp_banner = {$opts['smtp_banner']}
+        message_size_limit = {$opts['message_size_limit']}
+
+        # Exim Configuration Manager (cPanel #143) — panel se set kiye gaye options
+        smtp_accept_max = {$opts['smtp_accept_max']}
+        smtp_accept_max_per_host = {$opts['smtp_accept_max_per_host']}
+        queue_run_max = {$opts['queue_run_max']}
+        remote_max_parallel = {$opts['remote_max_parallel']}
+        deliver_queue_load_max = {$opts['deliver_queue_load_max']}
+        queue_only_load = {$opts['queue_only_load']}
 
         begin acl
 
