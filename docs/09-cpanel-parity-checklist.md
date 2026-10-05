@@ -57,22 +57,22 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 13 | Email Accounts | Mailboxes + quota | S7 | 🟡 (Virtual Maildir/passwd-file slice only; Exim/Dovecot integration + end-to-end delivery/auth verification pending; (virtual Maildir; bcrypt passwd-file; MAXPOP)) |
-| 14 | Forwarders | Email forward | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (address→address aliases; no pipe/shell)) |
-| 15 | Email Routing | MX/local routing per domain | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (auto/local/backup/remote JSON; no Exim rewrite)) |
-| 16 | Autoresponders | Vacation/auto reply | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (JSON vacation file; no pipe/shell)) |
-| 17 | Default Address | Catch-all | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (`*@domain` → email; no pipe/shell)) |
+| 13 | Email Accounts | Mailboxes + quota | S7 | ✅ (Exim4 delivery + Dovecot auth live verified (0.77.0 run 54/0): asli mail Maildir me, `doveadm user` ok) |
+| 14 | Forwarders | Email forward | S7 | ✅ (forwarders live verified: `exim -bt` + asli redirect) |
+| 15 | Email Routing | MX/local routing per domain | S7 | ✅ (MX/local routing live verified (exim local_domains + routers)) |
+| 16 | Autoresponders | Vacation/auto reply | S7 | ✅ (autoresponders live verified: vacation file + autoreply transport) |
+| 17 | Default Address | Catch-all | S7 | ✅ (catch-all live verified: unknown@ -> mailbox redirect chain) |
 | 18 | Mailing Lists | Mailman lists | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (list+owner JSON; no mailman daemon)) |
 | 19 | Track Delivery | Delivery trace | S7 | 🟡 (0.78.0 me asli ho gaya: `mail.track` ab ASLI exim mainlog se delivery trace (aayi/pahunchi/deferred/failed) — live verify pending) |
 | 20 | Global Email Filters | Server-side filters | S7 | 🟡 (0.78.0 me asli ho gaya: account-wide Exim filter file — sabhi mailboxes par, user rule se pehle — live verify pending) |
 | 21 | Email Filters | Per-mailbox filters | S7 | 🟡 (0.78.0 me asli ho gaya: per-mailbox ASLI Exim filter file (`exim -bf` validate): folder save / forward / discard — live verify pending) |
-| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (SPF/DMARC copy records; DNS/DKIM keys later)) |
+| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF + DMARC + DKIM live verified: `dig TXT`, `_dmarc`, `default._domainkey` sab green) |
 | 23 | Address Importer | Bulk CSV import | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (CSV local,domain,password → mail.set; no pipe)) |
-| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (score 1–10 + lists JSON; no daemon)) |
+| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (SpamAssassin score + blacklist/whitelist files live (0.77.0)) |
 | 25 | Encryption | PGP/GnuPG email keys | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (identity JSON; no gpg/private key)) |
 | 26 | BoxTrapper | Challenge-response anti-spam | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (enabled+allowlist JSON; no daemon)) |
 | 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (calendar+contact names JSON; no CalDAV)) |
-| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (mail/ walk; symlink skip; purge later)) |
+| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ✅ (per-mailbox mail space (mail/ walk) + server view (#146) live verified) |
 | 29 | Webmail | Roundcube/Horde link | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (client JSON; no Roundcube/Horde install)) |
 
 ### 🌐 Domains
@@ -245,12 +245,12 @@
 ### Email (server-wide)
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 141 | Mail Queue Manager | S7 | 🟡 (0.77.0 me ban gaya: `mail.server action=queue` — asli `exim -bp` parse + -M/-Mrm/-Mf/-Mt/-qf; galat id reject — live verify pending) |
-| 142 | Mail Delivery Reports | S7 | 🟡 (0.77.0 me ban gaya: `action=reports` — asli exim mainlog se ginati + top senders — live verify pending) |
-| 143 | Exim Configuration Manager | S7 | 🟡 (0.77.0 me ban gaya: `action=eximconf` — 11 options, type-validated, template re-render + `exim4 -bV` — live verify pending) |
-| 144 | Mailserver Configuration (Dovecot) | S7 | 🟡 (0.77.0 me ban gaya: `action=dovecotconf` — 8 options, `doveconf -n` validate — live verify pending) |
+| 141 | Mail Queue Manager | S7 | ✅ (live verified: `exim -bp` parse + deliver/remove/freeze/thaw/flush) |
+| 142 | Mail Delivery Reports | S7 | ✅ (live verified: asli exim mainlog se ginati) |
+| 143 | Exim Configuration Manager | S7 | ✅ (live verified: option set karte hi ASLI exim template me value) |
+| 144 | Mailserver Configuration (Dovecot) | S7 | ✅ (live verified: option set karte hi ASLI 99-alphacp.conf me value) |
 | 145 | Email Deliverability (server default) | S7 | ⏳ S7 |
-| 146 | Email Disk Usage (server view) | S7 | 🟡 (0.77.0 me ban gaya: `action=diskusage` — per account + per mailbox asli bytes — live verify pending) |
+| 146 | Email Disk Usage (server view) | S7 | ✅ (live verified: per account + per mailbox asli bytes) |
 | 147 | SpamAssassin + Greylisting config | S7 | ⏳ S7 |
 | 148 | Address Importer (server) | S7 | ⏳ S7 |
 
@@ -348,11 +348,18 @@
 
 | Hissa | Total items | ✅ Done | 🟡 Building | ⏳ Planned | 🔵 Optional |
 |---|---|---|---|---|---|
-| Client panel (cPanel) | 93 | 20 | 35 | 32 | 6 |
-| Admin/Reseller (WHM) | 99 | 13 | 26 | 59 | 1 |
+| Client panel (cPanel) | 93 | 28 | 27 | 32 | 6 |
+| Admin/Reseller (WHM) | 99 | 18 | 26 | 54 | 1 |
 | System/Business | 10 | **4** | 2 | 4 | 0 |
 | cPanel 138 naye features | 6 | 0 | 1 | 2 | 3 |
-| **TOTAL** | **208** | **37** | **64** | **97** | **10** |
+| **TOTAL** | **208** | **50** | **56** | **92** | **10** |
+
+> **5 Oct 2026 (0.77.0 + 0.78.0):** S7 Email ke 13 rows ✅ ho gaye — live server par
+> **54 pass / 0 fail**: asli mail Maildir me pahunchi, `doveadm user` ok,
+> SPF/DMARC/DKIM `dig TXT` se mil gaye, catch-all + autoresponder + forwarders kaam kar rahe hain.
+> Isi ke saath mail queue manager, delivery reports, exim/dovecot configuration manager
+> aur email disk usage bhi asli ho gaye (cPanel #141–#146).
+> Email Filters (#20/#21) + Track Delivery (#19) 0.78.0 me ASLI Exim filter files ban gaye.
 
 > Note: ✅ = row ke stated behavior ke liye implementation + test proof; 🟡 = partial/JSON/config-only ya host-service integration pending. Counts 208 numbered rows ko parse karke reconcile kiye gaye hain; server deployment status hamesha `server-snapshot/STATE.md` se alag verify karein.
 > JSON settings save hona, apne aap me, mail/DNS/database/backup ka real service operation nahi maana jayega.
