@@ -55,10 +55,25 @@ final class CommandRunner implements CommandExecutor
         '/bin/ssh',
         '/usr/bin/sshpass',
         // S9 BIND9 (dns.bind): config check, zone check, reload aur asli dig jawab.
+        // Dono (/usr/sbin + /usr/bin + /usr/local) isliye: distro ke hisaab se
+        // binary kahin bhi ho sakta hai, aur allowlist me na ho to task chup-chaap
+        // fail ho jata hai (0.73.1 wali `ssh` bhool dobara na ho).
         '/usr/sbin/named-checkconf',
+        '/usr/bin/named-checkconf',
+        '/usr/local/sbin/named-checkconf',
+        '/usr/local/bin/named-checkconf',
         '/usr/sbin/named-checkzone',
+        '/usr/bin/named-checkzone',
+        '/usr/local/sbin/named-checkzone',
+        '/usr/local/bin/named-checkzone',
         '/usr/sbin/rndc',
+        '/usr/bin/rndc',
+        '/usr/local/sbin/rndc',
+        '/usr/local/bin/rndc',
         '/usr/bin/dig',
+        '/usr/sbin/dig',
+        '/bin/dig',
+        '/usr/local/bin/dig',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

@@ -430,13 +430,34 @@ fi
 
 # S9 DNS: real authoritative zones. bina bind9 ke dns.bind task JSON likh kar
 # chhod deta hai — install hone ke baad hi named-checkzone/rndc/dig milte hain.
+# Ubuntu 24.04 rndc ko /usr/sbin me rakhta hai par named-checkconf/named-checkzone
+# /usr/bin me — isliye ek hi path check karne se "installed" jhooth bolta hai.
+# Har tool ke liye sab candidates dhoondo (agent bhi yahi karta hai).
+bind_find() {  # $1 tool
+  local d=""
+  command -v "$1" >/dev/null 2>&1 && { command -v "$1"; return 0; }
+  for d in /usr/sbin /usr/bin /sbin /bin /usr/local/sbin /usr/local/bin; do
+    [[ -x "${d}/$1" ]] && { printf '%s' "${d}/$1"; return 0; }
+  done
+  return 1
+}
 if [[ -z "${ACP_SKIP_EXTRA_PACKAGES:-}" ]]; then
-  if [[ -x /usr/sbin/named-checkconf && -x /usr/sbin/named-checkzone && -x /usr/sbin/rndc ]]; then
-    ok "bind9 present"
+  BIND_CC="$(bind_find named-checkconf || true)"
+  BIND_CZ="$(bind_find named-checkzone || true)"
+  BIND_RC="$(bind_find rndc || true)"
+  BIND_DG="$(bind_find dig || true)"
+  if [[ -n "${BIND_CC}" && -n "${BIND_CZ}" && -n "${BIND_RC}" ]]; then
+    ok "bind9 present (checkconf=${BIND_CC} checkzone=${BIND_CZ} rndc=${BIND_RC} dig=${BIND_DG:-none})"
   elif command -v apt-get >/dev/null 2>&1; then
     info "bind9 + bind9-utils + dnsutils install ho rahe hain (S9: asli DNS zones)"
     if DEBIAN_FRONTEND=noninteractive apt-get install -y -qq bind9 bind9-utils dnsutils >>"${LOG_FILE}" 2>&1; then
-      ok "bind9 installed"
+      BIND_CC="$(bind_find named-checkconf || true)"
+      BIND_CZ="$(bind_find named-checkzone || true)"
+      if [[ -n "${BIND_CC}" && -n "${BIND_CZ}" ]]; then
+        ok "bind9 installed (checkconf=${BIND_CC} checkzone=${BIND_CZ})"
+      else
+        warn "apt-get ne bind9 install kaha par named-checkconf/checkzone nahi mile — dns.bind sirf JSON likhega"
+      fi
     else
       warn "bind9 install fail — dns.bind task JSON-only rahega, zones nahi banenge"
     fi

@@ -4372,6 +4372,30 @@ test('dns.bind schema — payload fail-closed', function (): void {
     assert_true(JsonSchema::validate($schema, $bad2) !== [], 'AAAA abhi allow nahi (A/CNAME/MX/TXT)');
 });
 
+test('BIND tools: har possible path agent allowlist me hai (chuppi hui allowlist fail na ho)', function (): void {
+    $ref = new ReflectionClass(CommandRunner::class);
+    $allow = $ref->getConstant('BIN_ALLOWLIST');
+    foreach ([
+        'named-checkconf' => BindServer::CHECKCONF_PATHS,
+        'named-checkzone' => BindServer::CHECKZONE_PATHS,
+        'rndc'            => BindServer::RNDC_PATHS,
+        'dig'             => BindServer::DIG_PATHS,
+    ] as $tool => $paths) {
+        assert_true($paths !== [], "{$tool} candidates khali nahi hone chahiye");
+        foreach ($paths as $path) {
+            assert_true(
+                in_array($path, $allow, true),
+                "allowlist me {$path} nahi hai — server par binary wahan mila to task chup-chaap fail hoga"
+            );
+        }
+    }
+    // distro ke hisaab se binary kahin bhi ho — dono jagah allowlist me honi chahiye
+    assert_true(in_array('/usr/sbin/named-checkconf', $allow, true));
+    assert_true(in_array('/usr/bin/named-checkconf', $allow, true));
+    assert_true(in_array('/usr/sbin/rndc', $allow, true));
+    assert_true(in_array('/usr/bin/rndc', $allow, true));
+});
+
 test('BindServer renderZone — zone injection impossible (quote/escape)', function (): void {
     $body = BindServer::renderZone(
         'alice.test',

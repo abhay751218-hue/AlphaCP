@@ -22,10 +22,25 @@ PANELD="${ACP_VERIFY_PANELD:-${ACP_HOME}/agent/bin/paneld}"
 TEST_DOMAIN="${ACP_VERIFY_DOMAIN:-acp-bind-check.test}"
 # Live server par ye /etc/bind/* hote hain. Sim (tools/sim/s9-bind-sim.sh) inhi
 # ko override kar ke offline check karta hai — asli path kabhi change nahi hote.
-CHECKCONF="${ACP_VERIFY_NAMED_CHECKCONF:-/usr/sbin/named-checkconf}"
-CHECKZONE="${ACP_VERIFY_NAMED_CHECKZONE:-/usr/sbin/named-checkzone}"
-RNDC="${ACP_VERIFY_RNDC:-/usr/sbin/rndc}"
-DIG="${ACP_VERIFY_DIG:-/usr/bin/dig}"
+# Binary kahan hai: env override > preferred path > PATH > sab candidates.
+# (Server par /usr/sbin ke bajaye /usr/bin mila to bhi check chalna chahiye.)
+find_bin() {  # $1 tool, $2 env var, $3 preferred path
+  local tool="$1" envvar="$2" pref="$3" envval="" found="" d=""
+  envval="$(printenv "${envvar}" 2>/dev/null || true)"
+  if [[ -n "${envval}" ]]; then printf '%s' "${envval}"; return 0; fi
+  if [[ -n "${pref}" && -x "${pref}" ]]; then printf '%s' "${pref}"; return 0; fi
+  found="$(command -v "${tool}" 2>/dev/null || true)"
+  if [[ -n "${found}" && -x "${found}" ]]; then printf '%s' "${found}"; return 0; fi
+  for d in /usr/sbin /usr/bin /sbin /bin /usr/local/sbin /usr/local/bin; do
+    if [[ -x "${d}/${tool}" ]]; then printf '%s' "${d}/${tool}"; return 0; fi
+  done
+  printf ''
+}
+
+CHECKCONF="$(find_bin named-checkconf ACP_VERIFY_NAMED_CHECKCONF /usr/sbin/named-checkconf)"
+CHECKZONE="$(find_bin named-checkzone ACP_VERIFY_NAMED_CHECKZONE /usr/sbin/named-checkzone)"
+RNDC="$(find_bin rndc ACP_VERIFY_RNDC /usr/sbin/rndc)"
+DIG="$(find_bin dig ACP_VERIFY_DIG /usr/bin/dig)"
 ZONE_DIR="${ACP_VERIFY_BIND_ZONE_DIR:-/etc/bind/zones}"
 ZONES_FILE="${ACP_VERIFY_BIND_ZONES_FILE:-/etc/bind/named.conf.alphacp}"
 NAMED_CONF="${ACP_VERIFY_BIND_NAMED_CONF:-/etc/bind/named.conf}"
@@ -93,16 +108,44 @@ echo
 info "A: preconditions (bind9 installed?)"
 MISSING=""
 for b in "${CHECKCONF}" "${CHECKZONE}" "${RNDC}" "${DIG}"; do
-  [[ -x "${b}" ]] || MISSING="${MISSING} ${b}"
+  [[ -n "${b}" && -x "${b}" ]] || MISSING="${MISSING} ${b:-<nahi-mila>}"
 done
 if [[ -n "${MISSING}" ]]; then
-  bad "bind9 tools missing:${MISSING} — updater install karta hai (apt-get install -y bind9 bind9-utils dnsutils)"
+  bad "bind9 tools nahi mile:${MISSING}"
+  echo
+  info "--- diagnosis (ye poori copy bhej do) ---"
+  for t in named-checkconf named-checkzone rndc dig; do
+    info "command -v ${t} -> $(command -v "${t}" 2>/dev/null || echo 'NAHI MILA')"
+  done
+  info "dpkg bind packages: $(dpkg -l 2>/dev/null | grep -E '^ii +bind9' | awk '{print $2" "$3}' | tr '\n' ' ')"
+  info "ls /usr/sbin/named* : $(ls -1 /usr/sbin/named* 2>/dev/null | tr '\n' ' ')"
+  info "ls /usr/bin/named*  : $(ls -1 /usr/bin/named* 2>/dev/null | tr '\n' ' ')"
+  info "ls /usr/bin/dig /usr/sbin/dig /usr/bin/rndc /usr/sbin/rndc: $(ls -1 /usr/bin/dig /usr/sbin/dig /usr/bin/rndc /usr/sbin/rndc 2>/dev/null | tr '\n' ' ')"
+  info "dpkg -S named-checkconf: $(dpkg -S named-checkconf 2>&1 | head -2 | tr '\n' ' ')"
+  info "systemctl named: $(systemctl is-active named 2>/dev/null || echo 'inactive')"
+  info "--- ant ---"
+  info "Fix: sudo apt-get update && sudo apt-get install -y bind9 bind9-utils dnsutils"
   echo
   echo "=== S9 BIND9 LIVE CHECK: ${PASS} pass, ${FAIL} fail, ${SKIP} skip ==="
+  if mkdir -p "${REPORT_DIR}" 2>/dev/null; then
+    {
+      echo "=== S9 BIND9 LIVE CHECK ($(date -u +%Y-%m-%dT%H:%M:%SZ)) ==="
+      echo "pass=${PASS} fail=${FAIL} skip=${SKIP}"
+      echo "missing:${MISSING}"
+      echo "command -v named-checkconf: $(command -v named-checkconf 2>/dev/null || echo NAHI-MILA)"
+      echo "command -v named-checkzone: $(command -v named-checkzone 2>/dev/null || echo NAHI-MILA)"
+      echo "command -v rndc: $(command -v rndc 2>/dev/null || echo NAHI-MILA)"
+      echo "command -v dig: $(command -v dig 2>/dev/null || echo NAHI-MILA)"
+      echo "dpkg bind9: $(dpkg -l 2>/dev/null | grep -E '^ii +bind9' | awk '{print $2" "$3}' | tr '\n' ' ')"
+    } > "${REPORT_DIR}/s9-bind-check.txt" 2>/dev/null || true
+  fi
   DONE=1
   exit 1
 fi
-ok "named-checkconf / named-checkzone / rndc / dig sab maujood"
+ok "named-checkconf: ${CHECKCONF}"
+ok "named-checkzone: ${CHECKZONE}"
+ok "rndc: ${RNDC}"
+ok "dig: ${DIG}"
 ok "agent me dns.bind task registered"
 
 # ------------------------------------------------------------------ part B ----
@@ -316,6 +359,7 @@ if mkdir -p "${REPORT_DIR}" 2>/dev/null; then
     echo "pass=${PASS} fail=${FAIL} skip=${SKIP}"
     echo "tasks: ${TASK_IDS}"
     echo "zones: $(ls -1 "${ZONE_DIR}"/db.* 2>/dev/null | wc -l)"
+    echo "tools: checkconf=${CHECKCONF} checkzone=${CHECKZONE} rndc=${RNDC} dig=${DIG}"
   } > "${REPORT_DIR}/s9-bind-check.txt" 2>/dev/null || true
 fi
 
