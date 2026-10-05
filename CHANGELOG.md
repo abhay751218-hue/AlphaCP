@@ -10,9 +10,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   agent task persists them and syncs a static Exim alias that expands posts to each subscriber. Legacy
   owner-only rows seed the owner as the first member; invalid/pipe/self-recursive/colliding routes fail
   closed. Focused panel tests **8/8**, full panel suite **453/0/6 wasm-skip**, provision/agent artifact
-  tests **209/0**, and the updated S7 mail simulation **14/0** passed. Pinned updater release is not yet
-  prepared. The dedicated live verifier has only been run in simulation; #18 remains **not live-verified**,
-  and static fan-out does not supply Mailman moderation or archives.
+  tests **209/0**, the updated S7 mail simulation **14/0**, and full updater simulation **247/0** passed.
+  Updater **0.82.0** is pinned to the committed artifact set at `312f21c` with matching SHA-256 checks.
+  The dedicated live verifier has only been run in simulation; #18 remains **not live-verified**, and
+  static fan-out does not supply Mailman moderation or archives.
 - **S10 — remote backup destinations: apne archives doosre server par bhejo (5 Oct)** — panel **0.73.0**, agent **0.65.0**.
   cPanel me backup ka aakhri kadam hota hai: archive sirf isi server par nahi, **door ke server** par bhi
   jaye (off-site). Ab WHM → **Backup Destinations** se wo ho jata hai — naya agent task `backup.destination`

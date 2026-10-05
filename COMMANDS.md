@@ -19,10 +19,10 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 >
 > #18 now has customer CRUD, persisted subscriber addresses, validation, and static Exim fan-out.
 > Local checks: focused panel tests **8/8**, full panel suite **453/0/6 wasm-skip**, `provision-sim`
-> **209/0**, and updated `s7-mail-sim` **14/0**. Candidate archives panel **0.75.0** and agent **0.82.0**
-> exist locally, but the pinned updater release is not prepared. `tools/verify/s7-mailing-list-check.sh`
-> passes only against its simulator so far; no real Exim route or subscriber-Maildir delivery has been
-> verified. Checklist #18 remains 🟡.
+> **209/0**, updated `s7-mail-sim` **14/0**, and full `update-sim` **247/0**. Candidate archives panel
+> **0.75.0** and agent **0.82.0** are pinned with checksum-matching defaults in updater **0.82.0**.
+> `tools/verify/s7-mailing-list-check.sh` passes only against its simulator so far; no real Exim route or
+> subscriber-Maildir delivery has been verified. Checklist #18 remains 🟡.
 >
 > **NO LIVE SERVER COMMAND — live verification pending.** Keep the live command withheld until the release is pinned and the
 > dedicated verifier can prove real Exim fan-out and subscriber delivery. Do not manually update services.
