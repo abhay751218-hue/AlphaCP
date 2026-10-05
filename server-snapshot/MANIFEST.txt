@@ -133,6 +133,8 @@
 /usr/local/alphacp/etc/database.env
 /usr/local/alphacp/etc/install.env
 /usr/local/alphacp/etc/mail-server-configured
+/usr/local/alphacp/etc/mail/dkim/acp-mail-check.test.key
+/usr/local/alphacp/etc/mail/dkim/acp-mail-check.test.pub
 /usr/local/alphacp/etc/my.cnf
 /usr/local/alphacp/etc/panel.env
 /usr/local/alphacp/logs/verify-report-20260928-142610.txt
@@ -8435,6 +8437,7 @@
 /usr/local/alphacp/var/panel-appkey.txt
 /usr/local/alphacp/var/s10-verify/index.html
 /usr/local/alphacp/verify-reports/s10-backup-destination-check.txt
+/usr/local/alphacp/verify-reports/s7-diag.txt
 /usr/local/alphacp/verify-reports/s7-mail-check.txt
 /usr/local/alphacp/verify-reports/s9-bind-check.txt
 /var/www/alphacp-default/check.php
