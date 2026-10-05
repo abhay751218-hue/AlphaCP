@@ -1,55 +1,99 @@
-S7 mail diagnostics — 2026-10-05T11:43:24Z host=ip-172-26-4-65
+S7 mail diagnostics — 2026-10-05T12:05:25Z host=ip-172-26-4-65
+
+=== DOVEADM FAIL diagnostics (info@acp-mail-check.test) ===
+$ ls -l /etc/dovecot/alphacp-users
+    -rw-r----- 1 root dovecot 189 Oct  5 12:05 /etc/dovecot/alphacp-users
+--- users file pehli line (hash chhupa kar) ---
+info@acp-mail-check.test:{BLF-CRYPT}<hash>:1001:1001::/home/acpmailchk/mail/acp-mail-check.test/info::userdb_quota_rule=*:storage=100M
+--- doveconf -n (alphacp + auth) ---
+    auth_mechanisms = plain login
+    login_greeting = AlphaCP IMAP/POP3 ready.
+    mail_home = %h
+    mail_location = maildir:~/
+    passdb {
+    passdb {
+      args = scheme=BLF-CRYPT /etc/dovecot/alphacp-users
+    userdb {
+    userdb {
+      args = /etc/dovecot/alphacp-users
+--- dovecot auth worker file padh sakta hai? ---
+HAA (dovecot user padh sakta hai)
+--- dovecot log (aakhri 20) ---
+Oct 05 11:43:01 ip-172-26-4-65 dovecot[604579]: master: Dovecot v2.3.21 (47349e2482) starting up for imap, pop3 (core dumps disabled)
+Oct 05 11:43:01 ip-172-26-4-65 systemd[1]: Started dovecot.service - Dovecot IMAP/POP3 email server.
+Oct 05 11:43:28 ip-172-26-4-65 systemd[1]: Stopping dovecot.service - Dovecot IMAP/POP3 email server...
+Oct 05 11:43:28 ip-172-26-4-65 dovecot[604579]: master: Warning: Killed with signal 15 (by pid=608105 uid=0 code=kill)
+Oct 05 11:43:29 ip-172-26-4-65 systemd[1]: dovecot.service: Deactivated successfully.
+Oct 05 11:43:29 ip-172-26-4-65 systemd[1]: Stopped dovecot.service - Dovecot IMAP/POP3 email server.
+Oct 05 11:43:29 ip-172-26-4-65 systemd[1]: Starting dovecot.service - Dovecot IMAP/POP3 email server...
+Oct 05 11:43:29 ip-172-26-4-65 dovecot[608111]: master: Dovecot v2.3.21 (47349e2482) starting up for imap, pop3 (core dumps disabled)
+Oct 05 11:43:29 ip-172-26-4-65 systemd[1]: Started dovecot.service - Dovecot IMAP/POP3 email server.
+Oct 05 11:43:35 ip-172-26-4-65 systemd[1]: Stopping dovecot.service - Dovecot IMAP/POP3 email server...
+Oct 05 11:43:35 ip-172-26-4-65 dovecot[608111]: master: Warning: Killed with signal 15 (by pid=609538 uid=0 code=kill)
+Oct 05 11:43:36 ip-172-26-4-65 systemd[1]: dovecot.service: Deactivated successfully.
+Oct 05 11:43:36 ip-172-26-4-65 systemd[1]: Stopped dovecot.service - Dovecot IMAP/POP3 email server.
+Oct 05 11:43:36 ip-172-26-4-65 systemd[1]: Starting dovecot.service - Dovecot IMAP/POP3 email server...
+Oct 05 11:43:36 ip-172-26-4-65 dovecot[609548]: master: Dovecot v2.3.21 (47349e2482) starting up for imap, pop3 (core dumps disabled)
+Oct 05 11:43:36 ip-172-26-4-65 systemd[1]: Started dovecot.service - Dovecot IMAP/POP3 email server.
+Oct 05 12:04:57 ip-172-26-4-65 systemd[1]: Stopping dovecot.service - Dovecot IMAP/POP3 email server...
+Oct 05 12:04:57 ip-172-26-4-65 dovecot[609548]: master: Warning: Killed with signal 15 (by pid=612729 uid=0 code=kill)
+Oct 05 12:04:58 ip-172-26-4-65 systemd[1]: dovecot.service: Deactivated successfully.
+Oct 05 12:04:58 ip-172-26-4-65 systemd[1]: Stopped dovecot.service - Dovecot IMAP/POP3 email server.
+$ id dovecot
+    uid=117(dovecot) gid=119(dovecot) groups=119(dovecot)
+$ id Debian-exim
+    uid=115(Debian-exim) gid=117(Debian-exim) groups=117(Debian-exim)
 
 === DELIVERY FAIL diagnostics (info@acp-mail-check.test) ===
 $ ls -ld /home/acpmailchk /home/acpmailchk/mail /home/acpmailchk/mail/acp-mail-check.test /home/acpmailchk/mail/acp-mail-check.test/info /home/acpmailchk/mail/acp-mail-check.test/info/new /home/acpmailchk/mail/acp-mail-check.test/info/tmp
-    drwxr-x--x 7 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk
-    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail
-    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail/acp-mail-check.test
-    drwx------ 5 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail/acp-mail-check.test/info
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail/acp-mail-check.test/info/new
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 /home/acpmailchk/mail/acp-mail-check.test/info/tmp
+    drwxr-x--x 7 acpmailchk acpmailchk 4096 Oct  5 12:05 /home/acpmailchk
+    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 12:05 /home/acpmailchk/mail
+    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 12:05 /home/acpmailchk/mail/acp-mail-check.test
+    drwx------ 5 acpmailchk acpmailchk 4096 Oct  5 12:05 /home/acpmailchk/mail/acp-mail-check.test/info
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 12:05 /home/acpmailchk/mail/acp-mail-check.test/info/new
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 12:05 /home/acpmailchk/mail/acp-mail-check.test/info/tmp
 --- exim kis user se chal raha hai ---
 systemctl show User : 
 exim -bP exim_user  : exim_user = Debian-exim
 exim -bP deliver_drop_privilege : no_deliver_drop_privilege
 setuid bit          : -rwsr-xr-x 1 root root 1677232 Sep 22 18:24 /usr/sbin/exim4
-running daemon uid  : Debian-exim 
+running daemon uid  : 
 --- mailbox user likh sakta hai? (setuid path) ---
 HAA (acpmailchk likh sakta hai)
 --- Debian-exim likh sakta hai? (bina setuid path) ---
 NAHI — Debian-exim ko permission nahi (setuid zaroori hai)
 --- exim mainlog (aakhri 25) ---
-2026-10-05 11:38:50 1xDg13-00000002TYw-1pGc == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-2026-10-05 11:38:50 End queue run: pid=603235
-2026-10-05 11:42:59 Warning: purging the environment.
  Suggested action: use keep_environment.
-2026-10-05 11:42:59 Warning: No server certificate defined; will use a selfsigned one.
+2026-10-05 11:43:35 Warning: No server certificate defined; will use a selfsigned one.
  Suggested action: either install a certificate or change tls_advertise_hosts option
-2026-10-05 11:42:59 exim 4.97 daemon started: pid=604388, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
-2026-10-05 11:43:00 Start queue run: pid=604566
-2026-10-05 11:43:00 1xDfcU-00000002S8n-3C1V == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-2026-10-05 11:43:00 1xDg13-00000002TYw-1pGc == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-2026-10-05 11:43:00 End queue run: pid=604566
-2026-10-05 11:43:27 Warning: purging the environment.
+2026-10-05 11:43:35 exim 4.97 daemon started: pid=609513, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
+2026-10-05 11:43:35 Start queue run: pid=609539
+2026-10-05 11:43:35 1xDg13-00000002TYw-1pGc == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+2026-10-05 11:43:35 1xDh6R-00000002YEs-2OAm == info@acp-mail-check.test routing defer (-52): retry time not reached
+2026-10-05 11:43:35 1xDfcU-00000002S8n-3C1V == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+2026-10-05 11:43:35 End queue run: pid=609539
+2026-10-05 11:43:37 Warning: purging the environment.
  Suggested action: use keep_environment.
-2026-10-05 11:43:27 Warning: No server certificate defined; will use a selfsigned one.
- Suggested action: either install a certificate or change tls_advertise_hosts option
-2026-10-05 11:43:27 exim 4.97 daemon started: pid=607924, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
-2026-10-05 11:43:28 Start queue run: pid=608044
-2026-10-05 11:43:28 1xDfcU-00000002S8n-3C1V == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-2026-10-05 11:43:28 1xDg13-00000002TYw-1pGc == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
-2026-10-05 11:43:28 End queue run: pid=608044
-2026-10-05 11:43:31 Warning: purging the environment.
+2026-10-05 11:43:37 1xDh6X-00000002YaY-0c1v <= root@ip-172-26-4-65 U=root P=local S=353
+2026-10-05 11:43:37 1xDh6X-00000002YaY-0c1v Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+2026-10-05 11:43:37 1xDh6X-00000002YaY-0c1v == info@acp-mail-check.test R=alphacp_userfilter defer (-1): Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+2026-10-05 11:43:38 Warning: purging the environment.
  Suggested action: use keep_environment.
-2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm <= root@ip-172-26-4-65 U=root P=local S=366
-2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
-2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm == info@acp-mail-check.test R=alphacp_userfilter defer (-1): Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+2026-10-05 11:43:38 1xDh6Y-00000002YbI-3HuM <= root@ip-172-26-4-65 U=root P=local S=366
+2026-10-05 11:43:38 1xDh6Y-00000002YbI-3HuM Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+2026-10-05 11:43:38 1xDh6Y-00000002YbI-3HuM == info@acp-mail-check.test R=alphacp_userfilter defer (-1): Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+2026-10-05 12:05:30 1xDhRi-00000002aM4-0rNM <= root@ip-172-26-4-65.ap-south-1.compute.internal U=root P=local S=394
+2026-10-05 12:05:30 1xDhRi-00000002aM4-0rNM ** info@acp-mail-check.test R=nonlocal: Mailing to remote domains not supported
+2026-10-05 12:05:30 1xDhRi-00000002aM9-12kg <= <> R=1xDhRi-00000002aM4-0rNM U=Debian-exim P=local S=1818
+2026-10-05 12:05:30 1xDhRi-00000002aM9-12kg => /var/mail/mail <root@ip-172-26-4-65.ap-south-1.compute.internal> R=mail4root T=address_file
+2026-10-05 12:05:30 1xDhRi-00000002aM9-12kg Completed
+2026-10-05 12:05:30 1xDhRi-00000002aM4-0rNM Completed
 --- mail.server sync ka natija (repair) ---
 [INFO   ] running mail.server (safety=mutating, attempt 1)
 [INFO   ] done in 6ms
 
 {
-    "task_id": 411,
+    "task_id": 447,
     "status": "success",
     "duration_ms": 6,
     "result": {
@@ -58,39 +102,47 @@ NAHI — Debian-exim ko permission nahi (setuid zaroori hai)
         "mailboxes": 1,
         "aliases": 0,
 
-=== FILTER FILE diagnostics ===
-$ cat /etc/exim4/alphacp-filters
-
-
 === FILTER (folder) FAIL diagnostics ===
-$ cat 
-    cat: '': No such file or directory
+$ cat /home/acpmailchk/etc/mail/filter.d/info@acp-mail-check.test.filter
+    # Exim filter  <<== YE LINE HATAANA NAHI (Exim filter file ki pehchaan)
+    # AlphaCP managed — haath se edit mat karo
+    # mailbox: info@acp-mail-check.test
+    # banaya gaya: panel ke Email Filters (#20 account-wide + #21 per-mailbox) se
+    # har mail sync par dobara likha jata hai.
+    
+    if error_message then finish endif
+    
+    if $header_subject: contains "acpfilter" then
+      save "/home/acpmailchk/mail/acp-mail-check.test/info/.filtered/"
+      finish
+    endif
+    
 $ ls -la /home/acpmailchk/mail/acp-mail-check.test/info
     total 24
-    drwx------ 6 acpmailchk acpmailchk 4096 Oct  5 11:43 .
-    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 11:43 ..
-    drwx------ 5 acpmailchk acpmailchk 4096 Oct  5 11:43 .filtered
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 cur
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 new
-    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 11:43 tmp
+    drwx------ 6 acpmailchk acpmailchk 4096 Oct  5 12:05 .
+    drwx------ 3 acpmailchk acpmailchk 4096 Oct  5 12:05 ..
+    drwx------ 5 acpmailchk acpmailchk 4096 Oct  5 12:05 .filtered
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 12:05 cur
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 12:05 new
+    drwx------ 2 acpmailchk acpmailchk 4096 Oct  5 12:05 tmp
 $ tail -30 /var/log/exim4/mainlog
-    2026-10-05 11:43:28 End queue run: pid=608044
-    2026-10-05 11:43:31 Warning: purging the environment.
-     Suggested action: use keep_environment.
-    2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm <= root@ip-172-26-4-65 U=root P=local S=366
-    2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
-    2026-10-05 11:43:31 1xDh6R-00000002YEs-2OAm == info@acp-mail-check.test R=alphacp_userfilter defer (-1): Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
-    2026-10-05 11:43:34 Warning: purging the environment.
-     Suggested action: use keep_environment.
-    2026-10-05 11:43:34 Warning: purging the environment.
-     Suggested action: use keep_environment.
-    2026-10-05 11:43:34 Warning: purging the environment.
-     Suggested action: use keep_environment.
-    2026-10-05 11:43:34 Warning: No server certificate defined; will use a selfsigned one.
-     Suggested action: either install a certificate or change tls_advertise_hosts option
-    2026-10-05 11:43:34 exim 4.97 daemon started: pid=609009, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
-    2026-10-05 11:43:35 Warning: purging the environment.
-     Suggested action: use keep_environment.
     2026-10-05 11:43:35 Warning: No server certificate defined; will use a selfsigned one.
      Suggested action: either install a certificate or change tls_advertise_hosts option
     2026-10-05 11:43:35 exim 4.97 daemon started: pid=609513, -q30m, listening for SMTP on port 25 (IPv6 and IPv4)
+    2026-10-05 11:43:35 Start queue run: pid=609539
+    2026-10-05 11:43:35 1xDg13-00000002TYw-1pGc == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+    2026-10-05 11:43:35 1xDh6R-00000002YEs-2OAm == info@acp-mail-check.test routing defer (-52): retry time not reached
+    2026-10-05 11:43:35 1xDfcU-00000002S8n-3C1V == root@ip-172-26-4-65 R=local_user T=mail_spool defer (-53): Retry time not yet reached
+    2026-10-05 11:43:35 End queue run: pid=609539
+    2026-10-05 11:43:37 Warning: purging the environment.
+     Suggested action: use keep_environment.
+    2026-10-05 11:43:37 1xDh6X-00000002YaY-0c1v <= root@ip-172-26-4-65 U=root P=local S=353
+    2026-10-05 11:43:37 1xDh6X-00000002YaY-0c1v Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+    2026-10-05 11:43:37 1xDh6X-00000002YaY-0c1v == info@acp-mail-check.test R=alphacp_userfilter defer (-1): Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+    2026-10-05 11:43:38 Warning: purging the environment.
+     Suggested action: use keep_environment.
+    2026-10-05 11:43:38 1xDh6Y-00000002YbI-3HuM <= root@ip-172-26-4-65 U=root P=local S=366
+    2026-10-05 11:43:38 1xDh6Y-00000002YbI-3HuM Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+    2026-10-05 11:43:38 1xDh6Y-00000002YbI-3HuM == info@acp-mail-check.test R=alphacp_userfilter defer (-1): Failed to find user "}" from expanded string "${extract{2}{ }{${lookup{$local_part@$domain}lsearch{/etc/exim4/alphacp-recipients}}{$value}{}}}" for the alphacp_userfilter router
+    2026-10-05 12:05:30 1xDhRi-00000002aM4-0rNM <= root@ip-172-26-4-65.ap-south-1.compute.internal U=root P=local S=394
+    2026-10-05 12:05:30 1xDhRi-00000002aM4-0rNM ** info@acp-mail-check.test R=nonlocal: Mailing to remote domains not supported

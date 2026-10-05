@@ -126,7 +126,7 @@ panel-failed-20260928223644
 
 ## Services
 ```
-alphacp-sync               inactive
+alphacp-sync               activating
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -147,9 +147,13 @@ redis-server               active
 22	sshd
 53	named
 80	apache2
+110	dovecot
+143	dovecot
 443	apache2
 783	spamd
 953	named
+993	dovecot
+995	dovecot
 3306	mariadbd
 6379	redis-server
 8090	nginx

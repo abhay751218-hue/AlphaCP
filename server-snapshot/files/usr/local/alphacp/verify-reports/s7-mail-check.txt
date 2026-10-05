@@ -1,6 +1,6 @@
-=== S7 MAIL SERVER LIVE CHECK (2026-10-05T11:43:40Z) ===
-pass=58 fail=4 skip=0
-tasks: mail.server#407, account.create#408, mail.set#409, mail.server#410, mail.server#412, mail.server#413, mail.server#414, mail.server#415, mail.catchall#416, mail.server#417, mail.autorespond#418, mail.spam#419, mail.server#420, mail.server#421, mail.server#422, mail.server#423, mail.server#424, mail.server#425, mail.server#426, mail.server#427, mail.server#428, mail.server#429, mail.server#430, mail.filter#431, mail.server#432, mail.filter#433, mail.server#434, mail.track#435, mail.filter#436, mail.server#437
+=== S7 MAIL SERVER LIVE CHECK (2026-10-05T12:05:39Z) ===
+pass=50 fail=8 skip=2
+tasks: mail.server#443, account.create#444, mail.set#445, mail.server#446, mail.server#448, mail.server#449, mail.server#450, mail.server#451, mail.catchall#452, mail.server#453, mail.autorespond#454, mail.spam#455, mail.server#456, mail.server#457, mail.server#458, mail.server#459, mail.server#460, mail.server#461, mail.server#462, mail.server#463, mail.server#464, mail.server#465, mail.filter#466, mail.server#467, mail.filter#468, mail.server#469, mail.track#470, mail.filter#471, mail.server#472
 live_mail_delivery=NO
 tools: exim=/usr/sbin/exim4 dovecot=/usr/sbin/dovecot doveadm=/usr/bin/doveadm
 mailboxes: 1
