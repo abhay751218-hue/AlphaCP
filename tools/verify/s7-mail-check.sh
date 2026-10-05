@@ -36,6 +36,12 @@ REPORT_DIR="${ACP_HOME}/verify-reports"
 PASS=0; FAIL=0; SKIP=0; TASK_IDS=""; LAST_TASK_ID=""; LAST_ERR=""; TASK_OUT=""; DONE=0
 CREATED_ACCOUNT=0; LIVE_MAIL=0
 ok()   { PASS=$((PASS+1)); printf '  \033[32mok\033[0m   %s\n' "$1"; }
+# diagnostics: screen par bhi, aur ${ACP_HOME}/verify-reports/s7-diag.txt me bhi
+# (hourly sync se ye file main branch par aa jati hai — main khud padh leta hu)
+DIAG_FILE="${ACP_HOME}/verify-reports/s7-diag.txt"
+diag() { printf '  ::   %s\n' "$1"; [[ -d "${ACP_HOME}/verify-reports" ]] && printf '%s\n' "$1" >> "${DIAG_FILE}" 2>/dev/null; return 0; }
+diagsec() { diag ""; diag "=== $1 ==="; }
+diagcmd() { diag "\$ $*"; diag "$("$@" 2>&1 | head -20 | sed 's/^/    /')"; }
 bad()  { FAIL=$((FAIL+1)); printf '  \033[31mFAIL\033[0m %s\n' "$1"; }
 skip() { SKIP=$((SKIP+1)); printf '  \033[33mskip\033[0m %s\n' "$1"; }
 info() { printf '  --   %s\n' "$1"; }
@@ -100,6 +106,9 @@ run_task() {  # type payload -> 0/1 ; LAST_TASK_ID + LAST_ERR + TASK_OUT set
   return 1
 }
 
+mkdir -p "${ACP_HOME}/verify-reports" 2>/dev/null || true
+: > "${ACP_HOME}/verify-reports/s7-diag.txt" 2>/dev/null || true
+diag "S7 mail diagnostics — $(date -u +%Y-%m-%dT%H:%M:%SZ) host=$(hostname -f 2>/dev/null || hostname)"
 echo "=== S7 MAIL SERVER LIVE CHECK ==="
 info "ACP_HOME : ${ACP_HOME}"
 info "test addr: ${TEST_ADDR}"
@@ -229,6 +238,18 @@ else
       ok "doveadm user ${TEST_ADDR}: $("${DOVEADM}" user "${TEST_ADDR}" 2>/dev/null | tr '\n' ' ')"
     else
       bad "doveadm user ${TEST_ADDR} fail: $("${DOVEADM}" user "${TEST_ADDR}" 2>&1 | head -2 | tr '\n' ' ')"
+      diagsec "DOVEADM FAIL diagnostics (${TEST_ADDR})"
+      diagcmd ls -l "${DOVECONF_USERS}"
+      diag "--- users file pehli line (hash chhupa kar) ---"
+      diag "$(head -1 "${DOVECONF_USERS}" 2>/dev/null | sed 's/\({BLF-CRYPT}\)[^:]*/\1<hash>/')"
+      diag "--- doveconf -n (alphacp + auth) ---"
+      diag "$("${DOVECONF_BIN}" -n 2>&1 | grep -iE 'alphacp|userdb|passdb|mail_location|mail_home|first_valid|auth_' | head -20 | sed 's/^/    /')"
+      diag "--- dovecot auth worker file padh sakta hai? ---"
+      diag "$(sudo -u dovecot head -1 "${DOVECONF_USERS}" >/dev/null 2>&1 && echo 'HAA (dovecot user padh sakta hai)' || echo 'NAHI (permission problem — yahi wajah ho sakti hai)')"
+      diag "--- dovecot log (aakhri 20) ---"
+      diag "$(tail -20 /var/log/dovecot.log 2>/dev/null || journalctl -u dovecot -n 20 --no-pager 2>/dev/null)"
+      diagcmd id dovecot
+      diagcmd id Debian-exim
     fi
 
     # 3) ASLI DELIVERY — mail bhejo aur Maildir me file dhoondho
@@ -253,6 +274,22 @@ else
       info "maildir perms: $(ls -ld "${MAILDIR}" "${MAILDIR}/new" 2>&1 | tr '\n' ' ')"
       info "exim user    : $("${EXIM}" -bP exim_user 2>/dev/null | tr '\n' ' ')"
       info "setuid bit   : $(ls -l "${EXIM}" 2>/dev/null)"
+      diagsec "DELIVERY FAIL diagnostics (${TEST_ADDR})"
+      diagcmd ls -ld "/home/${TEST_USER}" "/home/${TEST_USER}/mail" "/home/${TEST_USER}/mail/${TEST_DOMAIN}" "${MAILDIR}" "${MAILDIR}/new" "${MAILDIR}/tmp"
+      diag "--- exim kis user se chal raha hai ---"
+      diag "systemctl show User : $(systemctl show -p User --value exim4 2>/dev/null)"
+      diag "exim -bP exim_user  : $("${EXIM}" -bP exim_user 2>/dev/null)"
+      diag "exim -bP deliver_drop_privilege : $("${EXIM}" -bP deliver_drop_privilege 2>/dev/null)"
+      diag "setuid bit          : $(ls -l "${EXIM}" 2>/dev/null)"
+      diag "running daemon uid  : $(ps -o user= -C exim4 2>/dev/null | head -2 | tr '\n' ' ')"
+      diag "--- mailbox user likh sakta hai? (setuid path) ---"
+      diag "$(sudo -u "${TEST_USER}" test -w "${MAILDIR}/new" 2>/dev/null && echo "HAA (${TEST_USER} likh sakta hai)" || echo "NAHI — ${TEST_USER} ko ${MAILDIR}/new me likhne nahi deta")"
+      diag "--- Debian-exim likh sakta hai? (bina setuid path) ---"
+      diag "$(sudo -u Debian-exim test -w "${MAILDIR}/new" 2>/dev/null && echo 'HAA (Debian-exim bhi likh sakta hai)' || echo 'NAHI — Debian-exim ko permission nahi (setuid zaroori hai)')"
+      diag "--- exim mainlog (aakhri 25) ---"
+      diag "$(tail -25 /var/log/exim4/mainlog 2>/dev/null)"
+      diag "--- mail.server sync ka natija (repair) ---"
+      diag "$(${PHP_BIN} ${ACP_HOME}/agent/bin/paneld --run mail.server '{"action":"sync"}' 2>&1 | head -12)" 
     fi
   fi
 fi

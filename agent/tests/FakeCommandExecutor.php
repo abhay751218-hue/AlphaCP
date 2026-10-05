@@ -94,6 +94,10 @@ final class FakeCommandExecutor implements CommandExecutor
     public string $eximBtOutput = '';
     /** `doveadm user <address>` ka output (khali = aisa mailbox nahi) */
     public string $doveadmUserOutput = '';
+    /** pehli N `doveadm user` call fail kare (0644-relax path test karne ke liye) */
+    public int $doveadmFailFirst = 0;
+    /** har `doveadm user` call fail kare */
+    public bool $doveadmAlwaysFails = false;
     /** `exim4 -bV` ke banner me DKIM/Content_Scanning dikhana hai? */
     public bool $mailDkim = false;
     /** `openssl` ke calls (DKIM key banane ke liye) */
@@ -165,7 +169,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'userdel' => $this->userdel($argv),
             'usermod' => $this->usermod($argv),
             'setquota' => new CommandResult($argv, 0, "fake {$bin} ok\n", '', 1),
-            'systemctl' => new CommandResult($argv, 0, (($argv[1] ?? '') === 'is-active' ? "active\n" : "fake systemctl ok\n"), '', 1),
+            'systemctl' => new CommandResult($argv, 0, self::systemctlOut($argv), '', 1),
             'crontab' => $this->handleCrontab($argv, $stdin),
             'certbot' => $this->handleCertbot($argv),
             'tar' => $this->handleTar($argv),
@@ -660,6 +664,20 @@ final class FakeCommandExecutor implements CommandExecutor
     }
 
     /** @param list<string> $argv */
+    private static function systemctlOut(array $argv): string
+    {
+        if (($argv[1] ?? '') === 'is-active') {
+            return "active\n";
+        }
+        if (($argv[1] ?? '') === 'show' && in_array('-p', $argv, true)) {
+            // exim4 unit kis user se chalta hai (mail.server root chahta hai)
+            return trim((string) (getenv('SIM_EXIM_UNIT_USER') ?: 'root')) . "\n";
+        }
+
+        return "fake systemctl ok\n";
+    }
+
+    /** @param list<string> $argv */
     private function handleExim(array $argv): CommandResult
     {
         $this->mailArgvs[] = $argv;
@@ -710,6 +728,14 @@ final class FakeCommandExecutor implements CommandExecutor
     private function handleDoveadm(array $argv): CommandResult
     {
         $this->mailArgvs[] = $argv;
+        if ($this->doveadmAlwaysFails) {
+            return new CommandResult($argv, 1, '', 'doveadm: Error: userdb lookup failed', 1);
+        }
+        if ($this->doveadmFailFirst > 0) {
+            $this->doveadmFailFirst--;
+
+            return new CommandResult($argv, 1, '', 'doveadm: Error: auth-master: userdb lookup failed', 1);
+        }
 
         return new CommandResult($argv, 0, $this->doveadmUserOutput, '', 1);
     }

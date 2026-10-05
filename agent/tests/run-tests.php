@@ -4997,6 +4997,80 @@ test('mail.server schema — deliverability action allowed, galat action nahi', 
     assert_true(JsonSchema::validate($schema, ['action' => 'deliverability', 'username' => '../root']) !== [], 'path traversal reject');
 });
 
+
+fwrite(STDOUT, "\nS7 MAIL FIXES (maildir ownership + dovecot userdb probe)\n");
+
+test('mail.server sync — root-owned Maildir parents theek (live wala asli bug)', function (): void {
+    $h = acp_mail_harness();
+    $root = $h['root'];
+    $hash = '$2y$10$abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ01234';
+    $home = $root . '/home/alicehost';
+    $box = $home . '/mail/alice.test/info';
+    mkdir($box . '/new', 0777, true);      // "root ne bana diya, chown bhool gaya"
+    mkdir($box . '/cur', 0777, true);
+    mkdir($box . '/tmp', 0777, true);
+    @chmod($box, 0777);
+    // uid/gid = is process ke (sandbox me hum root nahi, isliye chown path chhoda)
+    $uid = (string) (function_exists('posix_getuid') ? posix_getuid() : 1000);
+    $gid = (string) (function_exists('posix_getgid') ? posix_getgid() : 1000);
+    mkdir($home . '/etc/mail', 0755, true);
+    file_put_contents($home . '/etc/mail/passwd', "info@alice.test:{BLF-CRYPT}{$hash}:{$uid}:{$gid}::{$box}::\n");
+
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true($out['mailboxes'] === 1, '1 mailbox');
+    assert_true(($out['maildirs_fixed'] ?? 0) >= 1, 'Maildir theek hona chahiye (mode 0777 -> 0700), fixed=' . (int) ($out['maildirs_fixed'] ?? 0));
+    assert_true((fileperms($box) & 0777) === 0700, 'mailbox dir 0700 hona chahiye, ab ' . decoct(fileperms($box) & 0777));
+    assert_true((fileperms($box . '/new') & 0777) === 0700, 'new/ 0700 hona chahiye');
+    assert_true((fileperms(dirname($box)) & 0777) === 0700, '~/mail/<domain> bhi 0700 (traversable by owner)');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — Dovecot userdb probe: fail ho to 0644 relax karke dobara', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    $h['cmd']->doveadmUserOutput = "field\tvalue\nuid\t1001\nhome\t/home/alicehost/mail/alice.test/info\n";
+    $h['cmd']->doveadmFailFirst = 1;     // pehli koshish fail -> relax -> dobara
+    $out = (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $probe = $out['dovecot_userdb'] ?? [];
+    assert_true(($probe['ok'] ?? false) === true, 'probe ok hona chahiye: ' . json_encode($probe));
+    assert_true(($probe['mode'] ?? '') === '0644-relaxed', 'relax mode report hona chahiye: ' . json_encode($probe));
+    assert_true((fileperms($h['root'] . '/etc/dovecot/alphacp-users') & 0777) === 0644, 'file 0644 ho jana chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — Dovecot userdb probe: dono baar fail to jhoothi ok nahi', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    $h['cmd']->doveadmAlwaysFails = true;
+    $out = (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $probe = $out['dovecot_userdb'] ?? [];
+    assert_true(($probe['ok'] ?? true) === false, 'fail report hona chahiye (chhupana nahi): ' . json_encode($probe));
+    assert_true(str_contains((string) ($probe['error'] ?? ''), 'userdb lookup failed'), 'asli error hona chahiye');
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — exim unit non-root ho to root drop-in likhe (user= delivery)', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    putenv('SIM_EXIM_UNIT_USER=Debian-exim');
+    try {
+        $out = (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+        assert_true(($out['ok'] ?? false) === true, 'setup chalna chahiye (drop-in likhne ki koshish ke bawajud)');
+    } finally {
+        putenv('SIM_EXIM_UNIT_USER');
+    }
+    acp_mail_cleanup($h);
+});
+
+test('mail.server setup — exim template me deliver_drop_privilege = false', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+    $tpl = (string) file_get_contents($h['root'] . '/etc/exim4/exim4.conf.template');
+    assert_true(str_contains($tpl, 'deliver_drop_privilege = false'), 'mailbox uid se delivery ke liye zaroori');
+    acp_mail_cleanup($h);
+});
+
 fwrite(STDOUT, "\n" . str_repeat('-', 50) . "\n");
 fwrite(STDOUT, sprintf("passed: %d   failed: %d\n", $passed, $failed));
 exit($failed === 0 ? 0 : 1);

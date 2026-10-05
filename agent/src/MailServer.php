@@ -253,6 +253,11 @@ final class MailServer
             );
         }
 
+        // Exim daemon ko root chahiye (mailbox ki uid se delivery ke liye).
+        // Unit me User=Debian-exim ho to drop-in se root kar do — cPanel/Hestia
+        // bhi exim ko root chalate hain, warna `user=` transport kaam nahi karta.
+        $this->ensureEximRunsAsRoot();
+
         foreach (['exim4', 'dovecot'] as $unit) {
             $this->cmd->run(['/bin/systemctl', 'enable', $unit], self::CMD_TIMEOUT);
             $restart = $this->cmd->run(['/bin/systemctl', 'restart', $unit], self::CMD_TIMEOUT);
@@ -260,6 +265,11 @@ final class MailServer
                 $this->cmd->run(['/bin/systemctl', 'start', $unit], self::CMD_TIMEOUT);
             }
         }
+
+        // Sachchi tasdeeq: Dovecot khud bole ki mailbox mili ya nahi.
+        // File sirf group-readable ho aur auth worker use na padh paye to yahi
+        // pakad me aata hai — tab hum mode relax karke dobara check karte hain.
+        $userdb = $this->probeDovecotUserdb();
 
         $status = $this->status();
         $configured = $this->markConfigured();
@@ -272,6 +282,7 @@ final class MailServer
             'aliases'     => $agg['aliases'],
             'exim_config' => $status['exim_config'] ?? null,
             'dovecot_config' => $status['dovecot_config'] ?? null,
+            'dovecot_userdb' => $userdb,
             'services'    => $status['services'] ?? [],
         ];
     }
@@ -693,15 +704,145 @@ final class MailServer
         $this->writeManaged($this->domainsFile(), $domainList === [] ? '' : implode("\n", $domainList) . "\n", 0644);
         $this->writeVacation($vacation);
         $this->writeSpamLists($spam);
+        $fixed = $this->repairMaildirs($recipients);
 
         return [
-            'domains'    => count($domainList),
-            'mailboxes'  => count($users),
-            'aliases'    => count($aliases),
-            'catchalls'  => count($catchalls),
-            'responders' => count($vacation),
-            'spam_lists' => count($spam),
+            'domains'        => count($domainList),
+            'mailboxes'      => count($users),
+            'aliases'        => count($aliases),
+            'catchalls'      => count($catchalls),
+            'responders'     => count($vacation),
+            'spam_lists'     => count($spam),
+            'maildirs_fixed' => $fixed,
         ];
+    }
+
+    /**
+     * Exim ka daemon root ho to hi transport `user =` (mailbox ki uid) chalega.
+     * systemd unit me `User=Debian-exim` ho to drop-in likh kar root kar do.
+     */
+    private function ensureEximRunsAsRoot(): string
+    {
+        $show = $this->cmd->run(['/bin/systemctl', 'show', '-p', 'User', '--value', 'exim4'], self::CMD_TIMEOUT);
+        $user = trim($show->stdout);
+        if ($user === '' || $user === 'root' || $user === '0') {
+            return 'already-root' . ($user === '' ? ' (unit me User= hi nahi)' : '');
+        }
+        $dir = '/etc/systemd/system/exim4.service.d';
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0755, true);
+        }
+        $file = $dir . '/10-alphacp-root.conf';
+        $body = "# AlphaCP (mail.server): mailbox ki uid se delivery ke liye\\n"
+            . "# Exim ko root chalana padta hai (cPanel/Vesta/Hestia bhi yahi karte hain).\\n"
+            . "[Service]\\nUser=root\\nGroup=root\\n";
+        if (@file_put_contents($file, $body) === false) {
+            return "drop-in nahi likh paye ({$file}) - user={$user}";
+        }
+        @chmod($file, 0644);
+        $this->cmd->run(['/bin/systemctl', 'daemon-reload'], self::CMD_TIMEOUT);
+
+        return "drop-in likha ({$file}) - pehle User={$user} tha, ab root";
+    }
+
+    /**
+     * Dovecot se poochho: kya wo mailbox dhoondh leta hai? (`doveadm user <addr>`)
+     * Pehli koshish file ke current mode par; fail ho to mode 0644 karke dobara.
+     *
+     * @return array<string, mixed>
+     */
+    public function probeDovecotUserdb(): array
+    {
+        $boxes = $this->mailboxes();
+        if ($boxes === []) {
+            return ['checked' => false, 'reason' => 'koi mailbox nahi (abhi)'];
+        }
+        $addr = (string) $boxes[0];
+        $run = fn (): CommandResult => $this->cmd->run(
+            [self::bin('ACP_MAIL_DOVEADM', self::DOVEADM, self::DOVEADM_PATHS), 'user', $addr],
+            self::CMD_TIMEOUT,
+        );
+        $first = $run();
+        if ($first->ok()) {
+            return ['checked' => true, 'address' => $addr, 'ok' => true, 'mode' => '0640'];
+        }
+        // auth worker file nahi padh pa raha -> readable bana kar dobara poochho
+        $file = $this->dovecotUsersFile();
+        @chmod($file, 0644);
+        $second = $run();
+        if ($second->ok()) {
+            $this->log->info('dovecot users file 0644 par relax kiya (auth worker ko read chahiye tha)');
+
+            return ['checked' => true, 'address' => $addr, 'ok' => true, 'mode' => '0644-relaxed'];
+        }
+
+        return [
+            'checked' => true,
+            'address' => $addr,
+            'ok'      => false,
+            'error'   => self::cleanError($first),
+            'error2'  => self::cleanError($second),
+        ];
+    }
+
+    /**
+     * Maildir ki ownership theek karo (self-healing).
+     *
+     * Asli bug jo live server par mila: `AccountOs::setMail()` sirf cur/new/tmp
+     * banata hai, unke PARENT (`~/mail`, `~/mail/<domain>`, `~/mail/<domain>/<local>`)
+     * `mkdir` se root:root 0700 ban kar reh jate hain — to exim (Debian-exim) aur
+     * mailbox ka apna uid dono hi uske andar traverse nahi kar sakte:
+     *   defer (13): Permission denied: stat() error for /home/u/mail/d/l
+     * Har sync par ye check chalta hai, to naye aur purane dono mailboxes theek
+     * ho jate hain (mailbox bana kar exim/dovecot ko restart karne ki zarurat nahi).
+     *
+     * @param  array<string, string> $recipients  `addr: /maildir uid gid`
+     * @return int  kitne directory theek kiye
+     */
+    private function repairMaildirs(array $recipients): int
+    {
+        $fixed = 0;
+        foreach ($recipients as $line) {
+            $parts = preg_split('/\s+/', trim($line)) ?: [];
+            if (count($parts) < 4) {
+                continue;
+            }
+            $maildir = $parts[1];
+            $uid = (int) $parts[2];
+            $gid = (int) $parts[3];
+            if ($maildir === '' || $uid <= 0 || $gid <= 0 || str_contains($maildir, '..')) {
+                continue;
+            }
+            // mailbox + uske parents (niche se upar) + Maildir ke leaves
+            $dirs = [
+                $maildir . '/cur',
+                $maildir . '/new',
+                $maildir . '/tmp',
+                $maildir,
+                dirname($maildir),                 // ~/mail/<domain>
+                dirname(dirname($maildir)),        // ~/mail
+            ];
+            foreach ($dirs as $dir) {
+                if (!is_dir($dir) || is_link($dir)) {
+                    continue;
+                }
+                $owner = @fileowner($dir);
+                $group = @filegroup($dir);
+                if ($owner !== $uid || $group !== $gid) {
+                    if (@chown($dir, $uid)) {
+                        @chgrp($dir, $gid);
+                        $fixed++;
+                    }
+                }
+                // mailbox sirf usi user ki: 0700 (exim `user=` se deliver karta hai)
+                $mode = @fileperms($dir) & 0777;
+                if ($mode !== 0700 && @chmod($dir, 0700)) {
+                    $fixed++;
+                }
+            }
+        }
+
+        return $fixed;
     }
 
     /** @param array<string, array{subject: string, body: string, repeat: string}> $vacation */
@@ -950,6 +1091,10 @@ final class MailServer
         acl_smtp_rcpt = acl_check_rcpt
         acl_smtp_data = acl_check_data
 
+        # mailbox ki uid se deliver karne ke liye (transport `user =`) Exim ko apna
+        # root privilege rakhna padta hai — warna har delivery Debian-exim ke roop
+        # me hoti hai aur Maildir (0700) me likh hi nahi sakti.
+        deliver_drop_privilege = false
         never_users = root
         host_lookup = *
         rfc1413_hosts =
