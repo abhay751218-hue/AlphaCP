@@ -67,11 +67,11 @@ class TransferReviewController extends Controller
     }
 
     /**
-     * @return list<array{id:int,type:string,status:string,username:string,archive:string,source:string,files:int,bytes:int,sections:string,error:string,created_at:string}>
+     * @return list<array{id:int,type:string,status:string,username:string,archive:string,source:string,host:string,fingerprint:string,files:int,bytes:int,sections:string,error:string,created_at:string}>
      */
     private function jobs(): array
     {
-        return Paneld::recentJobs(['backup.cpanel', 'backup.transfer'], 25)
+        return Paneld::recentJobs(['backup.cpanel', 'backup.transfer', 'db.restore', 'backup.pull'], 25)
             ->map(static function (object $task): array {
                 $payload = json_decode((string) $task->payload, true);
                 $result = json_decode((string) ($task->result ?? ''), true);
@@ -85,8 +85,10 @@ class TransferReviewController extends Controller
                     'type' => (string) $task->type,
                     'status' => (string) $task->status,
                     'username' => (string) ($payload['username'] ?? ''),
-                    'archive' => (string) ($payload['archive_path'] ?? ''),
-                    'source' => (string) ($result['source'] ?? $payload['source'] ?? ''),
+                    'archive' => (string) ($payload['archive_path'] ?? $result['path'] ?? $payload['remote_path'] ?? ''),
+                    'host' => (string) ($result['host'] ?? $payload['host'] ?? ''),
+                    'fingerprint' => (string) ($result['fingerprint'] ?? ''),
+                    'source' => (string) ($result['source'] ?? $payload['source'] ?? ($task->type === 'backup.pull' ? ($payload['host'] ?? '') : '')),
                     'files' => (int) ($result['files'] ?? 0),
                     'bytes' => (int) ($result['bytes'] ?? 0),
                     'sections' => $sections,

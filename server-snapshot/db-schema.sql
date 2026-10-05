@@ -121,6 +121,52 @@ CREATE TABLE `backup_configs` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `backup_destination_pushes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `backup_destination_pushes` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `destination_id` bigint(20) unsigned NOT NULL,
+  `username` varchar(16) NOT NULL,
+  `archive_id` varchar(32) NOT NULL,
+  `file` varchar(120) NOT NULL,
+  `status` varchar(16) NOT NULL DEFAULT 'queued',
+  `task_id` bigint(20) unsigned DEFAULT NULL,
+  `message` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `bdp_destination_archive_unique` (`destination_id`,`archive_id`),
+  KEY `bdp_destination_index` (`destination_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `backup_destinations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `backup_destinations` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(32) NOT NULL,
+  `type` varchar(8) NOT NULL DEFAULT 'ssh',
+  `host` varchar(253) NOT NULL,
+  `port` smallint(5) unsigned NOT NULL DEFAULT 22,
+  `username` varchar(32) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `auth_type` varchar(8) NOT NULL DEFAULT 'key',
+  `retention_days` smallint(5) unsigned NOT NULL DEFAULT 30,
+  `host_fingerprint` varchar(128) DEFAULT NULL,
+  `public_key` text DEFAULT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT 1,
+  `last_test_at` timestamp NULL DEFAULT NULL,
+  `last_test_ok` tinyint(1) DEFAULT NULL,
+  `last_test_message` varchar(500) DEFAULT NULL,
+  `last_push_at` timestamp NULL DEFAULT NULL,
+  `last_push_message` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `backup_destinations_name_unique` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `backup_jobs`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;
@@ -968,6 +1014,8 @@ CREATE TABLE `transfer_restores` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(16) NOT NULL,
   `action` varchar(16) NOT NULL,
+  `mysql` tinyint(1) NOT NULL DEFAULT 0,
+  `mysql_only` varchar(255) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)

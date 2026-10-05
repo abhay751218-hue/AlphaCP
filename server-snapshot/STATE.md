@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.70.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.70.0   (.env)
-AGENT_VERSION : 0.63.0
+panel code    : 0.74.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.81.1   (.env)
+AGENT_VERSION : 0.81.1
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -102,15 +102,34 @@ agent-backup-20261004024356
 agent-backup-20261004032958
 agent-backup-20261004145538
 agent-backup-20261004151423
-panel-backup-20261004032958
-panel-backup-20261004145538
-panel-backup-20261004151423
+agent-backup-20261005014431
+agent-backup-20261005030945
+agent-backup-20261005034027
+agent-backup-20261005053943
+agent-backup-20261005062349
+agent-backup-20261005072216
+agent-backup-20261005073615
+agent-backup-20261005074509
+agent-backup-20261005075030
+agent-backup-20261005080305
+agent-backup-20261005100057
+agent-backup-20261005100819
+agent-backup-20261005103341
+agent-backup-20261005110804
+agent-backup-20261005114249
+agent-backup-20261005120447
+agent-backup-20261005135321
+agent-backup-20261005145330
+agent-backup-20261005165927
+panel-backup-20261005135321
+panel-backup-20261005145330
+panel-backup-20261005165927
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               inactive
+alphacp-sync               activating
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -129,11 +148,16 @@ redis-server               active
 ## Listening ports
 ```
 22	sshd
+25	exim4
 53	named
 80	apache2
+110	dovecot
+143	dovecot
 443	apache2
 783	spamd
 953	named
+993	dovecot
+995	dovecot
 3306	mariadbd
 6379	redis-server
 8090	nginx
@@ -148,6 +172,7 @@ alphacp-sync.timer alphacp-sync.service
 ## Custom artisan commands (alphacp / license / trial)
 ```
 alphacp:admin-password
+alphacp:backup-destination-push
 alphacp:scheduled-backups
 ```
 
@@ -209,6 +234,9 @@ alphacp:scheduled-backups
   2026_09_29_000052_create_transfer_restores_table   [51] Ran
   2026_09_29_000053_create_transfer_reviews_table   [52] Ran
   2026_10_04_000054_create_mysql_user_tables   [53] Ran
+  2026_10_04_000055_add_mysql_restore_to_transfer_restores   [54] Ran
+  2026_10_05_000060_create_backup_destinations_table   [55] Ran
+  2026_10_05_000061_create_backup_destination_pushes_table   [55] Ran
 ```
 
 ## Routes (web)
@@ -234,6 +262,12 @@ GET|HEAD           /backup                                       backup.index
 POST               /backup                                       backup.store
 GET|HEAD           /backup-config                                backup-config.index
 POST               /backup-config                                backup-config.store
+GET|HEAD           /backup-destinations                          backup-destinations.index
+POST               /backup-destinations                          backup-destinations.store
+POST               /backup-destinations/browse                   backup-destinations.browse
+POST               /backup-destinations/push                     backup-destinations.push
+POST               /backup-destinations/test                     backup-destinations.test
+DELETE             /backup-destinations/{name}                   backup-destinations.destroy
 GET|HEAD           /backup-restoration                           backup-restoration.index
 POST               /backup-restoration                           backup-restoration.store
 GET|HEAD           /backup-user-selection                        backup-user-selection.index
@@ -391,6 +425,8 @@ GET|HEAD           /transfer-review                              transfer-review
 POST               /transfer-review                              transfer-review.store
 GET|HEAD           /transfer-tool                                transfer-tool.index
 POST               /transfer-tool                                transfer-tool.store
+POST               /transfer-tool/probe                          transfer-tool.probe
+POST               /transfer-tool/pull                           transfer-tool.pull
 GET|HEAD           /two-factor                                   twofactor.challenge
 POST               /two-factor                                   twofactor.verify
 GET|HEAD           /up                                           
@@ -427,6 +463,7 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/etc/check.token  
 /usr/local/alphacp/etc/database.env  keys: ACP_DB_HOST ACP_DB_PORT ACP_DB_NAME ACP_DB_USER ACP_DB_PASS ACP_SERVER_ID 
 /usr/local/alphacp/etc/install.env  keys: ACP_INSTALLER_VERSION ACP_PROFILE ACP_INSTALLED_AT ACP_OS ACP_ARCH ACP_PHP_PRIMARY ACP_PHP_VERSIONS ACP_PANEL_INSTALLED ACP_LICENSE_STATUS 
+/usr/local/alphacp/etc/mail-server-configured  
 /usr/local/alphacp/etc/my.cnf  keys: user password host port database 
 /usr/local/alphacp/etc/panel.env  keys: ACP_DB_HOST ACP_DB_PORT ACP_DB_NAME ACP_DB_USER ACP_DB_PASS ACP_SERVER_ID ACP_HOME 
 /usr/local/alphacp/var/install.state  keys: preflight packages services 
@@ -440,5 +477,9 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/agent/src/AccountOs.php  (secret jaisa pattern)
 /usr/local/alphacp/agent/src/MysqlServer.php  (binary)
 /usr/local/alphacp/agent/tests/FakeCommandExecutor.php  (secret jaisa pattern)
+/usr/local/alphacp/agent/tests/run-tests.php  (secret jaisa pattern)
+/usr/local/alphacp/panel/resources/views/backup-destinations/index.blade.php  (secret jaisa pattern)
+/usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php  (secret jaisa pattern)
 /usr/local/alphacp/panel/tests/Feature/SshTest.php  (secret jaisa pattern)
+/usr/local/alphacp/panel/tests/Feature/TransferToolTest.php  (secret jaisa pattern)
 ```

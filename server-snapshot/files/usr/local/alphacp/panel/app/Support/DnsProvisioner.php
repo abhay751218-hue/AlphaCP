@@ -132,6 +132,63 @@ final class DnsProvisioner
         ]);
     }
 
+    /** S9: BIND9 khud provision karo (zone dir, managed options, include line). */
+    public static function enqueueBindSetup(): int
+    {
+        return Paneld::enqueue('dns.bind', ['action' => 'setup']);
+    }
+
+    /**
+     * S9: ek domain ki ASLI zone file likho (JSON ke saath-saath).
+     * `named-checkzone` gate agent par hai — yahan se bas records jate hain.
+     */
+    public static function enqueueBindZone(Account $account, string $domain): int
+    {
+        $rows = $account->dnsRecords()
+            ->where('domain', $domain)
+            ->orderBy('id')
+            ->get()
+            ->map(static fn (DnsRecord $row): array => [
+                'domain' => $row->domain,
+                'name' => $row->name,
+                'type' => $row->type,
+                'value' => $row->value,
+            ])->values()->all();
+
+        $ttl = (int) (ZoneTtl::query()->where('domain', $domain)->value('ttl') ?? 0);
+        $payload = [
+            'action' => 'write',
+            'domain' => $domain,
+            'records' => $rows,
+        ];
+        if ($ttl > 0) {
+            $payload['ttl'] = $ttl;
+        }
+
+        return Paneld::enqueue('dns.bind', $payload, 'panel', $account->id);
+    }
+
+    /** S9: zone file + zone clause hatao (domain delete / zone delete). */
+    public static function enqueueBindRemove(string $domain): int
+    {
+        return Paneld::enqueue('dns.bind', ['action' => 'remove', 'domain' => $domain]);
+    }
+
+    /** S9: `dig @127.0.0.1` se asli jawab (Track DNS jaisa). */
+    public static function enqueueBindVerify(string $domain): int
+    {
+        return Paneld::enqueue('dns.bind', ['action' => 'verify', 'domain' => $domain]);
+    }
+
+    /**
+     * S9: poore server ke zones zone.json se dobara likho — cPanel ka
+     * "Synchronize DNS Records". Ek hi task, har account ke liye alag nahi.
+     */
+    public static function enqueueBindSync(): int
+    {
+        return Paneld::enqueue('dns.bind', ['action' => 'sync']);
+    }
+
     public static function enqueueNameserver(string $software, string $ns1, string $ns2): int
     {
         return Paneld::enqueue('dns.nameserver', [

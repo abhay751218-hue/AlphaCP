@@ -556,6 +556,28 @@ return [
         ],
     ],
 
+    'db.restore' => [
+        'handler'     => Tasks\DbRestore::class,
+        'safety'      => 'destructive',
+        'timeout'     => 3600,
+        'confirm'     => 'db.restore',
+        'description' => 'Restore the mysql/*.sql dumps of a cPanel archive into real MariaDB databases.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'archive_path', '_confirm'],
+            'properties'           => [
+                'username'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'archive_path' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 4096],
+                'sha256'       => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$'],
+                'action'       => ['type' => 'string', 'enum' => ['transfer', 'restore']],
+                'only'         => ['type' => 'array', 'maxItems' => 64, 'items' => ['type' => 'string', 'maxLength' => 16]],
+                '_confirm'     => ['type' => 'string', 'enum' => ['db.restore']],
+            ],
+        ],
+    ],
+
     'db.drop' => [
         'handler'     => Tasks\DbDrop::class,
         'safety'      => 'destructive',
@@ -1088,6 +1110,48 @@ return [
         ],
     ],
 
+    // S7: Exim4 + Dovecot — asli mail. Panel/agent mailboxes (bcrypt + Maildir)
+    // pehle se likhte hain; yahi task unhe daemons tak pahunchata hai.
+    'mail.server' => [
+        'handler'     => Tasks\MailServerSetup::class,
+        'safety'      => 'mutating',
+        'timeout'     => 180,
+        'description' => 'Exim4 + Dovecot: status/setup/sync/verify, server mail config and SpamAssassin/greylisting.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['action'],
+            'properties'           => [
+                'action'  => ['type' => 'string', 'enum' => [
+                    'status', 'setup', 'sync', 'list', 'verify', 'deliverability',
+                    // S7 server-wide: cPanel #141 Mail Queue Manager, #142 Delivery Reports,
+                    // #143 Exim Configuration Manager, #144 Mailserver Configuration (Dovecot),
+                    // #146 Email Disk Usage (server view)
+                    'queue', 'reports', 'eximconf', 'dovecotconf', 'diskusage',
+                    // #147 Apache SpamAssassin + Greylisting
+                    'spamassassin',
+                ]],
+                'address' => ['type' => 'string', 'maxLength' => 190, 'pattern' => '^[a-z0-9._-]+@[a-z0-9.-]+$'],
+                'username' => ['type' => 'string', 'maxLength' => 32, 'pattern' => '^[a-z][a-z0-9]{2,15}$'],
+                // mail queue: op = list/count/deliver/remove/freeze/thaw/flush
+                'op' => ['type' => 'string', 'maxLength' => 16, 'pattern' => '^[a-z]{1,16}$'],
+                // asli exim message id (jaise 1oABCD-0000xy-1a) — shell-injection se bachav
+                'id' => ['type' => 'string', 'maxLength' => 32, 'pattern' => '^[0-9A-Za-z]{6}-[0-9A-Za-z]{6}-[0-9A-Za-z]{2}$'],
+                // delivery reports: kitni entries + kisme dhoondhna hai
+                'limit'  => ['type' => 'integer', 'minimum' => 1, 'maximum' => 500],
+                'search' => ['type' => 'string', 'maxLength' => 120, 'pattern' => '^[ -~]{1,120}$'],
+                // configuration manager: { option: value } — har value apne type se validate hoti hai
+                'set' => ['type' => 'object', 'maxProperties' => 40],
+                // #147 SpamAssassin + Greylisting
+                'enabled'        => ['type' => 'boolean'],
+                'greylisting'    => ['type' => 'boolean'],
+                'required_score' => ['type' => 'number', 'minimum' => 1, 'maximum' => 15],
+                'reject_score'   => ['type' => 'number', 'minimum' => 0, 'maximum' => 30],
+            ],
+        ],
+    ],
+
     'mail.set' => [
         'handler'     => Tasks\MailSet::class,
         'safety'      => 'mutating',
@@ -1143,6 +1207,43 @@ return [
                             'type'    => ['type' => 'string', 'enum' => ['ssh-ed25519', 'ssh-rsa', 'ecdsa-sha2-nistp256', 'ecdsa-sha2-nistp384', 'ecdsa-sha2-nistp521']],
                             'key'     => ['type' => 'string', 'maxLength' => 8192],
                             'comment' => ['type' => 'string', 'maxLength' => 64],
+                        ],
+                    ],
+                ],
+            ],
+        ],
+    ],
+
+    // S9: BIND9 — asli authoritative zones. JSON ke baad yahi asli kadam hai:
+    // zone file likhne se pehle `named-checkzone` gate, phir rndc reload, phir
+    // `dig @127.0.0.1` se verify (likhna = server ka jawab dena).
+    'dns.bind' => [
+        'handler'     => Tasks\BindSetup::class,
+        'safety'      => 'mutating',
+        'timeout'     => 120,
+        'description' => 'BIND9 zones: status/setup/list/write/remove/verify (named-checkzone gated).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['action'],
+            'properties'           => [
+                'action'  => ['type' => 'string', 'enum' => ['status', 'setup', 'list', 'write', 'remove', 'verify', 'sync']],
+                'domain'  => ['type' => 'string', 'pattern' => '^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$', 'maxLength' => 190],
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'ttl'     => ['type' => 'integer', 'minimum' => 60, 'maximum' => 86400],
+                'records' => [
+                    'type'     => 'array',
+                    'maxItems' => 50,
+                    'items'    => [
+                        'type'                 => 'object',
+                        'additionalProperties' => false,
+                        'required'             => ['domain', 'name', 'type', 'value'],
+                        'properties'           => [
+                            'domain' => ['type' => 'string', 'maxLength' => 190],
+                            'name'   => ['type' => 'string', 'maxLength' => 63],
+                            'type'   => ['type' => 'string', 'enum' => ['A', 'CNAME', 'MX', 'TXT']],
+                            'value'  => ['type' => 'string', 'maxLength' => 255],
                         ],
                     ],
                 ],
@@ -1629,6 +1730,76 @@ return [
             'properties'           => [
                 'username' => ['type' => 'string', 'maxLength' => 16],
                 'path'     => ['type' => 'string', 'maxLength' => 240],
+            ],
+        ],
+    ],
+
+    // S10: authenticated remote pull — cpmove archive doosre server se SSH (scp) se lao.
+    // 'probe' sirf host key fingerprint laata hai (download nahi) — panel pehle wo dikhata
+    // hai, admin verify karta hai, phir host_fingerprint pin karke asli pull hoti hai.
+    'backup.pull' => [
+        'handler'     => Tasks\BackupPull::class,
+        'safety'      => 'mutating',
+        'timeout'     => 3600,
+        'confirm'     => 'backup.pull',
+        'description' => 'Fetch a cPanel archive from another server over SSH (scp) into the import drop dir.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['host', 'user', '_confirm'],
+            'properties'           => [
+                'host'             => ['type' => 'string', 'minLength' => 1, 'maxLength' => 253],
+                'port'             => ['type' => 'integer', 'minimum' => 1, 'maximum' => 65535],
+                'user'             => ['type' => 'string', 'pattern' => '^[a-z_][a-z0-9_-]{0,31}$'],
+                'remote_path'      => ['type' => 'string', 'pattern' => '^/[A-Za-z0-9._/-]+$', 'maxLength' => 4096],
+                'probe'            => ['type' => 'boolean'],
+                'auth'             => ['type' => 'string', 'enum' => ['key', 'password']],
+                'private_key'      => ['type' => 'string', 'maxLength' => 65536],
+                'key_path'         => ['type' => 'string', 'pattern' => '^/[A-Za-z0-9._/-]+$', 'maxLength' => 4096],
+                'password'         => ['type' => 'string', 'maxLength' => 1024],
+                'dest_name'        => ['type' => 'string', 'pattern' => '^[A-Za-z0-9][A-Za-z0-9._-]*$', 'maxLength' => 120],
+                'sha256'           => ['type' => 'string', 'pattern' => '^[a-f0-9]{64}$', 'maxLength' => 64],
+                'host_fingerprint' => ['type' => 'string', 'maxLength' => 128],
+                'accept_host_key'  => ['type' => 'boolean'],
+                'max_kbps'         => ['type' => 'integer', 'minimum' => 0, 'maximum' => 1000000],
+                'overwrite'        => ['type' => 'boolean'],
+                '_confirm'         => ['type' => 'string', 'enum' => ['backup.pull']],
+            ],
+        ],
+    ],
+
+    // S10: remote backup destinations — apne archives doosre server par bhejo (scp).
+    // Host key PIN lagana zaroori hai (ya pehli key openly accept karni padti hai,
+    // jo log me loudly likhi jati hai). Key/password 0600 file me rehte hain —
+    // argv, log aur task result me kabhi nahi aate.
+    'backup.destination' => [
+        'handler'     => Tasks\BackupDestination::class,
+        'safety'      => 'mutating',
+        'timeout'     => 3600,
+        'confirm'     => 'backup.destination',
+        'description' => 'Manage remote backup destinations (SSH) — list/save/test/push/browse/remove.',
+        'paths'       => ['/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['action', '_confirm'],
+            'properties'           => [
+                'action'           => ['type' => 'string', 'enum' => ['list', 'save', 'test', 'push', 'browse', 'remove']],
+                'name'             => ['type' => 'string', 'pattern' => '^[a-z0-9][a-z0-9-]{0,31}$', 'maxLength' => 32],
+                'host'             => ['type' => 'string', 'minLength' => 1, 'maxLength' => 253],
+                'port'             => ['type' => 'integer', 'minimum' => 1, 'maximum' => 65535],
+                'user'             => ['type' => 'string', 'pattern' => '^[a-z_][a-z0-9_-]{0,31}$'],
+                'path'             => ['type' => 'string', 'pattern' => '^/[A-Za-z0-9._/-]+$', 'maxLength' => 4096],
+                'auth'             => ['type' => 'string', 'enum' => ['key', 'password']],
+                'private_key'      => ['type' => 'string', 'maxLength' => 65536],
+                'password'         => ['type' => 'string', 'maxLength' => 1024],
+                'host_fingerprint' => ['type' => 'string', 'maxLength' => 128],
+                'accept_host_key'  => ['type' => 'boolean'],
+                'retention_days'   => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365],
+                'enabled'          => ['type' => 'boolean'],
+                'archive_path'     => ['type' => 'string', 'pattern' => '^/[A-Za-z0-9._/-]+$', 'maxLength' => 4096],
+                '_confirm'         => ['type' => 'string', 'enum' => ['backup.destination']],
             ],
         ],
     ],

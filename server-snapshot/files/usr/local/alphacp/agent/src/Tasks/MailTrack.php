@@ -7,12 +7,15 @@ use Alphacp\Agent\AccountIdentity;
 use Alphacp\Agent\AccountOs;
 use Alphacp\Agent\AccountPaths;
 use Alphacp\Agent\Mail;
+use Alphacp\Agent\MailServer;
 use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskRejectedException;
 use RuntimeException;
 
 /**
- * mail.track — search ~/etc/mail/track.json by recipient. No Exim log, no pipe.
+ * mail.track — ~/etc/mail/track.json + ASLI exim mainlog se delivery trace (cPanel #19).
+ * Ab sirf JSON nahi: agar mail server configured hai to log khud jawab deta hai
+ * (kab aayi, kahan pahunchi, defer/fail hui ya nahi). No pipe, no shell.
  *
  * @acp-task mail.track
  */
@@ -40,10 +43,22 @@ final class MailTrack implements TaskInterface
             throw new TaskRejectedException($e->getMessage());
         }
 
+        // ASLI delivery trace: exim ka mainlog khud batata hai ki mail kahan pahunchi
+        // (cPanel #19). Mail server configured na ho to jhoothi report nahi — wajah batao.
+        $trace = ['ok' => false, 'error' => 'mail server configured nahi hai — pehle mail.server setup chalao'];
+        if (MailServer::isConfigured()) {
+            try {
+                $trace = (new MailServer($ctx->cmd, $ctx->log))->track($query);
+            } catch (TaskRejectedException $e) {
+                $trace = ['ok' => false, 'error' => $e->getMessage()];
+            }
+        }
+
         return [
             'username' => $username,
             'query'    => $query,
             'hits'     => $hits,
+            'log'      => $trace,
             'status'   => 'ok',
         ];
     }

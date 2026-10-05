@@ -436,6 +436,128 @@ final class BackupArchiveStore
         }
     }
 
+    /**
+     * Restore the `mysql/` section of a cPanel archive into real MariaDB
+     * databases (`<account>_<suffix>`), reusing the archive guards of the home
+     * import (allowlisted path, checksum, hostile-member scan, staging dir).
+     *
+     * Dumps are staged, sanitised (see CpanelMysql) and streamed to the client;
+     * the staging always disappears, even on failure.
+     *
+     * @param  list<string> $only database suffixes to restore (empty = every dump)
+     * @return array<string, mixed>
+     */
+    public function importCpanelMysql(string $username, string $archivePath, string $expectedSha256 = '', string $action = 'restore', array $only = []): array
+    {
+        $this->assertUsername($username);
+        if (!in_array($action, ['transfer', 'restore'], true)) {
+            throw new TaskRejectedException('invalid cPanel import action');
+        }
+        $expectedSha256 = strtolower(trim($expectedSha256));
+        if ($expectedSha256 !== '' && preg_match('/^[a-f0-9]{64}$/', $expectedSha256) !== 1) {
+            throw new TaskRejectedException('invalid cPanel archive checksum');
+        }
+
+        $archive = $this->assertReadableArchive($archivePath);
+        $sha256 = hash_file('sha256', $archive);
+        $size = filesize($archive);
+        if (!is_string($sha256) || preg_match('/^[a-f0-9]{64}$/', $sha256) !== 1 || !is_int($size) || $size < 20) {
+            throw new TaskRejectedException('cPanel archive checksum could not be computed');
+        }
+        if ($expectedSha256 !== '' && !hash_equals($expectedSha256, $sha256)) {
+            throw new TaskRejectedException('cPanel archive checksum mismatch; refusing to import');
+        }
+
+        $accountsRoot = $this->paths->accountsRoot;
+        $this->assertDirectory($accountsRoot, 'account root');
+
+        $lock = $this->acquireLock($username);
+        $staging = $accountsRoot . '/.acp-mysql-' . $username . '-' . gmdate('YmdHis');
+        try {
+            $plan = CpanelArchive::structure($this->tarListing($archive), $username);
+            $mysqlEntries = (int) (($plan['section_entries'] ?? [])['mysql'] ?? 0);
+            if ($mysqlEntries === 0) {
+                return [
+                    'username' => $username, 'action' => $action, 'archive' => basename($archive),
+                    'sha256' => $sha256, 'size_bytes' => $size, 'status' => 'empty',
+                    'databases' => [], 'skipped' => [],
+                    'message' => 'archive me mysql/ section nahi hai (koi dump restore nahi hua)',
+                ];
+            }
+
+            $prefix = $plan['root'] === '' ? '' : $plan['root'] . '/';
+            $mysqlMember = $prefix . 'mysql';
+            $selection = CpanelMysql::plan($this->tarListing($archive, false, $mysqlMember), $username, $only);
+            if ($selection['dumps'] === []) {
+                return [
+                    'username' => $username, 'action' => $action, 'archive' => basename($archive),
+                    'sha256' => $sha256, 'size_bytes' => $size, 'status' => 'empty',
+                    'databases' => [], 'skipped' => $selection['skipped'],
+                    'message' => 'archive ke mysql/ section me koi restorable dump nahi mila',
+                ];
+            }
+
+            $this->ensureDirectory($staging, 0700);
+
+            // Phase 1 — stage and sanitise EVERY dump before touching MariaDB, so a
+            // hostile archive can never leave a half-imported set of databases.
+            $jobs = [];
+            foreach ($selection['dumps'] as $dump) {
+                $member = $prefix . 'mysql/' . $dump['file'];
+                $staged = $staging . '/' . $member;
+                $this->extract($archive, $staging, $member, 'cPanel mysql dump extraction failed');
+                if (is_link($staged) || !is_file($staged)) {
+                    throw new TaskRejectedException('cPanel mysql dump could not be staged: ' . $dump['file']);
+                }
+
+                $database = MysqlServer::accountName($username, $dump['suffix'], 'database name');
+                $prepared = $staging . '/prepared-' . $dump['suffix'] . '.sql';
+                $info = CpanelMysql::prepare($staged, $prepared, $database);
+                $jobs[] = ['dump' => $dump, 'database' => $database, 'prepared' => $prepared, 'info' => $info];
+            }
+
+            // Phase 2 — create + import.
+            $server = new MysqlServer($this->cmd, $this->log);
+            $databases = [];
+            foreach ($jobs as $job) {
+                $created = $server->createDatabase($job['database']);
+                $server->importFile($job['prepared'], self::TAR_TIMEOUT);
+
+                $databases[] = [
+                    'database' => $job['database'],
+                    'dump' => $job['dump']['file'],
+                    'gzip' => $job['dump']['gzip'],
+                    'bytes' => $job['info']['bytes'],
+                    'statements_lines' => $job['info']['lines'],
+                    'database_created' => $created,
+                    'status' => 'imported',
+                ];
+                $this->log->info("cPanel mysql dump {$job['dump']['file']} imported into {$job['database']} ({$job['info']['bytes']} bytes)");
+            }
+
+            return [
+                'username' => $username,
+                'action' => $action,
+                'archive' => basename($archive),
+                'sha256' => $sha256,
+                'size_bytes' => $size,
+                'layout' => $plan['layout'],
+                'status' => 'imported',
+                'databases' => $databases,
+                'skipped' => $selection['skipped'],
+            ];
+        } finally {
+            if (is_dir($staging) && !is_link($staging)) {
+                try {
+                    $this->removeTree($staging);
+                } catch (Throwable $e) {
+                    $this->log->warning('cPanel mysql staging cleanup failed: ' . $e->getMessage());
+                }
+            }
+            $this->releaseLock($lock);
+        }
+    }
+
     private function extract(string $archive, string $directory, ?string $member, string $error): void
     {
         $argv = [

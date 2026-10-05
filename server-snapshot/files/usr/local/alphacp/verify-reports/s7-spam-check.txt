@@ -1,0 +1,30 @@
+S7 #147 live check — 2026-10-05T17:21:37Z host=ip-172-26-4-65
+[INFO   ] running mail.server (safety=mutating, attempt 1)
+[INFO   ] done in 33ms
+
+{
+    "task_id": 615,
+    "status": "success",
+    "duration_ms": 33,
+    "result": {
+        "action": "spamassassin",
+        "saved": [],
+        "exim_config": null,
+        "spam": {
+            "spamd_installed": true,
+            "spamd_running": false,
+            "content_scanning": true,
+            "enabled": false,
+            "active": false,
+            "required_score": 5,
+            "reject_score": 8,
+            "greylisting": false,
+            "greylisting_active": false,
+            "greylistd_running": false,
+            "greylistd_socket": false
+        },
+        "status": "ok"
+    },
+    "error": null
+}
+RESULT: 8 pass, 0 fail, 0 skip

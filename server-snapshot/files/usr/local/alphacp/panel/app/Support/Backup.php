@@ -162,6 +162,120 @@ final class Backup
         return $raw;
     }
 
+    /**
+     * Remote pull (S10): the old server we pull a cpmove archive from.
+     *
+     * Only a bare hostname or IP — no userinfo, no port, no spaces, nothing the
+     * scp argument parser could read as an option (`-oProxyCommand=…` is the
+     * classic smuggling trick, and a leading dash is exactly how it starts).
+     */
+    public static function tryHost(string $raw): ?string
+    {
+        $host = strtolower(trim($raw));
+        if ($host === '' || strlen($host) > 253) {
+            return null;
+        }
+        if (str_contains($host, "\0") || str_contains($host, '|') || str_contains($host, chr(92))) {
+            return null;
+        }
+        if (str_starts_with($host, '-')) {
+            return null;
+        }
+        $isIp = filter_var($host, FILTER_VALIDATE_IP) !== false;
+        $isName = preg_match('/^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)*$/', $host) === 1;
+        if (! $isIp && ! $isName) {
+            return null;
+        }
+
+        return $host;
+    }
+
+    /** Absolute path ON THE REMOTE server (no '..', no shell punctuation). */
+    public static function tryRemotePath(string $raw): ?string
+    {
+        $raw = trim($raw);
+        if ($raw === '' || strlen($raw) > 4096) {
+            return null;
+        }
+        if (str_contains($raw, "\0") || str_contains($raw, '|') || str_contains($raw, chr(92))) {
+            return null;
+        }
+        if (preg_match('#^/[A-Za-z0-9._/-]+$#', $raw) !== 1) {
+            return null;
+        }
+        foreach (explode('/', $raw) as $segment) {
+            if ($segment === '..') {
+                return null;
+            }
+        }
+
+        return $raw;
+    }
+
+    /** SSH user on the remote server. */
+    public static function tryRemoteUser(string $raw): ?string
+    {
+        $raw = strtolower(trim($raw));
+
+        return preg_match('/^[a-z_][a-z0-9_-]{0,31}$/', $raw) === 1 ? $raw : null;
+    }
+
+    /** Name the pulled archive gets in the drop dir — must look like a tarball. */
+    public static function tryDestName(string $raw): ?string
+    {
+        $raw = basename(trim($raw));
+        if ($raw === '' || strlen($raw) > 120) {
+            return null;
+        }
+        if (preg_match('/^[A-Za-z0-9][A-Za-z0-9._-]*$/', $raw) !== 1) {
+            return null;
+        }
+
+        return preg_match('/\.(tar|tar\.gz|tgz)$/i', $raw) === 1 ? $raw : null;
+    }
+
+    /**
+     * Destination name for `backup.destination` — a slug, because the agent
+     * turns it into a file name under its own state directory.
+     */
+    public static function tryDestinationName(string $raw): ?string
+    {
+        $name = strtolower(trim($raw));
+        if ($name === '' || strlen($name) > 32) {
+            return null;
+        }
+
+        return preg_match('/^[a-z0-9][a-z0-9-]{0,31}$/', $name) === 1 ? $name : null;
+    }
+
+    /** SSH host key fingerprint as printed by ssh-keygen (`SHA256:…`). */
+    public static function tryFingerprint(string $raw): ?string
+    {
+        $raw = trim($raw);
+        if ($raw === '') {
+            return '';
+        }
+        if (strlen($raw) > 128) {
+            return null;
+        }
+
+        return preg_match('/^SHA256:[A-Za-z0-9+\/]+={0,2}$/', $raw) === 1 ? $raw : null;
+    }
+
+    /** @return array{host:string,port:int,user:string,remote_path:string}|null */
+    public static function tryRemoteSpec(array $data): ?array
+    {
+        $host = self::tryHost((string) ($data['host'] ?? ''));
+        $user = self::tryRemoteUser((string) ($data['user'] ?? ''));
+        $path = self::tryRemotePath((string) ($data['remote_path'] ?? ''));
+        $port = (int) ($data['port'] ?? 22);
+        if ($host === null || $user === null || $path === null || $port < 1 || $port > 65535) {
+            return null;
+        }
+
+        return ['host' => $host, 'port' => $port, 'user' => $user, 'remote_path' => $path];
+    }
+
     /** '' stays empty; a valid sha256 comes back lowercased; anything else is null (invalid). */
     public static function normalizeSha256(string $raw): ?string
     {
