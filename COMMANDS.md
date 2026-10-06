@@ -14,7 +14,24 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### ⭐ alphacp-sync v1.4 — snapshot completeness + config-only secret-scan. **Abhi yahi chalao.**
+### ⭐ alphacp-sync v1.5 — source par pattern-scan band. **Abhi yahi chalao.**
+```bash
+sudo alphacp-sync get aa22e5fac292ddfce6086dc44db3752fea334c72 installer/alphacp-sync.sh /tmp/acp-sync-v1.5.sh 1e197e0860ca3c59e400e1b5c8504d894ec889e316007143493d5e3855557db5 && sudo bash /tmp/acp-sync-v1.5.sh
+```
+- sha256: `1e197e0860ca3c59e400e1b5c8504d894ec889e316007143493d5e3855557db5`
+- **Kyun:** v1.4 ke live run me bhi 4 files gayab rahi — un views/tests me placeholder
+  (`-----BEGIN OPENSSH PRIVATE KEY-----`) / dummy `ghp_` token ko v1.4 ke hard patterns "secret"
+  samajhte the. v1.5 me saare patterns **sirf config files** par; source par sirf literal
+  server-secret scan. Ab completeness **khaali** aani chahiye aur asli 4 views GitHub par aayengi.
+- Expected: banner `v1.5` → `completeness: panel ki har source file … snapshot me hai` →
+  `==> SYNC OK ✅`.
+- Verify (push ke baad):
+  `gh api repos/abhay751218-hue/AlphaCP/contents/server-snapshot/files/usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php`
+  → 200 (pehle 404).
+- Test: `sudo bash tools/sim/sync-sim.sh` → **72/72**.
+- ⚠️ Sync tool update + turant sync; panel code ko nahi chhoota. Safe.
+
+### alphacp-sync v1.4 — ✅ chal chuka (7 Oct, 21:58Z). Superseded by v1.5.
 ```bash
 sudo alphacp-sync get ff810fb2dacc19a0ce1f36ebad965fc64e71df07 installer/alphacp-sync.sh /tmp/acp-sync-v1.4.sh d32bc3fc9196867bd96fcafa34ba3c803a17bf893bdf27ed14f5a0f1f1ee0515 && sudo bash /tmp/acp-sync-v1.4.sh
 ```
