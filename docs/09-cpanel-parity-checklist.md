@@ -67,7 +67,7 @@
 | 20 | Global Email Filters | Server-side filters | S7 | ✅ (post-0.81.1 live S7 verifier: **62 pass / 0 fail / 0 skip**, 5 Oct; account-wide Exim filter delivery verified) |
 | 21 | Email Filters | Per-mailbox filters | S7 | ✅ (post-0.81.1 live S7 verifier: **62 pass / 0 fail / 0 skip**, 5 Oct; folder-save and discard both verified) |
 | 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ (SPF + DMARC + DKIM live verified: `dig TXT`, `_dmarc`, `default._domainkey` sab green) |
-| 23 | Address Importer | Bulk CSV import | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (CSV local,domain,password → mail.set; no pipe)) |
+| 23 | Address Importer | Bulk CSV import | S7 | 🟡 (6 Oct — panel CRUD + asli panel-code CSV parse/hash live verifier ready (`s7-address-importer-check.sh`, sim 21/0: real mail.set + doveadm auth test + asli Exim delivery); live run pending. Note: CSV→mail.set path; koi pipe/foreign domain accept nahi) |
 | 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ (SpamAssassin score + blacklist/whitelist files live (0.77.0)) |
 | 25 | Encryption | PGP/GnuPG email keys | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (identity JSON; no gpg/private key)) |
 | 26 | BoxTrapper | Challenge-response anti-spam | S7 | 🟡 (Mail services not production-complete: Exim/Dovecot integration + end-to-end delivery/auth verification pending; (enabled+allowlist JSON; no daemon)) |
@@ -252,7 +252,7 @@
 | 145 | Email Deliverability (server default) | S7 | ⏳ S7 |
 | 146 | Email Disk Usage (server view) | S7 | ✅ (live verified: per account + per mailbox asli bytes) |
 | 147 | SpamAssassin + Greylisting config | S7 | ✅ Live read-only status verifier: **8 pass / 0 fail / 0 skip**, `STATUS-VERIFIED` (5 Oct); no feature toggle changed |
-| 148 | Address Importer (server) | S7 | ⏳ S7 |
+| 148 | Address Importer (server) | S7 | 🟡 (6 Oct — live verifier `tools/verify/s7-address-importer-check.sh` ready + sim 21/0; server-scope import ka live proof pending) |
 
 ### SQL / Databases (server-wide)
 | # | WHM tool | Step | Status |

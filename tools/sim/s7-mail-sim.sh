@@ -16,6 +16,31 @@ mkdir -p "$ACP_HOME/agent/config" "$ACP_HOME/etc" "$ACP_HOME/agent/bin"
 BIN="$WORKROOT/bin"; mkdir -p "$BIN"
 export PATH="$BIN:$PATH"
 
+# #23 Address Importer verifier deployed panel ke ASLI classes chalata hai
+# (App\Support\Mail + AccountIdentity) — sim me wahi files repo se stage karo,
+# aur PHP ke liye php-wasm use karo (sandbox me system php nahi hota).
+REPO="$(cd "$(dirname "$0")/../.." && pwd)"
+mkdir -p "$ACP_HOME/panel/app/Support"
+for f in Mail.php AccountIdentity.php; do
+  [[ -f "$REPO/refs/panel-2b-bundle/app/Support/$f" ]] \
+    && cp "$REPO/refs/panel-2b-bundle/app/Support/$f" "$ACP_HOME/panel/app/Support/"
+done
+IMPORT_PHP=""
+PHPWASM_DIR="${PHPWASM_DIR:-{/tmp,$HOME}/.tools/phpw}"
+for d in ${PHPWASM_DIR//,/ }; do
+  if [[ -f "$d/node_modules/@php-wasm/cli/php-wasm.js" ]]; then
+    IMPORT_PHP="node $d/node_modules/@php-wasm/cli/php-wasm.js -d memory_limit=512M"; break
+  fi
+done
+if [[ -z "$IMPORT_PHP" ]] && command -v npm >/dev/null 2>&1; then
+  d="/tmp/phpw"; mkdir -p "$d"
+  (cd "$d" && npm init -y >/dev/null 2>&1 && npm i @php-wasm/cli >/dev/null 2>&1) || true
+  [[ -f "$d/node_modules/@php-wasm/cli/php-wasm.js" ]] \
+    && IMPORT_PHP="node $d/node_modules/@php-wasm/cli/php-wasm.js -d memory_limit=512M"
+fi
+if [[ -z "$IMPORT_PHP" ]] && command -v php8.4 >/dev/null 2>&1; then IMPORT_PHP="$(command -v php8.4)"; fi
+if [[ -z "$IMPORT_PHP" ]] && command -v php >/dev/null 2>&1; then IMPORT_PHP="$(command -v php)"; fi
+
 BREAK_EXIM=0
 BREAK_DELIVERY=0
 HAVE_SSL=0
@@ -250,6 +275,41 @@ if [[ "${1:-}" == "user" ]]; then
   uid="$(echo "$line" | awk -F: '{print $3}')"
   printf 'field\tvalue\nuid\t%s\ngid\t%s\nhome\t%s\nmail\tmaildir:%s\n' "$uid" "$uid" "$home" "$home"
   exit 0
+fi
+# doveadm auth test <user> <password> — passwd-file ({BLF-CRYPT}) ke against asli bcrypt check
+# (asli server par Dovecot khud karta hai). SIM_DOVEADM_NO_AUTH_TEST=1 -> purana doveadm
+# (verifier ka bcrypt-fallback path test karne ke liye).
+if [[ "${1:-}" == "auth" && "${2:-}" == "test" ]]; then
+  if [[ "${SIM_DOVEADM_NO_AUTH_TEST:-0}" == "1" ]]; then
+    echo "doveadm: unknown command 'auth test'" >&2; exit 64
+  fi
+  python3 - "$USERS" "${3:-}" "${4:-}" <<'PYAUTH'
+import sys
+users, want, pw = sys.argv[1], sys.argv[2].lower(), sys.argv[3]
+line = ""
+for raw in open(users):
+    if raw.lower().startswith(want + ":"):
+        line = raw.strip(); break
+if not line:
+    print("auth: user not found"); sys.exit(1)
+h = line.split(":")[1]
+if h.startswith("{BLF-CRYPT}"):
+    h = h[len("{BLF-CRYPT}"):]
+ok = False
+try:
+    import crypt
+    ok = crypt.crypt(pw, h) == h
+except Exception:
+    try:
+        import bcrypt
+        ok = bcrypt.checkpw(pw.encode(), h.encode())
+    except Exception:
+        print("auth: no bcrypt backend in sim"); sys.exit(2)
+if ok:
+    print("passdb: %s auth succeeded" % want)
+    sys.exit(0)
+print("auth: password mismatch"); sys.exit(1)
+PYAUTH
 fi
 printf 'SIMULATED doveadm %s\n' "$*"; exit 0
 EOF
@@ -1039,7 +1099,7 @@ chmod 755 "$ACP_HOME/agent/bin/paneld"
 cat > "$ACP_HOME/agent/config/tasks.php" <<'EOF'
 <?php
 // SIM: mail.server registered
-return ['mail.server' => ['handler' => 'Tasks\MailServerSetup', 'actions' => ['status', 'setup', 'sync', 'list', 'verify']], 'mail.list' => ['handler' => 'Tasks\\MailList']];
+return ['mail.server' => ['handler' => 'Tasks\MailServerSetup', 'actions' => ['status', 'setup', 'sync', 'list', 'verify']], 'mail.list' => ['handler' => 'Tasks\\MailList'], 'mail.set' => ['handler' => 'Tasks\\MailSet']];
 EOF
 
 # ----------------------------- runner ----------------------------------------
@@ -1076,6 +1136,9 @@ TPLEOF
   export ACP_VERIFY_DOVECOT="$BIN/dovecot"
   export ACP_VERIFY_DOVECONF="$BIN/doveconf"
   export ACP_VERIFY_ALLOW_NONROOT=1
+  export ACP_VERIFY_IMPORT_USER="acpimpchk"
+  export ACP_VERIFY_IMPORT_DOMAIN="acp-import-check.test"
+  [[ -n "$IMPORT_PHP" ]] && export ACP_VERIFY_PHP="$IMPORT_PHP"
   # SIM: exim mainlog (delivery reports) + mail queue (queue manager)
   mkdir -p "$SIMROOT/var/log/exim4"
   cat > "$SIMROOT/var/log/exim4/mainlog" <<'LOGEOF'
@@ -1109,13 +1172,16 @@ QEOF
   rc=$?
   list_out="$(ACP_HOME="$ACP_HOME" bash "$(dirname "$0")/../verify/s7-mailing-list-check.sh" 2>&1)"
   list_rc=$?
-  if [[ "${SIM_DEBUG:-0}" == "1" ]]; then printf '%s\n%s\n' "$out" "$list_out"; fi
+  imp_out="$(ACP_HOME="$ACP_HOME" bash "$(dirname "$0")/../verify/s7-address-importer-check.sh" 2>&1)"
+  imp_rc=$?
+  if [[ "${SIM_DEBUG:-0}" == "1" ]]; then printf '%s\n%s\n%s\n' "$out" "$list_out" "$imp_out"; fi
   # local vars must not leak into later modes
   unset SIM_BREAK_EXIM SIM_BREAK_DELIVERY SIM_BREAK_DNS SIM_BREAK_CATCHALL SIM_BREAK_FILTER
   echo "$out"
   echo "$list_out"
+  echo "$imp_out"
   if grep -q "pass=${PASS}" <<<"out"; then :; fi
-  (( rc == 0 && list_rc == 0 ))
+  (( rc == 0 && list_rc == 0 && imp_rc == 0 ))
 }
 
 PASS=0; FAIL=0
@@ -1144,6 +1210,18 @@ for mode in good breakexim breakdelivery breakdns breakcatchall breakfilter; do
   list_want=0
   [[ "$mode" == "breakexim" || "$mode" == "breakdelivery" ]] && list_want=1
   check "mode=$mode mailing-list verifier" "$list_want" "$LF"
+  IF="$(grep -o 'S7 #23 ADDRESS IMPORTER LIVE CHECK: [0-9]* pass, [0-9]* fail' <<<"$OUT" | tail -1 | sed 's/.*pass, //; s/ fail//')"
+  [[ -z "$IF" ]] && IF="?"
+  imp_want=0
+  [[ "$mode" == "breakdelivery" ]] && imp_want=1
+  check "mode=$mode address-importer verifier" "$imp_want" "$IF"
+  if [[ "$mode" == "good" ]]; then
+    if grep -q 'import delivery: YES' <<<"$OUT"; then
+      PASS=$((PASS+1)); echo "[ok]   imported mailboxes ko asli delivery mili (2/2)"
+    else
+      FAIL=$((FAIL+1)); echo "[FAIL] address-importer delivery marker missing"
+    fi
+  fi
   if [[ "$mode" == "good" ]]; then
     if grep -q 'list delivery: YES' <<<"$OUT"; then
       PASS=$((PASS+1)); echo "[ok]   mailing-list subscriber received test message"

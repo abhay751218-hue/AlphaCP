@@ -37,6 +37,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   s10-backup-destination-sim **21/0** (4 runs: sab theek / pin ignore / checksum mismatch / keyscan order),
   `tools/verify/s10-backup-destination-check.sh` live check (**25** checks).
 
+### Added
+- **6 Oct 2026 — S7 #23/#148 Address Importer ka live verifier** (`tools/verify/s7-address-importer-check.sh`):
+  CSV ko panel ke **asli code** se parse karta hai (`App\Support\Mail::parseImport` + `hashPassword` —
+  deployed files seedha require hote hain, Laravel boot nahi), wahi payload real `mail.set` ko deta hai, aur
+  phir har imported mailbox ka **asli password auth** (`doveadm auth test`; purane doveadm par users-file
+  bcrypt-verify fallback) + **asli Exim delivery** verify karta hai. Fail-closed bhi live: pipe/shell local-part
+  aur foreign domain poori CSV reject. Temporary account/mailboxes exit par khud saaf.
+  Sandbox: `tools/sim/s7-mail-sim.sh` **21 pass / 0 fail** (importer verifier 6 modes me; good = 16/0,
+  `breakdelivery` = expected fail, purane-doveadm fallback bhi verified). Do choti cheezein isi kaam me mili aur
+  fix hui: PHP 8.4+ ka `str_getcsv()` deprecation warning verifier ke JSON ko todta tha (ab parse step
+  `error_reporting(E_ALL & ~E_DEPRECATED)` + `display_errors=0`) aur sim ke fake `doveadm` me `auth test` +
+  `mail.set` registry add karna pada (warna sim asli check ko galat FAIL deta).
+
 ### Verified
 - **6 Oct 2026 — live mail health check PASS ✅** (`tools/verify/s7-mail-check.sh` @ `3172639`, sha256 `eed20adc…`,
   aapne server par chalaya): **62 pass / 0 fail / 0 skip**, `BASE INBOX DELIVERY: VERIFIED`, `FULL S7 MAIL CHECK: PASS`
