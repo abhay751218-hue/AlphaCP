@@ -1,0 +1,7 @@
+=== S7 MAILING LIST LIVE CHECK (2026-10-06T02:00:35Z) ===
+pass=14 fail=0
+list_address=announce@acp-list-check.test
+subscriber=info@acp-list-check.test
+list_delivery=YES
+tasks: account.create#656, mail.set#657, mail.list#658, mail.server#659, mail.list#660, mail.list#661, mail.list#662, mail.server#663, account.terminate#664, mail.server#665
+agent=    'mail.list' => [
