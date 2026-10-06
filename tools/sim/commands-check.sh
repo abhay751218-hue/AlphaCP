@@ -22,7 +22,7 @@ CMD_FILE="${COMMANDS_CHECK_FILE:-COMMANDS.md}"
 
 # ---------------------------------------------------------------- parse -------
 # Us section ka pehla alphacp-sync get line jo "NEXT STEP" ke baad aata hai.
-NEXT_BLOCK="$(awk '/^## .*NEXT STEP/{f=1;next} f && /^## /{exit} f' "${CMD_FILE}")"
+NEXT_BLOCK="$(awk '/^## .*NEXT/{f=1;next} f && /^## /{exit} f' "${CMD_FILE}")"
 CMD_LINE="$(grep -m1 'alphacp-sync get' <<<"${NEXT_BLOCK}" || true)"
 if [[ -z "${CMD_LINE}" ]]; then
   # A live command stays withheld both while a local implementation is being built
@@ -54,8 +54,19 @@ if ! git cat-file -e "${COMMIT}^{commit}" 2>/dev/null; then
   echo; echo "=== COMMANDS-CHECK: ${PASS} pass, ${FAIL} fail ==="; exit 1
 fi
 
-if git merge-base --is-ancestor "${COMMIT}" origin/arena/01a10111-alphacp 2>/dev/null; then
-  ok "commit push ho chuka hai (origin/arena/01a10111-alphacp me shaamil)"
+# commit push hua hai? — current branch ka upstream, warna koi bhi origin/arena/* ref
+pushed_to() {  # $1 = commit
+  local up ref
+  up="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || true)"
+  if [[ -n "${up}" ]] && git merge-base --is-ancestor "$1" "${up}" 2>/dev/null; then echo "${up}"; return 0; fi
+  while read -r ref; do
+    [[ -n "${ref}" ]] || continue
+    if git merge-base --is-ancestor "$1" "${ref}" 2>/dev/null; then echo "${ref}"; return 0; fi
+  done < <(git for-each-ref --format='%(refname:short)' 'refs/remotes/origin')   # NOTE: '*' yahan slash cross nahi karta
+  return 1
+}
+if REF_HIT="$(pushed_to "${COMMIT}")"; then
+  ok "commit push ho chuka hai (${REF_HIT} me shaamil)"
 else
   bad "commit ${COMMIT:0:12} origin par nahi — user ka alphacp-sync 404 dega"
 fi
@@ -111,7 +122,7 @@ if [[ "${PATH_IN_REPO}" == "installer/panel-update.sh" ]]; then
     else
       bad "${name}: sha mismatch (pin ${sha:0:16}…, file ${got:0:16}…)"
     fi
-    if git merge-base --is-ancestor "${commit}" origin/arena/01a10111-alphacp 2>/dev/null; then
+    if pushed_to "${commit}" >/dev/null; then
       ok "${name}: artifact commit push ho chuka hai"
     else
       bad "${name}: artifact commit ${commit:0:12} origin par nahi"

@@ -23,11 +23,26 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 > Checklist ab **57 ✅ / 51 🟡 / 91 ⏳** (199 required rows; +10 optional 🔵) — 28.6% green.
 
-## ⏳ NEXT (taiyaari chal rahi hai) — S7 #25 Encryption (PGP/GnuPG) ya #145 server-default Deliverability
+## ⏳ NEXT STEP — S7 #145 Email Deliverability (server default) · agent 0.83.0 deploy
 
-> Abhi repo me next item ka code/verifier banaya ja raha hai — jo bhi pehle poori tarah test hokar
-> ready hoga, uska **pinned single command** yahan aayega (bina test koi command nahi).
-> S7 me bache: #25 Encryption · #26 BoxTrapper · #27 Calendar & Contacts · #29 Webmail · #145 Deliverability (server default).
+> Yeh ek hi command hai: agent 0.83.0 update. Iske baad alag se sirf **read-only verifier** chalega
+> (wo command next message me milega). Panel code 0.75.0 hi rahega — sirf agent badalta hai.
+
+```bash
+sudo alphacp-sync get 9d055d434ac9236c7c16345465fd9e9610b60356 installer/panel-update.sh /tmp/acp-panel-update-0.83.0.sh 7da2ab50c3f6075281a2fbd3575219ca9a9690cd17b5ad2d0cf0a8713c4e2036 && sudo bash /tmp/acp-panel-update-0.83.0.sh
+```
+
+**Kya badlega (0.83.0):** `mail.server sync` — aur har mail task ke baad wala auto-sync — ab **khud**
+har mail domain ke liye SPF (`@` TXT), DMARC (`_dmarc`) aur DKIM (`default._domainkey`, asli 2048-bit
+key ka `p=`) records likhta hai; DKIM private key 0640 `Debian-exim` group, Exim template me signing on.
+Customer ko panel me kuch click karne ki zaroorat nahi (cPanel ka server-default). Records pehle se
+sahi hain to zone.json/BIND ko chhue bina skip — repeat sync sasta. DNS/BIND fail ho to sync fail nahi
+hota, sirf us domain ki wajah report hoti hai.
+
+**Local proof:** agent tests **212/0** (3 naye: sync auto-apply, idempotent skip, DNS fail-safe),
+S7 mail SIM **27/0** (naya verifier `s7-deliverability-default-check.sh`, 15 checks), update-sim **247/0**.
+
+> S7 me bache: #145 (yeh) · #25 Encryption · #26 BoxTrapper · #27 Calendar & Contacts · #29 Webmail.
 
 ### Remaining S7 scope
 - #18 Mailing Lists; #23/#148 Address Importer; #25 Encryption; #26 BoxTrapper; #27 Calendar & Contacts;

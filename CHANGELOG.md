@@ -5,6 +5,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **S7 #145 — Email Deliverability, server default (6 Oct)** — agent **0.83.0** (panel code 0.75.0 wahi).
+  Pehle SPF/DKIM/DMARC sirf tab likhte the jab customer panel me "Email Deliverability" page se action
+  bhejta tha; ab **`mail.server sync` (aur har mail task ke baad wala auto-sync) khud** har mail domain ke
+  liye records likhta hai — SPF `@` TXT, DMARC `_dmarc`, aur DKIM `default._domainkey` jisme `p=` **asli**
+  2048-bit RSA public key se aata hai (private key `<dkim-dir>/<domain>.key` **0640**, group
+  `Debian-exim`, public `.pub` 0644). Managed Exim template me `dkim_domain`/`dkim_selector`/
+  `dkim_private_key` pehle se the — ab signing server-default par on hai. `deliverabilityUpToDate()`
+  records ko compare karta hai: pehle se sahi hain to zone.json/BIND ko chhue bina skip (`changed=0`,
+  `dns.reason=already-present`) — isliye har mail task ke baad ka sync sasta rehta hai. DNS/BIND ki
+  galti sync ko **fail nahi** karti; wo per-domain `failed[]` me report hoti hai (`ok=false`, saaf error).
+  Proof: agent tests **212/0** (3 naye — sync auto-apply, idempotent skip, DNS fail-safe), naya verifier
+  `tools/verify/s7-deliverability-default-check.sh` (15 checks, manual action ki zaroorat nahi) S7 mail
+  SIM me **15/0**, poora S7 mail SIM **27/0**, updater simulation **247/0** (updater **0.83.0**,
+  agent artifact @ `341a3c9`, sha `e2aadf0c…`). Live deploy + verification pending — tab tak row 🟡.
 - **S7 #18 — mailing-list subscribers and static Exim fan-out (5 Oct)** — local candidate artifacts panel code **0.75.0** and agent **0.82.0**.
   Customer list CRUD now stores normalized subscriber addresses in `mailing_lists.members`; the `mail.list`
   agent task persists them and syncs a static Exim alias that expands posts to each subscriber. Legacy
