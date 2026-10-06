@@ -174,10 +174,24 @@ fi
 
 ROUTE="$("$EXIM" -bt "$LIST_ADDR" 2>&1)"
 ROUTE_RC=$?
-if [[ "$ROUTE_RC" == "0" && "$ROUTE" == *"${TEST_ADDR}"* && "$ROUTE" == *"alphacp_aliases"* ]]; then
-  ok "Exim -bt routed the list through alphacp_aliases to its subscriber"
+# ASLI exim 4.97 ka -bt output redirect (alias) par aisa hota hai:
+#     info@acp-list-check.test
+#       <-- announce@acp-list-check.test
+#       router = alphacp_mailbox, transport = alphacp_maildir
+# Matlab: pehli line = FINAL address (subscriber), `<--` line = jahan se aaya (list),
+# aur router = jo final delivery karta hai (mailbox router). Isliye router ka naam
+# "alphacp_aliases" hona zaroori NAHI — alias expansion ka proof ye hai ki output me
+# DONO address hain (list + subscriber) aur rc=0 (unrouteable nahi).
+# (0.82.0 live fail ki asli wajah yahi thi: purana check sirf simulator ke shape par pass hota tha.)
+ROUTE_HAS_LIST=0;   [[ "$ROUTE" == *"${LIST_ADDR}"* ]] && ROUTE_HAS_LIST=1
+ROUTE_HAS_MEMBER=0; [[ "$ROUTE" == *"${TEST_ADDR}"* ]] && ROUTE_HAS_MEMBER=1
+if [[ "$ROUTE_RC" == "0" && "$ROUTE_HAS_LIST" == "1" && "$ROUTE_HAS_MEMBER" == "1" ]]; then
+  PROOF="lista + subscriber dono output me"
+  [[ "$ROUTE" == *"alphacp_aliases"* ]] && PROOF="alphacp_aliases router"
+  [[ "$ROUTE" == *"<--"* ]] && PROOF="exim ka '<--' redirect form"
+  ok "Exim -bt ne list ko subscriber tak expand kiya (${PROOF}): $(tr '\n' ' ' <<<"$ROUTE" | sed 's/  */ /g')"
 else
-  fatal "Exim -bt did not confirm list routing (rc=${ROUTE_RC}): $(tr '\n' ' ' <<<"$ROUTE")"
+  fatal "Exim -bt did not confirm list routing (rc=${ROUTE_RC}, list=${ROUTE_HAS_LIST}, member=${ROUTE_HAS_MEMBER}): $(tr '\n' ' ' <<<"$ROUTE")"
 fi
 
 DOVE_HOME="$("$DOVEADM" user "$TEST_ADDR" 2>/dev/null | awk '$1 == "home" {print $2; exit}')"

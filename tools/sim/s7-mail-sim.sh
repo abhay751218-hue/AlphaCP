@@ -84,9 +84,20 @@ case "${1:-}" in
     if grep -q "^${addr}:" "$RECIPIENTS" 2>/dev/null; then
       echo "$addr"; echo "  router = alphacp_mailbox, transport = alphacp_maildir"
     elif grep -q "^${addr}:" "$ALIASES" 2>/dev/null; then
+      # ASLI exim 4.97 ka redirect (alias) shape — sim ko bhi faithful rakhna hai,
+      # warna verifier sirf sim par pass hokar live par fail hota hai (0.82.0 me hua tha):
+      #     <final address>
+      #       <-- <original address>
+      #       router = <final router>, transport = <final transport>
       target="$(awk -F': ' -v key="$addr" '$1 == key {print $2; exit}' "$ALIASES")"
-      echo "$addr"; echo "  router = alphacp_aliases, transport = address_directory"
-      echo "  redirect to ${target}"
+      first="${target%%,*}"
+      echo "${first}"
+      echo "  <-- ${addr}"
+      if grep -q "^${first}:" "$RECIPIENTS" 2>/dev/null; then
+        echo "  router = alphacp_mailbox, transport = alphacp_maildir"
+      else
+        echo "  router = alphacp_aliases, transport = address_directory"
+      fi
     else
       dom="${addr#*@}"
       if grep -q "^\\*@${dom}:" "${ACP_MAIL_CATCHALL:-/dev/null}" 2>/dev/null; then
