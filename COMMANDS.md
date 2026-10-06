@@ -14,14 +14,28 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### alphacp-sync v1.2 — private repo support (`get` mode). Repo PRIVATE karne se PEHLE chalao.
+### ⭐ alphacp-sync v1.3 — snapshot completeness fix. **Sabse pehle yahi chalao.**
 ```bash
-curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f55927ee1fbf526037785dcdb82aea1/installer/alphacp-sync.sh -o /tmp/acp-sync-v1.2.sh && sudo bash /tmp/acp-sync-v1.2.sh
+sudo alphacp-sync get a569e66fd2bbdb058769f05b50c836b772b299c4 installer/alphacp-sync.sh /tmp/acp-sync-v1.3.sh d5beafb39244457bdedd750d4afc8376789fe5f3e1228885227be5779a9f897b && sudo bash /tmp/acp-sync-v1.3.sh
 ```
-- sha256: `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852`
-- Expected: banner `v1.2` → (key pehle se hai, dobara add nahi karni) → `==> SYNC OK ✅` (ya "koi badlav nahi").
-- Test: `sudo bash tools/sim/sync-sim.sh` → 60/60 (Run 8 = get: sha verify, galat sha, traversal, PR-ref commit, no key).
-  GitHub par SHA-fetch + `refs/pull/*` fetch asli repo par verify kiya (29 Sep).
+- sha256: `d5beafb39244457bdedd750d4afc8376789fe5f3e1228885227be5779a9f897b`
+- **Kyun zaroori hai:** v1.2 tak sync panel ki 6 source files chup-chaap chhod deta tha
+  (`views/backup/`, `views/ssl/`, `views/backup-destinations/`, `views/transfer-tool/`,
+  `tests/Feature/SshTest.php`, `tests/Feature/TransferToolTest.php`). Isliye GitHub wala repo
+  server jaisa nahi tha, aur repo se panel dobara banane par `/backup`, `/ssl`,
+  `/backup-destinations`, `/transfer-tool` **500** dete. Poori tafseel `CHANGELOG.md` (6 Oct).
+- Expected: banner `v1.3` → `completeness: …` → `==> SYNC OK ✅`. Push hone ke baad GitHub par
+  `server-snapshot/STATE.md` me naya **"Snapshot completeness"** section dikhega — wahan
+  `panel ki har source file … snapshot me hai — repo = server ✔` aana chahiye.
+- Verify (push ke baad, kahin se bhi):
+  `gh api repos/abhay751218-hue/AlphaCP/contents/server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/index.blade.php`
+  → 200 aana chahiye (pehle 404 tha).
+- Test: `sudo bash tools/sim/sync-sim.sh` → **67/67** (7 naye completeness tests).
+- ⚠️ Ye sync tool update karta hai + turant sync karta hai. **Panel code ko chhoota tak nahi** —
+  websites/email/DNS safe hain. Dobara chalana safe hai.
+
+### alphacp-sync v1.2 — ✅ chal chuka (server par `tool: alphacp-sync v1.2`, LAST-SYNC 6 Oct 08:47Z)
+Superseded by **v1.3** (upar). Dobara mat chalao.
 
 ### Uske baad panel updates: panel-update 0.3.0 (private-ready) — agli panel release ke saath
 - commit `0c90863a10e6c70984e627af1b819e66ae60b600`, sha256 `204b78af0b59b75614a61455df1ca96b5eb3c05f744b744647da1a33c4da8480`

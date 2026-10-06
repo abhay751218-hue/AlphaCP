@@ -4,7 +4,58 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Fixed
+- **alphacp-sync v1.3 (6 Oct) — SNAPSHOT COMPLETENESS BUG.** Server → GitHub sync chup-chaap panel ki
+  source files chhod raha tha, aur kisi ko pata nahi chalta tha:
+  1. `find` ki prune list me bare-name rules thi — `-name backup`, `-name ssl`, `-name keys`,
+     `-name storage`, `-name certs`, `-name private`, `-name cache`, `-name logs`, `-name tmp`.
+     Ye source tree ke andar usi naam ki **koi bhi** directory uda deti thi. Natija:
+     `panel/resources/views/backup/index.blade.php` aur `panel/resources/views/ssl/index.blade.php`
+     repo me kabhi aaye hi nahi. (Proof: dono `server-snapshot/MANIFEST.txt` me listed hain = server par
+     maujood hain, par `server-snapshot/files/…` me nahi the, aur SKIPPED list me bhi naam nahi tha
+     kyunki wo secret-scan tak pahunche hi nahi.)
+  2. Secret pattern `^\s*[A-Z0-9_]*(PASS|PASSWORD|SECRET|TOKEN)…=\s*['\"]?[^\s'\"$]{6,}` kisi bhi normal
+     code line ko pakad leta tha — jaise blade views ki JS:
+     `PASSWORD = document.getElementById('password').value;` aur `TOKEN = form.querySelector(...)`.
+     Isliye `views/backup-destinations/index.blade.php`, `views/transfer-tool/index.blade.php`,
+     `tests/Feature/SshTest.php`, `tests/Feature/TransferToolTest.php` poori drop ho gayi thi.
+     (Reproduce kiya: pattern in dono lines ko flag karta hai; `const PASSWORD = 'x'` ko nahi.)
+
+  **Fix:** prunes ab path-scoped hain (`${ACP_HOME}/etc|var|releases`, `*/panel/storage`, `vendor`,
+  `node_modules`, `.git`) — baaki kaam file-name excludes + literal secret-value scan karte hain.
+  Secret `KEY=VALUE` pattern ab **end-of-line anchored** hai aur value ya to quoted literal honi chahiye
+  ya code-punctuation-free token. STATE.md me naya **"Snapshot completeness"** section aata hai jo
+  panel ki har source file (vendor/storage/.env chhod kar) snapshot se compare karta hai aur missing
+  files ke naam list karta hai — ab ye class of bug chhup nahi sakta.
+
+  **Test:** `tools/sim/sync-sim.sh` **67/67** (pehle 60/60) — 7 naye tests: `backup/`+`ssl/` views
+  snapshot me aati hain, normal JS wali blade drop NAHI hoti, asli `DB_PASSWORD=…` wali blade ab bhi
+  drop hoti hai, STATE me uska reason aata hai, normal blade skip-list me nahi, completeness section hai.
+- **`tools/sim/sync-sim.sh` Run 8 ka pre-existing bug** — `git rev-parse <missing-ref>` exit 128 ke saath
+  ref ka naam stdout par bhi print karta hai, isliye `GC="$(rev-parse arena/01a0ea3e-alphacp 2>/dev/null || rev-parse main)"`
+  me `GC = "<ref-naam>\n<main-sha>"` ban jaata tha aur Run 8 ke 4 `get` tests fail hote the
+  (`get: commit poora 40-char SHA hona chahiye`). `--verify --quiet` + regex guard se theek. Ye 29 Sep se
+  toota hua tha (us waqt wo branch repo me maujood thi).
+- **Repo me 4 missing blade views recover kiye** (upar wale bug ki wajah se gayab the):
+  `backup/index.blade.php`, `ssl/index.blade.php`, `backup-destinations/index.blade.php`,
+  `transfer-tool/index.blade.php`. Controllers + Feature tests ke contract se banaye gaye.
+  Verify: `BackupTest` 11/11, `BackupDestinationsTest` 9/9, `SslTest` 7/7 — pehle inme se 4 tests
+  `InvalidArgumentException: View [...] not found` se 500 de rahe the.
+  `transfer-tool` ka Feature test bhi snapshot me nahi hai, isliye wo view sirf controller ke
+  validation contract se bani hai (test-verified NAHI). **Note:** ye reconstructions hain —
+  `sudo alphacp-sync` (v1.3) chalane ke baad server ki asli files inhe overwrite kar dengi.
+
 ### Added
+- **`tools/sim/panel-tests-deployed.sh`** — poora PHPUnit suite (74 files) us code par chalata hai jo
+  **server par actually deployed hai** (`server-snapshot/files/usr/local/alphacp/panel`), php-wasm 8.5 +
+  `artifacts/panel-bundle-0.3.0.tar.gz` ka vendor (composer.lock byte-identical verify kiya).
+  Pehla result: **434 pass, 0 fail, 6 wasm-skip**. `tools/sim/_patch-testcase-sandbox.py` alag file hai
+  (inline heredoc me `$mockConsoleOutput` ka `$` shell escape se toot jaata tha).
+- **START-HERE.md §2b** — source-of-truth ka farq saaf likha: `server-snapshot/…/panel` = 0.75.0 (asli),
+  `refs/panel-2b-bundle/` = 0.3.2 (purana). §4c recipe me step 0 (refresh) add hua, warna
+  `build-panel-2b-bundle.py` + `panel-update.sh` server ko 0.75.0 → 0.3.2 par wapas bhej deta.
+
+### Added (29 Sep)
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
   PR refs se commit milta hai. sync-sim **60/60**. `panel-update 0.3.0`: artifact/sync-tool pehle `get` se,
