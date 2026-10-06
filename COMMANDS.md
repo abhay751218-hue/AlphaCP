@@ -42,6 +42,14 @@ hota, sirf us domain ki wajah report hoti hai.
 **Local proof:** agent tests **212/0** (3 naye: sync auto-apply, idempotent skip, DNS fail-safe),
 S7 mail SIM **27/0** (naya verifier `s7-deliverability-default-check.sh`, 15 checks), update-sim **247/0**.
 
+### Iske turant baad — read-only verifier (deploy ke baad chalao)
+```bash
+sudo alphacp-sync get COMMIT_TO_FILL tools/verify/s7-deliverability-default-check.sh /tmp/acp-deliv-check.sh SHA_TO_FILL && sudo bash /tmp/acp-deliv-check.sh
+```
+Yeh naya temporary account (`acpdelivchk`) banata hai, **sirf `mail.server sync`** chalata hai (koi manual
+deliverability action nahi), SPF/DMARC/DKIM + asli key pair + Exim signing verify karta hai, phir account
+hata deta hai. Report: `/usr/local/alphacp/verify-reports/s7-deliverability-default-check.txt`.
+
 > S7 me bache: #145 (yeh) · #25 Encryption · #26 BoxTrapper · #27 Calendar & Contacts · #29 Webmail.
 
 ### Remaining S7 scope

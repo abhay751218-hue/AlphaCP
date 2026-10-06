@@ -239,6 +239,14 @@ if [[ -f "$EXIM_TEMPLATE" ]]; then
     ok "Exim me DKIM signing enabled (${SEL}) — outbound mail sign hoga"
   else
     bad "Exim template me dkim_selector/dkim_private_key nahi mila (${EXIM_TEMPLATE})"
+    # live debugging ke liye: kya exim build me DKIM support hi hai?
+    if [[ -n "$EXIM" && -x "$EXIM" ]]; then
+      if "$EXIM" -bV 2>/dev/null | grep -qi 'dkim'; then
+        info "exim build me DKIM support hai (exim -bV me dikha) — yaani template purana hai; mail.server setup dobara chalao"
+      else
+        info "exim -bV me DKIM nahi dikha — ye Exim build bina DKIM ka hai (exim4-daemon-heavy chahiye)"
+      fi
+    fi
   fi
   if grep -q "alphacp_mailbox" "$EXIM_TEMPLATE"; then
     ok "managed Exim template intact (routers maujood)"
