@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Fixed
+- **alphacp-sync v1.5 (7 Oct).** v1.4 ke live run me bhi wahi 4 files gayab rahi — abki wajah
+  `pat` (hard patterns) thi: server ke asli views/tests me **placeholder/dummy secret-strings**
+  hain, jaise textarea placeholder `-----BEGIN OPENSSH PRIVATE KEY-----` aur dummy `ghp_…` token.
+  v1.4 tak ye hard patterns source files par bhi chalte the, isliye poori file drop ho jaati thi.
+  Ab **saare pattern-heuristics (private-key header / `ghp_` / `AKIA` / `APP_KEY=base64:` /
+  `panel_pass=` / KEY=VALUE) sirf config-type files par** chalte hain. Source files
+  (`.php/.blade.php/.js/…`) par **sirf literal server-secret-value scan** chalta hai — wahi asli
+  leak (DB-pass/APP_KEY/admin-pw/license-key jo server ke `etc/`/`var/` se padhe jaate hain) ki
+  guarantee hai, aur placeholder usme nahi phasta.
+  Test: `tools/sim/sync-sim.sh` **72/72**. Naya regression test: placeholder/dummy-secret wali
+  source blade **drop NAHI** hoti; config me `DB_PASSWORD=`/`ghp_`/private-key ab bhi drop hote hain.
 - **alphacp-sync v1.4 (6 Oct, v1.3 deploy ke turant baad).** User ke live run me v1.3 ka
   completeness check sahi kaam karta dikha (usi ne bataya ki 4 files abhi bhi nahi aayi),
   par do cheezein aur nikli:

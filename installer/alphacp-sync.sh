@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — SERVER → GITHUB SYNC  v1.4
+#  AlphaCP — SERVER → GITHUB SYNC  v1.5
+#  v1.5: pattern-heuristics (private-key header / ghp_ / AKIA / APP_KEY=base64 / KEY=VALUE) ab
+#        SIRF config-type files par. Source (.php/.blade.php/.js) par sirf literal server-
+#        secret-value scan. Placeholder (`-----BEGIN OPENSSH PRIVATE KEY-----`) / dummy token
+#        ki wajah se v1.2–v1.4 sab me asli 4 files girti rahi; ab nahi.
+#  v1.4: config-only KEY=VALUE + runtime junk prune (*/logs, */backups, */bootstrap/cache).
 #  v1.4: (a) secret kv-pattern ab BARE-IDENTIFIER values ko code samajhta hai —
 #        `PASSWORD: password,` / `TOKEN: csrf,` (JS object props) ab files drop nahi
 #        karte; server par asli 4 files (backup-destinations/transfer-tool views,
@@ -38,7 +43,7 @@
 # =============================================================================
 set -uo pipefail
 
-SYNC_VERSION="1.4"
+SYNC_VERSION="1.5"
 REPO_SLUG="${SYNC_REPO_SLUG:-abhay751218-hue/AlphaCP}"
 BRANCH="${SYNC_BRANCH:-main}"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
@@ -319,11 +324,13 @@ kv = re.compile(
     r"^\s*[\"']?[A-Z0-9_]*(PASS|PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY)[A-Z0-9_]*[\"']?\s*[:=]\s*"
     r"(?:\"[^\"\n]{6,}\"|'[^'\n]{6}'|[^\s'\"();#,]{6,})[\s,;]*$", re.M)
 
-# v1.4: KEY=VALUE check SIRF config-type files par. Source code (.php/.blade.php/.js/…)
-# me `PASSWORD: password,` jaisi lines normal hoti hain — unhe drop karna false positive
-# tha (v1.2/v1.3 dono me yahi asli 4 files ko gira raha tha). Source files par hard
-# patterns (private key / APP_KEY=base64 / AKIA / ghp_ / panel_pass=) + literal
-# server-secret scan phir bhi chalta hai, isliye asli leak wahan bhi pakda jata hai.
+# v1.5: SAARE pattern-heuristics (hard patterns + KEY=VALUE) SIRF config-type files par.
+# Source code (.php/.blade.php/.js/…) par pattern bilkul NAHI — kyunki source me placeholder/
+# dummy secret-strings normal hote hain: textarea placeholder `-----BEGIN OPENSSH PRIVATE KEY-----`,
+# tests me dummy `ghp_…` token, `PASSWORD: password,` JS object-props, etc. Inhe "secret" samajh
+# kar poori file drop karna hi v1.2/v1.3/v1.4 — teeno versions — me asli 4 files gira raha tha.
+# Source files par SIRF literal server-secret-value scan chalta hai (asli DB-pass/APP_KEY/admin-pw/
+# license-key jo server ke etc/var se padhe jaate hain) — wahi asli leak ki guarantee hai.
 SRC_EXT = (".php", ".js", ".ts", ".jsx", ".tsx", ".css", ".html", ".md", ".sql", ".py", ".vue")
 
 def is_source(name):
@@ -331,10 +338,10 @@ def is_source(name):
         return True
     return name.lower().endswith(SRC_EXT)
 
-def kv_is_secret(name, text):
+def pattern_is_secret(name, text):
     if is_source(name):
         return False
-    return kv.search(text) is not None
+    return pat.search(text) is not None or kv.search(text) is not None
 skipped = []
 for dp, dn, fn in os.walk(root):
     for n in fn:
@@ -351,7 +358,7 @@ for dp, dn, fn in os.walk(root):
         for s in secrets:
             if s in text:
                 why = "server secret value mila"; break
-        if not why and (pat.search(text) or kv_is_secret(n, text)):
+        if not why and pattern_is_secret(n, text):
             why = "secret jaisa pattern"
         if why:
             os.remove(p); skipped.append(f"/{rel}  ({why})")

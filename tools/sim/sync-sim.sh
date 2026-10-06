@@ -27,7 +27,7 @@ mkdir -p ${ACP}/etc ${ACP}/var ${ACP}/license/keys ${ACP}/bin /opt/alphacp-licen
 printf 'ACP_DB_HOST=127.0.0.1\nACP_DB_NAME=alphacp\nACP_DB_USER=alphacp\nACP_DB_PASS=%s\n' "$DBPASS" > ${ACP}/etc/database.env
 printf 'LICENSE_KEY=%s\nLICENSE_SERVER=https://license.example.com\nTRIAL_DAYS=15\n' "$LIC" > ${ACP}/etc/license.env
 printf -- '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----\n' > ${ACP}/license/keys/signing.pem
-printf -- '-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n' > ${ACP}/license/embedded_key.php
+printf -- '-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n' > ${ACP}/license/embedded_key.conf
 APPKEY="$(sed -n 's/^APP_KEY=base64://p' ${PANEL}/.env)"; echo "base64:${APPKEY}" > ${ACP}/var/panel-appkey.txt
 ADMINPW="$(sed -n 's/^panel_pass=//p' ${ACP}/var/panel-admin.txt)"
 mkdir -p ${PANEL}/app/Services/License
@@ -39,7 +39,7 @@ namespace App\Services\License;
 final class LicenseManager { public const TRIAL_DAYS = 15; }
 EOF
 echo '<?php return ["db" => "SuperSecretDb123"];' > ${PANEL}/app/Leak.php           # leak attempt 1
-echo '<?php // token ghp_abcdefghijklmnopqrstuvwxyz0123456789AB' > ${PANEL}/config/leak2.php   # leak attempt 2
+echo '<?php // token ghp_abcdefghijklmnopqrstuvwxyz0123456789AB' > ${PANEL}/config/leak2.conf   # leak attempt 2
 # v1.3 regression fixtures:
 #  (a) `backup/` aur `ssl/` NAAM ke source directories — v1.2 ki bare-name prune inhe uda deti thi
 mkdir -p ${PANEL}/resources/views/backup ${PANEL}/resources/views/ssl
@@ -66,6 +66,15 @@ EOF
 #  (c) CONFIG-type file me ASLI secret shape — ye drop hona hi chahiye (kv check config par chalta hai)
 cat > ${PANEL}/resources/views/backup/leaky.conf <<'EOF'
 DB_PASSWORD=Sup3rS3cretValue
+EOF
+#  (c2) SOURCE file me placeholder/dummy secret-strings — v1.5 me ye DROP NAHI honi chahiye.
+#       (Yehi cheez v1.2–v1.4 me asli 4 files gira rahi thi.)
+cat > ${PANEL}/resources/views/backup/placeholder.blade.php <<'EOF'
+@extends('layouts.panel')
+@section('content')
+<textarea name="private_key" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
+{{-- example token: ghp_ZYXWVUTSRQPONMLKJIHGFEDCBA9876543210 --}}
+@endsection
 EOF
 #  (d) runtime junk jo v1.3 me snapshot me leak hone laga tha — ab prune hona chahiye
 mkdir -p ${PANEL}/bootstrap/cache ${ACP}/logs ${ACP}/backups/locks
@@ -98,7 +107,7 @@ count()     { git -C "${REMOTE}" rev-list --count main; }
 echo; echo "=== Run 1: pehla sync ==="
 rc="$(run_sync 1)"; tail -4 /tmp/syncsim/run-1.out | sed 's/^/    | /'
 [[ "$rc" == 0 ]] && grep -q "SYNC OK" /tmp/syncsim/run-1.out && t_ok "sync OK (exit 0)" || { t_fail "sync fail rc=$rc"; cat /tmp/syncsim/run-1.out; }
-grep -q "v1.4" /tmp/syncsim/run-1.out && t_ok "banner v1.4" || t_fail "banner"
+grep -q "v1.5" /tmp/syncsim/run-1.out && t_ok "banner v1.5" || t_fail "banner"
 for f in server-snapshot/STATE.md server-snapshot/README.md server-snapshot/LAST-SYNC.md server-snapshot/MANIFEST.txt \
          server-snapshot/files/usr/local/alphacp/panel/app/Services/License/LicenseManager.php \
          server-snapshot/files/usr/local/alphacp/panel/routes/web.php \
@@ -111,8 +120,8 @@ for f in server-snapshot/STATE.md server-snapshot/README.md server-snapshot/LAST
 done
 for f in files/usr/local/alphacp/panel/.env files/usr/local/alphacp/etc files/usr/local/alphacp/var \
          files/usr/local/alphacp/panel/vendor files/usr/local/alphacp/panel/storage \
-         files/usr/local/alphacp/license/keys/signing.pem files/usr/local/alphacp/license/embedded_key.php \
-         files/usr/local/alphacp/panel/app/Leak.php files/usr/local/alphacp/panel/config/leak2.php \
+         files/usr/local/alphacp/license/keys/signing.pem files/usr/local/alphacp/license/embedded_key.conf \
+         files/usr/local/alphacp/panel/app/Leak.php files/usr/local/alphacp/panel/config/leak2.conf \
          files/usr/local/alphacp/panel/database/panel.sqlite; do
   tree_has "server-snapshot/$f" && t_fail "LEAK/heavy push ho gaya: $f" || t_ok "nahi gaya (sahi): $f"
 done
@@ -144,6 +153,10 @@ tree_has server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/le
   || t_ok "v1.4: config file me DB_PASSWORD= line ab bhi drop hoti hai (kv check)"
 grep -q "leaky.conf  (secret jaisa pattern)" <<<"$ST" && t_ok "v1.4: STATE me leaky.conf ka reason" || t_fail "STATE: leaky.conf reason nahi"
 grep -q "destinations.blade.php" <<<"$ST" && t_fail "v1.4: 'PASSWORD: password,' wali blade skip list me aa gayi" || t_ok "v1.4: JS object-prop wali blade drop NAHI hui"
+tree_has server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/placeholder.blade.php \
+  && t_ok "v1.5: placeholder/dummy-secret wali SOURCE blade drop NAHI hui" \
+  || t_fail "v1.5 REGRESSION: placeholder wali blade phir drop ho gayi"
+grep -q "placeholder.blade.php" <<<"$ST" && t_fail "v1.5: placeholder blade skip list me aa gayi" || t_ok "v1.5: placeholder blade skip list me NAHI"
 grep -q "Snapshot completeness" <<<"$ST" && t_ok "v1.3: STATE me completeness section" || t_fail "STATE: completeness section nahi"
 # v1.4: runtime junk prune hona chahiye
 tree_has server-snapshot/files/usr/local/alphacp/panel/bootstrap/cache/zz-sync-sim.php \
@@ -247,9 +260,9 @@ o="$( cd /root && SYNC_CONF_DIR=/tmp/syncsim/noconf SYNC_WORK_DIR=/tmp/syncsim/g
 [[ $rc != 0 ]] && grep -q "pehle setup" <<<"$o" && t_ok "get: deploy key na ho -> setup ka message" || { t_fail "get no key"; echo "$o"; }
 
 # cleanup nakli files (fake server)
-rm -f ${PANEL}/app/Leak.php ${PANEL}/config/leak2.php
+rm -f ${PANEL}/app/Leak.php ${PANEL}/config/leak2.conf
 rm -f ${PANEL}/resources/views/backup/index.blade.php ${PANEL}/resources/views/backup/destinations.blade.php \
-      ${PANEL}/resources/views/backup/leaky.conf ${PANEL}/resources/views/ssl/index.blade.php \
+      ${PANEL}/resources/views/backup/leaky.conf ${PANEL}/resources/views/backup/placeholder.blade.php ${PANEL}/resources/views/ssl/index.blade.php \
       ${PANEL}/bootstrap/cache/zz-sync-sim.php ${ACP}/logs/verify-report.txt ${ACP}/backups/locks/xyz.lock
 rmdir ${PANEL}/bootstrap/cache ${ACP}/logs ${ACP}/backups/locks ${ACP}/backups 2>/dev/null || true
 rmdir ${PANEL}/resources/views/backup ${PANEL}/resources/views/ssl 2>/dev/null || true
