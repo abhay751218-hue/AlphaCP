@@ -86,7 +86,7 @@ laata raha. `refs/panel-2b-bundle/` wahin 29 Sep par atka reh gaya.
 | `bash tools/sim/panel-tests.sh` | Wahi suite, par `artifacts/panel-code-*.tar.gz` par (abhi 0.3.2 = purana) | 42 pass, 0 fail, 6 wasm-skip |
 | `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.3.0: update, sha mismatch, rollback, backup prune, sync-tool upgrade, **private repo (get)** | **54/54** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
-| `sudo bash tools/sim/sync-sim.sh` | alphacp-sync **v1.3** (secret leak attempts, **snapshot completeness**, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **67/67** |
+| `sudo bash tools/sim/sync-sim.sh` | alphacp-sync **v1.4** (secret leak attempts, **snapshot completeness**, config-only kv-scan, runtime-junk prune, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **70/70** |
 
 php-wasm ki limits (code ki galti NAHI): PHP 8.4 wasm PHPUnit me crash karta hai → 8.5 use hota hai; Mockery
 console-output mock crash karta hai → runner temp copy me `$mockConsoleOutput=false` lagata hai, isliye
@@ -135,6 +135,6 @@ Steps:
   raha hai aur "Updated: Step 0, 1, 2A" likha hai). Aage badhne se pehle use server ki asli haalat se
   milao — bina verify kiye rows mat badalna.
 - ⚠️ Repo ka `refs/panel-2b-bundle/` 0.3.2 par atka hai — §2b dekho. Deploy se pehle refresh zaroori.
-- **Next command:** alphacp-sync **v1.3** (`COMMANDS.md`) — snapshot completeness fix, taaki repo = server ho jaye.
+- **Next command:** alphacp-sync **v1.4** (`COMMANDS.md`) — snapshot completeness + config-only secret-scan, taaki repo = server ho jaye.
 
 Latest status ke liye hamesha `server-snapshot/STATE.md` + `CHANGELOG.md` dekho.

@@ -5,6 +5,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Fixed
+- **alphacp-sync v1.4 (6 Oct, v1.3 deploy ke turant baad).** User ke live run me v1.3 ka
+  completeness check sahi kaam karta dikha (usi ne bataya ki 4 files abhi bhi nahi aayi),
+  par do cheezein aur nikli:
+  1. **Secret kv-pattern abhi bhi asli 4 files gira raha tha.** Server ke asli views me JS
+     object-property lines hain jaise `PASSWORD: password,` / `TOKEN: csrf,` — unquoted value
+     hone ki wajah se v1.3 inhe "secret" samajh kar poori file drop kar deta tha. Ab
+     `KEY=VALUE` check **sirf config-type files** (`.env/.conf/.sh/.yaml/.json/…`) par chalta
+     hai; source code (`.php/.blade.php/.js/…`) par nahi. Source par hard patterns
+     (private key / `APP_KEY=base64:` / `AKIA` / `ghp_` / `panel_pass=`) + literal
+     server-secret-value scan phir bhi chalta hai, isliye asli leak wahan bhi pakda jata hai.
+  2. **v1.3 ki prune relaxation se runtime junk leak hone laga tha** — `bootstrap/cache/routes-v7.php`
+     (12k lines), `logs/`, `backups/locks/`. Ab `*/logs`, `*/backups`, `*/bootstrap/cache`
+     path-scoped prune hain.
+  Test: `tools/sim/sync-sim.sh` **70/70** (clean run). Naye tests: config me `DB_PASSWORD=` ab bhi
+  drop · `PASSWORD: password,` wali blade drop NAHI · bootstrap/cache/logs/backups prune.
+  (sync-sim ka ek khud ka fixture bug bhi fix hua: fake panel ke `bootstrap/cache/routes-v7.php`
+  me garbage likhne se Laravel ka route cache toot jaata tha aur `STATE: routes`/`panel http` fail
+  hote the — fixture ab `zz-sync-sim.php` naam se banta hai jo Laravel load nahi karta.)
+- **alphacp-sync v1.3 (6 Oct) — SNAPSHOT COMPLETENESS BUG.** Server → GitHub sync chup-chaap panel ki
+  source files chhod raha tha, aur kisi ko pata nahi chalta tha:
 - **alphacp-sync v1.3 (6 Oct) — SNAPSHOT COMPLETENESS BUG.** Server → GitHub sync chup-chaap panel ki
   source files chhod raha tha, aur kisi ko pata nahi chalta tha:
   1. `find` ki prune list me bare-name rules thi — `-name backup`, `-name ssl`, `-name keys`,
