@@ -133,6 +133,8 @@
 /usr/local/alphacp/etc/database.env
 /usr/local/alphacp/etc/install.env
 /usr/local/alphacp/etc/mail-server-configured
+/usr/local/alphacp/etc/mail/dkim/acp-deliverability-check.test.key
+/usr/local/alphacp/etc/mail/dkim/acp-deliverability-check.test.pub
 /usr/local/alphacp/etc/mail/dkim/acp-mail-check.test.key
 /usr/local/alphacp/etc/mail/dkim/acp-mail-check.test.pub
 /usr/local/alphacp/etc/mail/dovecot-options.json
@@ -9450,6 +9452,7 @@
 /usr/local/alphacp/var/s10-verify/index.html
 /usr/local/alphacp/verify-reports/s10-backup-destination-check.txt
 /usr/local/alphacp/verify-reports/s7-address-importer-check.txt
+/usr/local/alphacp/verify-reports/s7-deliverability-default-check.txt
 /usr/local/alphacp/verify-reports/s7-diag.txt
 /usr/local/alphacp/verify-reports/s7-mail-check.txt
 /usr/local/alphacp/verify-reports/s7-mailing-list-check.txt
