@@ -30,7 +30,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 > Local proof (sandbox): `tools/sim/s7-mail-sim.sh` **21 pass / 0 fail** — importer verifier 6 modes me chalta hai
 > ("good" me **16 pass / 0 fail**, `breakdelivery` me sahi fail; purane-doveadm fallback bhi verified).
 ```bash
-sudo alphacp-sync get <COMMIT> tools/verify/s7-address-importer-check.sh /tmp/s7-address-importer-check.sh <SHA256> && sudo bash /tmp/s7-address-importer-check.sh
+sudo alphacp-sync get ba063fda8aa8886f3f2e2e9092088f9da1a2c623 tools/verify/s7-address-importer-check.sh /tmp/s7-address-importer-check.sh 30cae2c623f668d61536c14bd454db43d175c75ad4f2ab30f8c7e53bbe87de4f && sudo bash /tmp/s7-address-importer-check.sh
 ```
 - Expect: `panel ke ASLI code se CSV parse: header skip, 2 rows, quota, bcrypt hash` → 3 × fail-closed ok →
   `imported mailboxes provisioned via real mail.set` → dono mailboxes par `asli password auth pass` +
