@@ -14,25 +14,27 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### ⭐ alphacp-sync v1.3 — snapshot completeness fix. **Sabse pehle yahi chalao.**
+### ⭐ alphacp-sync v1.4 — snapshot completeness + config-only secret-scan. **Abhi yahi chalao.**
 ```bash
-sudo alphacp-sync get a569e66fd2bbdb058769f05b50c836b772b299c4 installer/alphacp-sync.sh /tmp/acp-sync-v1.3.sh d5beafb39244457bdedd750d4afc8376789fe5f3e1228885227be5779a9f897b && sudo bash /tmp/acp-sync-v1.3.sh
+sudo alphacp-sync get ff810fb2dacc19a0ce1f36ebad965fc64e71df07 installer/alphacp-sync.sh /tmp/acp-sync-v1.4.sh d32bc3fc9196867bd96fcafa34ba3c803a17bf893bdf27ed14f5a0f1f1ee0515 && sudo bash /tmp/acp-sync-v1.4.sh
 ```
-- sha256: `d5beafb39244457bdedd750d4afc8376789fe5f3e1228885227be5779a9f897b`
-- **Kyun zaroori hai:** v1.2 tak sync panel ki 6 source files chup-chaap chhod deta tha
-  (`views/backup/`, `views/ssl/`, `views/backup-destinations/`, `views/transfer-tool/`,
-  `tests/Feature/SshTest.php`, `tests/Feature/TransferToolTest.php`). Isliye GitHub wala repo
-  server jaisa nahi tha, aur repo se panel dobara banane par `/backup`, `/ssl`,
-  `/backup-destinations`, `/transfer-tool` **500** dete. Poori tafseel `CHANGELOG.md` (6 Oct).
-- Expected: banner `v1.3` → `completeness: …` → `==> SYNC OK ✅`. Push hone ke baad GitHub par
-  `server-snapshot/STATE.md` me naya **"Snapshot completeness"** section dikhega — wahan
-  `panel ki har source file … snapshot me hai — repo = server ✔` aana chahiye.
-- Verify (push ke baad, kahin se bhi):
-  `gh api repos/abhay751218-hue/AlphaCP/contents/server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/index.blade.php`
+- sha256: `d32bc3fc9196867bd96fcafa34ba3c803a17bf893bdf27ed14f5a0f1f1ee0515`
+- **Kyun:** v1.3 ke live run me completeness check ne dikhaya ki 4 files phir bhi nahi aayi —
+  un views me `PASSWORD: password,` jaisi JS lines ko v1.3 ka pattern abhi bhi "secret" samajhta
+  tha, aur `bootstrap/cache`/`logs`/`backups` junk leak hone laga tha. v1.4 me KEY=VALUE scan
+  **sirf config files** par hai aur junk prune hota hai. Tafseel `CHANGELOG.md`.
+- Expected: banner `v1.4` → `completeness: panel ki har source file … snapshot me hai` →
+  `==> SYNC OK ✅`. Ab STATE.md me missing list **khaali** honi chahiye.
+- Verify (push ke baad):
+  `gh api repos/abhay751218-hue/AlphaCP/contents/server-snapshot/files/usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php`
   → 200 aana chahiye (pehle 404 tha).
-- Test: `sudo bash tools/sim/sync-sim.sh` → **67/67** (7 naye completeness tests).
+- Test: `sudo bash tools/sim/sync-sim.sh` → **70/70**.
 - ⚠️ Ye sync tool update karta hai + turant sync karta hai. **Panel code ko chhoota tak nahi** —
   websites/email/DNS safe hain. Dobara chalana safe hai.
+
+### alphacp-sync v1.3 — snapshot completeness fix. ✅ chal chuka (6 Oct, 21:35Z)
+Superseded by **v1.4** (upar). v1.3 ne completeness check diya (usi ne 4 missing files pakdi),
+par secret-scan abhi bhi unhe gira raha tha — isliye v1.4 zaroori hai.
 
 ### alphacp-sync v1.2 — ✅ chal chuka (server par `tool: alphacp-sync v1.2`, LAST-SYNC 6 Oct 08:47Z)
 Superseded by **v1.3** (upar). Dobara mat chalao.
