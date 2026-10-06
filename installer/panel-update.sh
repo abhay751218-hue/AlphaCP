@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.82.0  ·  default panel bundle 0.75.0  ·  agent 0.82.0  ·  alphacp-sync v1.2
+# updater 0.83.0  ·  default panel bundle 0.75.0  ·  agent 0.83.0  ·  alphacp-sync v1.2
 #
+# 0.83.0: S7 #145 Email Deliverability (server default) — agent ka mail.server sync
+#         har mail domain ke liye SPF/DMARC DKIM records KHUD likhta hai (koi manual
+#         click nahi), DKIM 2048-bit key + Exim signing; records pehle se sahi hon to
+#         BIND reload skip. Agent 212/0, S7 mail SIM 27/0. Panel code 0.75.0 hi rahega.
 # 0.82.0: S7 #18 static mailing lists — panel subscribers persist in mailing_lists.members;
 #         agent syncs validated membership to Exim aliases for per-subscriber fan-out.
 #         Panel suite 453/0/6 wasm-skip, agent 209/0, S7 mail SIM 14/0. Real list delivery
@@ -187,17 +191,17 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.82.0"
+UPDATER_VERSION="0.83.0"
 PANEL_VERSION="${ACP_PANEL_VERSION:-0.75.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
 BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-312f21cbc1a2cecde786f8ebbff6f9e814a25253}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
 BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-53bcfb3b59add88bbad39df076b4e25a6f1164e0c0b8cc4331959b8780e5cc2c}"
-AGENT_VERSION="${ACP_AGENT_VERSION:-0.82.0}"
-AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-312f21cbc1a2cecde786f8ebbff6f9e814a25253}"
+AGENT_VERSION="${ACP_AGENT_VERSION:-0.83.0}"
+AGENT_COMMIT="${ACP_AGENT_BUNDLE_COMMIT:-341a3c9181a8be2eebb21a3fb3f3bb1b39a77fbf}"
 AGENT_PATH="artifacts/agent-${AGENT_VERSION}.tar.gz"
-AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-b3cb65c694d28f7d0361baac616ea47e1308c87826079238d3582a8e32142b77}"
+AGENT_SHA256="${ACP_AGENT_BUNDLE_SHA256:-e2aadf0c3d5fa4194dc597398e6a0586a094315df8d34411a83d58ef7589bfbb}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
