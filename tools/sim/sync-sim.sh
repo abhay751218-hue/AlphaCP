@@ -40,6 +40,34 @@ final class LicenseManager { public const TRIAL_DAYS = 15; }
 EOF
 echo '<?php return ["db" => "SuperSecretDb123"];' > ${PANEL}/app/Leak.php           # leak attempt 1
 echo '<?php // token ghp_abcdefghijklmnopqrstuvwxyz0123456789AB' > ${PANEL}/config/leak2.php   # leak attempt 2
+# v1.3 regression fixtures:
+#  (a) `backup/` aur `ssl/` NAAM ke source directories — v1.2 ki bare-name prune inhe uda deti thi
+mkdir -p ${PANEL}/resources/views/backup ${PANEL}/resources/views/ssl
+cat > ${PANEL}/resources/views/backup/index.blade.php <<'EOF'
+@extends('layouts.panel')
+@section('content')<h3>Backup</h3><p>jobs.json</p>@endsection
+EOF
+cat > ${PANEL}/resources/views/ssl/index.blade.php <<'EOF'
+@extends('layouts.panel')
+@section('content')<h3>SSL/TLS Status</h3><button>Run AutoSSL</button>@endsection
+EOF
+#  (b) normal JS jo v1.2 ka secret pattern "secret" samajh kar POORI file drop kar deta tha
+cat > ${PANEL}/resources/views/backup/destinations.blade.php <<'EOF'
+@extends('layouts.panel')
+@section('content')
+<script>
+    PASSWORD = document.getElementById('password').value;
+    TOKEN = form.querySelector('[name=_token]').value;
+</script>
+@endsection
+EOF
+#  (c) wahi shape me ASLI secret — ye drop hona hi chahiye
+cat > ${PANEL}/resources/views/backup/leaky.blade.php <<'EOF'
+@extends('layouts.panel')
+@section('content')
+DB_PASSWORD=Sup3rS3cretValue
+@endsection
+EOF
 echo '<?php // license server (sim)' > /opt/alphacp-license/server.php
 printf 'server { listen 8090 ssl; root %s/public; }\n' "${PANEL}" > /etc/nginx/sites-available/alphacp-panel.conf
 printf '#!/bin/sh\necho alphacp cli\n' > ${ACP}/bin/alphacp; chmod +x ${ACP}/bin/alphacp
@@ -66,7 +94,7 @@ count()     { git -C "${REMOTE}" rev-list --count main; }
 echo; echo "=== Run 1: pehla sync ==="
 rc="$(run_sync 1)"; tail -4 /tmp/syncsim/run-1.out | sed 's/^/    | /'
 [[ "$rc" == 0 ]] && grep -q "SYNC OK" /tmp/syncsim/run-1.out && t_ok "sync OK (exit 0)" || { t_fail "sync fail rc=$rc"; cat /tmp/syncsim/run-1.out; }
-grep -q "v1.2" /tmp/syncsim/run-1.out && t_ok "banner v1.2" || t_fail "banner"
+grep -q "v1.3" /tmp/syncsim/run-1.out && t_ok "banner v1.3" || t_fail "banner"
 for f in server-snapshot/STATE.md server-snapshot/README.md server-snapshot/LAST-SYNC.md server-snapshot/MANIFEST.txt \
          server-snapshot/files/usr/local/alphacp/panel/app/Services/License/LicenseManager.php \
          server-snapshot/files/usr/local/alphacp/panel/routes/web.php \
@@ -98,6 +126,21 @@ grep -q "alphacp:admin-password" <<<"$ST" && t_ok "STATE: custom artisan command
 grep -q "LicenseManager.php" <<<"$ST" && t_ok "STATE: license files list" || t_fail "STATE: license list nahi"
 grep -q "license.env  keys: LICENSE_KEY LICENSE_SERVER TRIAL_DAYS" <<<"$ST" && t_ok "STATE: secret file ke sirf KEY naam" || t_fail "STATE: secret keys list nahi"
 grep -q "Leak.php  (server secret value mila)" <<<"$ST" && t_ok "STATE: skipped leak file report" || t_fail "STATE: skip report nahi"
+# ---- v1.3: snapshot completeness (bare-name prune + secret false-positive fix)
+for f in files/usr/local/alphacp/panel/resources/views/backup/index.blade.php \
+         files/usr/local/alphacp/panel/resources/views/ssl/index.blade.php; do
+  tree_has "server-snapshot/$f" && t_ok "v1.3: ${f##*/views/} snapshot me hai" \
+    || t_fail "v1.3 REGRESSION: ${f} snapshot me NAHI (bare-name prune wapas aa gaya?)"
+done
+tree_has server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/destinations.blade.php \
+  && t_ok "v1.3: normal JS wali blade drop NAHI hui (false positive fix)" \
+  || t_fail "v1.3 REGRESSION: 'PASSWORD = document.getElementById(...)' wali blade drop ho gayi"
+tree_has server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/leaky.blade.php \
+  && t_fail "v1.3: asli 'DB_PASSWORD=...' wali blade push ho gayi (secret leak!)" \
+  || t_ok "v1.3: asli DB_PASSWORD= line wali blade ab bhi drop hoti hai"
+grep -q "leaky.blade.php  (secret jaisa pattern)" <<<"$ST" && t_ok "v1.3: STATE me leaky blade ka reason" || t_fail "STATE: leaky blade reason nahi"
+grep -q "destinations.blade.php" <<<"$ST" && t_fail "v1.3: normal blade STATE ke skip list me aa gayi" || t_ok "v1.3: normal blade skip list me NAHI"
+grep -q "Snapshot completeness" <<<"$ST" && t_ok "v1.3: STATE me completeness section" || t_fail "STATE: completeness section nahi"
 grep -q "panel http    : 200" <<<"$ST" && t_ok "STATE: panel http 200" || t_fail "STATE: panel http"
 tree_has server-snapshot/files/usr/local/alphacp/releases && t_fail "releases/ snapshot me chala gaya" || t_ok "v1.1: releases/ snapshot me NAHI"
 grep -q "panel-backup-20260928224358" <<<"$ST" && grep -q "panel-failed-20260928223644" <<<"$ST" && t_ok "v1.1: STATE me releases ke naam" || t_fail "STATE: releases naam nahi"
@@ -160,7 +203,11 @@ rm -f /tmp/syncsim/key-added
 grep -q "timer mode" /tmp/syncsim/run-7.out && t_ok "timer mode: fast fail" || { t_fail "timer mode"; tail -5 /tmp/syncsim/run-7.out; }
 
 echo; echo "=== Run 8 (v1.2): alphacp-sync get — deploy key se file (private repo me bhi) ==="
-GC="$(git -C "${REMOTE}" rev-parse refs/heads/arena/01a0ea3e-alphacp 2>/dev/null || git -C "${REMOTE}" rev-parse main)"
+# FIX: `git rev-parse <missing-ref>` exit 128 ke SAATH ref ka naam stdout par bhi print karta
+# hai, isliye `... 2>/dev/null || rev-parse main` me GC = "<ref-naam>\n<main-sha>" ban jaata tha
+# aur Run 8 ke saare `get` tests isi wajah se fail hote the. --verify --quiet se ye saaf hota hai.
+GC="$(git -C "${REMOTE}" rev-parse --verify --quiet "refs/heads/arena/01a0ea3e-alphacp^{commit}" 2>/dev/null || true)"
+[[ "${GC}" =~ ^[0-9a-f]{40}$ ]] || GC="$(git -C "${REMOTE}" rev-parse main)"
 GSHA="$(git -C "${REMOTE}" show "${GC}:START-HERE.md" | sha256sum | cut -d' ' -f1)"
 rm -rf /tmp/syncsim/getwork /tmp/syncsim/got*
 run_get() { ( cd /root && SYNC_CONF_DIR=/tmp/syncsim/conf SYNC_WORK_DIR=/tmp/syncsim/getwork SYNC_REPO_URL="file://${REMOTE}" bash "${SYNC}" get "$@" ) 2>&1; }
@@ -190,5 +237,8 @@ o="$( cd /root && SYNC_CONF_DIR=/tmp/syncsim/noconf SYNC_WORK_DIR=/tmp/syncsim/g
 
 # cleanup nakli files (fake server)
 rm -f ${PANEL}/app/Leak.php ${PANEL}/config/leak2.php
+rm -f ${PANEL}/resources/views/backup/index.blade.php ${PANEL}/resources/views/backup/destinations.blade.php \
+      ${PANEL}/resources/views/backup/leaky.blade.php ${PANEL}/resources/views/ssl/index.blade.php
+rmdir ${PANEL}/resources/views/backup ${PANEL}/resources/views/ssl 2>/dev/null || true
 echo; echo "=== RESULT: ${PASS} pass, ${FAIL} fail ==="
 [[ ${FAIL} -eq 0 ]]
