@@ -44,7 +44,7 @@ S7 mail SIM **27/0** (naya verifier `s7-deliverability-default-check.sh`, 15 che
 
 ### Iske turant baad — read-only verifier (deploy ke baad chalao)
 ```bash
-sudo alphacp-sync get COMMIT_TO_FILL tools/verify/s7-deliverability-default-check.sh /tmp/acp-deliv-check.sh SHA_TO_FILL && sudo bash /tmp/acp-deliv-check.sh
+sudo alphacp-sync get 9c42c195be2b38b27b79f6db1ee0099228d6af3a tools/verify/s7-deliverability-default-check.sh /tmp/acp-deliv-check.sh c2dfc222af98e88c95d34ff99f33427b65d3a3dde4bf0d78293535e3d03e6289 && sudo bash /tmp/acp-deliv-check.sh
 ```
 Yeh naya temporary account (`acpdelivchk`) banata hai, **sirf `mail.server sync`** chalata hai (koi manual
 deliverability action nahi), SPF/DMARC/DKIM + asli key pair + Exim signing verify karta hai, phir account
