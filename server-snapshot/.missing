@@ -1,0 +1,4 @@
+/usr/local/alphacp/panel/resources/views/backup-destinations/index.blade.php
+/usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php
+/usr/local/alphacp/panel/tests/Feature/SshTest.php
+/usr/local/alphacp/panel/tests/Feature/TransferToolTest.php

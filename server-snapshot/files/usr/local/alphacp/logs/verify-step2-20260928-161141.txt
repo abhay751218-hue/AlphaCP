@@ -1,0 +1,54 @@
+===== AlphaCP Step 2 verification — 2026-09-28T16:11:41+00:00 =====
+
+--- file layout ---
+  /usr/local/alphacp/agent/bin/:
+  total 12
+  drwxr-xr-x 2 root root 4096 Sep 28 16:11 .
+  drwxr-xr-x 7 root root 4096 Sep 28 16:11 ..
+  -rwxr-xr-x 1 root root  605 Jan  1  1970 paneld
+  
+  /usr/local/alphacp/etc/:
+  total 24
+  drwxr-xr-x 2 root root 4096 Sep 28 16:11 .
+  drwxr-xr-x 9 root root 4096 Sep 28 16:11 ..
+  -rw------- 1 root root   48 Sep 28 14:25 check.token
+  -rw------- 1 root root  269 Sep 28 16:11 database.env
+  -rw-r--r-- 1 root root  283 Sep 28 14:26 install.env
+  -rw------- 1 root root  104 Sep 28 16:11 my.cnf
+
+--- paneld selftest ---
+  [ OK ] database.env readable                      /usr/local/alphacp/etc/database.env
+  [ OK ] DB connection                              server 10.11.14-MariaDB-0ubuntu0.24.04.1
+  [ OK ] tasks table                                0 rows
+  [ OK ] task registry                              3 task types
+  [ OK ] registry entries valid                     all good
+  [ OK ] PathGuard blocks escapes                   escape blocked
+  [ OK ] command allowlist blocks /bin/sh           blocked
+  
+  SELFTEST PASSED
+
+--- agent status (before task) ---
+  {
+      "agent_version": "0.1.0",
+      "pid": 73947,
+      "server_id": 1,
+      "db": "ok",
+      "queue": {
+          "queued": 0,
+          "running": 0,
+          "failed": 0,
+          "success": 0
+      },
+      "last_task": null,
+      "task_types": [
+          "agent.ping",
+          "system.info",
+          "service.status"
+      ]
+  }
+
+--- queue test (task #1) ---
+  status      : success
+  waited      : 1s
+  result      : {"pong":true,"agent_version":"0.1.0","hostname":"ip-172-26-4-65","pid":73933,"php_version":"8.4.26","time":"2026-09-28T16:11:42+00:00","timezone":"UTC"}
+  error       : 

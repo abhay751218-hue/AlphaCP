@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — SERVER → GITHUB SYNC  v1.2
+#  AlphaCP — SERVER → GITHUB SYNC  v1.3
+#  v1.3: SNAPSHOT COMPLETENESS FIX — `-name backup`/`-name ssl`/`-name keys`/`-name storage`
+#        jaisi bare-name prunes hataayi gayi (wo panel ke resources/views/backup/ aur
+#        resources/views/ssl/ ko chup-chaap uda deti thi). Secret pattern ab EOL-anchored
+#        hai, isliye `PASSWORD = document.getElementById(...)` jaisi normal code lines par
+#        poori file drop nahi hoti. STATE.md me ab "Snapshot completeness" section aata hai
+#        jo MANIFEST.json ke file count se copy hue files compare karta hai.
 #  v1.2: `alphacp-sync get <commit> <path> <out> [sha256]` — deploy key se repo ki file laata hai
 #        (PRIVATE repo me bhi chalta hai; raw.githubusercontent private repo par 404 deta hai)
 #  v1.1: releases/ (purane backup/failed panel copies) snapshot me nahi — sirf naam STATE.md me;
@@ -25,7 +31,7 @@
 # =============================================================================
 set -uo pipefail
 
-SYNC_VERSION="1.2"
+SYNC_VERSION="1.3"
 REPO_SLUG="${SYNC_REPO_SLUG:-abhay751218-hue/AlphaCP}"
 BRANCH="${SYNC_BRANCH:-main}"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
@@ -250,10 +256,18 @@ done
 
 copy_tree() {  # $1 = source dir; secrets/heavy cheezein prune
   local src="$1"
+  # NOTE (v1.3): prunes AB PATH-SCOPED hain. v1.2 tak `-name backup`, `-name ssl`,
+  # `-name keys`, `-name storage` jaisi bare-name prunes thi, jo source tree ke andar
+  # usi naam ki koi bhi directory uda deti thi. Natija: panel ke
+  #   resources/views/backup/index.blade.php  aur  resources/views/ssl/index.blade.php
+  # snapshot me kabhi aaye hi nahi (secret scan tak pahunche hi nahi, isliye SKIPPED
+  # list me bhi naam nahi tha). Repo se panel dobara banane par /backup aur /ssl
+  # "View not found" 500 dete. Ab sirf wahi paths prune hote hain jo sach me
+  # secret/runtime hain; baaki sab file-name excludes + secret scan sambhalte hain.
   ( cd / && find "${src#/}" \
-      \( -name vendor -o -name node_modules -o -name storage -o -name .git -o -name cache -o -name logs -o -name log \
-         -o -name tmp -o -name backups -o -name backup -o -path "${ACP_HOME#/}/etc" -o -path "${ACP_HOME#/}/var" -o -path "${ACP_HOME#/}/releases" \
-         -o -name ssl -o -name certs -o -name keys -o -name private \) -prune -o \
+      \( -name vendor -o -name node_modules -o -name .git \
+         -o -path "${ACP_HOME#/}/etc" -o -path "${ACP_HOME#/}/var" -o -path "${ACP_HOME#/}/releases" \
+         -o -path "${ACP_HOME#/}/panel/storage" -o -path "*/panel/storage" \) -prune -o \
       -type f \! \( -name '.env' -o -name '.env.*' -o -name '*.sqlite' -o -name '*.sqlite3' -o -name '*.db' -o -name '*.pem' \
          -o -name '*.key' -o -name '*.crt' -o -name '*.p12' -o -name '*.pfx' -o -name 'id_*' -o -name '*.log' -o -name '*.bak*' \
          -o -name '*.disabled-*' -o -iname '*secret*' -o -iname '*private*' -o -name '*.tar*' -o -name '*.zip' -o -name '*.gz' -o -name '*.sock' \) \
@@ -278,12 +292,21 @@ python3 - "${FILES}" "${SECRETS}" "${SKIPPED}" <<'PY'
 import os, re, sys
 root, secf, skipf = sys.argv[1], sys.argv[2], sys.argv[3]
 secrets = [l.rstrip("\n") for l in open(secf, encoding="utf-8", errors="ignore") if len(l.strip()) >= 8]
+# v1.3: KEY=VALUE pattern ab END-OF-LINE anchored hai aur value ya to ek quoted
+# literal hona chahiye ya ek "token" jisme code punctuation ( ( ) ; ' " ) na ho.
+# v1.2 ka pattern `[^\s'"$]{6,}` kisi bhi code line ko pakad leta tha, jaise:
+#     PASSWORD = document.getElementById('password').value;
+#     TOKEN = form.querySelector('[name=_token]').value;
+# Isliye backup-destinations/transfer-tool ke blade views aur Ssh/TransferTool
+# tests poori files drop ho jaati thi. Asli secret ab bhi pakda jata hai:
+#     DB_PASSWORD=Sup3rS3cretValue      "PASSWORD": "abc123456",     TOKEN='abcdef'
 pat = re.compile(
     r"-----BEGIN [A-Z ]*PRIVATE KEY-----"
     r"|APP_KEY=base64:[A-Za-z0-9+/=]{20,}"
     r"|\bAKIA[0-9A-Z]{16}\b"
     r"|\bgh[pousr]_[A-Za-z0-9]{30,}"
-    r"|^\s*[A-Z0-9_]*(PASS|PASSWORD|SECRET|TOKEN)[A-Z0-9_]*\s*=\s*['\"]?[^\s'\"$]{6,}"
+    r"|^\s*[\"']?[A-Z0-9_]*(PASS|PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY)[A-Z0-9_]*[\"']?\s*[:=]\s*"
+    r"(?:\"[^\"\n]{6,}\"|'[^'\n]{6}'|[^\s'\"();#]{6,})[\s,;]*$"
     r"|^panel_pass=", re.M)
 skipped = []
 for dp, dn, fn in os.walk(root):
@@ -311,6 +334,38 @@ with open(skipf, "a") as f:
 PY
 find "${FILES}" -type d -empty -delete 2>/dev/null || true
 ok "files copy: $(find "${FILES}" -type f | wc -l)   skip (secret/binary): $(wc -l < "${SKIPPED}")"
+
+# --- v1.3 completeness check: panel ki kaun si source files snapshot me NAHI pahunchi
+# (v1.2 tak bare-name prunes ki wajah se kuch files chup-chaap gayab ho jaati thi aur
+#  SKIPPED list me bhi naam nahi aata tha — isliye kisi ko pata hi nahi chalta tha.)
+MISSING="${SNAP}/.missing"; : > "${MISSING}"
+python3 - "${ACP_HOME}/panel" "${FILES}" "${MISSING}" <<'PY'
+import os, sys
+panel, root, out = sys.argv[1], sys.argv[2], sys.argv[3]
+# runtime/secret dirs jo JAAN-BOOJH kar snapshot me nahi aate
+SKIP_PARTS = ("/vendor/", "/node_modules/", "/storage/", "/.git/", "/bootstrap/cache/")
+SKIP_NAMES = (".env",)
+missing = []
+for dp, dn, fn in os.walk(panel):
+    for n in fn:
+        p = os.path.join(dp, n)
+        rel = "/" + os.path.relpath(p, "/")
+        if any(s in rel for s in SKIP_PARTS):
+            continue
+        if n in SKIP_NAMES or n.startswith(".env."):
+            continue
+        if not os.path.exists(os.path.join(root, rel.lstrip("/"))):
+            missing.append(rel)
+with open(out, "w") as f:
+    for m in sorted(missing):
+        f.write(m + "\n")
+PY
+MCOUNT="$(wc -l < "${MISSING}")"
+if [[ "${MCOUNT}" -eq 0 ]]; then
+  ok "completeness: panel ki har source file snapshot me hai"
+else
+  warn "completeness: ${MCOUNT} panel source file snapshot me NAHI aayi (STATE.md dekho)"
+fi
 
 # ============================================================== 6. STATE.md (AI ke liye server ki haalat)
 hdr "Step 6: STATE.md (versions, services, routes, license files, DB schema)"
@@ -451,6 +506,16 @@ PY
   say "## Snapshot se skip hui files (secret/binary)"
   say '```'
   cat "${SKIPPED}"
+  say '```'
+  say ""
+  say "## Snapshot completeness (v1.3)"
+  say '```'
+  if [[ -s "${MISSING}" ]]; then
+    say "PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (${MCOUNT}) — repo se panel dobara banane par ye pages tootenge:"
+    cat "${MISSING}"
+  else
+    say "panel ki har source file (vendor/storage/.env chhod kar) snapshot me hai — repo = server ✔"
+  fi
   say '```'
 } > "${S}" 2>/dev/null
 

@@ -1,0 +1,34 @@
+AlphaCP installer v0.1.0 — verification report
+date: 2026-09-28T14:26:10+00:00   host: ip-172-26-4-65   profile: dev
+os: unknown   arch: unknown   ram: 3832 MB
+----------------------------------------------------------------
+FAIL  service: apache2 running
+PASS  service: php8.3-fpm running
+PASS  service: mariadb running
+PASS  service: redis-server running
+PASS  service: bind9 running
+PASS  service: fail2ban running
+PASS  service: ufw active
+PASS  service: nginx stopped (Step 2) — intentional
+PASS  service: exim/dovecot stopped — Step 7
+FAIL  http://127.0.0.1 responds — default page
+FAIL  PHP executes via Apache+FPM
+WARN  check.php blocks wrong token — token guard
+PASS  MariaDB query works
+PASS  no anonymous SQL users — count=0
+FAIL  MySQL not public (3306) — bound 127.0.0.1 only
+PASS  Redis responds (PONG)
+PASS  Redis local-only
+PASS  BIND answers locally
+PASS  public DNS resolution
+WARN  quota enforcement on /
+PASS  cgroups v2
+PASS  swap available — 2047 MB
+PASS  disk usage under 85% — 8% used
+PASS  ufw: ssh/http/https allowed
+PASS  ufw: panel port 2083 allowed
+PASS  composer available
+PASS  node available
+PASS  alphacp CLI works
+----------------------------------------------------------------
+PASS: 22   FAIL: 4   WARN: 2
