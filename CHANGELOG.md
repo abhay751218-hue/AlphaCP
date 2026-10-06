@@ -51,6 +51,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `mail.set` registry add karna pada (warna sim asli check ko galat FAIL deta).
 
 ### Verified
+- **6 Oct 2026 — S7 #23 + #148 Address Importer LIVE VERIFIED ✅** (server par, panel 0.75.0 + agent 0.82.0):
+  `tools/verify/s7-address-importer-check.sh` (@ `ba063fd`, sha256 `30cae2c6…`) ne **16 pass / 0 fail** diya —
+  CSV panel ke asli code se parse hui (header skip, 2 rows, quotas, bcrypt), real `mail.set` se dono mailboxes bane,
+  **har mailbox par asli password auth (`doveadm auth test`) + asli Exim delivery** (`import delivery: YES`),
+  pipe/foreign/header CSV poori reject, aur cleanup verified (dovecot me kuch nahi bacha). Checklist rows #23 + #148 ✅;
+  required ab **57 ✅ / 51 🟡 / 91 ⏳** (+10 optional).
 - **6 Oct 2026 — live mail health check PASS ✅** (`tools/verify/s7-mail-check.sh` @ `3172639`, sha256 `eed20adc…`,
   aapne server par chalaya): **62 pass / 0 fail / 0 skip**, `BASE INBOX DELIVERY: VERIFIED`, `FULL S7 MAIL CHECK: PASS`
   (tasks #618–#647). Isse confirm hua ki 0.82.0 updater ka mail-stack re-setup (exim4 + dovecot + SpamAssassin +

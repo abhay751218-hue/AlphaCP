@@ -12,29 +12,22 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ Abhi chalani hai (NEXT STEP) — S7 #23 Address Importer ka LIVE proof
+## ✅ Aaj ke live-verified steps (6 Oct) — dobara chalane ki zaroorat nahi
 
-> **S7 #18 Mailing Lists LIVE VERIFIED ✅ (6 Oct):** panel **0.75.0** + agent **0.82.0** par
-> `tools/verify/s7-mailing-list-check.sh` (@ `402ebcd`, sha256 `08b0928f…`) ne **14 pass / 0 fail** diya —
-> alias expansion (real Exim `<--` shape), **asli delivery subscriber Maildir me** (`list delivery: YES`),
-> pipe/self-subscribe reject, list removal + alias cleanup. Us se pehle wahi release par mail health
-> verifier **62 / 0 / 0** chuka tha. Checklist row **#18 ✅** (ab **55 ✅ / 52 🟡 / 92 ⏳ / 9 🔵**).
->
-> **Ab #23 Address Importer ka naya verifier:** CSV ko panel ke **ASLI code** se parse karta hai
-> (`App\Support\Mail::parseImport` + `hashPassword`, deployed files seedha require hote hain — Laravel boot nahi),
-> wahi payload real `mail.set` ko deta hai, aur phir **har imported mailbox** ka
-> **asli password auth** (`doveadm auth test`; purane doveadm par bcrypt-hash fallback) + **asli Exim delivery**
-> prove karta hai. Fail-closed bhi live check hota hai: pipe/shell local-part aur foreign domain poori CSV reject.
-> Verifier apna temporary account (`acpimpchk`) + mailboxes exit par khud hata deta hai.
->
-> Local proof (sandbox): `tools/sim/s7-mail-sim.sh` **21 pass / 0 fail** — importer verifier 6 modes me chalta hai
-> ("good" me **16 pass / 0 fail**, `breakdelivery` me sahi fail; purane-doveadm fallback bhi verified).
-```bash
-sudo alphacp-sync get ba063fda8aa8886f3f2e2e9092088f9da1a2c623 tools/verify/s7-address-importer-check.sh /tmp/s7-address-importer-check.sh 30cae2c623f668d61536c14bd454db43d175c75ad4f2ab30f8c7e53bbe87de4f && sudo bash /tmp/s7-address-importer-check.sh
-```
-- Expect: `panel ke ASLI code se CSV parse: header skip, 2 rows, quota, bcrypt hash` → 3 × fail-closed ok →
-  `imported mailboxes provisioned via real mail.set` → dono mailboxes par `asli password auth pass` +
-  `asli Exim delivery pahunchi` → `import delivery: YES` → **`=== S7 #23 ADDRESS IMPORTER LIVE CHECK: 16 pass, 0 fail ===`**
+| Step | Verifier | Live result |
+|---|---|---|
+| Panel **0.75.0** + Agent **0.82.0** deploy (updater 0.82.0) | — | `UPDATE COMPLETE ✅`, HTTP 200, backup `panel-backup-20261006014708` |
+| Mail health (S7 base) | `tools/verify/s7-mail-check.sh` @ 3172639 | **62 pass / 0 fail / 0 skip**, `BASE INBOX DELIVERY: VERIFIED` |
+| **#18 Mailing Lists** | `tools/verify/s7-mailing-list-check.sh` @ 402ebcd | **14 pass / 0 fail**, `list delivery: YES` → row ✅ |
+| **#23 + #148 Address Importer** | `tools/verify/s7-address-importer-check.sh` @ ba063fd | **16 pass / 0 fail**, `import delivery: YES` → dono rows ✅ |
+
+> Checklist ab **57 ✅ / 51 🟡 / 91 ⏳** (199 required rows; +10 optional 🔵) — 28.6% green.
+
+## ⏳ NEXT (taiyaari chal rahi hai) — S7 #25 Encryption (PGP/GnuPG) ya #145 server-default Deliverability
+
+> Abhi repo me next item ka code/verifier banaya ja raha hai — jo bhi pehle poori tarah test hokar
+> ready hoga, uska **pinned single command** yahan aayega (bina test koi command nahi).
+> S7 me bache: #25 Encryption · #26 BoxTrapper · #27 Calendar & Contacts · #29 Webmail · #145 Deliverability (server default).
 
 ### Remaining S7 scope
 - #18 Mailing Lists; #23/#148 Address Importer; #25 Encryption; #26 BoxTrapper; #27 Calendar & Contacts;
