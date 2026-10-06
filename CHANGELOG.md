@@ -38,6 +38,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `tools/verify/s10-backup-destination-check.sh` live check (**25** checks).
 
 ### Verified
+- **6 Oct 2026 — release 0.82.0 LIVE deploy ho gaya ✅** (server: panel `0.75.0` + agent `0.82.0`, updater banner
+  `updater 0.82.0`, `==> UPDATE COMPLETE ✅`, HTTP **200**, backup `panel-backup-20261006014708`, purane
+  backups prune, GitHub sync bhi ho gaya). Update ke baad mail stack dobara configure hua, isliye pehla
+  verify step **live mail health** (`tools/verify/s7-mail-check.sh`, commit `3172639`, sha256 `eed20adc…`) hai;
+  uske baad `tools/verify/s7-mailing-list-check.sh` (commit `47a7461`, sha256 `4be2d215…`) se #18 ka live proof.
 - **6 Oct 2026 — release 0.82.0 (panel 0.75.0 + agent 0.82.0) dobara locally verify hui** (is session me,
   sandbox me): `panel-tests.sh` **453 pass / 0 fail / 6 wasm-skip**, `update-sim.sh` **247 pass / 0 fail**,
   `provision-sim.sh` **209 pass / 0 fail** (sudo ke bina — dekho `tools/sim/README.md`), `s7-mail-sim.sh`

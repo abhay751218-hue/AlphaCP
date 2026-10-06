@@ -12,21 +12,27 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ Abhi chalani hai (NEXT STEP) — panel-update 0.82.0 (S7 #18 Mailing Lists: subscribers + static Exim fan-out)
+## ✅ Abhi chalani hai (NEXT STEP) — mail health verify (updater 0.82.0 ke baad)
 
-> Local verification (6 Oct, sandbox): panel suite **453 pass / 0 fail / 6 wasm-skip**, `update-sim`
-> **247/0**, `provision-sim` **209/0**, `s7-mail-sim` **14/0** — artifact sha256 updater ke pin se match karta hai.
-> Ye update **2 artifacts** deploy karta hai: panel code **0.75.0** + agent **0.82.0** (naya `mail.list` task).
-> Health check fail hone par updater **apne aap rollback** kar deta hai (kuch manually nahi karna).
+> **0.82.0 CHAL CHUKA ✅ (6 Oct 01:47Z server time):** panel **0.75.0** + agent **0.82.0** live,
+> `==> UPDATE COMPLETE ✅`, HTTP **200**, backup `releases/panel-backup-20261006014708`,
+> poora purana backup prune hua, aur end me `alphacp-sync` ne GitHub bhi update kar diya.
+>
+> ⚠️ Is updater ne mail stack **dobara configure** kiya (exim4 + dovecot + SpamAssassin + greylisted
+> install/setup phir se chala). Isliye pehle **live mail ki health** confirm karni hai — customer email
+> pehle se zyada zaroori hai. Ye wahi verifier hai jo pehle **62 pass / 0 fail / 0 skip** de chuka hai;
+> ab ye regression proof dega (commit + sha256 repo ke hint se, byte-for-byte verify kiya).
 ```bash
-sudo alphacp-sync get 47a7461b7aa4d5556e487ab79c7ff2741896186b installer/panel-update.sh /tmp/acp-panel-update-0.82.0.sh 6222e47172a96f9ba43085b5f38f24a68620f732b3f720612485fe691ed6c81e && sudo bash /tmp/acp-panel-update-0.82.0.sh
+sudo alphacp-sync get 31726394519c03332e29715c3ed37d1b4cc73d41 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh eed20adcbc77550d2407f81ed82a6373b9b00bc6a09ce220139915f25d4b53fc && sudo bash /tmp/s7-mail-check.sh
 ```
-- Expect: banner `updater 0.82.0` → panel + agent artifact sha256 OK → migrations → `==> UPDATE COMPLETE ✅` → HTTP `200`.
-- Iske turant baad (alag command, tab denge) `tools/verify/s7-mailing-list-check.sh` chalega jo **asli Exim route + subscriber Maildir delivery** prove karega → uske baad checklist #18 ✅.
+- Expect: section B (mail.server setup) se H tak checks → aakhir me **`=== S7 MAIL SERVER LIVE CHECK: 62 pass, 0 fail, 0 skip ===`** (ya usse zyada pass).
+- Ye script ek temporary account (`acpmailchk` / `acp-mail-check.test`) banata hai, test karta hai, phir **khud hata deta hai**.
+- **Iske baad** wala (aur aakhri) step — S7 #18 ka live proof (tab denge, jab ye green ho):
+  `tools/verify/s7-mailing-list-check.sh` @ `47a7461b7aa4d5556e487ab79c7ff2741896186b`,
+  sha256 `4be2d2157c0a6d52a5ecfcfb5051cf0a418f5dc73f4d8e2d6ebfd2e009a8ecf9` → isse checklist #18 ✅ hoga.
 
-> Purana status (context ke liye): #147 ka live status verifier **8 pass / 0 fail / 0 skip** (`STATUS-VERIFIED`),
-> #20/#21 ka live mail result **62/0/0**. Current required checklist status: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
-> #18 ka bacha hua kaam: sirf live Exim fan-out + subscriber delivery ka proof (upar wale update ke baad).
+> Purana status (context): #147 SpamAssassin/greylist **8/0/0** (`STATUS-VERIFIED`), #20/#21 **62/0/0**.
+> Current required checklist: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
 
 
 ### Remaining S7 scope
