@@ -5366,6 +5366,77 @@ test('mail.server deliverability — deliverability.json na ho to bhi (mailbox d
     acp_mail_cleanup($h);
 });
 
+test('#145 sync — SPF/DKIM/DMARC apne aap (server default), koi manual action nahi', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    $home = $h['root'] . '/home/alicehost';
+    // mail server configure hone ka nishaan (jaise asli server par)
+    @mkdir($h['root'] . '/alphacp', 0755, true);
+    file_put_contents($h['root'] . '/alphacp/etc/mail-server-configured', "1\n");
+
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    $deliv = (array) ($out['deliverability'] ?? []);
+    assert_true(($deliv['ok'] ?? false) === true, 'sync ke saath deliverability ok hona chahiye (fail: ' . json_encode($deliv['failed'] ?? []) . ')');
+    assert_true((int) ($deliv['count'] ?? 0) === 1, 'mailbox ka domain apne aap process ho, count=' . (int) ($deliv['count'] ?? -1));
+    assert_true((int) ($deliv['changed'] ?? 0) === 1, 'pehli baar records likhna chahiye (changed=1)');
+
+    // syncFiles() bsdk manually chalane se bhi (syncIfConfigured wahi call karta hai)
+    $agg = (new MailServer($h['ctx']->cmd, $h['ctx']->log))->syncFiles();
+    $again = (array) ($agg['deliverability'] ?? []);
+    assert_true((int) ($again['changed'] ?? -1) === 0, 'records pehle se sahi hain to dobara likhna nahi (changed=0)');
+    assert_true(($again['domains'][0]['dns']['reason'] ?? '') === 'already-present', 'skip ka kaaran clear ho');
+
+    $zone = json_decode((string) file_get_contents($home . '/etc/dns/zone.json'), true);
+    $byName = [];
+    foreach ((array) $zone as $row) {
+        $byName[$row['name'] . '|' . $row['type']] = $row['value'];
+    }
+    assert_true(($byName['@|TXT'] ?? '') === 'v=spf1 a mx -all', 'SPF apne aap likha jaye');
+    assert_true(str_starts_with((string) ($byName['_dmarc|TXT'] ?? ''), 'v=DMARC1'), 'DMARC apne aap likha jaye');
+    $dkim = (string) ($byName['default._domainkey|TXT'] ?? '');
+    assert_true(str_starts_with($dkim, 'v=DKIM1; k=rsa; p='), 'DKIM apne aap likha jaye');
+    // DKIM TXT ka p= asli .pub file se match kare
+    $pub = (string) @file_get_contents($h['root'] . '/alphacp/etc/mail/dkim/alice.test.pub');
+    if ($pub !== '') {
+        $b64 = (string) preg_replace('/-----[A-Z ]+-----|\s+/', '', $pub);
+        assert_true(str_contains($dkim, 'p=' . $b64), 'DKIM p= asli public key se match kare');
+    }
+    acp_mail_cleanup($h);
+});
+
+test('#145 sync — DNS/zone likhna fail ho to bhi sync ki baaki cheezein zinda rehti hain', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    $home = $h['root'] . '/home/alicehost';
+    // zone.json likhna hi na ho: uske parent ko read-only kar do (jaise disk full/EACCES)
+    @unlink($home . '/etc/dns/zone.json');
+    @chmod($home . '/etc/dns', 0555);
+
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true(($out['mailboxes'] ?? -1) >= 0, 'sync khud fail nahi hona chahiye (mailboxes key maujood)');
+    $deliv = (array) ($out['deliverability'] ?? []);
+    assert_true(($deliv['ok'] ?? true) === false, 'jhoothi success nahi — ok=false');
+    assert_true(!empty($deliv['failed']), 'failure ki wajah report ho');
+    assert_true(($deliv['failed'][0]['domain'] ?? '') === 'alice.test', 'kaunsa domain fail hua wo bhi batao');
+    assert_true(str_contains((string) ($deliv['failed'][0]['error'] ?? ''), 'zone.json'), 'error message me zone.json ho');
+    @chmod($home . '/etc/dns', 0755);
+    acp_mail_cleanup($h);
+});
+
+test('#145 sync — mail.server setup se pehle bhi sync crash nahi karta', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    // mail-server-configured nishaan NAHI (yaani mail.server setup abhi nahi hua)
+    assert_true(MailServer::isConfigured() === false, 'configured nahi hona chahiye');
+    $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
+    assert_true(array_key_exists('deliverability', $out), 'deliverability key har haal me ho (panel isko padh sakta hai)');
+    $deliv = (array) ($out['deliverability'] ?? []);
+    assert_true((int) ($deliv['count'] ?? -1) === 1, 'mailbox ka domain phir bhi cover ho, count=' . (int) ($deliv['count'] ?? -1));
+    assert_true(($deliv['ok'] ?? false) === true, 'chupchap skip bhi nahi — records likh diye');
+    acp_mail_cleanup($h);
+});
+
+
 test('mail.server setup — system users ke liye mail_spool (root ki mail queue me na atke)', function (): void {
     $h = acp_mail_harness();
     acp_mail_seed_extras($h);

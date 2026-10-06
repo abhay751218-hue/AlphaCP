@@ -505,7 +505,38 @@ def setup():
         if not os.path.isfile(backup):
             with open(TPL) as f:
                 write(backup, f.read())
-    write(TPL, "# AlphaCP managed exim template\nalphacp_mailbox:\nalphacp_maildir:\ndeny message = relay not permitted\n")
+    # #145 server-default: DKIM key pair har mail domain ke liye + Exim me signing lines
+    dkimdir = os.environ.get("ACP_MAIL_DKIM_DIR", os.path.join(STATE, "etc", "mail", "dkim"))
+    os.makedirs(dkimdir, exist_ok=True)
+    dkim_lines = ""
+    _doms = set()
+    if os.path.isfile(DOM):
+        for _l in open(DOM):
+            _d = _l.strip().lower()
+            if _d:
+                _doms.add(_d)
+    _vd = os.environ.get("ACP_VERIFY_DELIV_DOMAIN", "").strip().lower()
+    if _vd:
+        _doms.add(_vd)
+    for dom in sorted(_doms):
+        key = os.path.join(dkimdir, dom + ".key")
+        pub = os.path.join(dkimdir, dom + ".pub")
+        if not os.path.isfile(key):
+            import subprocess as _sp
+            r = _sp.run(["openssl", "genrsa", "-out", key, "2048"], capture_output=True)
+            if r.returncode == 0:
+                os.chmod(key, 0o640)
+                _sp.run(["openssl", "rsa", "-in", key, "-pubout", "-out", pub], capture_output=True)
+                if os.path.isfile(pub):
+                    os.chmod(pub, 0o644)
+        if os.path.isfile(key):
+            _D = chr(36)      # '$' — heredoc expansion se bachne ke liye (unquoted heredoc)
+            _k = dkimdir + "/" + _D + "sender_address_domain.key"
+            dkim_lines += ("  dkim_domain = " + _D + "sender_address_domain\n"
+                           "  dkim_selector = default\n"
+                           "  dkim_private_key = " + _D + "{if exists{" + _k + "}{" + _k + "}{0}}\n")
+    write(TPL, "# AlphaCP managed exim template\n" + dkim_lines
+          + "alphacp_mailbox:\nalphacp_maildir:\ndeny message = relay not permitted\n")
     write(DC, "passdb { driver = passwd-file }\nmail_location = maildir:%h/mail/%d/%n\n")
     os.makedirs(os.path.join(STATE, "etc"), exist_ok=True)
     write(os.path.join(STATE, "etc", "mail-server-configured"), "ok\n")
@@ -560,8 +591,22 @@ def deliverability(username=None):
             keep.append({"domain": dom, "name": "@", "type": "TXT", "value": "v=spf1 a mx -all"})
             keep.append({"domain": dom, "name": "_dmarc", "type": "TXT",
                          "value": "v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:postmaster@%s" % dom})
+            _dkimdir = os.environ.get("ACP_MAIL_DKIM_DIR", "/dev/null")
+            _key = os.path.join(_dkimdir, dom + ".key")
+            if _dkimdir != "/dev/null" and not os.path.isfile(_key):
+                import subprocess as _sp
+                os.makedirs(_dkimdir, exist_ok=True)
+                if _sp.run(["openssl", "genrsa", "-out", _key, "2048"], capture_output=True).returncode == 0:
+                    os.chmod(_key, 0o640)
+                    _sp.run(["openssl", "rsa", "-in", _key, "-pubout", "-out", os.path.join(_dkimdir, dom + ".pub")],
+                            capture_output=True)
+            _pub = os.path.join(_dkimdir, dom + ".pub")
+            _b64 = ""
+            if os.path.isfile(_pub):
+                _txt = open(_pub).read()
+                _b64 = "".join(_txt.replace("-----BEGIN PUBLIC KEY-----", "").replace("-----END PUBLIC KEY-----", "").split())
             keep.append({"domain": dom, "name": "default._domainkey", "type": "TXT",
-                         "value": "v=DKIM1; k=rsa; p=SIMKEY"})
+                         "value": "v=DKIM1; k=rsa; p=" + (_b64 or "SIMKEY")})
             os.makedirs(os.path.dirname(zf), exist_ok=True)
             write(zf, json.dumps(keep, indent=2) + "\n")
             done.append({"domain": dom, "dkim": True, "dns": {"applied": True, "records": len(keep)}})
@@ -1047,7 +1092,14 @@ def main():
         if a == "setup":
             emit("success", **setup())
         if a == "sync":
-            emit("success", **aggregate())
+            res = aggregate()
+            # ASLI agent jaisa server default: sync har mail domain ke liye
+            # SPF/DKIM/DMARC likhta hai (customer ke kisi click ke bina).
+            _deliv = deliverability(None)
+            # asli agent bhi `changed` bhejta hai (kitne domains naye likhe gaye)
+            _deliv["changed"] = len([d for d in _deliv.get("domains", []) if d.get("dns", {}).get("applied")])
+            res["deliverability"] = _deliv
+            emit("success", **res)
         if a == "status":
             st = {
                 "installed": True,
@@ -1138,6 +1190,8 @@ TPLEOF
   export ACP_VERIFY_ALLOW_NONROOT=1
   export ACP_VERIFY_IMPORT_USER="acpimpchk"
   export ACP_VERIFY_IMPORT_DOMAIN="acp-import-check.test"
+  export ACP_VERIFY_DELIV_USER="acpdelivchk"
+  export ACP_VERIFY_DELIV_DOMAIN="acp-deliverability-check.test"
   [[ -n "$IMPORT_PHP" ]] && export ACP_VERIFY_PHP="$IMPORT_PHP"
   # SIM: exim mainlog (delivery reports) + mail queue (queue manager)
   mkdir -p "$SIMROOT/var/log/exim4"
@@ -1174,14 +1228,17 @@ QEOF
   list_rc=$?
   imp_out="$(ACP_HOME="$ACP_HOME" bash "$(dirname "$0")/../verify/s7-address-importer-check.sh" 2>&1)"
   imp_rc=$?
+  deliv_out="$(ACP_HOME="$ACP_HOME" bash "$(dirname "$0")/../verify/s7-deliverability-default-check.sh" 2>&1)"
+  deliv_rc=$?
   if [[ "${SIM_DEBUG:-0}" == "1" ]]; then printf '%s\n%s\n%s\n' "$out" "$list_out" "$imp_out"; fi
   # local vars must not leak into later modes
   unset SIM_BREAK_EXIM SIM_BREAK_DELIVERY SIM_BREAK_DNS SIM_BREAK_CATCHALL SIM_BREAK_FILTER
   echo "$out"
   echo "$list_out"
   echo "$imp_out"
+  echo "$deliv_out"
   if grep -q "pass=${PASS}" <<<"out"; then :; fi
-  (( rc == 0 && list_rc == 0 && imp_rc == 0 ))
+  (( rc == 0 && list_rc == 0 && imp_rc == 0 && deliv_rc == 0 ))
 }
 
 PASS=0; FAIL=0
@@ -1215,6 +1272,11 @@ for mode in good breakexim breakdelivery breakdns breakcatchall breakfilter; do
   imp_want=0
   [[ "$mode" == "breakdelivery" ]] && imp_want=1
   check "mode=$mode address-importer verifier" "$imp_want" "$IF"
+  DF="$(grep -o 'S7 #145 DELIVERABILITY (SERVER DEFAULT): [0-9]* pass, [0-9]* fail' <<<"$OUT" | tail -1 | sed 's/.*pass, //; s/ fail//')"
+  [[ -z "$DF" ]] && DF="?"
+  deliv_want=0
+  [[ "$mode" == "breakdns" || "$mode" == "breakexim" ]] && deliv_want=1
+  check "mode=$mode deliverability-default verifier" "$deliv_want" "$DF"
   if [[ "$mode" == "good" ]]; then
     if grep -q 'import delivery: YES' <<<"$OUT"; then
       PASS=$((PASS+1)); echo "[ok]   imported mailboxes ko asli delivery mili (2/2)"

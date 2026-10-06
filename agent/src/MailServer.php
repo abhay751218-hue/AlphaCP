@@ -935,6 +935,21 @@ final class MailServer
                 $existing = array_values($decoded);
             }
         }
+
+        // #145 server default: sync baar-baar chalta hai (har mail task ke baad
+        // bhi) — records pehle se sahi hain to zone.json/BIND ko chhede bina
+        // turant wapas. Isse repeat sync sasta rehta hai.
+        if ($this->deliverabilityUpToDate($existing, $records, $domain)) {
+            return [
+                'domain'   => $domain,
+                'dkim'     => is_string($dkim['public'] ?? null) && $dkim['public'] !== '',
+                'selector' => $selector,
+                'dns'      => ['applied' => false, 'reason' => 'already-present'],
+                'records'  => count($existing),
+                'changed'  => false,
+            ];
+        }
+
         $keep = [];
         foreach ($existing as $row) {
             if (!is_array($row)) {
@@ -992,6 +1007,7 @@ final class MailServer
             'selector'  => $selector,
             'dns'       => $dns,
             'records'   => count($merged),
+            'changed'   => true,
         ];
     }
 
@@ -1051,6 +1067,45 @@ final class MailServer
     private static function dmarcRecord(string $domain): string
     {
         return 'v=DMARC1; p=quarantine; adkim=r; aspf=r; rua=mailto:postmaster@' . $domain;
+    }
+
+    /**
+     * #145: zone me SPF/DMARC/DKIM (dono) records pehle se theek hain?
+     * Haan to writeZone/reload skip — sirf tab likhte hain jab kuch badla ho.
+     *
+     * @param array<int, mixed>              $existing zone.json rows
+     * @param array<int, array<string,string>> $wanted  records jo hum likhte
+     */
+    private function deliverabilityUpToDate(array $existing, array $wanted, string $domain): bool
+    {
+        foreach ($wanted as $want) {
+            $found = false;
+            $wantName = strtolower(trim((string) ($want['name'] ?? '')));
+            $wantValue = trim((string) ($want['value'] ?? ''));
+            foreach ($existing as $row) {
+                if (!is_array($row)) {
+                    continue;
+                }
+                if (strtolower(trim((string) ($row['domain'] ?? ''))) !== $domain) {
+                    continue;
+                }
+                if (strtoupper(trim((string) ($row['type'] ?? ''))) !== 'TXT') {
+                    continue;
+                }
+                if (strtolower(trim((string) ($row['name'] ?? ''))) !== $wantName) {
+                    continue;
+                }
+                if (trim((string) ($row['value'] ?? '')) === $wantValue) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!$found) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -1327,7 +1382,34 @@ final class MailServer
             'filters'        => count($filters),
             'filter_errors'  => $filterErrors,
             'maildirs_fixed' => $fixed,
+            'deliverability' => $this->deliverabilityPass(),
         ];
+    }
+
+    /**
+     * #145 server default: sync ke saath hi har mail domain ke SPF/DKIM/DMARC
+     * records apne aap likh do — customer ko panel me kuch click karne ki
+     * zaroorat nahi (cPanel ka server-default behaviour). DNS/BIND ki galti
+     * sync ko fail nahi karti; wo per-domain `failed` me dikhti hai.
+     *
+     * @return array<string, mixed>
+     */
+    private function deliverabilityPass(): array
+    {
+        try {
+            $out = $this->deliverability(null);
+            $out['changed'] = count(array_filter(
+                (array) ($out['domains'] ?? []),
+                static fn ($row): bool => is_array($row) && ($row['changed'] ?? false) === true
+            ));
+
+            return $out;
+        } catch (Throwable $e) {
+            $this->log->info('deliverability pass failed: ' . $e->getMessage());
+
+            return ['ok' => false, 'count' => 0, 'changed' => 0, 'domains' => [],
+                    'failed' => [['domain' => '*', 'error' => $e->getMessage()]]];
+        }
     }
 
     /**
