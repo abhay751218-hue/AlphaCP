@@ -19,8 +19,7 @@
 ## 2. Code kahan hai
 | Path | Kya |
 |---|---|
-| **`server-snapshot/files/usr/local/alphacp/panel/`** | ⭐ **Panel ka ASLI SOURCE (0.75.0, 420 files)** — jo abhi server par chal raha hai. **Panel me kuch bhi badalna ho to yahin badlo.** |
-| ⚠️ `refs/panel-2b-bundle/` | **PURANA (0.3.2, 95 files) — 6 Oct 2026 tak.** Step 2B ka snapshot. **Isse artifact BANA KAR DEPLOY MAT KARO** — server 0.75.0 par hai aur 0.3.2 bhejne se 325 files ka kaam mit jayega. Neeche §2b dekho. |
+| **`refs/panel-2b-bundle/`** | ⭐ **Panel ka SOURCE (Laravel 13.33.0)** — login, RBAC, 2FA, **license + 15-day trial** (`app/Support/License/`, design: `docs/modules/license.md`), `PasswordGenerator`. Panel badalna ho to yahin badlo. |
 | `artifacts/panel-code-<ver>.tar.gz` | Source ka reproducible build (`python3 tools/build-panel-2b-bundle.py`). Server par yahi deploy hota hai. Latest: **0.3.2**. |
 | `artifacts/panel-bundle-0.3.0.tar.gz` | Purana bundle **vendor/ ke saath** — sandbox tests isi ka vendor use karte hain (composer.lock same). |
 | `server-snapshot/files/usr/local/alphacp/…` | **Server par jo ABHI deployed hai** (alphacp-sync se). Source se mismatch ho to server = sach; farq samjho phir source theek karo. |
@@ -31,33 +30,6 @@
 
 `server-snapshot/` me **secrets nahi hain**, jaise `.env`, DB password, APP_KEY, license keys, admin password.
 Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hain.
-
-## 2b. ⚠️ Source of truth ka farq (6 Oct 2026 ko verify kiya — zaroor padho)
-
-| Kahan | Panel version | Files | Kya karein |
-|---|---|---|---|
-| `server-snapshot/files/usr/local/alphacp/panel/` | **0.75.0** (`ACP_VERSION` 0.83.0) | 420 | ⭐ **Yahi source hai.** Yahan badlo. |
-| `refs/panel-2b-bundle/` | 0.3.2 | 95 | ❌ Deploy artifact mat banao. Sirf history. |
-| `panel/` | — | — | ❌ Sabse purana scaffold. Chhoo mat. |
-
-**Kyun:** Step 2B ke baad ka poora kaam (Steps 3–10: accounts, packages, domains, email, MySQL,
-DNS, backups, SSL, files…) seedha server par hua aur `alphacp-sync` use `server-snapshot/` me
-laata raha. `refs/panel-2b-bundle/` wahin 29 Sep par atka reh gaya.
-
-**Iska matlab:**
-1. `python3 tools/build-panel-2b-bundle.py` **abhi mat chalao** — wo `refs/` se 0.3.2 ka artifact
-   banayega, aur `installer/panel-update.sh` se deploy karne par server 0.75.0 → 0.3.2 par
-   **wapas chala jayega** (updater ka auto-rollback sirf fail par chalta hai, is par nahi).
-2. Deploy karne se pehle pehle `refs/panel-2b-bundle/` ko server ke snapshot se **refresh** karo:
-   ```bash
-   rsync -a --delete --exclude=vendor --exclude=storage --exclude=.env \
-     server-snapshot/files/usr/local/alphacp/panel/ refs/panel-2b-bundle/
-   ```
-   Phir `tools/sim/panel-tests-deployed.sh` chalao (0 fail chahiye), tab hi artifact banao.
-3. Snapshot me panel ki **4 files missing** thi (sync v1.2 ka bug — CHANGELOG 6 Oct dekho).
-   `server-snapshot/.../views/{backup,ssl,backup-destinations,transfer-tool}/index.blade.php`
-   repo me dobara bana di gayi hain; `sudo alphacp-sync` (v1.3) chalane ke baad server ki asli
-   files apne aap aa jayengi aur inhe overwrite kar dengi.
 
 ## 3. User ke saath kaam karne ke rules (BINDING)
 1. Jawab **Hindi/Hinglish** me do.
@@ -82,11 +54,10 @@ laata raha. `refs/panel-2b-bundle/` wahin 29 Sep par atka reh gaya.
 ## 4b. Tests (sab sandbox me chalte hain — system PHP/MySQL ki zaroorat nahi)
 | Command | Kya test karta hai | Last result |
 |---|---|---|
-| ⭐ `bash tools/sim/panel-tests-deployed.sh` | **Poora PHPUnit suite us code par jo server par deployed hai** (`server-snapshot/…/panel`, 0.75.0, 74 test files) | **434 pass, 0 fail, 6 wasm-skip** (6 Oct) |
-| `bash tools/sim/panel-tests.sh` | Wahi suite, par `artifacts/panel-code-*.tar.gz` par (abhi 0.3.2 = purana) | 42 pass, 0 fail, 6 wasm-skip |
+| `bash tools/sim/panel-tests.sh` | Panel PHPUnit suite (php-wasm PHP 8.5, SQLite) — latest artifact par | **42 pass, 0 fail, 6 wasm-skip** |
 | `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.3.0: update, sha mismatch, rollback, backup prune, sync-tool upgrade, **private repo (get)** | **54/54** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
-| `sudo bash tools/sim/sync-sim.sh` | alphacp-sync **v1.5** (secret leak attempts, **snapshot completeness**, config-only pattern-scan (source par sirf literal value-scan), runtime-junk prune, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **72/72** |
+| `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
 
 php-wasm ki limits (code ki galti NAHI): PHP 8.4 wasm PHPUnit me crash karta hai → 8.5 use hota hai; Mockery
 console-output mock crash karta hai → runner temp copy me `$mockConsoleOutput=false` lagata hai, isliye
@@ -95,13 +66,6 @@ hote hain. Ek hi phpunit run me poora suite crash karta hai → runner har file 
 Real server (PHP 8.4 FPM) par poora suite: `cd /usr/local/alphacp/panel && sudo -u alphacp php artisan test` (dev deps chahiye).
 
 ## 4c. Panel update kaise bhejein (recipe)
-0. ⚠️ **PEHLA STEP (6 Oct se zaroori):** `refs/panel-2b-bundle/` server se **refresh** karo, warna
-   purana 0.3.2 deploy ho jayega:
-   ```bash
-   rsync -a --delete --exclude=vendor --exclude=storage --exclude=.env \
-     server-snapshot/files/usr/local/alphacp/panel/ refs/panel-2b-bundle/
-   bash tools/sim/panel-tests-deployed.sh        # 0 fail hona chahiye
-   ```
 1. `refs/panel-2b-bundle/` me change + test likho; `MANIFEST.json` aur `config/acp.php` me version bump.
 2. `python3 tools/build-panel-2b-bundle.py` → `artifacts/panel-code-<ver>.tar.gz` (sha256 print hota hai).
 3. `bash tools/sim/panel-tests.sh` → 0 fail. Commit + push (commit **A**).
@@ -114,27 +78,14 @@ Real server (PHP 8.4 FPM) par poora suite: `cd /usr/local/alphacp/panel && sudo 
 unka kaam PR se `main` me merge karo (29 Sep: `arena/01a0ea0d-alphacp` ka S2C kaam PR #1 me merge hua).
 
 ## 5. Abhi kahan hain (roadmap position)
-**Last verified: 6 Oct 2026, `server-snapshot/STATE.md` (sync 08:47Z) + sandbox me poora test suite chala kar.**
-
-Server par abhi:
-- panel code **0.75.0** (`MANIFEST.json`), `.env` me `ACP_VERSION` / `ACP_AGENT_VERSION` = **0.83.0**, step **5**
-- Laravel 13.33.0 · PHP 8.4.26 (7.4/8.1/8.2/8.3/8.4 installed) · MariaDB 10.11.14
-- nginx 1.24.0 (panel, **:8090**) + Apache 2.4.58 (80/443) · named · exim4 · dovecot · spamd · redis · fail2ban · paneld
-- `panel http : 200` · 56 migrations Ran · ~150 web routes
-- License: `local_trial`, tier trial, max 20 accounts, **expiry 2026-10-13** (signed: no)
-
-Code health (sandbox me verify kiya, php-wasm PHP 8.5):
-- 657 PHP files par syntax check → **0 error**
-- Deployed panel ka poora PHPUnit suite → **434 pass, 0 fail, 6 wasm-skip**
-
-Steps:
-- Step 0 → 2B ✅ · Step 2C 🟡 (client + offline trial deployed; apna `license-server/` API abhi pending — folder me sirf README hai)
-- Steps 3–10 ka code server par **maujood hai** (accounts, packages, domains, email, MySQL, DNS, backups,
-  SSL, files, transfers) — snapshot ki 414 files aur 150 routes iske proof hain.
-  Par `docs/09-cpanel-parity-checklist.md` **update nahi hua** (abhi bhi 14 ✅ / 21 🟡 / 174 pending dikha
-  raha hai aur "Updated: Step 0, 1, 2A" likha hai). Aage badhne se pehle use server ki asli haalat se
-  milao — bina verify kiye rows mat badalna.
-- ⚠️ Repo ka `refs/panel-2b-bundle/` 0.3.2 par atka hai — §2b dekho. Deploy se pehle refresh zaroori.
-- **Next command:** alphacp-sync **v1.5** (`COMMANDS.md`) — source par pattern-scan band, taaki repo = server ho jaye.
+- Step 0 → 2B (panel + login + RBAC + 2FA + password change) ✅
+- Step 2C (license + 15-day trial) 🟡 — **panel client + offline trial server par deployed (0.3.1)**;
+  apna license-server API (`license-server/`, activation/renewal) abhi baaki.
+- Server par abhi (snapshot se verified, 29 Sep): panel **0.3.1** (= source byte-for-byte), Laravel 13.33.0, PHP 8.4.26,
+  MariaDB 10.11, nginx (8090) + Apache (80/443), bind, spamd, redis, fail2ban, paneld.
+- 29 Sep 00:17Z: panel **0.3.2** + alphacp-sync v1.1 deployed (updater 0.2.1) ✅. Trial expiry 13 Oct.
+- Next command: alphacp-sync **v1.2** (private repo support) → phir user repo PRIVATE karega (`COMMANDS.md`).
+- **Next: Step 3 — Provisioning engine** (hosting account create/suspend/unsuspend/terminate: Linux user, home dir,
+  Apache vhost, PHP-FPM pool, quota). Uske baad S4 Packages & limits → … → S12 WHM API 1 billing layer.
 
 Latest status ke liye hamesha `server-snapshot/STATE.md` + `CHANGELOG.md` dekho.

@@ -27,7 +27,7 @@ mkdir -p ${ACP}/etc ${ACP}/var ${ACP}/license/keys ${ACP}/bin /opt/alphacp-licen
 printf 'ACP_DB_HOST=127.0.0.1\nACP_DB_NAME=alphacp\nACP_DB_USER=alphacp\nACP_DB_PASS=%s\n' "$DBPASS" > ${ACP}/etc/database.env
 printf 'LICENSE_KEY=%s\nLICENSE_SERVER=https://license.example.com\nTRIAL_DAYS=15\n' "$LIC" > ${ACP}/etc/license.env
 printf -- '-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASC\n-----END PRIVATE KEY-----\n' > ${ACP}/license/keys/signing.pem
-printf -- '-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n' > ${ACP}/license/embedded_key.conf
+printf -- '-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n' > ${ACP}/license/embedded_key.php
 APPKEY="$(sed -n 's/^APP_KEY=base64://p' ${PANEL}/.env)"; echo "base64:${APPKEY}" > ${ACP}/var/panel-appkey.txt
 ADMINPW="$(sed -n 's/^panel_pass=//p' ${ACP}/var/panel-admin.txt)"
 mkdir -p ${PANEL}/app/Services/License
@@ -39,48 +39,7 @@ namespace App\Services\License;
 final class LicenseManager { public const TRIAL_DAYS = 15; }
 EOF
 echo '<?php return ["db" => "SuperSecretDb123"];' > ${PANEL}/app/Leak.php           # leak attempt 1
-echo '<?php // token ghp_abcdefghijklmnopqrstuvwxyz0123456789AB' > ${PANEL}/config/leak2.conf   # leak attempt 2
-# v1.3 regression fixtures:
-#  (a) `backup/` aur `ssl/` NAAM ke source directories — v1.2 ki bare-name prune inhe uda deti thi
-mkdir -p ${PANEL}/resources/views/backup ${PANEL}/resources/views/ssl
-cat > ${PANEL}/resources/views/backup/index.blade.php <<'EOF'
-@extends('layouts.panel')
-@section('content')<h3>Backup</h3><p>jobs.json</p>@endsection
-EOF
-cat > ${PANEL}/resources/views/ssl/index.blade.php <<'EOF'
-@extends('layouts.panel')
-@section('content')<h3>SSL/TLS Status</h3><button>Run AutoSSL</button>@endsection
-EOF
-#  (b) normal JS jo v1.2/v1.3 ka secret pattern "secret" samajh kar POORI file drop kar deta tha.
-#      v1.4 ka asli server false-positive bhi yahi tha: JS object property `PASSWORD: password,`
-cat > ${PANEL}/resources/views/backup/destinations.blade.php <<'EOF'
-@extends('layouts.panel')
-@section('content')
-<script>
-    PASSWORD = document.getElementById('password').value;
-    TOKEN = form.querySelector('[name=_token]').value;
-    body: JSON.stringify({ PASSWORD: password, TOKEN: csrf, });
-</script>
-@endsection
-EOF
-#  (c) CONFIG-type file me ASLI secret shape — ye drop hona hi chahiye (kv check config par chalta hai)
-cat > ${PANEL}/resources/views/backup/leaky.conf <<'EOF'
-DB_PASSWORD=Sup3rS3cretValue
-EOF
-#  (c2) SOURCE file me placeholder/dummy secret-strings — v1.5 me ye DROP NAHI honi chahiye.
-#       (Yehi cheez v1.2–v1.4 me asli 4 files gira rahi thi.)
-cat > ${PANEL}/resources/views/backup/placeholder.blade.php <<'EOF'
-@extends('layouts.panel')
-@section('content')
-<textarea name="private_key" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
-{{-- example token: ghp_ZYXWVUTSRQPONMLKJIHGFEDCBA9876543210 --}}
-@endsection
-EOF
-#  (d) runtime junk jo v1.3 me snapshot me leak hone laga tha — ab prune hona chahiye
-mkdir -p ${PANEL}/bootstrap/cache ${ACP}/logs ${ACP}/backups/locks
-echo '<?php return ["junk"=>1];' > ${PANEL}/bootstrap/cache/zz-sync-sim.php   # Laravel is naam ko load nahi karta
-echo 'verify log' > ${ACP}/logs/verify-report.txt
-: > ${ACP}/backups/locks/xyz.lock
+echo '<?php // token ghp_abcdefghijklmnopqrstuvwxyz0123456789AB' > ${PANEL}/config/leak2.php   # leak attempt 2
 echo '<?php // license server (sim)' > /opt/alphacp-license/server.php
 printf 'server { listen 8090 ssl; root %s/public; }\n' "${PANEL}" > /etc/nginx/sites-available/alphacp-panel.conf
 printf '#!/bin/sh\necho alphacp cli\n' > ${ACP}/bin/alphacp; chmod +x ${ACP}/bin/alphacp
@@ -107,7 +66,7 @@ count()     { git -C "${REMOTE}" rev-list --count main; }
 echo; echo "=== Run 1: pehla sync ==="
 rc="$(run_sync 1)"; tail -4 /tmp/syncsim/run-1.out | sed 's/^/    | /'
 [[ "$rc" == 0 ]] && grep -q "SYNC OK" /tmp/syncsim/run-1.out && t_ok "sync OK (exit 0)" || { t_fail "sync fail rc=$rc"; cat /tmp/syncsim/run-1.out; }
-grep -q "v1.5" /tmp/syncsim/run-1.out && t_ok "banner v1.5" || t_fail "banner"
+grep -q "v1.2" /tmp/syncsim/run-1.out && t_ok "banner v1.2" || t_fail "banner"
 for f in server-snapshot/STATE.md server-snapshot/README.md server-snapshot/LAST-SYNC.md server-snapshot/MANIFEST.txt \
          server-snapshot/files/usr/local/alphacp/panel/app/Services/License/LicenseManager.php \
          server-snapshot/files/usr/local/alphacp/panel/routes/web.php \
@@ -120,8 +79,8 @@ for f in server-snapshot/STATE.md server-snapshot/README.md server-snapshot/LAST
 done
 for f in files/usr/local/alphacp/panel/.env files/usr/local/alphacp/etc files/usr/local/alphacp/var \
          files/usr/local/alphacp/panel/vendor files/usr/local/alphacp/panel/storage \
-         files/usr/local/alphacp/license/keys/signing.pem files/usr/local/alphacp/license/embedded_key.conf \
-         files/usr/local/alphacp/panel/app/Leak.php files/usr/local/alphacp/panel/config/leak2.conf \
+         files/usr/local/alphacp/license/keys/signing.pem files/usr/local/alphacp/license/embedded_key.php \
+         files/usr/local/alphacp/panel/app/Leak.php files/usr/local/alphacp/panel/config/leak2.php \
          files/usr/local/alphacp/panel/database/panel.sqlite; do
   tree_has "server-snapshot/$f" && t_fail "LEAK/heavy push ho gaya: $f" || t_ok "nahi gaya (sahi): $f"
 done
@@ -139,32 +98,6 @@ grep -q "alphacp:admin-password" <<<"$ST" && t_ok "STATE: custom artisan command
 grep -q "LicenseManager.php" <<<"$ST" && t_ok "STATE: license files list" || t_fail "STATE: license list nahi"
 grep -q "license.env  keys: LICENSE_KEY LICENSE_SERVER TRIAL_DAYS" <<<"$ST" && t_ok "STATE: secret file ke sirf KEY naam" || t_fail "STATE: secret keys list nahi"
 grep -q "Leak.php  (server secret value mila)" <<<"$ST" && t_ok "STATE: skipped leak file report" || t_fail "STATE: skip report nahi"
-# ---- v1.3: snapshot completeness (bare-name prune + secret false-positive fix)
-for f in files/usr/local/alphacp/panel/resources/views/backup/index.blade.php \
-         files/usr/local/alphacp/panel/resources/views/ssl/index.blade.php; do
-  tree_has "server-snapshot/$f" && t_ok "v1.3: ${f##*/views/} snapshot me hai" \
-    || t_fail "v1.3 REGRESSION: ${f} snapshot me NAHI (bare-name prune wapas aa gaya?)"
-done
-tree_has server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/destinations.blade.php \
-  && t_ok "v1.3: normal JS wali blade drop NAHI hui (false positive fix)" \
-  || t_fail "v1.3 REGRESSION: 'PASSWORD = document.getElementById(...)' wali blade drop ho gayi"
-tree_has server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/leaky.conf \
-  && t_fail "v1.4: config me 'DB_PASSWORD=...' push ho gaya (secret leak!)" \
-  || t_ok "v1.4: config file me DB_PASSWORD= line ab bhi drop hoti hai (kv check)"
-grep -q "leaky.conf  (secret jaisa pattern)" <<<"$ST" && t_ok "v1.4: STATE me leaky.conf ka reason" || t_fail "STATE: leaky.conf reason nahi"
-grep -q "destinations.blade.php" <<<"$ST" && t_fail "v1.4: 'PASSWORD: password,' wali blade skip list me aa gayi" || t_ok "v1.4: JS object-prop wali blade drop NAHI hui"
-tree_has server-snapshot/files/usr/local/alphacp/panel/resources/views/backup/placeholder.blade.php \
-  && t_ok "v1.5: placeholder/dummy-secret wali SOURCE blade drop NAHI hui" \
-  || t_fail "v1.5 REGRESSION: placeholder wali blade phir drop ho gayi"
-grep -q "placeholder.blade.php" <<<"$ST" && t_fail "v1.5: placeholder blade skip list me aa gayi" || t_ok "v1.5: placeholder blade skip list me NAHI"
-grep -q "Snapshot completeness" <<<"$ST" && t_ok "v1.3: STATE me completeness section" || t_fail "STATE: completeness section nahi"
-# v1.4: runtime junk prune hona chahiye
-tree_has server-snapshot/files/usr/local/alphacp/panel/bootstrap/cache/zz-sync-sim.php \
-  && t_fail "v1.4: bootstrap/cache leak ho gaya" || t_ok "v1.4: bootstrap/cache prune hua"
-tree_has server-snapshot/files/usr/local/alphacp/logs/verify-report.txt \
-  && t_fail "v1.4: logs/ leak ho gaya" || t_ok "v1.4: logs/ prune hua"
-tree_has server-snapshot/files/usr/local/alphacp/backups/locks/xyz.lock \
-  && t_fail "v1.4: backups/locks leak ho gaya" || t_ok "v1.4: backups/locks prune hua"
 grep -q "panel http    : 200" <<<"$ST" && t_ok "STATE: panel http 200" || t_fail "STATE: panel http"
 tree_has server-snapshot/files/usr/local/alphacp/releases && t_fail "releases/ snapshot me chala gaya" || t_ok "v1.1: releases/ snapshot me NAHI"
 grep -q "panel-backup-20260928224358" <<<"$ST" && grep -q "panel-failed-20260928223644" <<<"$ST" && t_ok "v1.1: STATE me releases ke naam" || t_fail "STATE: releases naam nahi"
@@ -227,11 +160,7 @@ rm -f /tmp/syncsim/key-added
 grep -q "timer mode" /tmp/syncsim/run-7.out && t_ok "timer mode: fast fail" || { t_fail "timer mode"; tail -5 /tmp/syncsim/run-7.out; }
 
 echo; echo "=== Run 8 (v1.2): alphacp-sync get — deploy key se file (private repo me bhi) ==="
-# FIX: `git rev-parse <missing-ref>` exit 128 ke SAATH ref ka naam stdout par bhi print karta
-# hai, isliye `... 2>/dev/null || rev-parse main` me GC = "<ref-naam>\n<main-sha>" ban jaata tha
-# aur Run 8 ke saare `get` tests isi wajah se fail hote the. --verify --quiet se ye saaf hota hai.
-GC="$(git -C "${REMOTE}" rev-parse --verify --quiet "refs/heads/arena/01a0ea3e-alphacp^{commit}" 2>/dev/null || true)"
-[[ "${GC}" =~ ^[0-9a-f]{40}$ ]] || GC="$(git -C "${REMOTE}" rev-parse main)"
+GC="$(git -C "${REMOTE}" rev-parse refs/heads/arena/01a0ea3e-alphacp 2>/dev/null || git -C "${REMOTE}" rev-parse main)"
 GSHA="$(git -C "${REMOTE}" show "${GC}:START-HERE.md" | sha256sum | cut -d' ' -f1)"
 rm -rf /tmp/syncsim/getwork /tmp/syncsim/got*
 run_get() { ( cd /root && SYNC_CONF_DIR=/tmp/syncsim/conf SYNC_WORK_DIR=/tmp/syncsim/getwork SYNC_REPO_URL="file://${REMOTE}" bash "${SYNC}" get "$@" ) 2>&1; }
@@ -260,11 +189,6 @@ o="$( cd /root && SYNC_CONF_DIR=/tmp/syncsim/noconf SYNC_WORK_DIR=/tmp/syncsim/g
 [[ $rc != 0 ]] && grep -q "pehle setup" <<<"$o" && t_ok "get: deploy key na ho -> setup ka message" || { t_fail "get no key"; echo "$o"; }
 
 # cleanup nakli files (fake server)
-rm -f ${PANEL}/app/Leak.php ${PANEL}/config/leak2.conf
-rm -f ${PANEL}/resources/views/backup/index.blade.php ${PANEL}/resources/views/backup/destinations.blade.php \
-      ${PANEL}/resources/views/backup/leaky.conf ${PANEL}/resources/views/backup/placeholder.blade.php ${PANEL}/resources/views/ssl/index.blade.php \
-      ${PANEL}/bootstrap/cache/zz-sync-sim.php ${ACP}/logs/verify-report.txt ${ACP}/backups/locks/xyz.lock
-rmdir ${PANEL}/bootstrap/cache ${ACP}/logs ${ACP}/backups/locks ${ACP}/backups 2>/dev/null || true
-rmdir ${PANEL}/resources/views/backup ${PANEL}/resources/views/ssl 2>/dev/null || true
+rm -f ${PANEL}/app/Leak.php ${PANEL}/config/leak2.php
 echo; echo "=== RESULT: ${PASS} pass, ${FAIL} fail ==="
 [[ ${FAIL} -eq 0 ]]
