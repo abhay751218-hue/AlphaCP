@@ -9322,6 +9322,7 @@
 /usr/local/alphacp/var/panel-appkey.txt
 /usr/local/alphacp/var/s10-verify/index.html
 /usr/local/alphacp/verify-reports/s10-backup-destination-check.txt
+/usr/local/alphacp/verify-reports/s7-address-importer-check.txt
 /usr/local/alphacp/verify-reports/s7-diag.txt
 /usr/local/alphacp/verify-reports/s7-mail-check.txt
 /usr/local/alphacp/verify-reports/s7-mailing-list-check.txt

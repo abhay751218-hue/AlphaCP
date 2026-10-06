@@ -1,0 +1,6 @@
+=== S7 #23 ADDRESS IMPORTER LIVE CHECK (2026-10-06T07:41:58Z) ===
+pass=16 fail=0
+account=acpimpchk domain=acp-import-check.test locals=sales support
+import_delivery=YES
+panel_mail_class=eb1a611524c32176
+tasks: account.create#667, mail.set#668, mail.server#669, account.terminate#670, mail.server#671
