@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — SERVER → GITHUB SYNC  v1.3
+#  AlphaCP — SERVER → GITHUB SYNC  v1.4
+#  v1.4: (a) secret kv-pattern ab BARE-IDENTIFIER values ko code samajhta hai —
+#        `PASSWORD: password,` / `TOKEN: csrf,` (JS object props) ab files drop nahi
+#        karte; server par asli 4 files (backup-destinations/transfer-tool views,
+#        SshTest/TransferToolTest) isliye phir ruk gayi thi.
+#        (b) runtime junk prune: */logs, */backups, */bootstrap/cache — v1.3 me ye
+#        snapshot me leak hone lage the (routes-v7.php 12k lines, lock files, logs).
+#  v1.3: SNAPSHOT COMPLETENESS FIX — `-name backup`/`-name ssl`/`-name keys`/`-name storage`
 #  v1.3: SNAPSHOT COMPLETENESS FIX — `-name backup`/`-name ssl`/`-name keys`/`-name storage`
 #        jaisi bare-name prunes hataayi gayi (wo panel ke resources/views/backup/ aur
 #        resources/views/ssl/ ko chup-chaap uda deti thi). Secret pattern ab EOL-anchored
@@ -31,7 +38,7 @@
 # =============================================================================
 set -uo pipefail
 
-SYNC_VERSION="1.3"
+SYNC_VERSION="1.4"
 REPO_SLUG="${SYNC_REPO_SLUG:-abhay751218-hue/AlphaCP}"
 BRANCH="${SYNC_BRANCH:-main}"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
@@ -267,6 +274,7 @@ copy_tree() {  # $1 = source dir; secrets/heavy cheezein prune
   ( cd / && find "${src#/}" \
       \( -name vendor -o -name node_modules -o -name .git \
          -o -path "${ACP_HOME#/}/etc" -o -path "${ACP_HOME#/}/var" -o -path "${ACP_HOME#/}/releases" \
+         -o -path "*/logs" -o -path "*/backups" -o -path "*/bootstrap/cache" \
          -o -path "${ACP_HOME#/}/panel/storage" -o -path "*/panel/storage" \) -prune -o \
       -type f \! \( -name '.env' -o -name '.env.*' -o -name '*.sqlite' -o -name '*.sqlite3' -o -name '*.db' -o -name '*.pem' \
          -o -name '*.key' -o -name '*.crt' -o -name '*.p12' -o -name '*.pfx' -o -name 'id_*' -o -name '*.log' -o -name '*.bak*' \
@@ -292,22 +300,41 @@ python3 - "${FILES}" "${SECRETS}" "${SKIPPED}" <<'PY'
 import os, re, sys
 root, secf, skipf = sys.argv[1], sys.argv[2], sys.argv[3]
 secrets = [l.rstrip("\n") for l in open(secf, encoding="utf-8", errors="ignore") if len(l.strip()) >= 8]
-# v1.3: KEY=VALUE pattern ab END-OF-LINE anchored hai aur value ya to ek quoted
-# literal hona chahiye ya ek "token" jisme code punctuation ( ( ) ; ' " ) na ho.
-# v1.2 ka pattern `[^\s'"$]{6,}` kisi bhi code line ko pakad leta tha, jaise:
-#     PASSWORD = document.getElementById('password').value;
-#     TOKEN = form.querySelector('[name=_token]').value;
-# Isliye backup-destinations/transfer-tool ke blade views aur Ssh/TransferTool
-# tests poori files drop ho jaati thi. Asli secret ab bhi pakda jata hai:
+# v1.4: KEY=VALUE pattern EOL-anchored hai, aur value teen shapes le sakta hai:
+#   "quoted literal"   'quoted literal'   ya   unquoted-token
+# v1.3 tak unquoted token me BARE IDENTIFIER bhi aa jaata tha — JS object property jaise
+#     PASSWORD: password,        TOKEN: csrf,
+# (ye variable reference hai, secret nahi). Server par yehi asli 4 files
+# (backup-destinations/transfer-tool views, SshTest/TransferToolTest) ko phir se drop
+# kar raha tha. Ab unquoted value agar sirf identifier hai to code samjha jata hai.
+# Asli secret phir bhi pakda jata hai (unquoted me digit/mixed-case/symbol zaroori):
 #     DB_PASSWORD=Sup3rS3cretValue      "PASSWORD": "abc123456",     TOKEN='abcdef'
 pat = re.compile(
     r"-----BEGIN [A-Z ]*PRIVATE KEY-----"
     r"|APP_KEY=base64:[A-Za-z0-9+/=]{20,}"
     r"|\bAKIA[0-9A-Z]{16}\b"
     r"|\bgh[pousr]_[A-Za-z0-9]{30,}"
-    r"|^\s*[\"']?[A-Z0-9_]*(PASS|PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY)[A-Z0-9_]*[\"']?\s*[:=]\s*"
-    r"(?:\"[^\"\n]{6,}\"|'[^'\n]{6}'|[^\s'\"();#]{6,})[\s,;]*$"
     r"|^panel_pass=", re.M)
+kv = re.compile(
+    r"^\s*[\"']?[A-Z0-9_]*(PASS|PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY)[A-Z0-9_]*[\"']?\s*[:=]\s*"
+    r"(?:\"[^\"\n]{6,}\"|'[^'\n]{6}'|[^\s'\"();#,]{6,})[\s,;]*$", re.M)
+
+# v1.4: KEY=VALUE check SIRF config-type files par. Source code (.php/.blade.php/.js/…)
+# me `PASSWORD: password,` jaisi lines normal hoti hain — unhe drop karna false positive
+# tha (v1.2/v1.3 dono me yahi asli 4 files ko gira raha tha). Source files par hard
+# patterns (private key / APP_KEY=base64 / AKIA / ghp_ / panel_pass=) + literal
+# server-secret scan phir bhi chalta hai, isliye asli leak wahan bhi pakda jata hai.
+SRC_EXT = (".php", ".js", ".ts", ".jsx", ".tsx", ".css", ".html", ".md", ".sql", ".py", ".vue")
+
+def is_source(name):
+    if name.endswith(".blade.php"):
+        return True
+    return name.lower().endswith(SRC_EXT)
+
+def kv_is_secret(name, text):
+    if is_source(name):
+        return False
+    return kv.search(text) is not None
 skipped = []
 for dp, dn, fn in os.walk(root):
     for n in fn:
@@ -324,7 +351,7 @@ for dp, dn, fn in os.walk(root):
         for s in secrets:
             if s in text:
                 why = "server secret value mila"; break
-        if not why and pat.search(text):
+        if not why and (pat.search(text) or kv_is_secret(n, text)):
             why = "secret jaisa pattern"
         if why:
             os.remove(p); skipped.append(f"/{rel}  ({why})")
