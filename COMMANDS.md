@@ -12,27 +12,28 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ```
 (Public repo ke zamane ka `curl https://raw.githubusercontent.com/...` format private repo par **404** dega.)
 
-## ✅ Abhi chalani hai (NEXT STEP) — mail health verify (updater 0.82.0 ke baad)
+## ✅ Abhi chalani hai (NEXT STEP) — S7 #18 Mailing Lists ka LIVE proof (aakhri step)
 
-> **0.82.0 CHAL CHUKA ✅ (6 Oct 01:47Z server time):** panel **0.75.0** + agent **0.82.0** live,
-> `==> UPDATE COMPLETE ✅`, HTTP **200**, backup `releases/panel-backup-20261006014708`,
-> poora purana backup prune hua, aur end me `alphacp-sync` ne GitHub bhi update kar diya.
+> **Mail health check PASS ✅ (6 Oct, aapne chalaya):** `=== S7 MAIL SERVER LIVE CHECK: 62 pass, 0 fail, 0 skip ===`
+> + `BASE INBOX DELIVERY: VERIFIED` + `FULL S7 MAIL CHECK: PASS` (tasks #618–#647). Matlab 0.82.0 update ne
+> exim/dovecot/SpamAssassin ko dobara configure kiya, magar **customer email bilkul theek hai**.
 >
-> ⚠️ Is updater ne mail stack **dobara configure** kiya (exim4 + dovecot + SpamAssassin + greylisted
-> install/setup phir se chala). Isliye pehle **live mail ki health** confirm karni hai — customer email
-> pehle se zyada zaroori hai. Ye wahi verifier hai jo pehle **62 pass / 0 fail / 0 skip** de chuka hai;
-> ab ye regression proof dega (commit + sha256 repo ke hint se, byte-for-byte verify kiya).
+> Ab yahi verifier #18 ka asli proof dega: temporary account banata hai, `announce@…` list + `info@…`
+> subscriber, phir **asli Exim se mail bhej kar subscriber ke Maildir me delivery** check karta hai
+> (plus pipe/self-subscribe reject + list remove + alias cleanup). End me sab kuch khud hata deta hai.
 ```bash
-sudo alphacp-sync get 31726394519c03332e29715c3ed37d1b4cc73d41 tools/verify/s7-mail-check.sh /tmp/s7-mail-check.sh eed20adcbc77550d2407f81ed82a6373b9b00bc6a09ce220139915f25d4b53fc && sudo bash /tmp/s7-mail-check.sh
+sudo alphacp-sync get 47a7461b7aa4d5556e487ab79c7ff2741896186b tools/verify/s7-mailing-list-check.sh /tmp/s7-mailing-list-check.sh 4be2d2157c0a6d52a5ecfcfb5051cf0a418f5dc73f4d8e2d6ebfd2e009a8ecf9 && sudo bash /tmp/s7-mailing-list-check.sh
 ```
-- Expect: section B (mail.server setup) se H tak checks → aakhir me **`=== S7 MAIL SERVER LIVE CHECK: 62 pass, 0 fail, 0 skip ===`** (ya usse zyada pass).
-- Ye script ek temporary account (`acpmailchk` / `acp-mail-check.test`) banata hai, test karta hai, phir **khud hata deta hai**.
-- **Iske baad** wala (aur aakhri) step — S7 #18 ka live proof (tab denge, jab ye green ho):
-  `tools/verify/s7-mailing-list-check.sh` @ `47a7461b7aa4d5556e487ab79c7ff2741896186b`,
-  sha256 `4be2d2157c0a6d52a5ecfcfb5051cf0a418f5dc73f4d8e2d6ebfd2e009a8ecf9` → isse checklist #18 ✅ hoga.
+- Expect: `mail.list saved one list and one subscriber` → `Exim -bt routed the list through alphacp_aliases` →
+  **`real Exim list delivery reached subscriber Maildir`** → `list delivery: YES` →
+  `=== S7 #18 MAILING LIST LIVE CHECK: 14 pass, 0 fail ===` (verifier me total 14 checks hain; **fail 0 hone chahiye**).
+- Local proof (is session me): `s7-mail-sim` **14 pass / 0 fail** (yahi verifier 6 modes me), agent suite me
+  `mail.list` ke focused tests **209/0** me pass.
+- Green hone ke baad main checklist row **#18 ✅** kar dunga (repo update) — phir S7 ke bache items
+  (#23/#148 Address Importer, #25 Encryption, #26 BoxTrapper, #27 Calendar, #29 Webmail, #145 Deliverability).
 
-> Purana status (context): #147 SpamAssassin/greylist **8/0/0** (`STATUS-VERIFIED`), #20/#21 **62/0/0**.
-> Current required checklist: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
+> Purana status (context): #147 SpamAssassin/greylist **8/0/0** (`STATUS-VERIFIED`), #20/#21 **62/0/0**,
+> base mail + filters + track **62/0/0** (dobara 6 Oct). Current required checklist: **54 ✅ / 53 🟡 / 92 ⏳ / 9 🔵**.
 
 
 ### Remaining S7 scope

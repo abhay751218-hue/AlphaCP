@@ -38,6 +38,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `tools/verify/s10-backup-destination-check.sh` live check (**25** checks).
 
 ### Verified
+- **6 Oct 2026 — live mail health check PASS ✅** (`tools/verify/s7-mail-check.sh` @ `3172639`, sha256 `eed20adc…`,
+  aapne server par chalaya): **62 pass / 0 fail / 0 skip**, `BASE INBOX DELIVERY: VERIFIED`, `FULL S7 MAIL CHECK: PASS`
+  (tasks #618–#647). Isse confirm hua ki 0.82.0 updater ka mail-stack re-setup (exim4 + dovecot + SpamAssassin +
+  greylisted) ne customer email kuch nahi toda — #20/#21 filter checks bhi isi run me pass hue.
 - **6 Oct 2026 — release 0.82.0 LIVE deploy ho gaya ✅** (server: panel `0.75.0` + agent `0.82.0`, updater banner
   `updater 0.82.0`, `==> UPDATE COMPLETE ✅`, HTTP **200**, backup `panel-backup-20261006014708`, purane
   backups prune, GitHub sync bhi ho gaya). Update ke baad mail stack dobara configure hua, isliye pehla
