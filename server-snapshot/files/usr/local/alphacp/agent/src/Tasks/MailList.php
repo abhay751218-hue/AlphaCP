@@ -7,12 +7,13 @@ use Alphacp\Agent\AccountIdentity;
 use Alphacp\Agent\AccountOs;
 use Alphacp\Agent\AccountPaths;
 use Alphacp\Agent\Mail;
+use Alphacp\Agent\MailServer;
 use Alphacp\Agent\SafeFs;
 use Alphacp\Agent\TaskRejectedException;
 use RuntimeException;
 
 /**
- * mail.list — mailing lists (JSON). No mailman, no pipe.
+ * mail.list — Exim distribution lists (static subscribers + owner). No shell/pipe.
  *
  * @acp-task mail.list
  */
@@ -44,10 +45,14 @@ final class MailList implements TaskInterface
             throw new TaskRejectedException($e->getMessage());
         }
 
+        $subscribers = array_sum(array_map(static fn (array $row): int => count($row['members']), $written));
+
         return [
-            'username' => $username,
-            'lists'    => count($written),
-            'status'   => 'ok',
+            'username'   => $username,
+            'lists'      => count($written),
+            'subscribers'=> $subscribers,
+            'mail_sync'  => MailServer::syncIfConfigured($ctx->cmd, $ctx->log),
+            'status'     => 'ok',
         ];
     }
 }

@@ -61,22 +61,25 @@ class MailingListsTest extends TestCase
         $this->asPanelUser($customer)->get('/mailing-lists')
             ->assertOk()
             ->assertSee('Mailing Lists')
-            ->assertSee('lists.json');
+            ->assertSee('Subscriber addresses');
 
         $this->asPanelUser($customer)->post('/mailing-lists', [
             'localpart' => 'news',
             'domain' => 'shop.example.com',
             'owner' => 'alice@example.net',
+            'members' => "bob@example.net\nteam@example.org\nbob@example.net",
         ])->assertRedirect(route('mailing-lists.index'));
 
         $row = $account->fresh()->mailingLists()->first();
         $this->assertNotNull($row);
         $this->assertSame('news', $row->localpart);
         $this->assertSame('alice@example.net', $row->owner);
+        $this->assertSame(['bob@example.net', 'team@example.org'], $row->members);
         $task = DB::table('tasks')->where('account_id', $account->id)->where('type', 'mail.list')->first();
         $this->assertNotNull($task);
         $payload = json_decode((string) $task->payload, true);
         $this->assertSame('alice@example.net', $payload['lists'][0]['owner']);
+        $this->assertSame(['bob@example.net', 'team@example.org'], $payload['lists'][0]['members']);
         $this->assertStringNotContainsString('|', (string) $task->payload);
     }
 
@@ -87,9 +90,47 @@ class MailingListsTest extends TestCase
             'localpart' => 'news',
             'domain' => 'shop.example.com',
             'owner' => '|/bin/sh',
+            'members' => 'bob@example.net',
         ])->assertRedirect();
         $this->assertSame(0, $account->fresh()->mailingLists()->count());
         $this->assertNull(DB::table('tasks')->where('type', 'mail.list')->first());
+    }
+
+    public function test_pipe_subscriber_is_rejected(): void
+    {
+        [$customer, $account] = $this->customerWithAccount();
+        $this->asPanelUser($customer)->post('/mailing-lists', [
+            'localpart' => 'news',
+            'domain' => 'shop.example.com',
+            'owner' => 'alice@example.net',
+            'members' => '|/bin/sh',
+        ])->assertSessionHasErrors('members');
+        $this->assertSame(0, $account->fresh()->mailingLists()->count());
+        $this->assertNull(DB::table('tasks')->where('type', 'mail.list')->first());
+    }
+
+    public function test_customer_can_update_subscribers(): void
+    {
+        [$customer, $account] = $this->customerWithAccount();
+        $row = $account->mailingLists()->create([
+            'localpart' => 'news',
+            'domain' => 'shop.example.com',
+            'owner' => 'alice@example.net',
+            'members' => ['old@example.net'],
+        ]);
+
+        $this->asPanelUser($customer)->patch('/mailing-lists/' . $row->id, [
+            'owner' => 'owner@example.net',
+            'members' => "z@example.net\na@example.org\nz@example.net",
+        ])->assertRedirect(route('mailing-lists.index'));
+
+        $fresh = $row->fresh();
+        $this->assertSame('owner@example.net', $fresh->owner);
+        $this->assertSame(['a@example.org', 'z@example.net'], $fresh->members);
+        $task = DB::table('tasks')->where('account_id', $account->id)->where('type', 'mail.list')->latest('id')->first();
+        $this->assertNotNull($task);
+        $payload = json_decode((string) $task->payload, true);
+        $this->assertSame(['a@example.org', 'z@example.net'], $payload['lists'][0]['members']);
     }
 
     public function test_foreign_domain_is_rejected(): void
@@ -99,6 +140,7 @@ class MailingListsTest extends TestCase
             'localpart' => 'news',
             'domain' => 'evil.example.net',
             'owner' => 'alice@example.net',
+            'members' => 'bob@example.net',
         ])->assertRedirect();
         $this->assertSame(0, $account->fresh()->mailingLists()->count());
         $this->assertNull(DB::table('tasks')->where('type', 'mail.list')->first());

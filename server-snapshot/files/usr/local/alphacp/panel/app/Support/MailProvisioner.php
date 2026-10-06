@@ -177,6 +177,9 @@ final class MailProvisioner
             'local' => $row->localpart,
             'domain' => $row->domain,
             'owner' => $row->owner,
+            // Old rows have no members column value; preserve the list by
+            // starting its owner as the first subscriber on upgrade.
+            'members' => is_array($row->members) && $row->members !== [] ? array_values($row->members) : [$row->owner],
         ])->values()->all();
 
         return AccountProvisioner::enqueue($account, 'mail.list', [

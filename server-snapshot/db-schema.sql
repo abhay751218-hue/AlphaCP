@@ -655,6 +655,7 @@ CREATE TABLE `mailing_lists` (
   `owner` varchar(190) NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `members` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`members`)),
   PRIMARY KEY (`id`),
   UNIQUE KEY `mailing_lists_account_id_localpart_domain_unique` (`account_id`,`localpart`,`domain`),
   KEY `mailing_lists_account_id_index` (`account_id`)

@@ -8,6 +8,7 @@ namespace App\Support;
 final class Mail
 {
     public const MAX = 50;
+    public const MAX_LIST_MEMBERS = 200;
 
     public static function tryLocal(string $local): ?string
     {

@@ -725,6 +725,8 @@ final class MailServer
             'domains'     => $agg['domains'],
             'mailboxes'   => $agg['mailboxes'],
             'aliases'     => $agg['aliases'],
+            'lists'       => $agg['lists'],
+            'list_errors' => $agg['list_errors'],
             'filters'     => $agg['filters'],
             'filter_errors' => $agg['filter_errors'],
             'exim_config' => $status['exim_config'] ?? null,
@@ -798,7 +800,9 @@ final class MailServer
             $out = (new self($cmd, $log))->syncFiles();
 
             return 'ok (' . (int) ($out['mailboxes'] ?? 0) . ' mailboxes, '
-                . (int) ($out['aliases'] ?? 0) . ' forwarders)';
+                . (int) ($out['aliases'] ?? 0) . ' aliases including '
+                . (int) ($out['lists'] ?? 0) . ' active lists; '
+                . (int) ($out['list_errors'] ?? 0) . ' list errors)';
         } catch (Throwable $e) {
             // primary task ka kaam ho chuka hai — sync ki wajah se use fail nahi karte
             $log->info('mail sync after task failed: ' . $e->getMessage());
@@ -1062,6 +1066,9 @@ final class MailServer
         $users = [];
         $recipients = [];
         $aliases = [];
+        $listAliases = [];
+        $listConflicts = [];
+        $listErrors = 0;
         $catchalls = [];
         $domains = [];
         $vacation = [];
@@ -1122,6 +1129,41 @@ final class MailServer
                     continue;   // pipe/command nahi — sirf email address
                 }
                 $aliases[$key] = $key . ': ' . $dest;
+            }
+
+            // ---- static mailing-list members -> Exim redirect expansion ----
+            $listsFile = $home . '/etc/mail/lists.json';
+            if (is_link($listsFile)) {
+                $listErrors++;
+            } else {
+                foreach ($this->readJsonList($listsFile) as $rawList) {
+                    if (!is_array($rawList)) {
+                        $listErrors++;
+                        continue;
+                    }
+                    try {
+                        $cleanList = Mail::sanitizeLists([$rawList])[0] ?? null;
+                    } catch (TaskRejectedException) {
+                        $listErrors++;
+                        continue;
+                    }
+                    if (!is_array($cleanList)) {
+                        $listErrors++;
+                        continue;
+                    }
+                    $address = $cleanList['local'] . '@' . $cleanList['domain'];
+                    if (isset($listConflicts[$address])) {
+                        $listErrors++;
+                        continue;
+                    }
+                    if (isset($listAliases[$address])) {
+                        unset($listAliases[$address]);
+                        $listConflicts[$address] = true;
+                        $listErrors++;
+                        continue;
+                    }
+                    $listAliases[$address] = $cleanList;
+                }
             }
 
             // ---- catch-all (`*@domain: dest`) ----
@@ -1228,6 +1270,30 @@ final class MailServer
             }
         }
 
+        // Add a list only when its address is not already a mailbox/forwarder.
+        // Nested list targets are rejected to avoid redirect loops and bounce storms.
+        $listCount = 0;
+        foreach ($listAliases as $address => $row) {
+            if (isset($listConflicts[$address]) || isset($users[$address]) || isset($aliases[$address])) {
+                $listErrors++;
+                continue;
+            }
+            $nested = false;
+            foreach ($row['members'] as $member) {
+                if (isset($listAliases[$member]) || isset($listConflicts[$member])) {
+                    $nested = true;
+                    break;
+                }
+            }
+            if ($nested) {
+                $listErrors++;
+                continue;
+            }
+            $aliases[$address] = $address . ': ' . implode(', ', $row['members']);
+            $domains[$row['domain']] = true;
+            $listCount++;
+        }
+
         ksort($users);
         ksort($recipients);
         ksort($aliases);
@@ -1253,6 +1319,8 @@ final class MailServer
             'domains'        => count($domainList),
             'mailboxes'      => count($users),
             'aliases'        => count($aliases),
+            'lists'           => $listCount,
+            'list_errors'     => $listErrors,
             'catchalls'      => count($catchalls),
             'responders'     => count($vacation),
             'spam_lists'     => count($spam),

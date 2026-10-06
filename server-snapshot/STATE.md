@@ -17,9 +17,9 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ## AlphaCP
 ```
 laravel       : Laravel Framework 13.33.0
-panel code    : 0.74.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.81.1   (.env)
-AGENT_VERSION : 0.81.1
+panel code    : 0.75.0   (MANIFEST.json = asli deployed code version)
+ACP_VERSION   : 0.82.0   (.env)
+AGENT_VERSION : 0.82.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
@@ -121,15 +121,16 @@ agent-backup-20261005120447
 agent-backup-20261005135321
 agent-backup-20261005145330
 agent-backup-20261005165927
-panel-backup-20261005135321
+agent-backup-20261006014708
 panel-backup-20261005145330
 panel-backup-20261005165927
+panel-backup-20261006014708
 panel-failed-20260928223644
 ```
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active
@@ -237,6 +238,7 @@ alphacp:scheduled-backups
   2026_10_04_000055_add_mysql_restore_to_transfer_restores   [54] Ran
   2026_10_05_000060_create_backup_destinations_table   [55] Ran
   2026_10_05_000061_create_backup_destination_pushes_table   [55] Ran
+  2026_10_05_000062_add_members_to_mailing_lists_table   [56] Ran
 ```
 
 ## Routes (web)
@@ -352,6 +354,7 @@ POST               /login                                        login.attempt
 POST               /logout                                       logout
 GET|HEAD           /mailing-lists                                mailing-lists.index
 POST               /mailing-lists                                mailing-lists.store
+PATCH              /mailing-lists/{mailing_list}                 mailing-lists.update
 DELETE             /mailing-lists/{mailing_list}                 mailing-lists.destroy
 GET|HEAD           /mime                                         mime.index
 POST               /mime                                         mime.store
