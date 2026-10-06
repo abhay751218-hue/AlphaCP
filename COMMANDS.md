@@ -18,14 +18,27 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 > + `BASE INBOX DELIVERY: VERIFIED` + `FULL S7 MAIL CHECK: PASS` (tasks #618–#647). Matlab 0.82.0 update ne
 > exim/dovecot/SpamAssassin ko dobara configure kiya, magar **customer email bilkul theek hai**.
 >
+> ⚠️ **Pehli koshish me 1 check fail hua tha — wo verifier ka bug tha, code ka nahi** (isliye fix commit
+> `402ebcd` aayi). Asli Exim redirect (alias) par aisa likhta hai:
+> ```
+> info@acp-list-check.test
+>   <-- announce@acp-list-check.test
+>   router = alphacp_mailbox, transport = alphacp_maildir
+> ```
+> yaani alias expansion `<--` se prove hota hai, aur final router mailbox ka hota hai — purana assertion
+> `alphacp_aliases` naam dhoondh raha tha jo sirf simulator likhta tha. Ab proof = rc=0 + output me
+> DONO address. Sim bhi ab asli shape likhta hai (taaki ye gap dobara local me pakda jaye). `s7-mail-sim` **14/0**.
+> Server ki state safe hai: us run ne apne saare temp objects (account/mailbox/list/alias) khud hata diye,
+> aur `account.create`/`mail.set` idempotent hain — **dobara chalana bilkul safe hai**.
+>
 > Ab yahi verifier #18 ka asli proof dega: temporary account banata hai, `announce@…` list + `info@…`
 > subscriber, phir **asli Exim se mail bhej kar subscriber ke Maildir me delivery** check karta hai
 > (plus pipe/self-subscribe reject + list remove + alias cleanup). End me sab kuch khud hata deta hai.
 ```bash
-sudo alphacp-sync get 47a7461b7aa4d5556e487ab79c7ff2741896186b tools/verify/s7-mailing-list-check.sh /tmp/s7-mailing-list-check.sh 4be2d2157c0a6d52a5ecfcfb5051cf0a418f5dc73f4d8e2d6ebfd2e009a8ecf9 && sudo bash /tmp/s7-mailing-list-check.sh
+sudo alphacp-sync get 402ebcdebc4a1e8d94ce8e50d383c8837fcdc483 tools/verify/s7-mailing-list-check.sh /tmp/s7-mailing-list-check.sh 08b0928f818f3d3385a7d143c0b5407f38255f15f495c1d7e04c98d6f66193a5 && sudo bash /tmp/s7-mailing-list-check.sh
 ```
-- Expect: `mail.list saved one list and one subscriber` → `Exim -bt routed the list through alphacp_aliases` →
-  **`real Exim list delivery reached subscriber Maildir`** → `list delivery: YES` →
+- Expect: `mail.list saved one list and one subscriber` → `Exim -bt ne list ko subscriber tak expand kiya
+  (exim ka '<--' redirect form)` → **`real Exim list delivery reached subscriber Maildir`** → `list delivery: YES` →
   `=== S7 #18 MAILING LIST LIVE CHECK: 14 pass, 0 fail ===` (verifier me total 14 checks hain; **fail 0 hone chahiye**).
 - Local proof (is session me): `s7-mail-sim` **14 pass / 0 fail** (yahi verifier 6 modes me), agent suite me
   `mail.list` ke focused tests **209/0** me pass.

@@ -57,6 +57,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 - **S7 #147 SpamAssassin + greylist status (5 Oct)** — pinned read-only live verifier returned **8 pass / 0 fail / 0 skip** and `S7 SPAMASSASSIN + GREYLIST:STATUS-VERIFIED`. No setting or service toggle was changed. The report file is awaiting the next alphacp-sync (latest snapshot predates this run).
 
 ### Fixed
+- **6 Oct 2026 — `s7-mailing-list-check.sh` ka routing assertion (live fail #1 ka asli kaaran)** — live run me
+  `Exim -bt did not confirm list routing` aaya jabki routing **theek thi**: asli Exim 4.97 redirect par
+  `info@… \n <-- announce@… \n router = alphacp_mailbox, transport = alphacp_maildir` likhta hai (alias
+  expansion `<--` se prove hoti hai; final router mailbox ka hota hai). Purana assertion router ka naam
+  `alphacp_aliases` dhoondh raha tha — wo shape sirf **simulator** likhta tha, isliye ye check sirf sim me
+  pass hota tha (bilkul wahi sim-vs-real gap jo 0.78.0–0.80.0 me foi). Fix: proof = `rc=0` + output me DONO
+  address (list + subscriber), aur kaunsa proof mila wo print hota hai. Sim bhi ab asli shape likhta hai
+  (regression guard). `s7-mail-sim` **14 pass / 0 fail**, `bash -n` clean. Commit `402ebcd`.
 - **S7 #20/#21 — Exim user-filter permission fix, live-verified (agent 0.81.1, 5 Oct)** — live diagnostics
   showed Exim 4.97 opening the per-mailbox filter as the mailbox uid/gid and deferring with `Permission denied`;
   `exim -bf` as root had only validated syntax. The agent now checks `~/etc` and grants the mailbox identity
