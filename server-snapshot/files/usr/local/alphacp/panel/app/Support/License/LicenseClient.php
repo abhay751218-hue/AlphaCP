@@ -64,6 +64,36 @@ final class LicenseClient
         return $this->statusFromRecord($record);
     }
 
+    /** Re-issue a fresh local trial (+$days), overwriting any existing record.
+     *  Owner-server keep-alive: local_trial is offline-valid (fingerprint-bound). */
+    public function renewTrial(int $days = 15): array
+    {
+        $now     = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $expires = $now->modify('+' . max(1, $days) . ' days');
+        $payload = [
+            'license_uid'  => 'TRIAL-' . strtoupper(substr($this->fingerprint(), 0, 16)),
+            'product'      => self::PRODUCT,
+            'tier'         => 'trial',
+            'features'     => ['core'],
+            'max_accounts' => 20,
+            'max_servers'  => 1,
+            'issued_at'    => $now->format(DATE_ATOM),
+            'expires_at'   => $expires->format(DATE_ATOM),
+            'grace_days'   => 0,
+            'bindings'     => ['fingerprint'],
+        ];
+        $record = [
+            'source'      => 'local_trial',
+            'fingerprint' => $this->fingerprint(),
+            'payload'     => $payload,
+            'signature'   => null,
+            'stored_at'   => $now->format(DATE_ATOM),
+        ];
+        $this->writeRecord($record);
+
+        return $this->statusFromRecord($record);
+    }
+
     /** @return array<string, mixed> */
     public function status(): array
     {

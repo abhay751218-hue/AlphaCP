@@ -148,6 +148,7 @@
 /usr/local/alphacp/panel/README.md
 /usr/local/alphacp/panel/app/Console/Commands/AdminPasswordCommand.php
 /usr/local/alphacp/panel/app/Console/Commands/BackupDestinationPushCommand.php
+/usr/local/alphacp/panel/app/Console/Commands/LicenseRenewCommand.php
 /usr/local/alphacp/panel/app/Console/Commands/ScheduledBackupsCommand.php
 /usr/local/alphacp/panel/app/Http/Controllers/AccountsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AddressImporterController.php

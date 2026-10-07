@@ -28,8 +28,8 @@ panel http    : 200
 ```
 store      : /usr/local/alphacp/panel/storage/app/private/license.json
 source     : local_trial   tier: trial   max_accounts: 20
-issued_at  : 2026-09-28T22:44:58+00:00
-expires_at : 2026-10-13T22:44:58+00:00   -> valid (expiry se pehle)
+issued_at  : 2026-10-07T00:12:56+00:00
+expires_at : 2027-10-07T00:12:56+00:00   -> valid (expiry se pehle)
 signed     : no (local trial)
 ```
 
@@ -176,6 +176,7 @@ alphacp-sync.timer alphacp-sync.service
 ```
 alphacp:admin-password
 alphacp:backup-destination-push
+alphacp:license:renew
 alphacp:scheduled-backups
 ```
 
@@ -459,6 +460,7 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## License / trial se jude files (naam se)
 ```
+/usr/local/alphacp/panel/app/Console/Commands/LicenseRenewCommand.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php
 /usr/local/alphacp/panel/config/license_public.pem.example
