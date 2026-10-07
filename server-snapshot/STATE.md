@@ -363,6 +363,7 @@ GET|HEAD           /mailing-lists                                mailing-lists.i
 POST               /mailing-lists                                mailing-lists.store
 PATCH              /mailing-lists/{mailing_list}                 mailing-lists.update
 DELETE             /mailing-lists/{mailing_list}                 mailing-lists.destroy
+GET|HEAD           /metrics                                      metrics.index
 GET|HEAD           /mime                                         mime.index
 POST               /mime                                         mime.store
 DELETE             /mime/{ext}                                   mime.destroy

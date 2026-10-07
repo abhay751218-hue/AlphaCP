@@ -193,6 +193,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailingListsController.php
+/usr/local/alphacp/panel/app/Http/Controllers/MetricsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MimeTypesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlDatabasesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php
@@ -302,6 +303,7 @@
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php
 /usr/local/alphacp/panel/app/Support/Mail.php
 /usr/local/alphacp/panel/app/Support/MailProvisioner.php
+/usr/local/alphacp/panel/app/Support/Metrics.php
 /usr/local/alphacp/panel/app/Support/MimeTypes.php
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php
 /usr/local/alphacp/panel/app/Support/Mysql.php
@@ -454,6 +456,7 @@
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php
 /usr/local/alphacp/panel/resources/views/license/index.blade.php
 /usr/local/alphacp/panel/resources/views/mailing-lists/index.blade.php
+/usr/local/alphacp/panel/resources/views/metrics/index.blade.php
 /usr/local/alphacp/panel/resources/views/mime/index.blade.php
 /usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php
 /usr/local/alphacp/panel/resources/views/mysql-wizard/index.blade.php
