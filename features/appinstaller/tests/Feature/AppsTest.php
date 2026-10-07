@@ -10,11 +10,12 @@ use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Process;
 use Tests\TestCase;
 
-class SecurityToolsTest extends TestCase
+class AppsTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -36,10 +37,12 @@ class SecurityToolsTest extends TestCase
         return $this->withSession(['two_factor_passed' => true])->actingAs($user->fresh());
     }
 
-    private function customerWithAccount(): array
+    private function customerWithTempAccount(): array
     {
         $customer = $this->userWithRole('user');
         $pkg      = Package::query()->where('name', 'default')->firstOrFail();
+        $tmp      = sys_get_temp_dir() . '/acphome_' . uniqid();
+        File::makeDirectory($tmp, 0755, true, true);
         $account  = Account::query()->create([
             'server_id'     => 1,
             'package_id'    => $pkg->id,
@@ -47,54 +50,40 @@ class SecurityToolsTest extends TestCase
             'username'      => 'custhost',
             'main_domain'   => 'shop.example.com',
             'contact_email' => 'c@example.com',
-            'home_path'     => '/home/custhost',
+            'home_path'     => $tmp,
             'php_version'   => '8.4',
             'status'        => 'active',
             'quota_mb'      => 1024,
         ]);
 
-        return [$customer, $account, $pkg];
+        return [$customer, $account, $pkg, $tmp];
     }
 
-    public function test_view_shows_waf_status(): void
+    public function test_view_shows_catalog(): void
     {
-        Process::fake(['*' => Process::result(exitCode: 0)]);
-        [$customer] = $this->customerWithAccount();
+        [$customer] = $this->customerWithTempAccount();
 
         $this->asPanelUser($customer)
-            ->get('/security-tools')
+            ->get('/apps')
             ->assertOk()
-            ->assertSee('Security Tools')
-            ->assertSee('ENABLED');
+            ->assertSee('WordPress');
     }
 
-    public function test_toggle_enables_modsec_when_off(): void
+    public function test_install_wordpress(): void
     {
-        Process::fake([
-            'a2query *'  => Process::result(exitCode: 1),
-            'a2enmod *'  => Process::result(),
-            'systemctl *' => Process::result(),
-        ]);
-        [$customer] = $this->customerWithAccount();
+        Process::fake();
+        [$customer, $account, $pkg, $tmp] = $this->customerWithTempAccount();
 
         $this->asPanelUser($customer)
-            ->post('/security-tools/modsec')
-            ->assertRedirect('/security-tools');
+            ->post('/apps', ['app' => 'wordpress'])
+            ->assertRedirect('/apps');
 
-        Process::assertRan(fn ($p) => is_string($p->command) && str_contains($p->command, 'a2enmod'));
-    }
+        Process::assertRan(fn ($p) => is_string($p->command) && str_contains($p->command, 'mysql'));
+        Process::assertRan(fn ($p) => is_string($p->command) && str_contains($p->command, 'curl'));
 
-    public function test_scan_runs_clamscan(): void
-    {
-        Process::fake([
-            'clamscan *' => Process::result(output: 'Scanned 0 infected'),
-        ]);
-        [$customer] = $this->customerWithAccount();
+        $this->assertFileExists($tmp . '/public_html/wp-config.php');
+        $this->assertStringContainsString("DB_NAME', 'custhost_wp'", File::get($tmp . '/public_html/wp-config.php'));
 
-        $this->asPanelUser($customer)
-            ->post('/security-tools/scan')
-            ->assertRedirect('/security-tools');
-
-        Process::assertRan(fn ($p) => is_string($p->command) && str_contains($p->command, 'clamscan'));
+        File::deleteDirectory($tmp);
     }
 }
