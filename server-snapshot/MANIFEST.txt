@@ -141,6 +141,9 @@
 /usr/local/alphacp/etc/mail/exim-options.json
 /usr/local/alphacp/etc/my.cnf
 /usr/local/alphacp/etc/panel.env
+/usr/local/alphacp/logs/login-fix-20261007121757.txt
+/usr/local/alphacp/logs/login-fix-20261007124842.txt
+/usr/local/alphacp/logs/login-fix-20261007124915.txt
 /usr/local/alphacp/logs/verify-report-20260928-142610.txt
 /usr/local/alphacp/logs/verify-step2-20260928-161141.txt
 /usr/local/alphacp/panel/.env
