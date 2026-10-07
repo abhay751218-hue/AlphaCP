@@ -491,7 +491,13 @@
 /usr/local/alphacp/panel/resources/views/email/index.blade.php
 /usr/local/alphacp/panel/resources/views/encryption/index.blade.php
 /usr/local/alphacp/panel/resources/views/errorpages/index.blade.php
+/usr/local/alphacp/panel/resources/views/errors/403.blade.php
 /usr/local/alphacp/panel/resources/views/errors/404.blade.php
+/usr/local/alphacp/panel/resources/views/errors/405.blade.php
+/usr/local/alphacp/panel/resources/views/errors/419.blade.php
+/usr/local/alphacp/panel/resources/views/errors/429.blade.php
+/usr/local/alphacp/panel/resources/views/errors/500.blade.php
+/usr/local/alphacp/panel/resources/views/errors/503.blade.php
 /usr/local/alphacp/panel/resources/views/file-directory-restoration/index.blade.php
 /usr/local/alphacp/panel/resources/views/file-restoration/index.blade.php
 /usr/local/alphacp/panel/resources/views/files/index.blade.php

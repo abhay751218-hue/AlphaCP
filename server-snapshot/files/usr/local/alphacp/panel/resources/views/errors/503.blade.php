@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>404 · AlphaCP</title>
+<title>503 · AlphaCP</title>
 <style>
 body{background:#0f172a;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
 .card{background:#1e293b;padding:2.5rem 3.5rem;border-radius:14px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.4)}
@@ -17,8 +17,8 @@ small{color:#64748b}
 <body>
 {{-- Standalone error page: NO layout, NO database, NO auth — kabhi crash nahi hogi. --}}
 <div class="card">
-<h1>404</h1>
-<p>Ye page panel me nahi hai.</p>
+<h1>503</h1>
+<p>Panel abhi maintenance me hai — jald wapas.</p>
 <p><a href="{{ url('/') }}">← Panel login</a></p>
 <small>AlphaCP</small>
 </div>
