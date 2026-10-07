@@ -248,6 +248,7 @@ alphacp:scheduled-backups
   2026_10_07_000003_create_api_tokens_table   [59] Ran
   2026_10_07_000004_create_license_keys_table   [60] Ran
   2026_10_07_000005_create_security_extras_table . [61] Ran
+  2026_10_07_000006_create_webdisk_accounts_table  [62] Ran
 ```
 
 ## Routes (web)
@@ -485,6 +486,9 @@ GET|HEAD           /users/create                                 users.create
 PUT                /users/{user}                                 users.update
 GET|HEAD           /users/{user}/edit                            users.edit
 POST               /users/{user}/password                        users.password
+GET|HEAD           /webdisk                                      webdisk.index
+POST               /webdisk                                      webdisk.store
+DELETE             /webdisk/{webDiskAccount}                     webdisk.destroy
 GET|HEAD           /webmail                                      webmail.index
 POST               /webmail                                      webmail.store
 GET|HEAD           /zone-editor                                  zone-editor.index

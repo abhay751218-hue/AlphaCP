@@ -230,6 +230,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/TransferReviewController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TransferToolController.php
 /usr/local/alphacp/panel/app/Http/Controllers/UsersController.php
+/usr/local/alphacp/panel/app/Http/Controllers/WebDiskController.php
 /usr/local/alphacp/panel/app/Http/Controllers/WebmailController.php
 /usr/local/alphacp/panel/app/Http/Controllers/WhmApiController.php
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneEditorController.php
@@ -295,6 +296,7 @@
 /usr/local/alphacp/panel/app/Models/TransferReview.php
 /usr/local/alphacp/panel/app/Models/TransferTool.php
 /usr/local/alphacp/panel/app/Models/User.php
+/usr/local/alphacp/panel/app/Models/WebDiskAccount.php
 /usr/local/alphacp/panel/app/Models/WebmailSetting.php
 /usr/local/alphacp/panel/app/Models/ZoneTtl.php
 /usr/local/alphacp/panel/app/Providers/AppServiceProvider.php
@@ -424,6 +426,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000003_create_api_tokens_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000004_create_license_keys_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000005_create_security_extras_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000006_create_webdisk_accounts_table.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php
@@ -529,6 +532,7 @@
 /usr/local/alphacp/panel/resources/views/users/create.blade.php
 /usr/local/alphacp/panel/resources/views/users/edit.blade.php
 /usr/local/alphacp/panel/resources/views/users/index.blade.php
+/usr/local/alphacp/panel/resources/views/webdisk/index.blade.php
 /usr/local/alphacp/panel/resources/views/webmail/index.blade.php
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php
 /usr/local/alphacp/panel/resources/views/zone-templates/index.blade.php
