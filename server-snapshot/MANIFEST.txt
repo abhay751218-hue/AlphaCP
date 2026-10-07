@@ -143,6 +143,7 @@
 /usr/local/alphacp/etc/mail/exim-options.json
 /usr/local/alphacp/etc/my.cnf
 /usr/local/alphacp/etc/panel.env
+/usr/local/alphacp/logs/agent-fix-20261007143111.txt
 /usr/local/alphacp/logs/login-fix-20261007121757.txt
 /usr/local/alphacp/logs/login-fix-20261007124842.txt
 /usr/local/alphacp/logs/login-fix-20261007124915.txt
@@ -8179,6 +8180,8 @@
 /usr/local/alphacp/releases/agent-backup-20261006082529/systemd/paneld.service
 /usr/local/alphacp/releases/agent-backup-20261006082529/tests/FakeCommandExecutor.php
 /usr/local/alphacp/releases/agent-backup-20261006082529/tests/run-tests.php
+/usr/local/alphacp/releases/agentfix-20261007143111/MysqlServer.php
+/usr/local/alphacp/releases/agentfix-20261007143111/pre_existed
 /usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Http/Controllers/Auth/EntryLoginController.php
 /usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Http/Controllers/Auth/TwoFactorController.php
 /usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Http/Middleware/EnsureTwoFactorIsVerified.php
