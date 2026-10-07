@@ -214,16 +214,20 @@ echo "  + errors/503.blade.php"
 
 cd "$PANEL"
 # ---- env hardening: stale compiled views / opcache / ownership ----
-FPM_USER=$(ps axo user=,comm= 2>/dev/null | awk '/php-fpm/{print $1; exit}')
+PHP_BIN="$(command -v php8.4 || command -v php || echo /usr/bin/php8.4)"
+FPM_USER=$(ps axo user=,comm= 2>/dev/null | awk '$2 ~ /php-fpm/ {print $1}' | sort | uniq -c | sort -rn | awk 'NR==1 {print $2}')
+if [ -z "$FPM_USER" ] || [ "$FPM_USER" = "root" ]; then
+  FPM_USER="$(awk -F'=' '/^[[:space:]]*user[[:space:]]*=/{gsub(/ /,"",$2); print $2; exit}' /etc/php/*/fpm/pool.d/*.conf 2>/dev/null | head -1)"
+fi
 FPM_USER=${FPM_USER:-www-data}
-echo "  fpm user: $FPM_USER"
+echo "  fpm worker user: $FPM_USER"
 chown -R "$FPM_USER":"$FPM_USER" storage bootstrap/cache 2>/dev/null || \
   chown -R "$FPM_USER" storage bootstrap/cache 2>/dev/null || true
 chmod -R ug+rwX storage bootstrap/cache 2>/dev/null || true
-php artisan view:clear   2>&1 | tail -1 || true
-php artisan config:clear 2>&1 | tail -1 || true
-php artisan route:clear  2>&1 | tail -1 || true
-php artisan cache:clear  2>&1 | tail -1 || true
+"$PHP_BIN" artisan view:clear   2>&1 | tail -1 || true
+"$PHP_BIN" artisan config:clear 2>&1 | tail -1 || true
+"$PHP_BIN" artisan route:clear  2>&1 | tail -1 || true
+"$PHP_BIN" artisan cache:clear  2>&1 | tail -1 || true
 systemctl restart php8.4-fpm 2>/dev/null || systemctl restart php-fpm 2>/dev/null || \
   service php8.4-fpm restart 2>/dev/null || echo "  (fpm restart manually: sudo systemctl restart php8.4-fpm)"
 echo "=================================================="
