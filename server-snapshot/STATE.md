@@ -28,8 +28,8 @@ panel http    : 200
 ```
 store      : /usr/local/alphacp/panel/storage/app/private/license.json
 source     : local_trial   tier: trial   max_accounts: 20
-issued_at  : 2026-10-07T00:14:08+00:00
-expires_at : 2026-10-22T00:14:08+00:00   -> valid (expiry se pehle)
+issued_at  : 2026-10-07T03:31:51+00:00
+expires_at : 2027-10-07T03:31:51+00:00   -> valid (expiry se pehle)
 signed     : no (local trial)
 ```
 
