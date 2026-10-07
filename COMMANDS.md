@@ -300,7 +300,20 @@ Agar iske baad bhi 500 dikhe (nahi chahiye), ye ek line paste karo — exact exc
 
 ---
 
-## Command #31 — EMERGENCY ownership fix (site down recovery) ⚡ PEHLE YE
+## Command #33 — open_basedir 500 PERMANENT fix ⚡ PEHLE YE
+```bash
+sudo alphacp-sync get 0df1588bd63366c78a41c64a3c4b1e949081831f installer/openbasedir-fix.sh /tmp/openbasedir-fix-v1.0.sh 4d4205ac605b6e02c07221ecfd9315a4ce6775cf26e0d010c119e29f0af1eec4 && sudo bash /tmp/openbasedir-fix-v1.0.sh
+```
+Asli root cause (laravel log se): `EntryLoginController` `var/ports.json` par `is_file()`
+karta tha — **open_basedir se bahar** → ErrorException → har request 500. Ab controllers
+`etc/ports.json` (allowed path) use karte hain, try/catch ke saath — kabhi crash nahi.
+Expected: `+ EntryLoginController.php` `+ PortsController.php` → `/ => 200`, `/login => 404`
+→ `==> OPEN_BASEDIR FIX v1.0 APPLIED`. Sandbox proof: prod-repro **/ => 200, /login => 404**,
+EntryGate **3/3 (25)**, errorpages **7/7 (16)**.
+
+---
+
+## Command #31 — EMERGENCY ownership fix (site down recovery)
 ```bash
 sudo alphacp-sync get 68fb915fc912bb4a0c1b483409e459b91221fa52 installer/fix-ownership.sh /tmp/fix-ownership-v1.0.sh 7ae5f888cb5f4e9a0caba585843637b0c80c5af97e504b6207c4e1725c26ded6 && sudo bash /tmp/fix-ownership-v1.0.sh
 ```

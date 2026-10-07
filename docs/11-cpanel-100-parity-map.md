@@ -71,6 +71,8 @@ Legend: ✅ = controller+view+test hai · 🟡 = partial · ❌ = missing (banan
     `/license-server` issue + customer `/api/v1/activate`. LicensePlanFlow+LicenseServer **10/10 (53)**.
 21. **Standalone error pages** ✅ (7 Oct): `installer/error-pages.sh` — errors 403/404/405/419/429/500/503 bina
     layout/DB/auth ke; galat URL kabhi 500 nahi. Worst-case (broken layout) me bhi **7/7 (16)**. GET /login 500 fix.
+22. **open_basedir 500 permanent fix** ✅ (7 Oct): `installer/openbasedir-fix.sh` — EntryLoginController/
+    PortsController ab `etc/ports.json` (allowed path) + try/catch; `/ => 200`, `/login => 404` sandbox-proof.
     → **AGLA: Joomla/Drupal (apps) · Updates · awstats reports · multi-server hardening.**
 
 **Har feature ka flow (project rule):** sandbox me code + test (453-suite me add) → `installer/<feature>.sh`

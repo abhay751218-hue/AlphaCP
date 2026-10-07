@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Fixed
+- **open_basedir 500 (7 Oct, PERMANENT)** — `EntryLoginController` `var/ports.json` is_file() open_basedir
+  violation → har request 500. Controllers ab `etc/ports.json` + try/catch (`installer/openbasedir-fix.sh`,
+  Command #33). Prod-equivalent sandbox: `/ => 200`, `/login => 404`.
 - **GET /login 500 (7 Oct)** — fallback `errors.404` → `layouts.panel` (DB + auth) guest context me crash karta tha.
   `installer/error-pages.sh` v2.0: saare error pages (403/404/405/419/429/500/503) ab **standalone** — no layout/DB/auth.
   Sandbox proof: broken-layout worst case me bhi **7/7 tests (16 assertions)**. Command #29.
