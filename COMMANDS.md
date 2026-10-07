@@ -80,3 +80,12 @@ sudo alphacp-sync get 05eccbd42b1a7deed719157e123d842bf19a5daa installer/manager
 ```
 Expected banner manager-entry v0.1.0 then MANAGER ENTRY READY. Validation/reload/new-port health
 failures restore old config; if rollback reload fails, stop and report output. Full separation not claimed.
+
+## Manager entry retry — v0.1.1 (supersedes v0.1.0)
+Fix: accept only verified same-file nginx include aliases/symlinks. No identity-check bypass.
+Eight simulated scenarios pass; GitHub bytes checksum/cmp verified. 8090 stays; only TLS 2087 added.
+```bash
+sudo alphacp-sync get a976e6d0393c9f20db875204997b230094b18f51 installer/manager-entry.sh /tmp/acp-manager-entry-0.1.1.sh df154f66892ac4722766dd9a2f768ee216e3b8ec0adb6bf5b4fa564fb0b826b5 && sudo bash /tmp/acp-manager-entry-0.1.1.sh
+```
+Expected v0.1.1 banner + Loaded panel vhost verified + MANAGER ENTRY READY.
+If no same-file match, stop; diagnose actual loaded includes. Do not rerun v0.1.0.
