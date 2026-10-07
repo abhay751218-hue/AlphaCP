@@ -300,6 +300,19 @@ Agar iske baad bhi 500 dikhe (nahi chahiye), ye ek line paste karo — exact exc
 
 ---
 
+## Command #31 — EMERGENCY ownership fix (site down recovery) ⚡ PEHLE YE
+```bash
+sudo alphacp-sync get 68fb915fc912bb4a0c1b483409e459b91221fa52 installer/fix-ownership.sh /tmp/fix-ownership-v1.0.sh 7ae5f888cb5f4e9a0caba585843637b0c80c5af97e504b6207c4e1725c26ded6 && sudo bash /tmp/fix-ownership-v1.0.sh
+```
+#30 (v2.1) ne galti se storage ko root diya tha (fpm MASTER detect hua tha) → workers
+ka write access gaya → poora panel 500. Ye script: **asli worker user** (count-based
+detection + pool-config fallback) ko storage/bootstrap wapas deti hai, sahi php binary
+(`/usr/bin/php8.4`) se view/config/route/cache clear, fpm restart, aur **aakhri ERROR
+lines print** karti hai. Expected: `fpm worker user: www-data` → clears → `==> OWNERSHIP
+FIX v1.0 APPLIED` → sync. Phir `https://IP:8090/` wapas live.
+
+---
+
 ## 🚀 MASTER — naye/fresh VPS par SAB KUCH ek command se (portable 100%)
 Base panel (alphacp-sync v1.5) ke baad, ye EK script saare 9 features laga deti hai
 (FTP, Metrics, License, IP Blocker, WAF, App Installer, Monitoring, WHM API, API Tokens):
