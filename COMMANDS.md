@@ -14,7 +14,11 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 ftp-fix v1.0 — FTP Accounts live par HTTP 500 (B1 part 1). **Yahi chalao.**
+> **Abhi koi server command NAHI** — FTP live ho chuka hai. Agla pinned command tab milega jab
+> **B1-baaki (Git · Terminal · Apps · Firewall/Waf)** ka installer sim-verified ho jayega.
+> Filhal panel me **FTP Accounts → naya account** bana kar verify karo (neeche ftp-fix section).
+
+### ✅ ftp-fix v1.0 — APPLIED 8 Oct 00:39 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 047d974540aceff0fa686a8b3e3fc65a104f0f21 installer/ftp-fix.sh /tmp/ftp-fix-v1.0.sh 8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809 && sudo bash /tmp/ftp-fix-v1.0.sh
 ```

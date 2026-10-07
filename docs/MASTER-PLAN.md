@@ -36,7 +36,7 @@
 | `install.sh` / `panel-install.sh` / `step2-install.sh` / `step2b-*` | — | 0.1.2 / 0.3.0 / 0.2.0 / 0.3.8 | |
 | `login-fix.sh` | **v1.0 APPLIED** (7 Oct 13:04Z) | same | pin `269eb3c`/`6ca53d4d…` |
 | `agent-fix.sh` | **v1.0 APPLIED** (7 Oct 14:31Z) | same | pin `321c819`/`d03f3cd6…` |
-| `ftp-fix.sh` | **v1.0 READY — user ko command diya, apply baaki** | same | pin `047d974`/`8f2cdafec…` |
+| `ftp-fix.sh` | **v1.0 APPLIED live 8 Oct 00:39 IST** (user screenshot-confirmed) | same | pin `047d974`/`8f2cdafec…` |
 **Drift notes:** `config/acp.php` ke default versions (0.72/0.62) live (0.75/0.83) se peeche hain —
 UI footer galat version dikhata hai; ek chhota fix chahiye (env se override theek hai par default update karo).
 
@@ -165,13 +165,15 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 |---|---|---|
 | `login-fix.sh` v1.0 | APPLIED 7 Oct 13:04Z | `269eb3c22ae49dd5bba76a5ce2750b594f65ff2c` / `6ca53d4d163f7dc736963f5d8cb18084c3b44c6185a8891a8b61981a8960e6cf` |
 | `agent-fix.sh` v1.0 | APPLIED 7 Oct 14:31Z | `321c81929df94e6d2b05a29b912eaa31fba4209d` / `d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1` |
-| `ftp-fix.sh` v1.0 | **READY (apply baaki)** | `047d974540aceff0fa686a8b3e3fc65a104f0f21` / `8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809` |
+| `ftp-fix.sh` v1.0 | **APPLIED 8 Oct 00:39 IST** | `047d974540aceff0fa686a8b3e3fc65a104f0f21` / `8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809` |
 | sync tool v1.2 (bootstrap) | — | `4b4573f96f55927ee1fbf526037785dcdb82aea1` / `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852` |
 | doctor v1.7 | — | `da3539029d1010f33fd550e7b4d016785c932103` / `e2915e0204df79ec41540d0ee68ef8a1c3cb3f261a39dc38651471a5115f5e88` |
 
 ## 7. Next immediate step
-**Phase 1 = B1 FTP → LIVE APPLY.** Installer ready + sim-verified (`installer/ftp-fix.sh` v1.0,
-sim **40/40**, agent suite **215/0**). User ko diya gaya pinned command:
+**Phase 1 = B1 FTP → ✅ LIVE APPLIED (8 Oct 00:39 IST, user-confirmed).** Pinned command chal chuka:
+backup → lint 7 → SMOKE OK → paneld active → panel lint 2 (Process:: 0) → optimize:clear →
+php8.4-fpm active → /login HTTP 200 → sync complete → APPLY. (Live par `pdo_sqlite` nahi isliye
+suite skip, smoke gate pass — expected.) Aage:
 
 ```bash
 sudo alphacp-sync get 047d974540aceff0fa686a8b3e3fc65a104f0f21 installer/ftp-fix.sh /tmp/ftp-fix-v1.0.sh 8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809 && sudo bash /tmp/ftp-fix-v1.0.sh
