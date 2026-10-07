@@ -4,6 +4,13 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Added
+- `docs/FEATURE-AUDIT.md` — poore panel ka A→Z audit (7 Oct): 204 route→controller pairs (0 dead),
+  80 agent task handlers (0 unknown), TODO grep 0, suite + live logs/config se evidence.
+  **Production-broken cluster mila:** (B1) `proc_open` fpm me disabled par FTP/Git/Terminal/Apps
+  web-FPM se `Process` chalate hain → 500; (B2) Metrics `open_basedir` se blocked;
+  (B3) WebDisk sirf DB rows; (B4) 6 test-debt failures; (B5) 6 wasm-skip record karne hain.
+  7-phase fix plan bhi usi doc me (har phase = verified increment + pinned command).
 ### Fixed
 - **LOGIN LOCKOUT — entry separation (7 Oct)** · `installer/login-fix.sh` **v1.0**
   "Login page khulta hai, credentials daalne par login nahi hota, error aata hai" — user ki yahi
