@@ -638,7 +638,7 @@ done
 sleep 2
 CODE="$(hit)"; [[ "${CODE}" == "200" ]] && ok "panel HTTP ${CODE}" || err "panel HTTP ${CODE}"
 
-# ============================================== STEP 9: SELFTEST (15 checks)
+# ============================================== STEP 9: SELFTEST (16 checks)
 hdr "Step 9: SELFTEST — gate ka truth table + routes + B5 recursion check"
 cat > "${WORK}/selftest.php" <<PHPEOF
 <?php
