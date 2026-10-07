@@ -14,7 +14,31 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 login-fix v1.0 — LOGIN TOOTA HUA THA (5 bug: B1–B5). **Yahi chalao.**
+### 🔴 agent-fix v1.0 — MySQL provisioning live par FATAL tha (B6). **Yahi chalao.**
+```bash
+sudo alphacp-sync get 321c81929df94e6d2b05a29b912eaa31fba4209d installer/agent-fix.sh /tmp/agent-fix-v1.0.sh d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1 && sudo bash /tmp/agent-fix-v1.0.sh
+```
+- commit `321c81929df94e6d2b05a29b912eaa31fba4209d`, sha256 `d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1`.
+- **Kya karta hai:** live agent me `src/MysqlServer.php` **gayab** thi → panel se MySQL
+  database/user banana + cPanel-import/backup-restore ka mysql path agent-step par
+  `Class "Alphacp\Agent\MysqlServer" not found` se **fatal** tha. Ye script wahi class
+  (sandbox me reconstruct + **212/0** verify) sirf EK file me rakhta hai; baaki agent untouched.
+  **Koi interactive prompt nahi** — command chalte hi poori hogi.
+- **Expected output:** banner `AlphaCP — AGENT FIX v1.0` → preflight → backup →
+  `MysqlServer.php likhi` → `php -l clean` → `SELF-TEST 1/2 … static smoke PASS` →
+  `SELF-TEST 2/2 … agent suite GREEN (passed=212 failed=0)` → `paneld active` →
+  `alphacp-sync complete` → `FINAL VERDICT … APPLY ho gaya`.
+- **Agar self-test fail ya paneld active na ho** → script **apne aap rollback** kar deta hai
+  (backup wapas), deploy ruk jaata hai — server tootta hua nahi chhoda jaata.
+- **Sirf dekhna ho, kuch badle nahi:** `sudo bash /tmp/agent-fix-v1.0.sh --diagnose`
+- **Wapas jaana ho:** `sudo bash /tmp/agent-fix-v1.0.sh --rollback`
+  (backup: `/usr/local/alphacp/releases/agentfix-<ts>/`)
+- **Verify (fix ke baad):** panel me ek MySQL database + user banao (pehle fatal hota tha, ab
+  banna chahiye). Ya terminal se: `sudo php8.4 /usr/local/alphacp/agent/tests/run-tests.php | tail -1`
+  → `passed: 212   failed: 0`.
+- Test: `sudo bash tools/sim/agent-fix-sim.sh` → **17/17**.
+
+### ✅ login-fix v1.0 — APPLIED 7 Oct 13:04Z (ab MAT chalao; sirf history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 269eb3c22ae49dd5bba76a5ce2750b594f65ff2c installer/login-fix.sh /tmp/login-fix-v1.0.sh 6ca53d4d163f7dc736963f5d8cb18084c3b44c6185a8891a8b61981a8960e6cf && sudo bash /tmp/login-fix-v1.0.sh
 ```

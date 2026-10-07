@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/agent-fix.sh` **v1.0** (+ `tools/build-agent-fix.py`, `tools/sim/agent-fix-sim.sh`) —
+  B6 fix ko live agent par deploy karne wala self-contained, commit-pinned, sha256-verified installer.
+  Sirf `src/MysqlServer.php` rakhta hai; backup → `php -l` → static smoke (bina pdo) → full agent
+  suite gate (pdo_sqlite ho to `failed:0`, warna rollback) → paneld restart → `alphacp-sync`.
+  `--diagnose` / `--rollback` flags. **Sim 17/17** (reproduce 204/8 → apply → 212/0 → rollback →
+  idempotent). Pin: commit `321c81929df94e6d2b05a29b912eaa31fba4209d`, sha256
+  `d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1`.
 - `docs/FEATURE-AUDIT.md` — poore panel ka A→Z audit (7 Oct): 204 route→controller pairs (0 dead),
   80 agent task handlers (0 unknown), TODO grep 0, suite + live logs/config se evidence.
   **Production-broken cluster mila:** (B1) `proc_open` fpm me disabled par FTP/Git/Terminal/Apps
