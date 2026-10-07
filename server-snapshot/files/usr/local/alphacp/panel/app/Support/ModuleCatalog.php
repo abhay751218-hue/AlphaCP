@@ -177,7 +177,7 @@ final class ModuleCatalog
                     ['name' => 'Setup/Edit Domain Forwarding', 'step' => 'S9',  'status' => 'live', 'route' => 'domain-forward.index'],
                     ['name' => 'Synchronize DNS Records', 'step' => 'S9',  'status' => 'live', 'route' => 'dns-sync.index'],
                     ['name' => 'Nameserver Selection', 'step' => 'S9',  'status' => 'live', 'route' => 'nameserver-selection.index'],
-                    ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'step'],
+                    ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'live', 'route' => 'dns-cluster.index'],
                     ['name' => 'Backup Config',       'step' => 'S10', 'status' => 'live', 'route' => 'backup-config.index'],
                     ['name' => 'Backup Destinations', 'step' => 'S10', 'status' => 'live', 'route' => 'backup-destinations.index'],
                     ['name' => 'Backup Restoration',  'step' => 'S10', 'status' => 'live', 'route' => 'backup-restoration.index'],

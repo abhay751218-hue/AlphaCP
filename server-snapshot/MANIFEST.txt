@@ -174,6 +174,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/DeliverabilityController.php
 /usr/local/alphacp/panel/app/Http/Controllers/DiskUsageController.php
 /usr/local/alphacp/panel/app/Http/Controllers/DnsCleanupController.php
+/usr/local/alphacp/panel/app/Http/Controllers/DnsClusterController.php
 /usr/local/alphacp/panel/app/Http/Controllers/DnsSyncController.php
 /usr/local/alphacp/panel/app/Http/Controllers/DnsZonesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/DomainForwardController.php
@@ -262,6 +263,7 @@
 /usr/local/alphacp/panel/app/Models/Catchall.php
 /usr/local/alphacp/panel/app/Models/CronJob.php
 /usr/local/alphacp/panel/app/Models/DnsCleanup.php
+/usr/local/alphacp/panel/app/Models/DnsClusterNode.php
 /usr/local/alphacp/panel/app/Models/DnsDynamicHost.php
 /usr/local/alphacp/panel/app/Models/DnsRecord.php
 /usr/local/alphacp/panel/app/Models/DnsSync.php
@@ -432,6 +434,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000005_create_security_extras_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000006_create_webdisk_accounts_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000008_create_optimize_settings_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000009_create_dns_cluster_nodes_table.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php
@@ -467,6 +470,7 @@
 /usr/local/alphacp/panel/resources/views/deliverability/index.blade.php
 /usr/local/alphacp/panel/resources/views/disk/index.blade.php
 /usr/local/alphacp/panel/resources/views/dns-cleanup/index.blade.php
+/usr/local/alphacp/panel/resources/views/dns-cluster/index.blade.php
 /usr/local/alphacp/panel/resources/views/dns-sync/index.blade.php
 /usr/local/alphacp/panel/resources/views/dns-zones/index.blade.php
 /usr/local/alphacp/panel/resources/views/domain-forward/index.blade.php
