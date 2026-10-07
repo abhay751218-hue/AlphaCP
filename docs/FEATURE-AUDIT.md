@@ -59,6 +59,28 @@ Decision chahiye: agent se dav-config implement karo, ya module ko UI se hide ka
 
 ### B5 · 6 wasm-skip tests — sandbox limit; server par ek baar `artisan test` chala kar record karo
 
+### B6 · `MysqlServer.php` live agent me MISSING → real MySQL provisioning + backup-restore FATAL  ✅ FIXED (repo, deploy baaki)
+Agent ke `src/Tasks/Db*.php`, `DbTask`, `CpanelMysql` aur `BackupArchiveStore` sab
+`Alphacp\Agent\MysqlServer` use karte hain — par wo class file server par kabhi pahunchi hi
+nahi (git-history/bundle/kahin nahi mili; sirf references the). Iska matlab live par
+**`db.create` / `db.drop` / `db.user.create|grant|password|drop` / `db.list` / `db.restore`
+— har real MariaDB task agent-step par `Class "MysqlServer" not found` se fatal** tha
+(panel MySQL Databases/Users UI + cPanel-import ka mysql path dono dead).
+Agent ke apne suite me ye 8 failures the (204/8). Class ko uske call-sites + tests
+(= spec) se reconstruct kiya: SQL hamesha **stdin** se (argv me kabhi secret/identifier
+nahi), validated + backtick-quoted identifiers, doubled-quote literals, fail-closed
+password/identifier checks, `ACP_MYSQL_CLIENT` (default `/usr/bin/mariadb`).
+**Verify:** `php8.4 agent/tests/run-tests.php` → **212 pass / 0 fail**. Deploy Phase-0c ke
+pinned `agent-fix` command se hoga.
+
+### B0 (meta) · Agent source-of-truth DRIFT — canonical `agent/` 77 tasks purana tha  ✅ FIXED
+`build-step2-installer.py` (embed) + `tools/sim/panel-tests.sh` (test-registry) dono root
+`agent/` par depend karte hain, par wo sirf **3-task** stale seed tha jabki live agent
+(snapshot mirror) **80-task** pahunch chuka tha. Documented workflow follow karne par live
+**80→3 tasks downgrade** ho jata (PHP/mail/DNS/backup/SSL/cron sab toot jaate). Live/snapshot
+agent ko canonical `agent/` par promote kiya (strict superset; kuch lost nahi). Ab `agent/`
+== live agent, aur future agent fixes isi correct base par bante hain.
+
 ## 🟡 C. Decisions pending (aap se)
 1. **Entry separation live** karni hai? (`--enable-ports` — nginx 2083/2087/2096; opt-in)
 2. **License-selling hardening**: per-key limits (max accounts/modules), offline grace period,
@@ -66,15 +88,25 @@ Decision chahiye: agent se dav-config implement karo, ya module ko UI se hide ka
 3. Product/brand name jo license me dikhega
 
 ## 🗺️ D. Phased plan (har phase = ek verified increment, ek command/step per message)
-| Phase | Kaam | Ship channel |
-|---|---|---|
-| 1 | **FTP via agent** (`ftp.*` tasks + handlers + panel queueing) — repro → fix → sim/tests | panel-update artifact |
-| 2 | Git + Terminal + Apps via agent (`git.*`, `terminal.run`, `apps.install`) | panel-update artifact |
-| 3 | Metrics via agent (`metrics.access`) | panel-update artifact |
-| 4 | Test-debt → suite **100% green** | artifact (tests) |
-| 5 | WebDisk: implement ya hide | artifact |
-| 6 | License hardening + docs | artifact + docs |
-| 7 | Entry separation opt-in run | `login-fix --enable-ports` |
+| Phase | Kaam | Status | Ship channel |
+|---|---|---|---|
+| 0a | Agent source-of-truth reconcile (live 80-task → canonical `agent/`) | ✅ done (`606ac97`) | repo-only |
+| 0b | **B6 fix** — missing `MysqlServer` reconstruct; agent suite 212/0 | ✅ done (repo) | — |
+| 0c | B6 deploy — pinned `agent-fix.sh` (MysqlServer live par) + on-server self-test | 🔜 next | `installer/agent-fix.sh` |
+| 1 | **FTP via agent** (`ftp.*` tasks + handlers + `pure-pw` allowlist + panel queueing) | pending | `agent-fix.sh` + panel-update |
+| 2 | Git + Terminal + Apps via agent (`git.*`, `terminal.run`, `apps.install`) | pending | `agent-fix.sh` + panel-update |
+| 3 | Metrics via agent (`metrics.access`) | pending | `agent-fix.sh` + panel-update |
+| 4 | Test-debt (B4) → panel suite **100% green** | pending | panel-update (tests) |
+| 5 | WebDisk: implement ya hide | pending | artifact |
+| 6 | License hardening + docs | pending | artifact + docs |
+| 7 | Entry separation opt-in run | pending | `login-fix --enable-ports` |
 
-Gate har phase par: `tools/sim/update-sim.sh` (54/54) + `tools/sim/panel-tests.sh` +
-`tools/sim/login-entry-sim.sh` (53/53) — phir commit-pin + sha256 command.
+**Ship channel note:** B1/B2/B6 sab **agent-side** hain (root execution), isliye inka fix
+`panel-update` artifact se nahi — ek **pinned `installer/agent-fix.sh`** se jaayega (wahi
+proven pattern jo `login-fix.sh` me chala: payload files + backup + atomic swap + paneld
+restart + **on-server `agent/tests/run-tests.php` self-test (green zaroori)** + end me
+`alphacp-sync`). Panel-side queueing changes usi command me ya panel-update se jaayenge.
+
+Gate har phase par: `php8.4 agent/tests/run-tests.php` (212/0) + `tools/sim/update-sim.sh`
+(54/54) + `tools/sim/panel-tests.sh` + `tools/sim/login-entry-sim.sh` (53/53) — phir
+commit-pin + sha256 command.

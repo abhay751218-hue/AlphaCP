@@ -12,6 +12,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   (B3) WebDisk sirf DB rows; (B4) 6 test-debt failures; (B5) 6 wasm-skip record karne hain.
   7-phase fix plan bhi usi doc me (har phase = verified increment + pinned command).
 ### Fixed
+- **B6 — real MySQL provisioning + backup-restore FATAL (7 Oct, repo me fix; deploy baaki)** ·
+  agent `src/MysqlServer.php` **missing** tha live par. `DbTask`, saare `Db*` handlers
+  (`db.create/drop/user.create|grant|password|drop/list`), `db.restore`, `CpanelMysql` aur
+  `BackupArchiveStore` isi class ko `use` karte hain — par file server par kabhi pahunchi nahi
+  (git-history/bundle/kahin nahi; sirf references). Natija: panel ke MySQL Databases/Users UI +
+  cPanel-import ka mysql path agent-step par `Class "MysqlServer" not found` se **fatal**.
+  Agent ke apne suite me 8 failures (204/8). Class ko call-sites + tests (= spec) se reconstruct
+  kiya: SQL sirf **stdin**/stdinFile se (argv me kabhi secret/identifier nahi), validated +
+  backtick-quoted identifiers, doubled-quote literals, fail-closed password (8–64, no
+  quote/backslash/control-char) + identifier checks, `ACP_MYSQL_CLIENT` (default `/usr/bin/mariadb`).
+  **Verify:** `php8.4 agent/tests/run-tests.php` → **212 pass / 0 fail**.
+- **B0 — agent source-of-truth DRIFT (`606ac97`)** · canonical `agent/` sirf 3-task stale seed tha
+  jabki live agent 80-task; `build-step2-installer.py` + `tools/sim/panel-tests.sh` isi stale root
+  par depend karte the → step2 dobara chalane par live **80→3 tasks downgrade** (catastrophe).
+  Live/snapshot agent ko canonical `agent/` par promote kiya (strict superset, kuch lost nahi).
 - **LOGIN LOCKOUT — entry separation (7 Oct)** · `installer/login-fix.sh` **v1.0**
   "Login page khulta hai, credentials daalne par login nahi hota, error aata hai" — user ki yahi
   shikayat sandbox me **live server ke exact panel code (0.75.0) + asli vendor** par reproduce ki
