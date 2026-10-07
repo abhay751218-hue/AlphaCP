@@ -14,7 +14,31 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### alphacp-sync v1.2 — private repo support (`get` mode). Repo PRIVATE karne se PEHLE chalao.
+### 🔴 login-fix v1.0 — LOGIN TOOTA HUA THA (5 bug: B1–B5). **Yahi chalao.**
+```bash
+sudo alphacp-sync get c5115e718c8a454e9ea5068c53f284a59d6259cc installer/login-fix.sh /tmp/login-fix-v1.0.sh db40c7d33973620b5b926f0945380bcf7f7780273988ced8bb11e0281f330d2e && sudo bash /tmp/login-fix-v1.0.sh
+```
+- commit `c5115e718c8a454e9ea5068c53f284a59d6259cc`, sha256 `db40c7d33973620b5b926f0945380bcf7f7780273988ced8bb11e0281f330d2e`
+  (GitHub API se verify: blob `b24bf32a824872c3b7af00bbdb017d050b3cd23a`, 81,135 bytes).
+- **Expected output:** banner `AlphaCP LOGIN FIX - v1.0` → Step 1 me `BUG B1 … B5` lines (kitne bug
+  the) → Step 3 `unlocked users: N` → Step 4/4b/5/6 `installed:` / `patched` → Step 7 truth file →
+  Step 9 `SELFTEST: 15 pass, 0 fail` (usme `PASS B5: session se user resolve hua`) →
+  Step 10 `==> FIX APPLY HO GAYA ✅`.
+- **Asli wajah (B5):** `ResellerScopeProvider` ke global scopes `Auth::user()` call karte the, jo
+  khud `retrieveById()` → wahi scope → **infinite recursion** → PHP fatal → har authenticated page
+  par HTTP 500. Login POST 302 deta tha, phir `/dashboard` 500. Tests isko nahi pakad paate the
+  (`actingAs()` shortcut). Detail: CHANGELOG `[Unreleased]`.
+- **Sirf dekhna ho, kuch badle nahi:** `sudo bash /tmp/login-fix-v1.0.sh --diagnose`
+- **Entry separation ASLI me live karni ho** (nginx par 2083/2087/2096 listen) — ye **port badlav**
+  hai, isliye OPT-IN hai; pehle pooch ke hi chalao:
+  `sudo bash /tmp/login-fix-v1.0.sh --enable-ports`  (`nginx -t` fail → apne aap rollback)
+- **Wapas jaana ho:** `sudo bash /tmp/login-fix-v1.0.sh --rollback`
+  (backup: `/usr/local/alphacp/releases/loginfix-<ts>/`; kuch delete nahi hota)
+- Test: `sudo bash tools/sim/login-entry-sim.sh` → **50/50** (P8+P9 = bug-proof).
+- Agar `alphacp-sync get` par `unknown option` aaye to server ka sync tool v1.2 se purana hai —
+  batao, pehle sync-tool upgrade denge.
+
+### alphacp-sync v1.2 — private repo support (`get` mode). ✅ Server par v1.5 chal raha hai (LAST-SYNC.md).
 ```bash
 curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f55927ee1fbf526037785dcdb82aea1/installer/alphacp-sync.sh -o /tmp/acp-sync-v1.2.sh && sudo bash /tmp/acp-sync-v1.2.sh
 ```
@@ -34,6 +58,7 @@ curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f5
 | alphacp-sync v1.0 setup (`aa2091d…/installer/alphacp-sync.sh`) | 29 Sep | ✅ `main` par pehla snapshot `d5ae8d2` (314 files). Timer har ghante chalta hai. Manual: `sudo alphacp-sync`, status: `sudo alphacp-sync --status` |
 | updater 0.1.0 (dusre AI ka, panel 0.3.1) | 29 Sep | ✅ server par 0.3.1 = source byte-for-byte (snapshot se verify) |
 | panel-update 0.2.1 (`d741f79…`) → panel 0.3.2 + sync v1.1 | 29 Sep 00:17Z | ✅ UPDATE COMPLETE, HTTP 200, trial same (expiry 13 Oct), snapshot `ebdbd75` |
+| alphacp-sync v1.5 (server par khud) | 7 Oct 09:51Z | ✅ `LAST-SYNC.md` me `tool: alphacp-sync v1.5`; timer active. `get` mode available (v1.2+) |
 
 ## 🩺 Sirf zaroorat par
 
