@@ -59,6 +59,21 @@ final class FakeCommandExecutor implements CommandExecutor
     /** @var list<string> every pure-pw stdin (the password lives here, not argv) */
     public array $purePwStdins = [];
 
+    /** @var list<list<string>> git argvs (clone/pull/status) */
+    public array $gitArgvs = [];
+
+    /** @var list<list<string>> curl argvs (downloads) */
+    public array $curlArgvs = [];
+
+    /** @var list<list<string>> chown argvs (ownership fixes) */
+    public array $chownArgvs = [];
+
+    /** @var list<list<string>> terminal whitelist argvs (ls/cat/pwd/…) */
+    public array $termArgvs = [];
+
+    /** git status ka canned porcelain output */
+    public string $gitStatusOut = "M changed.php\n?? new-dir/\n";
+
     // ---- S10 remote pull (backup.pull) ----
     /** host key pubkey line returned by the fake `ssh-keyscan` */
     public string $hostKeyPubkey = 'old.example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl';
@@ -219,6 +234,11 @@ final class FakeCommandExecutor implements CommandExecutor
             'update-exim4.conf' => $this->mailEximGenerateFails
                 ? new CommandResult($argv, 1, '', 'update-exim4.conf: failed to generate', 1)
                 : new CommandResult($argv, 0, '', '', 1),
+            'git' => $this->handleGit($argv),
+            'curl' => $this->handleCurl($argv),
+            'chown' => $this->handleChown($argv),
+            'cat' => $this->handleCat($argv),
+            'ls', 'pwd', 'whoami', 'date', 'uname' => $this->handleTerm($argv),
             default => new CommandResult($argv, 0, '', '', 1),
         };
     }
@@ -478,6 +498,52 @@ final class FakeCommandExecutor implements CommandExecutor
             return implode("\n", $lines) . "\n";
         }
         return '';
+    }
+
+    /** @param list<string> $argv */
+    private function handleGit(array $argv): CommandResult
+    {
+        $this->gitArgvs[] = $argv;
+        if (in_array('status', $argv, true)) {
+            return new CommandResult($argv, 0, $this->gitStatusOut, '', 1);
+        }
+        return new CommandResult($argv, 0, "fake git ok\n", '', 1);
+    }
+
+    /** curl -o <file> ko sach me likhta hai taaki download-flow aage badhe. @param list<string> $argv */
+    private function handleCurl(array $argv): CommandResult
+    {
+        $this->curlArgvs[] = $argv;
+        $i = array_search('-o', $argv, true);
+        if ($i !== false && isset($argv[$i + 1])) {
+            @file_put_contents($argv[$i + 1], "fake-tarball-bytes\n");
+        }
+        return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleChown(array $argv): CommandResult
+    {
+        $this->chownArgvs[] = $argv;
+        return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleCat(array $argv): CommandResult
+    {
+        $this->termArgvs[] = $argv;
+        $f = $argv[1] ?? '';
+        if ($f !== '' && is_file($f)) {
+            return new CommandResult($argv, 0, (string) file_get_contents($f), '', 1);
+        }
+        return new CommandResult($argv, 1, '', "cat: {$f}: No such file or directory\n", 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleTerm(array $argv): CommandResult
+    {
+        $this->termArgvs[] = $argv;
+        return new CommandResult($argv, 0, 'fake-' . basename((string) $argv[0]) . "-output\n", '', 1);
     }
 
     /** @param list<string> $argv */

@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **B1-baaki: Git Version Control + Terminal + Site Software ab root-agent se** · agent par 6 naye
+  tasks (`git.list/clone/pull/status`, `terminal.run`, `apps.install`; registry 83 → **89**) +
+  `agent/src/Git.php` + `Tasks/GitTask` base; allowlist me git/curl/chown + terminal whitelist bins.
+  Guards: repo `<home>/git/<dir>` tak limited (PathGuard), `git clone --` se option-injection band,
+  pull `--ff-only`, terminal whitelist agent par DOBARA validate (chaining chars banned, `cat`
+  PathGuard ke andar), WordPress tarball account-home ke andar (koi shared-/tmp race nahi) +
+  `<account>_wp` DB/user/grant MysqlServer se. Panel: `GitController` account-scoped (Paneld::run
+  se sync status/list, enqueue se clone/pull), `TerminalController` Paneld::run, `AppsController`
+  enqueue; `AppInstaller` sirf catalog. Agent suite **218/0** (3 naye tests).
 - `installer/ftp-fix.sh` **v1.0** (+ `installer/ftp-fix.sh.in`, `tools/build-ftp-fix.py`,
   `tools/sim/ftp-fix-sim.sh`) — B1 ka pehla deploy: FTP ko web-FPM ke `Process` se nikaal kar
   **root agent** par le jaata hai. Agent ki 7 + panel ki 2 files byte-for-byte embed;

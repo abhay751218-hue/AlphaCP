@@ -50,6 +50,12 @@ use Alphacp\Agent\Tasks\SshSet;
 use Alphacp\Agent\Tasks\FtpAdd;
 use Alphacp\Agent\Tasks\FtpPasswd;
 use Alphacp\Agent\Tasks\FtpDel;
+use Alphacp\Agent\Tasks\GitClone;
+use Alphacp\Agent\Tasks\GitList;
+use Alphacp\Agent\Tasks\GitPull;
+use Alphacp\Agent\Tasks\GitStatus;
+use Alphacp\Agent\Tasks\TerminalRun;
+use Alphacp\Agent\Tasks\AppsInstall;
 use Alphacp\Agent\Tasks\MailSet;
 use Alphacp\Agent\Tasks\MailForward;
 use Alphacp\Agent\Tasks\MailAutorespond;
@@ -254,7 +260,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del', 'git.list', 'git.clone', 'git.pull', 'git.status', 'terminal.run', 'apps.install'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1602,6 +1608,116 @@ test('ftp tasks refuse foreign accounts, foreign logins, weak passwords and outs
     assert_true($threw, 'a chroot home outside the account is refused');
 
     assert_true($harness['cmd']->purePwUsers === [], 'nothing was created by hostile payloads');
+    acp_account_cleanup($harness);
+});
+
+fwrite(STDOUT, "\nB1-baaki: Git Version Control + Terminal + Site Software (root-side)\n");
+test('git.clone/list/status/pull: repo <home>/git/<dir> me, guards ke saath', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $out = (new GitClone())->handle([
+        'account' => 'alicehost',
+        'url'     => 'https://github.com/example/site.git',
+        'dir'     => 'site',
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'ok', 'git.clone reports ok');
+    assert_true($out['path'] === $root . '/home/alicehost/git/site', 'repo account home ke andar hai');
+    $clone = end($harness['cmd']->gitArgvs);
+    assert_true(in_array('clone', $clone, true) && in_array('--', $clone, true), 'git clone -- (option-injection band)');
+
+    // fake git dir nahi banata; asli repo jaisa .git bana dete hain
+    mkdir($root . '/home/alicehost/git/site/.git', 0755, true);
+
+    $list = (new GitList())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true($list['repos'] === ['site'], 'git.list sirf asli repos dikhata hai');
+
+    $st = (new GitStatus())->handle(['account' => 'alicehost', 'dir' => 'site'], $harness['ctx']);
+    assert_true($st['clean'] === false && $st['lines'][0] === 'M changed.php', 'git.status porcelain lines');
+
+    $pull = (new GitPull())->handle(['account' => 'alicehost', 'dir' => 'site'], $harness['ctx']);
+    $p = end($harness['cmd']->gitArgvs);
+    assert_true($pull['status'] === 'ok' && in_array('--ff-only', $p, true), 'git.pull --ff-only');
+
+    // guards
+    foreach ([
+        ['account' => 'bobhost', 'url' => 'https://github.com/x/y.git', 'dir' => 'z'],
+        ['account' => 'alicehost', 'url' => 'ftp://nope/x.git', 'dir' => 'z'],
+        ['account' => 'alicehost', 'url' => 'https://github.com/x/y.git', 'dir' => '../evil'],
+        ['account' => 'alicehost', 'url' => 'https://github.com/x/y.git', 'dir' => 'site'],
+    ] as $bad) {
+        $threw = false;
+        try {
+            (new GitClone())->handle($bad, $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'git.clone refuses: ' . json_encode($bad));
+    }
+    acp_account_cleanup($harness);
+});
+test('terminal.run: read-only whitelist, chaining banned, cat PathGuard ke andar', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $out = (new TerminalRun())->handle(['command' => 'ls -la'], $harness['ctx']);
+    assert_true($out['status'] === 'ok' && str_contains($out['output'], 'fake-ls-output'), 'ls chalta hai');
+    assert_true(str_ends_with($harness['cmd']->termArgvs[0][0], '/ls'), 'allowlisted /bin|/usr/bin ls use hua');
+
+    assert_true((new TerminalRun())->handle(['command' => 'uptime'], $harness['ctx'])['status'] === 'ok', 'uptime ok');
+
+    $file = $root . '/home/alicehost/note.txt';
+    file_put_contents($file, "hello terminal\n");
+    $cat = (new TerminalRun())->handle(['command' => 'cat ' . $file], $harness['ctx']);
+    assert_true($cat['status'] === 'ok' && str_contains($cat['output'], 'hello terminal'), 'cat account file padhta hai');
+
+    foreach (['rm -rf /', 'ls; rm -rf /', 'ls | cat /etc/passwd', 'cat /etc/shadow', 'df && curl evil', 'ls $(id)'] as $bad) {
+        $threw = false;
+        try {
+            (new TerminalRun())->handle(['command' => $bad], $harness['ctx']);
+        } catch (Throwable $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'terminal refuses: ' . $bad);
+    }
+    acp_account_cleanup($harness);
+});
+test('apps.install: WordPress = public_html + <acct>_wp DB + extract + wp-config + chown', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $out = (new AppsInstall())->handle([
+        'username'    => 'alicehost',
+        'app'         => 'wordpress',
+        'db_password' => 'Wp-Secret-9',
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'ok' && $out['db'] === 'alicehost_wp', 'wordpress install ok + db naam');
+    assert_true(in_array('alicehost_wp', $harness['cmd']->mysqlDatabases, true), 'MariaDB me db bana');
+    $curl = end($harness['cmd']->curlArgvs);
+    assert_true(in_array('https://wordpress.org/latest.tar.gz', $curl, true), 'tarball wordpress.org se aaya');
+    $wp = $root . '/home/alicehost/public_html/wp-config.php';
+    assert_true(is_file($wp) && str_contains((string) file_get_contents($wp), "DB_NAME', 'alicehost_wp'"), 'wp-config likha gaya');
+    $chown = end($harness['cmd']->chownArgvs);
+    assert_true(in_array('-R', $chown, true) && in_array('alicehost:alicehost', $chown, true), 'public_html chown -R account');
+    $leftover = glob($root . '/home/alicehost/.alphacp-wp-*.tar.gz') ?: [];
+    assert_true($leftover === [], 'tarball cleanup hua');
+
+    foreach ([
+        ['username' => 'alicehost', 'app' => 'joomla', 'db_password' => 'Wp-Secret-9'],
+        ['username' => 'alicehost', 'app' => 'wordpress', 'db_password' => 'short'],
+        ['username' => 'bobhost', 'app' => 'wordpress', 'db_password' => 'Wp-Secret-9'],
+    ] as $bad) {
+        $threw = false;
+        try {
+            (new AppsInstall())->handle($bad, $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'apps.install refuses: ' . json_encode($bad));
+    }
     acp_account_cleanup($harness);
 });
 

@@ -30,6 +30,11 @@
 
 ### B1 · `proc_open` disabled, par 4 features web-FPM se `Process` chalate hain → **HTTP 500**
 
+> **B1-ext (audit me chhoota tha, 8 Oct):** `Support/Firewall.php` (ufw deny/delete) aur
+> `Support/Waf.php` (a2query/a2enmod/a2dismod/apache restart/clamscan) bhi web-FPM se `Process`
+> chalate hain → Security section ke ye actions bhi live par 500 denge. Fix pattern wahi
+> (agent tasks `security.*`/`waf.*`) — agla installer.
+
 > **STATUS (7 Oct): FTP fix ho gaya** — code `35cd630` (agent `ftp.add`/`ftp.passwd`/`ftp.del`
 > + `pure-pw` allowlist + panel `AccountProvisioner::enqueue`), installer `installer/ftp-fix.sh`
 > v1.0 (`047d974`, sim **40/40**, agent suite **215/0**). Live apply COMMANDS.md ke NEXT STEP se.

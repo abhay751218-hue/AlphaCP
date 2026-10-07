@@ -23,7 +23,10 @@
 </div>
 
 <div class="card">
-    <h3>Repositories ({{ count($repos) }})</h3>
+    @if (! empty($note))
+    <div class="card" style="border:2px solid #c80;padding:10px;border-radius:6px;margin-bottom:10px"><p>{{ $note }}</p></div>
+@endif
+<h3>Repositories ({{ count($repos) }})</h3>
     @if (empty($repos))
         <p class="muted">Koi git repository nahi.</p>
     @else

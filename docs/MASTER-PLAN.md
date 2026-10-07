@@ -72,7 +72,7 @@ Persona → panel: **Owner/Admin = WHM-like (2086/87)** · **Reseller = scoped W
 |---|---|---|
 | B0 | Agent source-of-truth drift (3-task stale → downgrade risk) | ✅ `606ac97` |
 | B6 | `MysqlServer.php` missing → db.*/db.restore fatal | ✅ repo `fd9aca9` + **live `agent-fix v1.0`** |
-| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | 🟡 **FTP: code `35cd630` + installer `047d974` (sim 40/40) — LIVE APPLY baaki**; Git/Terminal/Apps 🔜 |
+| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | ✅ FTP **live** (`047d974` applied); 🟡 Git/Terminal/Apps code done (agent 218/0) — installer `b1-fix` baaki; Firewall/Waf = B1-ext 🔜 |
 | B2 | Metrics `open_basedir` se blocked | 🔜 Phase 3 (`metrics.access` agent task) |
 | B3 | WebDisk sirf DB rows (WebDAV provisioning nahi) | 🔜 Phase 5 (implement ya hide — decision) |
 | B4 | 6 panel test-debt failures | 🔜 Phase 4 (suite 100% green) |

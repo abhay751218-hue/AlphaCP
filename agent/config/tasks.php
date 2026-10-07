@@ -249,6 +249,112 @@ return [
         ],
     ],
 
+    // ------------------------------------------------------------------
+    //  B1-baaki: cPanel Git Version Control + WHM Terminal + Site Software.
+    //  Web-FPM proc_open disabled hai, isliye ye sab root agent karta hai.
+    // ------------------------------------------------------------------
+    'git.list' => [
+        'handler'     => Tasks\GitList::class,
+        'safety'      => 'readonly',
+        'timeout'     => 30,
+        'description' => 'List git repos under <home>/git (dirs containing .git).',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account'],
+            'properties'           => [
+                'account' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+            ],
+        ],
+    ],
+
+    'git.clone' => [
+        'handler'     => Tasks\GitClone::class,
+        'safety'      => 'mutating',
+        'timeout'     => 150,
+        'description' => 'Clone a repository into <home>/git/<dir> (git clone -- , argv-only).',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account', 'url', 'dir'],
+            'properties'           => [
+                'account' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'url'     => ['type' => 'string', 'minLength' => 8, 'maxLength' => 300],
+                'dir'     => ['type' => 'string', 'pattern' => '^[a-z0-9._-]{1,64}$', 'maxLength' => 64],
+            ],
+        ],
+    ],
+
+    'git.pull' => [
+        'handler'     => Tasks\GitPull::class,
+        'safety'      => 'mutating',
+        'timeout'     => 150,
+        'description' => 'git pull --ff-only in <home>/git/<dir>.',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account', 'dir'],
+            'properties'           => [
+                'account' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'dir'     => ['type' => 'string', 'pattern' => '^[a-z0-9._-]{1,64}$', 'maxLength' => 64],
+            ],
+        ],
+    ],
+
+    'git.status' => [
+        'handler'     => Tasks\GitStatus::class,
+        'safety'      => 'readonly',
+        'timeout'     => 40,
+        'description' => 'git status --porcelain for <home>/git/<dir>.',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account', 'dir'],
+            'properties'           => [
+                'account' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'dir'     => ['type' => 'string', 'pattern' => '^[a-z0-9._-]{1,64}$', 'maxLength' => 64],
+            ],
+        ],
+    ],
+
+    'terminal.run' => [
+        'handler'     => Tasks\TerminalRun::class,
+        'safety'      => 'readonly',
+        'timeout'     => 40,
+        'description' => 'WHM-style Terminal: read-only whitelist (ls/pwd/df/…/git status/cat), agent par dobara validate.',
+        'paths'       => ['/home', '/etc', '/usr/local/alphacp', '/var/log'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['command'],
+            'properties'           => [
+                'command' => ['type' => 'string', 'minLength' => 1, 'maxLength' => 200],
+            ],
+        ],
+    ],
+
+    'apps.install' => [
+        'handler'     => Tasks\AppsInstall::class,
+        'safety'      => 'mutating',
+        'timeout'     => 320,
+        'description' => 'One-click WordPress: public_html + <account>_wp DB/user/grant + tarball extract + wp-config + chown.',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'app', 'db_password'],
+            'properties'           => [
+                'username'    => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'app'         => ['type' => 'string', 'enum' => ['wordpress']],
+                'db_password' => ['type' => 'string', 'minLength' => 8, 'maxLength' => 72],
+            ],
+        ],
+    ],
+
     'php.setVersion' => [
         'handler'     => Tasks\PhpSetVersion::class,
         'safety'      => 'mutating',
