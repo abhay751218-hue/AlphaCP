@@ -5,6 +5,164 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/agent-fix.sh` **v1.0** (+ `tools/build-agent-fix.py`, `tools/sim/agent-fix-sim.sh`) —
+  B6 fix ko live agent par deploy karne wala self-contained, commit-pinned, sha256-verified installer.
+  Sirf `src/MysqlServer.php` rakhta hai; backup → `php -l` → static smoke (bina pdo) → full agent
+  suite gate (pdo_sqlite ho to `failed:0`, warna rollback) → paneld restart → `alphacp-sync`.
+  `--diagnose` / `--rollback` flags. **Sim 17/17** (reproduce 204/8 → apply → 212/0 → rollback →
+  idempotent). Pin: commit `321c81929df94e6d2b05a29b912eaa31fba4209d`, sha256
+  `d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1`.
+- `docs/FEATURE-AUDIT.md` — poore panel ka A→Z audit (7 Oct): 204 route→controller pairs (0 dead),
+  80 agent task handlers (0 unknown), TODO grep 0, suite + live logs/config se evidence.
+  **Production-broken cluster mila:** (B1) `proc_open` fpm me disabled par FTP/Git/Terminal/Apps
+  web-FPM se `Process` chalate hain → 500; (B2) Metrics `open_basedir` se blocked;
+  (B3) WebDisk sirf DB rows; (B4) 6 test-debt failures; (B5) 6 wasm-skip record karne hain.
+  7-phase fix plan bhi usi doc me (har phase = verified increment + pinned command).
+### Fixed
+- **B6 — real MySQL provisioning + backup-restore FATAL (7 Oct, repo me fix; deploy baaki)** ·
+  agent `src/MysqlServer.php` **missing** tha live par. `DbTask`, saare `Db*` handlers
+  (`db.create/drop/user.create|grant|password|drop/list`), `db.restore`, `CpanelMysql` aur
+  `BackupArchiveStore` isi class ko `use` karte hain — par file server par kabhi pahunchi nahi
+  (git-history/bundle/kahin nahi; sirf references). Natija: panel ke MySQL Databases/Users UI +
+  cPanel-import ka mysql path agent-step par `Class "MysqlServer" not found` se **fatal**.
+  Agent ke apne suite me 8 failures (204/8). Class ko call-sites + tests (= spec) se reconstruct
+  kiya: SQL sirf **stdin**/stdinFile se (argv me kabhi secret/identifier nahi), validated +
+  backtick-quoted identifiers, doubled-quote literals, fail-closed password (8–64, no
+  quote/backslash/control-char) + identifier checks, `ACP_MYSQL_CLIENT` (default `/usr/bin/mariadb`).
+  **Verify:** `php8.4 agent/tests/run-tests.php` → **212 pass / 0 fail**.
+- **B0 — agent source-of-truth DRIFT (`606ac97`)** · canonical `agent/` sirf 3-task stale seed tha
+  jabki live agent 80-task; `build-step2-installer.py` + `tools/sim/panel-tests.sh` isi stale root
+  par depend karte the → step2 dobara chalane par live **80→3 tasks downgrade** (catastrophe).
+  Live/snapshot agent ko canonical `agent/` par promote kiya (strict superset, kuch lost nahi).
+- **LOGIN LOCKOUT — entry separation (7 Oct)** · `installer/login-fix.sh` **v1.0**
+  "Login page khulta hai, credentials daalne par login nahi hota, error aata hai" — user ki yahi
+  shikayat sandbox me **live server ke exact panel code (0.75.0) + asli vendor** par reproduce ki
+  (php-wasm + SQLite, `server-snapshot/` se), phir fix kiya.
+  - **B1 — `EntryLoginController` v1 ka lockout** (entry separation tootne ki wajah): gate `ports.json` par bharosa karta
+    tha (owner ki `/ports` screen ki *ichha*), nginx kya **asli me** listen kar raha hai us par nahi.
+    Server par nginx sirf `8090` par sunta hai (vhost ka `ACP_PORTS_START/END` block **khaali** hai
+    aur koi "apply-step" repo me maujood hi nahi), par `ports.json` me 2083 hote hi `user`/`mail`
+    role ka har login 8090 par reject: *"Account Panel login 2083 par hota hai — https://\<host\>:2083
+    kholein."* — aur 2083 kholne par connection refused. **Permanent lockout.**
+    *Proof:* isi wajah se panel ka apna `tests/Feature/AuthTest.php` fail hota tha
+    (`Valid credentials reach the dashboard`, `Two factor gate blocks the dashboard`), saath me
+    `MysqlUsersTest::Customer and mail cannot open the users page` aur
+    `TransferRestoreTest::Root can queue a real cpanel import`. Fix ke baad chaaron PASS.
+  - **B2 — reverse proxy/CDN:** `trustProxies(at:'*')` ki wajah se `X-Forwarded-Port: 443` par
+    `getPort()=443` milta tha; v1 ka rule `!$onCustomer` tha, isliye customer **phir bhi deny** ho
+    jata tha. v2 fail-OPEN hai: port/role/truth-file kuch bhi confirm na ho → allow.
+  - **B3 — 2FA redirect loop:** session me `two_factor_passed` kho jaye (purana session, 2FA baad me
+    off, driver change) aur account par 2FA enabled na ho, to `/dashboard` ⇄ `/two-factor` ka
+    **infinite loop** chalta tha → browser me "Too many redirects". `EnsureTwoFactorIsVerified` ab
+    flag khud heal karta hai + `TwoFactorController::challenge()` me loop-breaker.
+  - **B4 — `GET /login` = 404:** login page sirf `/` par tha, isliye bookmark/WHMCS/cPanel-aadat
+    wale `/login` link 404 dete the. Ab `GET /login` alias (`login.page`) bhi wahi page deta hai.
+  - **B5 (ASLI WAJAH) — `ResellerScopeProvider` ka FATAL RECURSION:** provider ke dono global scopes
+    (`Account`, `User`) apne andar seedha `Auth::user()` call karte the. Laravel ka
+    `SessionGuard::user()` apna `$this->user` **`retrieveById()` return hone ke BAAD** set karta hai,
+    aur `EloquentUserProvider::retrieveById()` `newQuery()` se query banata hai — yani **global scopes
+    ke saath**. Nateeja: har authenticated request par
+    `Auth::user() → SessionGuard::user() → retrieveById($id) → User query → reseller_scope →
+    Auth::user() → …` **infinite loop** → PHP fatal (`Allowed memory size exhausted`, sandbox me
+    606,955 stack frames) → **HTTP 500**. Login POST to 302 de deta tha, phir `/dashboard` par 500 —
+    user ko yahi dikhta tha: *"login page khulta hai, credentials daalne par login nahi hota, error
+    aata hai."* Panel ke apne tests isko **pakad nahi paate the** kyunki `actingAs()` guard par user
+    seedha set kar deta hai (`retrieveById` chalta hi nahi); isliye suite "green" tha par panel toota hua.
+    Fix: `actor()` recursion-breaker flag — auth khud user load kar raha ho tab scope chup rehta hai
+    (`finally` me reset, isliye exception par bhi stuck nahi hota). Scoping parity bilkul waisi hi hai
+    (reseller ko sirf apne accounts/users; root bypass; CLI actor null = unscoped).
+  - Saath me: baar-baar fail hone par laga `locked_until` / `failed_logins` / `login_attempts` /
+    rate-limit reset (warna fix ke baad bhi "Account is locked for a short time" aata rehta).
+- **`EntryLoginController` v2 (naya design):** gate ab sirf `/usr/local/alphacp/etc/entry-ports.json`
+  ("truth file") ko maanta hai, jo **root** ka naya `acp-entry-ports` tool nginx ke asli listening
+  ports se banata hai (teen chhanni: `nginx -T` me `listen <p> ssl` **aur** `ss -Hltn` me bound
+  **aur** port AlphaCP ki allowlist me). File na ho → single-entry mode → gate OFF. Denial sirf tab
+  jab dusri entry sach me live ho. Decision pure-static `decide()` me hai (DB/file/request nahi),
+  isliye PHPUnit aur on-server `--selftest` dono me chalta hai. Galat password/unknown user par gate
+  chup rehta hai (port se role-enumeration nahi). Koi bhi `Throwable` → `report()` + allow.
+### Added
+- `installer/login-fix.sh` v1.0 (+ `installer/login-fix.sh.in` template, `installer/payload/*`,
+  `tools/build-login-fix.py` builder). Steps: diagnose → live login probe → unlock → **Step 4/4b/5/6**
+  (EntryLoginController v2, ResellerScopeProvider v2, 2FA self-heal + loop-breaker, `GET /login`
+  alias) → truth file + cron → perms/`optimize:clear`/fpm restart → selftest → verdict → tests
+  install → `alphacp-sync`. Modes: `--diagnose` (read-only report), default (fix chain upar),
+  `--enable-ports`
+  (nginx par 2083/2087/2096 **asli me** listen karwao + UFW + truth file refresh; `nginx -t` fail
+  par auto-rollback), `--rollback`. Har PHP swap se **pehle** `php -l`; kuch delete nahi hota
+  (backup `<ACP_HOME>/releases/loginfix-<ts>/`). End me `alphacp-sync`.
+- `acp-entry-ports` (`/usr/local/alphacp/bin/` + `/etc/cron.d/alphacp-entry-ports`, har 5 min +
+  `@reboot`) — truth file generator. Kabhi `exit 1` nahi karta.
+- `tools/sim/login-entry-sim.sh` — 53 assertions (build drift, truth-file ke 6 scenario, diagnose
+  read-only, full run, idempotency, `--enable-ports` + nginx-fail rollback, `--rollback`, PHPUnit,
+  **P8 bug-proof**: v1 controller + `ports.json(2083)` par `AuthTest` FAIL hona chahiye, aur
+  **P9 bug-proof**: v1 `ResellerScopeProvider` par `SessionAuthTest` ka PHP fatal hona chahiye).
+  Sim ke panel DB me 2 users seed hote hain (jaan-boojh kar `locked_until` lagake) taaki Step 3 ka
+  unlock aur SELFTEST ka B5 recursion check asli DB par chale.
+- `installer/payload/tests/SessionAuthTest.php` — **B5 ka regression test** (12 tests / 31
+  assertions). `freshRequest()` guard ko `forgetGuards()` karke user ko session se resolve karwata
+  hai (asli browser jaisa), jo `actingAs()` wale shortcut ko bypass karta hai. Saath me parity checks:
+  reseller ko sirf apne users, root ko sab, guest/CLI unscoped, reseller barabar/upar wala role create
+  nahi kar sakta.
+- `login-fix.sh` ke SELFTEST me **B5 runtime check** juda: active user ko session me daal kar
+  `forgetGuards()` → `Auth::user()`; recursion ho to PHP jaldi fatal de isliye `runphp` ab
+  `-d memory_limit=${ACP_FIX_PHP_MEM:-256M}` ke saath chalta hai (sirf us CLI call par, php-fpm
+  settings ko haath nahi lagta).
+- **PANEL_USER detection fix (live run 7 Oct se pakda gaya):** pehle runtime user `artisan` file ke
+  owner se detect hota tha. Live server par deploy root se hua hai isliye `root` mila, jabki php-fpm
+  pool `alphacp` se chalta hai. Step 8 us galat user ko `storage/`+`bootstrap/cache/` de deta
+  (0770/0660) → fpm compiled views/file-cache/log **padh bhi nahi pata** → har page 500. Ab detection:
+  `ACP_PANEL_USER` override → chalte `php-fpm: pool <name>` workers → pool conf (sirf wo jo ACP home
+  ka zikr kare, `www.conf` se bachne ke liye) → `storage/logs` owner → `artisan` owner → `alphacp` →
+  `root`. Diagnose ab `runtime user : <user> [<source>]` + artisan owner alag-alag dikhata hai.
+- **Koi interactive prompt nahi:** pehle Step 2 terminal par username/password poochta tha
+  (`read -s`). 7 Oct ko mobile SSH par run wahin atak kar adhoora reh gaya (password prompt par
+  script khatam) — fix apply hi nahi hui. Ab live login probe **sirf env-vars** se hoti hai
+  (`ACP_FIX_USER` + `ACP_FIX_PASS`); warna skip. Verification phir bhi poori hai: SELFTEST ka
+  B5 runtime check + Step 8 write-test + Step 10 HTTP + aapka browser login.
+- **Step 8 write-test guard:** chown ke baad fpm user se `storage/framework/cache/data`,
+  `storage/framework/views`, `storage/logs` me `touch` karwaya jata hai; fail ho to saaf error
+  (+ `panel-perm-fix.sh` ka ishara). Ye guard isi bug-class ko dobara server par jaane se rokta hai.
+- `installer/payload/tests/EntryLoginTest.php` — panel me install hone wala regression test
+  (10 tests / 42 assertions): `decide()` truth table, truth-file parsing, gate-off, sirf-8090-live
+  (B1 regression), asli separation, generic password error, array-input crash, 2FA loop, `GET /login`.
+### Verified (live panel code 0.75.0 + asli vendor, php-wasm 8.5 + SQLite)
+| Suite | Fix se PEHLE (v1 code) | Fix ke BAAD (v2) |
+|---|---|---|
+| poora PHPUnit suite | 459 pass, **8 fail**, 6 wasm-skip | **470 pass, 6 fail**, 6 wasm-skip |
+| `AuthTest` | 2 FAIL (B1: "Account Panel login 2083 par hota hai") | **8/8 OK** |
+| `EntryLoginTest` (naya) | — | **10/10 OK** |
+| `SessionAuthTest` (naya) | PHP **fatal** (606,955 stack frames) | **12/12 OK** |
+| `tools/sim/login-entry-sim.sh` | — | **53/53 PASS** |
+| `AuthorizationTest` (reseller/root parity) | OK | **OK** (parity bilkul waisi hi) |
+
+Fix ne 2 login failures hataye aur **ek bhi naya failure nahi** laaya.
+
+### Live deploy — 7 Oct 13:04Z, ip-172-26-4-65 (pin `269eb3c`, sha256 `6ca53d4d…`)
+- Step 9 SELFTEST **16 pass, 0 fail** — jisme `PASS B5: session se user resolve hua
+  (recursion nahi)` **live DB par** (pehle yahi request PHP fatal karti thi).
+- Step 8: `ownership alphacp:alphacp` + `fpm user (alphacp) storage me likh sakta hai`
+  + `restart php8.4-fpm` + panel HTTP 200.
+- Step 7: truth file `{"manager":[8090],"customer":[]}` (single-entry, gate fail-open)
+  + cron `/etc/cron.d/alphacp-entry-ports` (`*/5` + `@reboot`).
+- Step 3: `login_attempts cleared: 72`, koi locked user nahi.
+- Server ke apne `alphacp-sync` ne post-fix snapshot push kiya (**`e50f842`, 11 files**) —
+  usse byte-level tasdeeq hui ki live par v2 payloads hi chal rahe hain
+  (`ResellerScopeProvider` me `resolvingActor`, `EntryLoginController` me `decide()`,
+  `routes/web.php` me `login.page`, naya `bin/acp-entry-ports` + cron).
+- nginx error log ke recursion fatals **12:53:32 par ruk gaye** (fix 13:04Z par lagi);
+  uske baad koi naya fatal nahi.
+
+### Known issues (login se related NAHI — pehle se the, is change me chhede nahi)
+- 6 tests fail hote hain, sab **purane assertions** ki wajah se (production bug nahi):
+  - `DashboardShellTest` ×2 — `assertSee('WHM Dashboard')`, par UI ab `'Server Manager Dashboard'`
+    dikhata hai. Dashboard asli me HTTP 200 deta hai (verify kiya, 16,690 bytes).
+  - `DomainsTest::Whm user does not use customer domain form` — `assertSee('customer cPanel')`.
+  - `TransferToolTest` + `TransferRestoreTest` ×1 each — Transfer Tool page ke content par `assertSee`.
+  - `MysqlUsersTest::Customer and mail cannot open the users page` — test ka apna order galat hai:
+    `mail` role se logged-in hokar `root` user banata hai, jo `ResellerScopeProvider` ke
+    `User::creating` guard (rule 3) par 403 khata hai. Guard bilkul sahi kaam kar raha hai;
+    test me `$whm` ko `asPanelUser($mail)` se PEHLE banana chahiye.
+  - Ye test-debt alag change me theek hoga — parity checklist ki koi row nahi hatayi gayi.
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
   PR refs se commit milta hai. sync-sim **60/60**. `panel-update 0.3.0`: artifact/sync-tool pehle `get` se,

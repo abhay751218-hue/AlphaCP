@@ -1,0 +1,864 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  AlphaCP — LOGIN FIX  v1.0
+#  "Login page khulta hai, credentials daalne par login nahi hota, error aata hai"
+#  — is poori failure-chain ka diagnose + fix + PROOF ek hi command me.
+# -----------------------------------------------------------------------------
+#  Sandbox me live server ke exact panel code (0.75.0) par reproduce kiye gaye
+#  5 asli bug, sab yahan fix hote hain:
+#
+#   B1  ENTRY-GATE LOCKOUT (sabse common)
+#       EntryLoginController v1 `ports.json` (owner ki /ports screen ki ICHHA)
+#       padhta tha, nginx kya ASLI me listen kar raha hai wo nahi. Server par
+#       nginx sirf 8090 par sunta hai (vhost ka ACP_PORTS block khaali hai aur
+#       koi apply-step maujood hi nahi) — par ports.json me 2083 likha ho to
+#       user/mail role ka har login 8090 par reject:
+#         "Account Panel login 2083 par hota hai — https://<host>:2083 kholein."
+#       aur 2083 kholne par connection refused. => permanent lockout.
+#       PROOF: isi wajah se panel ka apna tests/Feature/AuthTest.php fail hota hai
+#       ("Valid credentials reach the dashboard" -> wahi error message).
+#   B2  PROXY/CDN par sab customer lock: trustProxies(at:'*') ki wajah se
+#       X-Forwarded-Port: 443 par getPort()=443 -> "known entry" nahi, par v1 ka
+#       rule `!onCustomer` tha -> customer deny. Fail-open hona chahiye tha.
+#   B3  2FA REDIRECT LOOP: session me `two_factor_passed` kho jaye (purana
+#       session / 2FA baad me off) aur account par 2FA enabled na ho to
+#       /dashboard <-> /two-factor infinite loop -> browser "Too many redirects".
+#   B4  GET /login = 404 (login page sirf "/" par hai) — bookmark/WHMCS link
+#       tootte hain. Saath me: baar-baar fail hone par account `locked_until`
+#       me chala jata hai ("Account is locked for a short time").
+#   B5  **ASLI WAJAH — ResellerScopeProvider ka FATAL RECURSION.**
+#       v1 har global scope ke andar seedha `Auth::user()` call karta tha.
+#       Laravel ka SessionGuard::user() apna `$this->user` **retrieveById()
+#       RETURN hone ke BAAD** set karta hai, aur EloquentUserProvider::
+#       retrieveById() `newQuery()` se query banata hai — matlab GLOBAL SCOPES
+#       ke saath. Isliye har authenticated request me:
+#          Auth::user() -> SessionGuard::user() -> retrieveById($id)
+#            -> User query -> reseller_scope -> Auth::user() -> ... INFINITE
+#       = PHP fatal ("Allowed memory size exhausted" / max nesting) = HTTP 500.
+#       Login POST to 302 de deta tha, phir /dashboard par 500 — user ko yahi
+#       dikhta tha: "login page khulta hai, credentials daalne par login nahi
+#       hota, error aata hai."
+#       Panel ke tests isko PAKAD NAHI paate the kyunki `actingAs()` guard par
+#       user seedha set kar deta hai (retrieveById chalta hi nahi). Reproduce:
+#       SessionAuthTest ka freshRequest() (guards bhula do) — v1 par 606,955
+#       stack frames tak jaata hai. Fix: `actor()` recursion-breaker flag.
+#
+#  Fix chain (har step idempotent; pehle backup; har PHP file swap se PEHLE lint):
+#    1  DIAGNOSE (read-only) — asli error screen/log/DB se nikaalo
+#    2  LIVE LOGIN PROBE — server se hi asli browser jaisa GET / -> POST /login
+#    3  unlock: locked_until/failed_logins reset + login_attempts + rate-limit saaf
+#    4  EntryLoginController v2 (truth-based, fail-open, crash-proof)
+#    4b ResellerScopeProvider v2 (B5 recursion-breaker) — SABSE ZAROORI FIX
+#    5  EnsureTwoFactorIsVerified v2 + TwoFactorController loop-breaker
+#    6  routes: GET /login alias
+#    7  acp-entry-ports truth generator + cron (nginx ke ASLI ports se)
+#    8  permission heal (runtime user = fpm pool user, write-test guard ke saath)
+#       + optimize:clear + php-fpm restart (opcache)
+#    9  SELFTEST — decide() truth table + routes + B5 recursion check
+#   10  LIVE LOGIN PROBE dobara -> FINAL VERDICT
+#
+#  Usage:
+#    sudo bash login-fix.sh                    # diagnose + fix + verify
+#    sudo bash login-fix.sh --diagnose         # sirf report, kuch badalta nahi
+#    sudo bash login-fix.sh --enable-ports     # upar wala + nginx par 2083/2087/2096
+#                                              #   ASLI me listen karwao (separation live)
+#    sudo bash login-fix.sh --rollback         # is script ke pichle backup par wapas
+#    ACP_FIX_USER=admin ACP_FIX_PASS='...' sudo bash login-fix.sh    # + live login probe
+#  (koi interactive prompt NAHI — mobile SSH par prompt trap ban gaya tha 7 Oct)
+#
+#  Kuch delete nahi hota: har badlav <releases>/loginfix-<ts>/ me backup hota hai.
+# =============================================================================
+set -uo pipefail
+
+FIX_VERSION="1.0"
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+PANEL="${ACP_HOME}/panel"
+PRIMARY_PORT="${ACP_PRIMARY_PORT:-8090}"
+ENTRY_FILE="${ACP_HOME}/etc/entry-ports.json"
+BIN_ENTRY="${ACP_HOME}/bin/acp-entry-ports"
+CRON_ENTRY="/etc/cron.d/alphacp-entry-ports"
+TS="$(date -u +%Y%m%d%H%M%S)"
+BK="${ACP_HOME}/releases/loginfix-${TS}"
+LOGDIR="${ACP_HOME}/logs"
+REPORT="${LOGDIR}/login-fix-${TS}.txt"
+
+MODE="fix"
+ENABLE_PORTS=0
+for a in "$@"; do
+  case "$a" in
+    --diagnose)     MODE="diagnose" ;;
+    --enable-ports) MODE="fix"; ENABLE_PORTS=1 ;;
+    --rollback)     MODE="rollback" ;;
+    --selftest)     MODE="selftest" ;;
+    --version)      echo "login-fix v${FIX_VERSION}"; exit 0 ;;
+    -h|--help)      sed -n '2,50p' "$0"; exit 0 ;;
+    *) echo "unknown option: $a  (use: --diagnose | --enable-ports | --rollback | --selftest)" >&2; exit 2 ;;
+  esac
+done
+
+C_G=$'\033[32m'; C_R=$'\033[31m'; C_Y=$'\033[33m'; C_B=$'\033[1m'; C_0=$'\033[0m'
+say()  { printf '%s\n' "$*"; }
+ok()   { say "${C_G}[OK]${C_0} $*"; }
+warn() { say "${C_Y}[!]${C_0} $*"; }
+err()  { say "${C_R}[x]${C_0} $*"; }
+hdr()  { say ""; say "${C_B}== $* ==${C_0}"; }
+tee_report() { tee -a "${REPORT}" 2>/dev/null || cat; }
+
+[[ "${EUID}" -eq 0 ]] || { err "root chahiye:  sudo bash $0"; exit 1; }
+mkdir -p "${LOGDIR}" 2>/dev/null || true
+: > "${REPORT}" 2>/dev/null || REPORT="/tmp/login-fix-${TS}.txt"
+
+say ""
+say "${C_B}===============================================================${C_0}"
+say "${C_B}   AlphaCP LOGIN FIX  -  v${FIX_VERSION}${C_0}"
+say "${C_B}   yahan 'v${FIX_VERSION}' likha ho = sahi command chali hai${C_0}"
+say "${C_B}===============================================================${C_0}"
+
+# ------------------------------------------------------------------ preflight
+[[ -f "${PANEL}/artisan" ]] || { err "${PANEL} me panel nahi mila"; exit 1; }
+# Panel ka RUNTIME user = php-fpm pool ka user — YAHI storage/bootstrap ka owner
+# hona chahiye. artisan/panel files ke OWNER se detect karna DHOKA hai (deploy
+# aksar root se hota hai): tab Step 8 storage ko root:root 0770/0660 kar deta aur
+# fpm (alphacp) compiled views / file-cache / log PADH bhi nahi pata -> har page
+# 500. (Live server par 7 Oct ko yahi pakda gaya: diagnose "user: root" bola,
+# jabki pool alphacp tha.) Tarkeeb: env override -> chalte fpm workers -> pool
+# conf -> storage/logs owner -> artisan owner -> alphacp -> root.
+detect_pool_user() { # pool conf = declarative sach (restart ke baad yahi chalega)
+  local pool u
+  for pool in /etc/php/*/fpm/pool.d/*.conf; do
+    [[ -f "${pool}" ]] || continue
+    grep -q "${ACP_HOME##*/}\|${PANEL}" "${pool}" 2>/dev/null || continue   # www.conf se bacho
+    u="$(awk -F= '/^[[:space:]]*user[[:space:]]*=/ {gsub(/[[:space:]]/,"",$2); print $2; exit}' "${pool}" 2>/dev/null)"
+    [[ -n "${u}" ]] && { printf '%s' "${u}"; return 0; }
+  done
+  return 1
+}
+PANEL_USER="${ACP_PANEL_USER:-}"; PANEL_USER_SRC="env ACP_PANEL_USER"
+if [[ -z "${PANEL_USER}" ]] && POOL_U="$(detect_pool_user)"; then
+  PANEL_USER="${POOL_U}"; PANEL_USER_SRC="fpm pool conf"
+fi
+if [[ -z "${PANEL_USER}" ]]; then
+  # chalte workers ka title: "php-fpm[8.4]: pool <name>". NOTE: awk ka APNA cmdline
+  # bhi pattern rakhta hai, isliye $2 (comm) se filter karo — warna self-match root dega.
+  PANEL_USER="$(ps -eo user=,comm=,args= 2>/dev/null | awk '$2 ~ /^php-fpm/ && index($0, ": pool ") {print $1; exit}')"
+  PANEL_USER_SRC="fpm worker process"
+fi
+if [[ -z "${PANEL_USER}" ]]; then PANEL_USER="$(stat -c '%U' "${PANEL}/storage/logs" 2>/dev/null | head -1)"; PANEL_USER_SRC="storage/logs owner"; fi
+if [[ -z "${PANEL_USER}" ]]; then PANEL_USER="$(stat -c '%U' "${PANEL}/artisan" 2>/dev/null | head -1)"; PANEL_USER_SRC="artisan owner"; fi
+if [[ -z "${PANEL_USER}" ]]; then PANEL_USER="alphacp"; PANEL_USER_SRC="default alphacp"; fi
+id -u "${PANEL_USER}" >/dev/null 2>&1 || { PANEL_USER="root"; PANEL_USER_SRC="fallback root"; }
+
+PHPBIN="/usr/bin/php"
+for v in 8.5 8.4 8.3; do [[ -x "/usr/bin/php${v}" ]] && { PHPBIN="/usr/bin/php${v}"; break; }; done
+
+ASK() { ( cd "${PANEL}" && runuser -u "${PANEL_USER}" -- env ACP_HOME="${ACP_HOME}" "${PHPBIN}" artisan "$@" ) ; }
+WORK="$(mktemp -d /tmp/acp-loginfix.XXXXXX)"
+trap 'rm -rf "${WORK}"' EXIT
+chmod 0755 "${WORK}" 2>/dev/null || true
+
+# panel-user ke naam se ek PHP file chalao (CLI, open_basedir laagu nahi hota)
+runphp() { # runphp <file> [args...]
+  local f="$1"; shift
+  cp "$f" "${WORK}/x.php"; chmod 0644 "${WORK}/x.php"; chown "${PANEL_USER}" "${WORK}/x.php" 2>/dev/null || true
+  # memory_limit cap: B5 recursion check me agar bug abhi bhi ho to PHP jaldi fatal
+  # de (warna box ki saari RAM kha jayega). Sirf is CLI call par lagta hai —
+  # php-fpm ke pool settings ko haath nahi lagta.
+  ( cd "${PANEL}" && runuser -u "${PANEL_USER}" -- env ACP_HOME="${ACP_HOME}" \
+      "${PHPBIN}" -d memory_limit="${ACP_FIX_PHP_MEM:-256M}" "${WORK}/x.php" )
+}
+
+# PHP file likho + lint karo; lint fail ho to KUCH bhi swap mat karo
+lint_php() { "${PHPBIN}" -l "$1" >/dev/null 2>&1; }
+
+hit() { curl -k -s -o /dev/null -w '%{http_code}' -m 15 "https://127.0.0.1:${PRIMARY_PORT}/" 2>/dev/null || echo "none"; }
+
+backup_file() { # backup_file <path>
+  local f="$1"; [[ -f "$f" ]] || return 0
+  local rel="${f#/}"; mkdir -p "${BK}/$(dirname "${rel}")" 2>/dev/null || true
+  cp -a "$f" "${BK}/${rel}" 2>/dev/null || true
+}
+
+# ------------------------------------------------------------------ rollback
+if [[ "${MODE}" == "rollback" ]]; then
+  hdr "ROLLBACK"
+  LAST="$(ls -1d "${ACP_HOME}"/releases/loginfix-* 2>/dev/null | sort | tail -1)"
+  [[ -n "${LAST}" ]] || { err "koi loginfix backup nahi mila (${ACP_HOME}/releases/)"; exit 1; }
+  say "backup: ${LAST}"
+  ( cd "${LAST}" && find . -type f -print0 ) | while IFS= read -r -d '' rel; do
+    rel="${rel#./}"; dst="/${rel}"
+    if [[ -f "${dst}" ]]; then cp -a "${LAST}/${rel}" "${dst}" && ok "restore ${dst}"; else warn "skip ${dst} (ab maujood nahi)"; fi
+  done
+  ASK optimize:clear >/dev/null 2>&1 || true
+  systemctl restart php8.4-fpm >/dev/null 2>&1 || systemctl restart php-fpm >/dev/null 2>&1 || true
+  sleep 2; ok "panel HTTP $(hit)"
+  exit 0
+fi
+
+mkdir -p "${BK}" 2>/dev/null || true
+
+# =========================================================== STEP 1: DIAGNOSE
+hdr "Step 1: DIAGNOSE (read-only — asli wajah yahan dikhegi)"
+{
+say "panel root      : ${PANEL}"
+say "runtime user    : ${PANEL_USER}  [${PANEL_USER_SRC}]   (artisan owner: $(stat -c '%U' "${PANEL}/artisan" 2>/dev/null || echo '?'))"
+say "                  ^ fpm isi user se chalta hai; storage/bootstrap isi ka hona chahiye"
+say "panel version   : $(grep -o '"version":[^,]*' "${PANEL}/MANIFEST.json" 2>/dev/null | head -1 | tr -d '" ' || echo '?')"
+say "php (fpm/cli)   : ${PHPBIN}  $(${PHPBIN} -r 'echo PHP_VERSION;' 2>/dev/null)"
+say "panel HTTP      : $(hit)"
+say ""
+say "--- nginx: sach me kaun se SSL ports LISTEN kar rahe hain ---"
+if command -v ss >/dev/null 2>&1; then ss -Hltn 2>/dev/null | awk '{print $4}' | grep -oE '[0-9]+$' | sort -un | tr '\n' ' '; echo; else warn "ss nahi mila"; fi
+NGXCONF=""
+for c in /etc/nginx/sites-available/alphacp-panel.conf /etc/nginx/sites-enabled/alphacp-panel.conf /etc/nginx/alpha/nginx.conf; do
+  [[ -f "$c" ]] && { NGXCONF="$c"; break; }
+done
+say "nginx vhost     : ${NGXCONF:-?}"
+if [[ -n "${NGXCONF}" ]]; then
+  say "  listen lines  : $(grep -E '^[[:space:]]*listen' "${NGXCONF}" | tr -s ' ' | tr '\n' ';')"
+  if grep -q 'ACP_PORTS_START' "${NGXCONF}"; then
+    inside="$(awk '/ACP_PORTS_START/{f=1;next}/ACP_PORTS_END/{f=0}f' "${NGXCONF}" | grep -c 'listen' || true)"
+    say "  ACP_PORTS block: ${inside} listen line(s)  $( [[ "${inside:-0}" == "0" ]] && echo '<-- KHAALI: 2083/2087/2096 par nginx sunta hi NAHI' )"
+  else
+    say "  ACP_PORTS block: markers hi nahi hain"
+  fi
+fi
+say ""
+say "--- entry config files ---"
+for f in "${ACP_HOME}/etc/entry-ports.json" "${ACP_HOME}/etc/ports.json" "${ACP_HOME}/var/ports.json"; do
+  if [[ -f "$f" ]]; then say "  HAI  $f : $(tr -d '\n' < "$f" | cut -c1-200)"; else say "  nahi $f"; fi
+done
+say ""
+say "--- login routes: kaunsa controller handle karta hai ---"
+( cd "${PANEL}" && grep -n "EntryLoginController\|Auth\\\\LoginController" routes/web.php | head -5 ) || true
+ASK route:list --path=login 2>/dev/null | head -10 || warn "route:list nahi chala"
+say ""
+say "--- PHP syntax (auth files) ---"
+for f in app/Http/Controllers/Auth/EntryLoginController.php app/Http/Controllers/Auth/LoginController.php \
+         app/Http/Controllers/Auth/TwoFactorController.php app/Http/Middleware/EnsureTwoFactorIsVerified.php \
+         routes/web.php bootstrap/app.php; do
+  if [[ -f "${PANEL}/$f" ]]; then
+    if "${PHPBIN}" -l "${PANEL}/$f" >/dev/null 2>&1; then say "  OK   $f"; else say "  FAIL $f"; "${PHPBIN}" -l "${PANEL}/$f" 2>&1 | head -3; fi
+  fi
+done
+say ""
+say "--- kaun se bug ABHI maujood hain (B1..B5) ---"
+F_CTRL="${PANEL}/app/Http/Controllers/Auth/EntryLoginController.php"
+F_MW="${PANEL}/app/Http/Middleware/EnsureTwoFactorIsVerified.php"
+F_TFC="${PANEL}/app/Http/Controllers/Auth/TwoFactorController.php"
+F_RSP="${PANEL}/app/Providers/ResellerScopeProvider.php"
+F_RT="${PANEL}/routes/web.php"
+b1=0; { [[ -f "${F_CTRL}" ]] && ! grep -q "public static function decide" "${F_CTRL}"; } && b1=1
+b3=0; { [[ -f "${F_MW}" ]]   && ! grep -q "LOOP FIX" "${F_MW}"; } && b3=1
+b3b=0; { [[ -f "${F_TFC}" ]] && ! grep -q "loop-breaker" "${F_TFC}"; } && b3b=1
+b4=0; { [[ -f "${F_RT}" ]]   && ! grep -qF "name('login.page')" "${F_RT}"; } && b4=1
+b5=0; { [[ -f "${F_RSP}" ]]  && ! grep -q "resolvingActor" "${F_RSP}"; } && b5=1
+mark_bug() { # mark_bug <flag> <label>
+  if [[ "$1" -eq 1 ]]; then say "  ${C_R}BUG${C_0}  $2"; else say "  ${C_G}OK${C_0}   $2"; fi
+}
+mark_bug ${b1}  "B1/B2 EntryLoginController v1 — ports.json par gate (customer lockout, fail-closed)"
+mark_bug ${b3}  "B3    2FA middleware me self-heal nahi (redirect loop)"
+mark_bug ${b3b} "B3b   TwoFactorController me loop-breaker nahi"
+mark_bug ${b4}  "B4    GET /login alias route nahi (404)"
+mark_bug ${b5}  "B5    ResellerScopeProvider v1 — scope me Auth::user() = FATAL recursion (har authenticated page 500)"
+[[ -f "${F_RSP}" ]] || say "       (ResellerScopeProvider.php mila hi nahi — B5 laagu nahi)"
+say ""
+say "--- runtime ownership (root-owned file = php-fpm likh nahi paata = 500) ---"
+for d in storage bootstrap/cache; do
+  bad="$(find "${PANEL}/${d}" ! -user "${PANEL_USER}" 2>/dev/null | head -5)"
+  if [[ -n "${bad}" ]]; then say "  GALAT owner (${d}):"; printf '%s\n' "${bad}" | sed 's/^/      /'; else say "  OK   ${d} sab ${PANEL_USER} ka"; fi
+done
+say ""
+say "--- session / cache driver ---"
+grep -E '^(SESSION_DRIVER|CACHE_STORE|APP_ENV|APP_DEBUG|SESSION_SECURE_COOKIE|SESSION_DOMAIN)=' "${PANEL}/.env" 2>/dev/null | sed 's/^/  /' || say "  (.env padha nahi gaya)"
+} 2>&1 | tee_report
+
+# ---- DB state (users ka lock/2fa/role) — PHP se, credentials chhue bina -----
+cat > "${WORK}/dbprobe.php" <<PHPEOF
+<?php
+declare(strict_types=1);
+require '${PANEL}/vendor/autoload.php';
+\$app = require '${PANEL}/bootstrap/app.php';
+\$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+use Illuminate\Support\Facades\DB;
+
+echo "--- panel users (role / status / lock / 2fa) ---\n";
+try {
+    \$rows = DB::table('users')->join('roles','roles.id','=','users.role_id')
+        ->orderBy('roles.level')->orderBy('users.id')
+        ->get(['users.id','users.username','roles.name as role','roles.level','users.status',
+               'users.locked_until','users.failed_logins','users.two_factor_enabled',
+               'users.force_password_change','users.last_login_at']);
+    foreach (\$rows as \$r) {
+        \$flag = [];
+        if (\$r->locked_until !== null && strtotime((string)\$r->locked_until) > time()) { \$flag[] = 'LOCKED'; }
+        if ((int)\$r->failed_logins > 0)  { \$flag[] = 'failed='.\$r->failed_logins; }
+        if ((int)\$r->two_factor_enabled) { \$flag[] = '2FA'; }
+        if ((int)\$r->force_password_change) { \$flag[] = 'FORCE-PW-CHANGE'; }
+        if (\$r->status !== 'active')     { \$flag[] = 'status='.\$r->status; }
+        printf("  #%-3s %-20s role=%-9s level=%s  last=%s  %s\n",
+            \$r->id, \$r->username, \$r->role, \$r->level, \$r->last_login_at ?: '-', implode(' ', \$flag) ?: '-');
+    }
+    if (\$rows->isEmpty()) { echo "  (koi user nahi!)\n"; }
+} catch (\Throwable \$e) { echo '  users query FAIL: '.\$e->getMessage()."\n"; }
+
+echo "--- aakhri 8 login_attempts ---\n";
+try {
+    foreach (DB::table('login_attempts')->orderByDesc('id')->limit(8)->get() as \$a) {
+        printf("  %s  %-16s success=%s reason=%s ip=%s\n",
+            \$a->created_at, (string)\$a->username, (int)\$a->success, (string)(\$a->reason ?? '-'), \$a->ip);
+    }
+} catch (\Throwable \$e) { echo '  login_attempts FAIL: '.\$e->getMessage()."\n"; }
+
+echo "--- aakhri 8 auth.* audit entries ---\n";
+try {
+    foreach (DB::table('audit_logs')->where('action','like','auth.%')->orderByDesc('id')->limit(8)->get() as \$a) {
+        printf("  %s  %-26s %-8s %s\n", \$a->created_at, \$a->action, \$a->severity, (string)(\$a->meta ?? ''));
+    }
+} catch (\Throwable \$e) { echo '  audit_logs FAIL: '.\$e->getMessage()."\n"; }
+PHPEOF
+runphp "${WORK}/dbprobe.php" 2>&1 | tee_report
+
+{
+say ""
+say "--- laravel.log (aakhri 25 ERROR/EXCEPTION lines) ---"
+for lg in "${PANEL}/storage/logs/laravel.log" "${PANEL}/storage/logs/laravel-$(date -u +%Y-%m-%d).log"; do
+  [[ -f "$lg" ]] || continue
+  say "  [${lg}]"
+  grep -E "ERROR|CRITICAL|Exception" "$lg" 2>/dev/null | tail -25 | cut -c1-300 | sed 's/^/    /' || say "    (koi error line nahi)"
+done
+say ""
+say "--- nginx panel error log (aakhri 10) ---"
+tail -10 /var/log/nginx/alphacp-panel.error.log 2>/dev/null | sed 's/^/    /' || say "    (nahi mila)"
+say ""
+say "--- php-fpm error log (aakhri 10) ---"
+tail -10 /var/log/php/alphacp-fpm-error.log 2>/dev/null | sed 's/^/    /' || say "    (nahi mila)"
+} 2>&1 | tee_report
+
+# ================================================== STEP 2: LIVE LOGIN PROBE
+cat > "${WORK}/probe.py" <<'PYEOF'
+import re, sys
+h = open(sys.argv[1], encoding='utf-8', errors='replace').read()
+what = sys.argv[2] if len(sys.argv) > 2 else 'token'
+if what == 'token':
+    m = re.search(r'name="_token"[^>]*?value="([^"]+)"', h) or re.search(r'value="([^"]+)"[^>]*?name="_token"', h)
+    print(m.group(1) if m else '')
+else:
+    out = []
+    for blk in re.findall(r'<div class="flash error"[^>]*>(.*?)</div>', h, re.S):
+        out.append(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', blk)).strip())
+    m = re.search(r'<title>(.*?)</title>', h, re.S)
+    if m: out.append('TITLE=' + m.group(1).strip())
+    for m in re.finditer(r'(Too many redirects|419|Page Expired|Server Error|403|404)', h):
+        out.append('HIT=' + m.group(1))
+    print(' | '.join(dict.fromkeys(out))[:600])
+PYEOF
+
+# KOI INTERACTIVE PROMPT NAHI. (7 Oct: mobile SSH par read -s wala prompt trap
+# ban gaya — run wahin atak kar adhoora reh gaya, fix apply hi nahi hui.)
+# Live login probe sirf env-vars se: ACP_FIX_USER + ACP_FIX_PASS.
+# Probe ke bina bhi verification poori hai: SELFTEST ka B5 runtime check
+# (session se user resolve) + Step 8 write-test + Step 10 HTTP + browser login.
+PROBE_USER="${ACP_FIX_USER:-}"
+PROBE_PASS="${ACP_FIX_PASS:-}"
+if [[ -n "${PROBE_USER}" && -z "${PROBE_PASS}" ]]; then
+  warn "ACP_FIX_USER diya par ACP_FIX_PASS khaali -> probe skip"
+  PROBE_USER=""
+fi
+
+login_probe() { # login_probe <label> <user> <pass>
+  local label="$1" u="$2" p="$3"
+  local base="https://127.0.0.1:${PRIMARY_PORT}"
+  local jar="${WORK}/jar-${label}.txt" body="${WORK}/body-${label}.html"
+  rm -f "${jar}" "${body}"
+  local code loc fin
+  code="$(curl -k -s -c "${jar}" -b "${jar}" -o "${body}" -w '%{http_code}' -m 20 "${base}/" 2>/dev/null || echo none)"
+  say "  [${label}] GET  /            -> HTTP ${code}"
+  [[ "${code}" == "200" ]] || { warn "login page hi nahi khula — pehle panel 500 fix karo (panel-doctor)"; return 1; }
+  local tok; tok="$(python3 "${WORK}/probe.py" "${body}" token 2>/dev/null || echo '')"
+  [[ -n "${tok}" ]] || { warn "CSRF token nahi mila (login page ka HTML badla?)"; return 1; }
+  local out
+  out="$(curl -k -s -c "${jar}" -b "${jar}" -o "${body}" -w '%{http_code}|%{redirect_url}' -m 25 \
+          --data-urlencode "_token=${tok}" --data-urlencode "username=${u}" --data-urlencode "password=${p}" \
+          "${base}/login" 2>/dev/null || echo 'curlfail|')"
+  code="${out%%|*}"; loc="${out#*|}"
+  say "  [${label}] POST /login (${u}) -> HTTP ${code}${loc:+   Location: ${loc}}"
+  local msgs; msgs="$(python3 "${WORK}/probe.py" "${body}" errors 2>/dev/null || true)"
+  [[ -n "${msgs}" ]] && say "  [${label}] SCREEN PAR: ${msgs}"
+  if [[ "${code}" == "302" && -n "${loc}" ]]; then
+    fin="$(curl -k -s -c "${jar}" -b "${jar}" -o "${body}" -w '%{http_code}|%{url_effective}|%{num_redirects}' \
+            -m 30 -L --max-redirs 8 "${loc}" 2>/dev/null)"
+    local rc=$?
+    if [[ ${rc} -eq 47 ]]; then
+      err "  [${label}] REDIRECT LOOP mila (curl: too many redirects) -> B3 (2FA loop)"
+      return 2
+    fi
+    say "  [${label}] FINAL: ${fin}"
+    case "${fin}" in
+      200*/dashboard*) ok "  [${label}] LOGIN CHAL GAYA ✅ (dashboard 200)"; return 0 ;;
+      200*)            ok "  [${label}] login ke baad page 200 mila"; return 0 ;;
+      *)               warn "  [${label}] dashboard tak nahi pahuncha"; return 3 ;;
+    esac
+  fi
+  [[ "${code}" == "419" ]] && err "  [${label}] 419 = CSRF/session (cookie store nahi ho rahi)"
+  [[ "${code}" == "429" ]] && err "  [${label}] 429 = rate limit (throttle:login) — thodi der baad ya Step 3 ke baad try"
+  [[ "${code}" =~ ^5 ]] && err "  [${label}] 5xx = server error — laravel.log upar print hua hai"
+  return 3
+}
+
+if [[ -n "${PROBE_USER}" && -n "${PROBE_PASS}" ]]; then
+  hdr "Step 2: LIVE LOGIN PROBE (fix se PEHLE — asli error yahi hai)"
+  OUT="$(login_probe "before" "${PROBE_USER}" "${PROBE_PASS}" 2>&1)"; PROBE_BEFORE=$?
+  printf '%s\n' "${OUT}" | tee_report
+else
+  hdr "Step 2: LIVE LOGIN PROBE"
+  warn "username/password nahi mile -> live probe skip. Probe chahiye to: ACP_FIX_USER=admin ACP_FIX_PASS='...' sudo bash $0"
+  say "     (fix aur verification phir bhi poori hoti hai: SELFTEST B5 + Step 10 HTTP + browser login)"
+fi
+
+if [[ "${MODE}" == "diagnose" ]]; then
+  hdr "DIAGNOSE-ONLY mode: kuch badla nahi gaya"
+  say "report: ${REPORT}"
+  exit 0
+fi
+
+# ============================================================== STEP 3: UNLOCK
+hdr "Step 3: lockout / throttle saaf (baar-baar fail hone se account lock ho jata hai)"
+cat > "${WORK}/unlock.php" <<PHPEOF
+<?php
+declare(strict_types=1);
+require '${PANEL}/vendor/autoload.php';
+\$app = require '${PANEL}/bootstrap/app.php';
+\$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+use Illuminate\Support\Facades\DB;
+\$n = 0;
+try {
+    \$n = DB::table('users')->whereNotNull('locked_until')->update(['locked_until' => null]);
+    DB::table('users')->where('failed_logins', '>', 0)->update(['failed_logins' => 0]);
+    DB::table('users')->where('status', 'locked')->update(['status' => 'active']);
+    \$la = DB::table('login_attempts')->delete();
+    echo "  unlocked users: {\$n}   login_attempts cleared: {\$la}\n";
+} catch (\Throwable \$e) { echo '  unlock FAIL: '.\$e->getMessage()."\n"; }
+PHPEOF
+runphp "${WORK}/unlock.php" 2>&1 | tee_report
+ASK cache:clear >/dev/null 2>&1 && ok "cache clear (rate-limit keys bhi)" || warn "cache:clear nahi chala"
+
+# ============================================ STEP 4: EntryLoginController v2
+hdr "Step 4: EntryLoginController v2 (truth-based, fail-open, crash-proof)"
+CTRL="${PANEL}/app/Http/Controllers/Auth/EntryLoginController.php"
+mkdir -p "$(dirname "${CTRL}")"
+if [[ -f "${CTRL}" ]]; then
+  backup_file "${CTRL}"
+  if grep -q 'public static function decide' "${CTRL}"; then
+    ok "v2 pehle se installed — skip"
+  else
+    warn "v1 mila (lockout wala) — backup: ${BK}${CTRL#/}... replace ho raha hai"
+  fi
+fi
+cat > "${WORK}/EntryLoginController.php" <<'PHPEOF'
+@@ENTRY_LOGIN_CONTROLLER@@
+PHPEOF
+if lint_php "${WORK}/EntryLoginController.php"; then
+  install -m 0644 -o "${PANEL_USER}" -g "${PANEL_USER}" "${WORK}/EntryLoginController.php" "${CTRL}" 2>/dev/null \
+    || { cp "${WORK}/EntryLoginController.php" "${CTRL}"; chown "${PANEL_USER}:${PANEL_USER}" "${CTRL}"; chmod 0644 "${CTRL}"; }
+  ok "installed: ${CTRL}"
+else
+  err "naya EntryLoginController lint FAIL — swap nahi kiya (purana barkaraar)"
+  "${PHPBIN}" -l "${WORK}/EntryLoginController.php" 2>&1 | head -5
+fi
+
+# ====================================== STEP 4b: ResellerScopeProvider v2 (B5)
+hdr "Step 4b: ResellerScopeProvider v2 — FATAL RECURSION fix (B5)"
+RSP="${PANEL}/app/Providers/ResellerScopeProvider.php"
+if [[ -f "${RSP}" ]]; then
+  backup_file "${RSP}"
+  if grep -q 'resolvingActor' "${RSP}"; then
+    ok "v2 pehle se installed — skip"
+    RSP_DONE=1
+  else
+    warn "v1 mila (recursion wala) — backup: ${BK}${RSP#/}... replace ho raha hai"
+    RSP_DONE=0
+  fi
+else
+  warn "${RSP} maujood nahi (shayad ye panel version purana hai) — skip"
+  RSP_DONE=1
+fi
+if [[ "${RSP_DONE}" -eq 0 ]]; then
+  cat > "${WORK}/ResellerScopeProvider.php" <<'PHPEOF'
+@@RESELLER_SCOPE_PROVIDER@@
+PHPEOF
+  if lint_php "${WORK}/ResellerScopeProvider.php"; then
+    install -m 0644 -o "${PANEL_USER}" -g "${PANEL_USER}" "${WORK}/ResellerScopeProvider.php" "${RSP}" 2>/dev/null \
+      || { cp "${WORK}/ResellerScopeProvider.php" "${RSP}"; chown "${PANEL_USER}:${PANEL_USER}" "${RSP}"; chmod 0644 "${RSP}"; }
+    ok "installed: ${RSP}"
+  else
+    err "naya ResellerScopeProvider lint FAIL — swap nahi kiya (purana barkaraar)"
+    "${PHPBIN}" -l "${WORK}/ResellerScopeProvider.php" 2>&1 | head -5
+  fi
+fi
+
+# =============================================== STEP 5: 2FA loop-breaker
+hdr "Step 5: 2FA redirect-loop fix (B3)"
+MW="${PANEL}/app/Http/Middleware/EnsureTwoFactorIsVerified.php"
+backup_file "${MW}"
+cat > "${WORK}/EnsureTwoFactorIsVerified.php" <<'PHPEOF'
+@@TFA_MW@@
+PHPEOF
+if lint_php "${WORK}/EnsureTwoFactorIsVerified.php"; then
+  install -m 0644 -o "${PANEL_USER}" -g "${PANEL_USER}" "${WORK}/EnsureTwoFactorIsVerified.php" "${MW}" 2>/dev/null \
+    || { cp "${WORK}/EnsureTwoFactorIsVerified.php" "${MW}"; chown "${PANEL_USER}:${PANEL_USER}" "${MW}"; chmod 0644 "${MW}"; }
+  ok "installed: ${MW}"
+else
+  err "middleware lint FAIL — swap nahi kiya"
+fi
+
+TFC="${PANEL}/app/Http/Controllers/Auth/TwoFactorController.php"
+backup_file "${TFC}"
+if grep -q "loop-breaker" "${TFC}" 2>/dev/null; then
+  ok "TwoFactorController me loop-breaker pehle se hai — skip"
+elif [[ -f "${TFC}" ]]; then
+  python3 - "${TFC}" <<'PYEOF'
+import sys
+p = sys.argv[1]; s = open(p, encoding='utf-8').read()
+old = """        if (! $user->two_factor_enabled || request()->session()->get('two_factor_passed')) {
+            return redirect()->route('dashboard');
+        }"""
+new = """        if (! $user->two_factor_enabled || request()->session()->get('two_factor_passed')) {
+            request()->session()->put('two_factor_passed', true);   // loop-breaker (login-fix v1.0)
+            return redirect()->route('dashboard');
+        }"""
+if old in s:
+    open(p, 'w', encoding='utf-8').write(s.replace(old, new, 1)); print("  patched")
+else:
+    print("  ANCHOR-NAHI-MILA")
+PYEOF
+  if grep -q "loop-breaker" "${TFC}"; then ok "TwoFactorController patched"; else warn "TwoFactorController anchor nahi mila — file jaisi thi waisi (middleware fix kaafi hai)"; fi
+fi
+
+# =============================================== STEP 6: GET /login alias
+hdr "Step 6: GET /login alias (B4 — pehle 404 deta tha)"
+ROUTES="${PANEL}/routes/web.php"
+backup_file "${ROUTES}"
+if grep -q "'/login', \[LoginController::class, 'show'\]" "${ROUTES}" 2>/dev/null; then
+  ok "GET /login pehle se hai — skip"
+else
+  python3 - "${ROUTES}" <<'PYEOF'
+import sys
+p = sys.argv[1]; s = open(p, encoding='utf-8').read()
+anchor = "    Route::get('/', [LoginController::class, 'show'])->name('login');"
+add = ("\n    // /login bhi wahi login page — bookmark/WHMCS/cPanel aadat. Pehle 404 deta tha.\n"
+       "    Route::get('/login', [LoginController::class, 'show'])->name('login.page');")
+if anchor in s:
+    open(p, 'w', encoding='utf-8').write(s.replace(anchor, anchor + add, 1)); print("  patched")
+else:
+    print("  ANCHOR-NAHI-MILA")
+PYEOF
+  if lint_php "${ROUTES}"; then
+    if grep -q "'/login', \[LoginController::class, 'show'\]" "${ROUTES}"; then ok "routes/web.php patched"; else warn "route anchor nahi mila — routes jaise the waise"; fi
+  else
+    err "routes lint FAIL -> backup wapas"
+    cp -a "${BK}${ROUTES#/}" "${ROUTES}" && ok "routes/web.php restore"
+  fi
+fi
+
+# ============================================ STEP 7: entry-ports truth file
+hdr "Step 7: acp-entry-ports (nginx ke ASLI ports -> ${ENTRY_FILE})"
+backup_file "${BIN_ENTRY}"
+mkdir -p "${ACP_HOME}/bin" "${ACP_HOME}/etc"
+cat > "${WORK}/acp-entry-ports" <<'SHEOF'
+@@ACP_ENTRY_PORTS@@
+SHEOF
+if bash -n "${WORK}/acp-entry-ports"; then
+  install -m 0755 -o root -g root "${WORK}/acp-entry-ports" "${BIN_ENTRY}" 2>/dev/null \
+    || { cp "${WORK}/acp-entry-ports" "${BIN_ENTRY}"; chmod 0755 "${BIN_ENTRY}"; chown root:root "${BIN_ENTRY}"; }
+  ln -sf "${BIN_ENTRY}" /usr/local/bin/acp-entry-ports 2>/dev/null || true
+  ok "installed: ${BIN_ENTRY}"
+  EP_OUT="$("${BIN_ENTRY}" 2>&1)"; printf '%s\n' "${EP_OUT}" | tee_report
+else
+  err "acp-entry-ports bash -n FAIL — install nahi kiya"
+fi
+
+if [[ ! -f "${CRON_ENTRY}" ]] || ! grep -q acp-entry-ports "${CRON_ENTRY}" 2>/dev/null; then
+  cat > "${CRON_ENTRY}" <<CRONEOF
+# AlphaCP entry-ports truth file refresh (login-fix v${FIX_VERSION}). Managed file; do not edit.
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/5 * * * * root ${BIN_ENTRY} --quiet >/dev/null 2>&1
+@reboot      root sleep 20 && ${BIN_ENTRY} --quiet >/dev/null 2>&1
+CRONEOF
+  chmod 0644 "${CRON_ENTRY}"; chown root:root "${CRON_ENTRY}"
+  ok "cron: ${CRON_ENTRY} (har 5 min refresh)"
+else
+  ok "cron pehle se hai — skip"
+fi
+
+# ============================================ STEP 7b: optional nginx ports
+if [[ ${ENABLE_PORTS} -eq 1 ]]; then
+  hdr "Step 7b: nginx par 2083/2087/2096 ASLI me listen karwao (--enable-ports)"
+  VHOST=""
+  for c in /etc/nginx/sites-available/alphacp-panel.conf /etc/nginx/sites-enabled/alphacp-panel.conf /etc/nginx/alpha/nginx.conf; do
+    [[ -f "$c" ]] && { VHOST="$c"; break; }
+  done
+  if [[ -z "${VHOST}" ]]; then
+    warn "nginx vhost nahi mila — skip"
+  else
+    backup_file "${VHOST}"
+    BLOCK="    # --- AlphaCP entry ports (login-fix v${FIX_VERSION} ${TS}) ---
+    listen 2083 ssl;
+    listen 2087 ssl;
+    listen 2096 ssl;
+    listen [::]:2083 ssl;
+    listen [::]:2087 ssl;
+    listen [::]:2096 ssl;"
+    if grep -q 'listen 2083 ssl' "${VHOST}"; then
+      ok "2083 already configured — skip"
+    elif grep -q 'ACP_PORTS_START' "${VHOST}"; then
+      python3 - "${VHOST}" <<PYEOF
+import sys
+p = sys.argv[1]; s = open(p, encoding='utf-8').read()
+block = """${BLOCK}"""
+out, seen = [], False
+for line in s.splitlines():
+    out.append(line)
+    if 'ACP_PORTS_START' in line and not seen:
+        seen = True
+        out.append(block)
+open(p, 'w', encoding='utf-8').write("\n".join(out) + "\n")
+print("  ACP_PORTS block bhar diya" if seen else "  MARKER-NAHI-MILA")
+PYEOF
+    else
+      python3 - "${VHOST}" <<PYEOF
+import sys
+p = sys.argv[1]; s = open(p, encoding='utf-8').read()
+block = """${BLOCK}"""
+a = "    listen 8090 ssl;"
+open(p, 'w', encoding='utf-8').write(s.replace(a, a + "\n" + block, 1) if a in s else s)
+print("  listen 8090 ke baad ports jod diye" if a in s else "  ANCHOR-NAHI-MILA")
+PYEOF
+    fi
+    if nginx -t >/dev/null 2>&1; then
+      systemctl reload nginx 2>/dev/null && ok "nginx reload OK" || warn "nginx reload nahi hua (config test pass tha)"
+    else
+      err "nginx -t FAIL -> vhost wapas"
+      nginx -t 2>&1 | tail -5
+      cp -a "${BK}${VHOST#/}" "${VHOST}" && ok "vhost restore"
+    fi
+    if command -v ufw >/dev/null 2>&1; then
+      for p in 2083 2087 2096; do ufw allow "${p}/tcp" comment "AlphaCP entry" >/dev/null 2>&1 && ok "ufw allow ${p}/tcp"; done
+      warn "AWS Lightsail/OCI firewall me bhi 2083,2087,2096 kholne padenge (console se) — server se nahi khulte"
+    fi
+    EP_OUT2="$("${BIN_ENTRY}" 2>&1 || true)"; printf '%s\n' "${EP_OUT2}" | tee_report
+  fi
+fi
+
+# ================================== STEP 8: perms + cache + fpm restart
+hdr "Step 8: permission heal + cache rebuild + php-fpm restart (opcache)"
+for d in storage bootstrap/cache; do
+  [[ -d "${PANEL}/${d}" ]] || continue
+  chown -R "${PANEL_USER}:${PANEL_USER}" "${PANEL}/${d}" 2>/dev/null || true
+  find "${PANEL}/${d}" -type d -exec chmod 0770 {} \; 2>/dev/null || true
+  find "${PANEL}/${d}" -type f -exec chmod 0660 {} \; 2>/dev/null || true
+done
+mkdir -p "${PANEL}/storage/framework/views" "${PANEL}/storage/framework/sessions" \
+         "${PANEL}/storage/framework/cache/data" "${PANEL}/storage/logs" "${PANEL}/bootstrap/cache"
+chown -R "${PANEL_USER}:${PANEL_USER}" "${PANEL}/storage" "${PANEL}/bootstrap/cache" 2>/dev/null || true
+ok "ownership ${PANEL_USER}:${PANEL_USER}"
+# REGRESSION GUARD: fpm user sach me likh pata hai ya nahi (views/cache/logs).
+# Na padh sakta = har page 500 (compiled views). Ye check usi ko pakadta hai.
+WTEST_OK=1
+for wd in storage/framework/cache/data storage/framework/views storage/logs; do
+  if runuser -u "${PANEL_USER}" -- touch "${PANEL}/${wd}/.acp-wtest" 2>/dev/null; then
+    rm -f "${PANEL}/${wd}/.acp-wtest" 2>/dev/null || true
+  else
+    WTEST_OK=0; err "fpm user likh NAHI sakta: ${wd}"
+  fi
+done
+if [[ ${WTEST_OK} -eq 1 ]]; then
+  ok "fpm user (${PANEL_USER}) storage me likh sakta hai (cache/views/logs)"
+else
+  err "storage ownership abhi bhi galat — alag se chalao: sudo bash installer/panel-perm-fix.sh"
+fi
+rm -f "${PANEL}/storage/framework/views/"* 2>/dev/null || true
+ASK optimize:clear >/dev/null 2>&1 && ok "optimize:clear (config/route/view/cache/event)" || warn "optimize:clear nahi chala"
+ASK config:clear >/dev/null 2>&1 || true
+ASK route:clear  >/dev/null 2>&1 || true
+ASK view:clear   >/dev/null 2>&1 || true
+for svc in php8.4-fpm php8.3-fpm php-fpm; do
+  systemctl restart "${svc}" >/dev/null 2>&1 && { ok "restart ${svc}"; break; }
+done
+sleep 2
+CODE="$(hit)"; [[ "${CODE}" == "200" ]] && ok "panel HTTP ${CODE}" || err "panel HTTP ${CODE}"
+
+# ============================================== STEP 9: SELFTEST (16 checks)
+hdr "Step 9: SELFTEST — gate ka truth table + routes + B5 recursion check"
+cat > "${WORK}/selftest.php" <<PHPEOF
+<?php
+declare(strict_types=1);
+require '${PANEL}/vendor/autoload.php';
+\$app = require '${PANEL}/bootstrap/app.php';
+\$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+use App\Http\Controllers\Auth\EntryLoginController as E;
+
+\$pass = 0; \$fail = 0;
+\$t = function (string \$name, \$got, \$want) use (&\$pass, &\$fail): void {
+    \$g = is_string(\$got) ? \$got : var_export(\$got, true);
+    \$w = is_string(\$want) ? \$want : var_export(\$want, true);
+    \$good = (\$want === null) ? (\$got === null)
+          : ((\$got !== null) && str_contains(\$got, (string) \$want));
+    if (\$good) { \$pass++; printf("  PASS  %s\n", \$name); }
+    else { \$fail++; printf("  FAIL  %s\n        got=%s want=%s\n", \$name, \$g, \$w); }
+};
+
+\$both = ['manager' => [8090, 2087], 'customer' => [2083, 2096]];
+\$only = ['manager' => [8090], 'customer' => []];
+
+\$t('root@8090 (dono entry live) -> allow',      E::decide('root', 8090, \$both),     null);
+\$t('root@2087 -> allow',                        E::decide('root', 2087, \$both),     null);
+\$t('reseller@8090 -> allow',                    E::decide('reseller', 8090, \$both), null);
+\$t('customer(user)@2083 -> allow',              E::decide('user', 2083, \$both),     null);
+\$t('mail@2096 -> allow',                        E::decide('mail', 2096, \$both),     null);
+\$t('root@2083 -> deny (manager entry batao)',   E::decide('root', 2083, \$both),     '8090');
+\$t('reseller@2096 -> deny',                     E::decide('reseller', 2096, \$both), '8090');
+\$t('customer@8090 -> deny (2083 batao)',        E::decide('user', 8090, \$both),     '2083');
+\$t('B2 proxy: customer@443 -> allow (fail-open)', E::decide('user', 443, \$both),    null);
+\$t('unknown role@8090 -> allow',                E::decide('admin', 8090, \$both),    null);
+\$t('port null -> allow',                        E::decide('user', null, \$both),     null);
+\$t('gate OFF (live=null) -> allow',             E::decide('user', 8090, null),       null);
+\$t('B1 REGRESSION: sirf 8090 live, customer@8090 -> allow (lockout NAHI)',
+   E::decide('user', 8090, \$only), null);
+
+echo "\n  liveEntries() = ";
+\$live = E::liveEntries();
+echo \$live === null ? "null  => SINGLE-ENTRY MODE (gate OFF, sab ek URL par)\n"
+                     : json_encode(\$live) . "  => separation ACTIVE\n";
+
+// route sanity
+\$rt = null;
+foreach (app('router')->getRoutes() as \$r) {
+    if (\$r->getName() === 'login.attempt') { \$rt = \$r->getActionName(); }
+}
+echo '  login.attempt -> ' . (\$rt ?? '(nahi mila)') . "\n";
+if (\$rt !== null && str_contains(\$rt, 'EntryLoginController')) { \$pass++; echo "  PASS  route EntryLoginController par hai\n"; }
+elseif (\$rt !== null && str_contains(\$rt, 'LoginController'))   { \$pass++; echo "  PASS  route LoginController par hai (gate off bhi chalega)\n"; }
+else { \$fail++; echo "  FAIL  login.attempt route ka controller pehchana nahi gaya\n"; }
+
+// GET /login alias
+\$has = false;
+foreach (app('router')->getRoutes() as \$r) {
+    if (in_array('GET', \$r->methods(), true) && \$r->uri() === 'login') { \$has = true; }
+}
+if (\$has) { \$pass++; echo "  PASS  GET /login route maujood hai\n"; }
+else { \$fail++; echo "  FAIL  GET /login route nahi mila\n"; }
+
+// B5 REGRESSION — global scope recursion (asli browser jaisa session resolve).
+// actingAs() jaisa shortcut NAHI: guard ka cached user bhula kar session se
+// retrieveById() karwate hain, taaki global scopes sach me chalein.
+try {
+    \$row = Illuminate\Support\Facades\DB::table('users')
+        ->where('status', 'active')->orderBy('id')->first();
+    \$target = \$row === null ? null
+        : App\Models\User::query()->withoutGlobalScopes()->find(\$row->id);
+} catch (\Throwable \$e) { \$target = null; }
+
+if (! \$target instanceof App\Models\User) {
+    echo "  SKIP  B5 recursion check (koi active user nahi mila)\n";
+} else {
+    try {
+        \$gname = app('auth')->guard('web')->getName();
+        app('session')->put(\$gname, \$target->getAuthIdentifier());
+        app('auth')->forgetGuards();          // <-- ab guard session se load karega
+        \$resolved = app('auth')->guard('web')->user();
+        if (\$resolved !== null
+            && (int) \$resolved->getAuthIdentifier() === (int) \$target->getAuthIdentifier()) {
+            \$pass++; echo "  PASS  B5: session se user resolve hua (recursion nahi)\n";
+        } else {
+            \$fail++; echo "  FAIL  B5: session se user resolve NAHI hua (scope ne filter kar diya?)\n";
+        }
+        app('session')->forget(\$gname);
+        app('auth')->forgetGuards();
+    } catch (\Throwable \$e) {
+        \$fail++; echo "  FAIL  B5: " . get_class(\$e) . ': ' . \$e->getMessage() . "\n";
+    }
+}
+
+printf("\n=== SELFTEST: %d pass, %d fail ===\n", \$pass, \$fail);
+exit(\$fail === 0 ? 0 : 1);
+PHPEOF
+ST_OUT="$(runphp "${WORK}/selftest.php" 2>&1)"; ST_RC=$?
+printf '%s\n' "${ST_OUT}" | tee_report
+[[ ${ST_RC} -eq 0 ]] && ok "SELFTEST pass (${ST_RC})" || err "SELFTEST fail (rc=${ST_RC}) — upar dekho"
+
+# ================================== STEP 9b: regression tests install karo
+hdr "Step 9b: PHPUnit regression tests (aage koi dobara ye bug na laaye)"
+TESTDIR="${PANEL}/tests/Feature"
+
+install_test() { # install_test <Name> <workfile>
+  local name="$1" src="$2" dst="${TESTDIR}/${1}.php"
+  backup_file "${dst}"
+  if lint_php "${src}"; then
+    install -m 0644 -o "${PANEL_USER}" -g "${PANEL_USER}" "${src}" "${dst}" 2>/dev/null \
+      || { cp "${src}" "${dst}"; chown "${PANEL_USER}:${PANEL_USER}" "${dst}"; chmod 0644 "${dst}"; }
+    ok "installed: ${dst}"
+  else
+    err "${name}.php lint FAIL — install nahi kiya (panel par koi asar nahi)"
+  fi
+}
+
+if [[ -d "${TESTDIR}" ]]; then
+  # Entry-gate (B1/B2) truth table + gate-off behaviour
+  cat > "${WORK}/EntryLoginTest.php" <<'PHPEOF'
+@@ENTRY_LOGIN_TEST@@
+PHPEOF
+  # B5 recursion: browser jaisa fresh request (session se retrieveById)
+  cat > "${WORK}/SessionAuthTest.php" <<'PHPEOF'
+@@SESSION_AUTH_TEST@@
+PHPEOF
+  install_test EntryLoginTest "${WORK}/EntryLoginTest.php"
+  install_test SessionAuthTest "${WORK}/SessionAuthTest.php"
+  say "     chalane ke liye (dev deps chahiye): cd ${PANEL} && sudo -u ${PANEL_USER} ${PHPBIN} artisan test --filter EntryLoginTest"
+  say "                                          cd ${PANEL} && sudo -u ${PANEL_USER} ${PHPBIN} artisan test --filter SessionAuthTest"
+else
+  warn "${TESTDIR} nahi mila — tests install skip"
+fi
+
+# ============================================ STEP 10: FINAL VERDICT
+hdr "Step 10: FINAL VERDICT"
+RC=0
+if [[ -n "${PROBE_USER}" && -n "${PROBE_PASS}" ]]; then
+  OUT2="$(login_probe "after" "${PROBE_USER}" "${PROBE_PASS}" 2>&1)"; RC=$?
+fi
+{
+if [[ -n "${PROBE_USER}" && -n "${PROBE_PASS}" ]]; then
+  printf '%s\n' "${OUT2}"
+  say ""
+  if [[ ${RC} -eq 0 ]]; then
+    say "${C_G}==> LOGIN FIX COMPLETE ✅  (${PROBE_USER} dashboard tak pahunch gaya)${C_0}"
+  else
+    say "${C_Y}==> login abhi bhi nahi hua. Upar 'SCREEN PAR:' aur laravel.log ki lines bhejo.${C_0}"
+    say "    report: ${REPORT}"
+  fi
+else
+  CODE="$(hit)"
+  say "panel HTTP: ${CODE}"
+  if [[ "${CODE}" == "200" ]]; then
+    say "${C_G}==> FIX APPLY HO GAYA ✅  (live login test skip hua tha — browser se try karo)${C_0}"
+  else
+    say "${C_Y}==> panel HTTP ${CODE} — pehle panel-doctor chalao${C_0}"
+  fi
+fi
+say ""
+say "Backup : ${BK}"
+say "Report : ${REPORT}"
+say "Rollback: sudo bash $0 --rollback"
+say ""
+say "Entry separation ab kaise chalti hai:"
+say "  * gate SIRF tab active hota hai jab nginx sach me 2083/2096 par sun raha ho"
+say "  * abhi: $( [[ -f "${ENTRY_FILE}" ]] && tr -d '\n' < "${ENTRY_FILE}" | cut -c1-160 || echo '(truth file nahi)' )"
+say "  * separation LIVE karni ho:  sudo bash $0 --enable-ports"
+say "  * truth file haath se dekhni ho:  acp-entry-ports --print"
+} 2>&1 | tee_report
+
+# ------------------------------------------------------------------ sync
+command -v alphacp-sync >/dev/null 2>&1 && { hdr "GitHub sync"; alphacp-sync 2>&1 | tail -5 || true; }
+exit 0

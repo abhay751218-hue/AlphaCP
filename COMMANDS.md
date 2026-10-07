@@ -14,7 +14,64 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### alphacp-sync v1.2 — private repo support (`get` mode). Repo PRIVATE karne se PEHLE chalao.
+### 🔴 agent-fix v1.0 — MySQL provisioning live par FATAL tha (B6). **Yahi chalao.**
+```bash
+sudo alphacp-sync get 321c81929df94e6d2b05a29b912eaa31fba4209d installer/agent-fix.sh /tmp/agent-fix-v1.0.sh d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1 && sudo bash /tmp/agent-fix-v1.0.sh
+```
+- commit `321c81929df94e6d2b05a29b912eaa31fba4209d`, sha256 `d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1`.
+- **Kya karta hai:** live agent me `src/MysqlServer.php` **gayab** thi → panel se MySQL
+  database/user banana + cPanel-import/backup-restore ka mysql path agent-step par
+  `Class "Alphacp\Agent\MysqlServer" not found` se **fatal** tha. Ye script wahi class
+  (sandbox me reconstruct + **212/0** verify) sirf EK file me rakhta hai; baaki agent untouched.
+  **Koi interactive prompt nahi** — command chalte hi poori hogi.
+- **Expected output:** banner `AlphaCP — AGENT FIX v1.0` → preflight → backup →
+  `MysqlServer.php likhi` → `php -l clean` → `SELF-TEST 1/2 … static smoke PASS` →
+  `SELF-TEST 2/2 … agent suite GREEN (passed=212 failed=0)` → `paneld active` →
+  `alphacp-sync complete` → `FINAL VERDICT … APPLY ho gaya`.
+- **Agar self-test fail ya paneld active na ho** → script **apne aap rollback** kar deta hai
+  (backup wapas), deploy ruk jaata hai — server tootta hua nahi chhoda jaata.
+- **Sirf dekhna ho, kuch badle nahi:** `sudo bash /tmp/agent-fix-v1.0.sh --diagnose`
+- **Wapas jaana ho:** `sudo bash /tmp/agent-fix-v1.0.sh --rollback`
+  (backup: `/usr/local/alphacp/releases/agentfix-<ts>/`)
+- **Verify (fix ke baad):** panel me ek MySQL database + user banao (pehle fatal hota tha, ab
+  banna chahiye). Ya terminal se: `sudo php8.4 /usr/local/alphacp/agent/tests/run-tests.php | tail -1`
+  → `passed: 212   failed: 0`.
+- Test: `sudo bash tools/sim/agent-fix-sim.sh` → **17/17**.
+
+### ✅ login-fix v1.0 — APPLIED 7 Oct 13:04Z (ab MAT chalao; sirf history/rollback ke liye)
+```bash
+sudo alphacp-sync get 269eb3c22ae49dd5bba76a5ce2750b594f65ff2c installer/login-fix.sh /tmp/login-fix-v1.0.sh 6ca53d4d163f7dc736963f5d8cb18084c3b44c6185a8891a8b61981a8960e6cf && sudo bash /tmp/login-fix-v1.0.sh
+```
+- commit `269eb3c22ae49dd5bba76a5ce2750b594f65ff2c`, sha256 `6ca53d4d163f7dc736963f5d8cb18084c3b44c6185a8891a8b61981a8960e6cf`
+  (GitHub API se verify: byte-for-byte identical). **Isme koi interactive prompt NAHI hai** —
+  mobile SSH par pichla run Step 2 ke prompt par atak kar adhoora reh gaya tha, isliye fix
+  apply hi nahi hui thi. Purane pin (`a965399`/`adb269b8…`, `38d790b`/`c00b06c8…`,
+  `c5115e7`/`db40c7d3…`) superseded — dobara mat chalao.
+  Superseded pins: `38d790b`/`c00b06c8…` (PANEL_USER detection artisan-owner se hoti thi —
+  live par `root` mila, jabki fpm pool `alphacp` hai; Step 8 storage root:root kar deta)
+  aur `c5115e7`/`db40c7d3…` (comment count). **Purane pin dobara mat chalao.**
+- **Expected output:** banner `AlphaCP LOGIN FIX - v1.0` → Step 1 me `BUG B1 … B5` lines (kitne bug
+  the) → Step 3 `unlocked users: N` → Step 4/4b/5/6 `installed:` / `patched` → Step 7 truth file →
+  Step 9 `SELFTEST: 16 pass, 0 fail` (usme `PASS B5: session se user resolve hua`) →
+  Step 10 `==> FIX APPLY HO GAYA ✅`.
+- **Asli wajah (B5):** `ResellerScopeProvider` ke global scopes `Auth::user()` call karte the, jo
+  khud `retrieveById()` → wahi scope → **infinite recursion** → PHP fatal → har authenticated page
+  par HTTP 500. Login POST 302 deta tha, phir `/dashboard` 500. Tests isko nahi pakad paate the
+  (`actingAs()` shortcut). Detail: CHANGELOG `[Unreleased]`.
+- **Sirf dekhna ho, kuch badle nahi:** `sudo bash /tmp/login-fix-v1.0.sh --diagnose`
+- **Entry separation ASLI me live karni ho** (nginx par 2083/2087/2096 listen) — ye **port badlav**
+  hai, isliye OPT-IN hai; pehle pooch ke hi chalao:
+  `sudo bash /tmp/login-fix-v1.0.sh --enable-ports`  (`nginx -t` fail → apne aap rollback)
+- **Wapas jaana ho:** `sudo bash /tmp/login-fix-v1.0.sh --rollback`
+  (backup: `/usr/local/alphacp/releases/loginfix-<ts>/`; kuch delete nahi hota)
+- **Koi prompt nahi** — command chalte hi poori hogi, kuch type nahi karna. Live login probe
+  chahiye to alag se: `sudo ACP_FIX_USER=admin ACP_FIX_PASS='******' bash /tmp/login-fix-v1.0.sh`
+  (password shell history me jaayega, isliye default run me probe skip hi theek hai).
+- Test: `sudo bash tools/sim/login-entry-sim.sh` → **53/53** (P8+P9 = bug-proof).
+- Agar `alphacp-sync get` par `unknown option` aaye to server ka sync tool v1.2 se purana hai —
+  batao, pehle sync-tool upgrade denge.
+
+### alphacp-sync v1.2 — private repo support (`get` mode). ✅ Server par v1.5 chal raha hai (LAST-SYNC.md).
 ```bash
 curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f55927ee1fbf526037785dcdb82aea1/installer/alphacp-sync.sh -o /tmp/acp-sync-v1.2.sh && sudo bash /tmp/acp-sync-v1.2.sh
 ```
@@ -34,6 +91,7 @@ curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f5
 | alphacp-sync v1.0 setup (`aa2091d…/installer/alphacp-sync.sh`) | 29 Sep | ✅ `main` par pehla snapshot `d5ae8d2` (314 files). Timer har ghante chalta hai. Manual: `sudo alphacp-sync`, status: `sudo alphacp-sync --status` |
 | updater 0.1.0 (dusre AI ka, panel 0.3.1) | 29 Sep | ✅ server par 0.3.1 = source byte-for-byte (snapshot se verify) |
 | panel-update 0.2.1 (`d741f79…`) → panel 0.3.2 + sync v1.1 | 29 Sep 00:17Z | ✅ UPDATE COMPLETE, HTTP 200, trial same (expiry 13 Oct), snapshot `ebdbd75` |
+| alphacp-sync v1.5 (server par khud) | 7 Oct 09:51Z | ✅ `LAST-SYNC.md` me `tool: alphacp-sync v1.5`; timer active. `get` mode available (v1.2+) |
 
 ## 🩺 Sirf zaroorat par
 

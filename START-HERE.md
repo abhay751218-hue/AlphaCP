@@ -4,6 +4,11 @@
 > Iska apna license system hai (15 din ka trial), aur ye billing software se WHM API 1 compatible banega.
 > Server: AWS Lightsail Mumbai, Ubuntu 24.04, 4 GB / 2 vCPU / 80 GB, static IP `13.207.123.177`, panel `https://<ip>:8090`.
 
+> 🧭 **RESUME CHECKLIST / MASTER LIST:** [`docs/MASTER-PLAN.md`](docs/MASTER-PLAN.md) — versions ka
+> inventory, **S0–S15 step status**, functional fix-queue (B0–B6), **cPanel-parity (design/colour/alag
+> panels) plan**, pinned-command history, aur "naye chat me kaise continue karein".
+> **Koi bhi kaam shuru karne se pehle ye file zaroor padho.**
+
 ## 1. Isi order me padho
 | # | File | Kyun |
 |---|---|---|
@@ -58,6 +63,7 @@ Unke sirf naam aur keys `STATE.md` me likhe hain. Values server par hi rehti hai
 | `sudo bash tools/sim/update-sim.sh` | `panel-update.sh` 0.3.0: update, sha mismatch, rollback, backup prune, sync-tool upgrade, **private repo (get)** | **54/54** |
 | `sudo bash tools/sim/doctor-sim.sh` | panel-doctor v1.7 (ProtectSystem 500 fix, leaked password rotate) | **21/21** |
 | `sudo bash tools/sim/sync-sim.sh` | alphacp-sync v1.2 (secret leak attempts, releases/ exclude, license state, rebase, deploy-key flow, 443 fallback, `get`) | **60/60** |
+| `sudo bash tools/sim/login-entry-sim.sh` | login-fix v1.0: build drift, `acp-entry-ports` ke 6 truth-file scenario, `--diagnose` read-only, full run, idempotency, `--enable-ports` + nginx-fail rollback, `--rollback`, PHPUnit (EntryLoginTest/AuthTest/SessionAuthTest/AuthorizationTest), **P8+P9 bug-proof** (purana code FAIL hona chahiye) | **53/53** |
 
 php-wasm ki limits (code ki galti NAHI): PHP 8.4 wasm PHPUnit me crash karta hai → 8.5 use hota hai; Mockery
 console-output mock crash karta hai → runner temp copy me `$mockConsoleOutput=false` lagata hai, isliye
