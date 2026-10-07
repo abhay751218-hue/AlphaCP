@@ -31,8 +31,8 @@
             <li>Leaked passwords blocked (HIBP check)</li>
             <li>Must differ from the current password</li>
         </ul>
-        <p class="help mt">Yahi policy hosting accounts par bhi lagegi (Step 3+) — cPanel ki password strength
-            settings ka equivalent, aur Step 13 me WHM-style se tune hoti hai.</p>
+        <p class="help mt">Yahi policy hosting accounts par bhi lagegi (Step 3+) — Account Panel ki password strength
+            settings ka equivalent, aur Step 13 me Server Manager-style se tune hoti hai.</p>
     </div>
 </div>
 @endsection

@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Park a Domain')
-@section('subtitle', 'WHM DNS park — no BIND rewrite, no pipe')
+@section('subtitle', 'Server Manager DNS park — no BIND rewrite, no pipe')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

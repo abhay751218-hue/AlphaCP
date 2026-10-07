@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Setup/Edit Domain Forwarding')
-@section('subtitle', 'WHM domain forward — no BIND rewrite, no pipe')
+@section('subtitle', 'Server Manager domain forward — no BIND rewrite, no pipe')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

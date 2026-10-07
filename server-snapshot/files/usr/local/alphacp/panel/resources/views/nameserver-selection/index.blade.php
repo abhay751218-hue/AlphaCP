@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Nameserver Selection')
-@section('subtitle', 'WHM nameserver — no BIND rewrite, no pipe')
+@section('subtitle', 'Server Manager nameserver — no BIND rewrite, no pipe')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

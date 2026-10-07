@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Resource Usage')
-@section('subtitle', 'Server monitoring — disk / memory / load / CPU (WHM jaisa)')
+@section('subtitle', 'Server monitoring — disk / memory / load / CPU (Server Manager jaisa)')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

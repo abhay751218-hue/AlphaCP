@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Service Status')
-@section('subtitle', 'WHM-style service monitor — data root agent se, read-only')
+@section('subtitle', 'Server Manager-style service monitor — data root agent se, read-only')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('system.index') }}">System info</a>

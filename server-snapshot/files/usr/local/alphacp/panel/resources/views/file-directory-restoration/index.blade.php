@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'File and Directory Restoration')
-@section('subtitle', 'WHM account path restore — no tar, no pipe')
+@section('subtitle', 'Server Manager account path restore — no tar, no pipe')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

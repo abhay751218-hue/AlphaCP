@@ -1,3 +1,4 @@
+{{-- REBRAND_DONE --}}
 <!doctype html>
 <html lang="en">
 <head>
@@ -13,8 +14,8 @@
     <div class="brand">
         <span class="logo">A</span>
         <span>
-            AlphaCP {{ ($panelMode ?? 'cpanel') === 'whm' ? 'WHM' : '' }}
-            <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'Web Host Manager' : 'cPanel' }} · {{ config('acp.version') }}</small>
+            AlphaCP {{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : '' }}
+            <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : 'Account Panel' }} · {{ config('acp.version') }}</small>
         </span>
     </div>
 
@@ -71,7 +72,7 @@
 </main>
 
 <footer class="wrap muted" style="padding-top:0; font-size:12.5px">
-    AlphaCP {{ config('acp.version') }} — cPanel-parity control panel ·
+    AlphaCP {{ config('acp.version') }} — AlphaCP control panel ·
     parity checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span>
 </footer>
 

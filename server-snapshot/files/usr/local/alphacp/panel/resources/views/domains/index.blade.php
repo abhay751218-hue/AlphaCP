@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Domains')
-@section('subtitle', 'Main, addon, subdomain, alias (parked) aur redirects — cPanel jaisa')
+@section('subtitle', 'Main, addon, subdomain, alias (parked) aur redirects — Account Panel jaisa')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
@@ -11,7 +11,7 @@
 
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>This tool is part of the <strong>customer cPanel</strong>. Create the account in WHM; the customer manages domains here.</p>
+    <p>This tool is part of the <strong>customer account panel</strong>. Create the account in Server Manager; the customer manages domains here.</p>
     <p class="help mt">Accounts page: <a href="{{ route('accounts.index') }}">List Accounts →</a></p>
 </div>
 @elseif (! $account)

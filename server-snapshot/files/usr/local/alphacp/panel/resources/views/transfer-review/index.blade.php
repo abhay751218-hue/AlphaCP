@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Review Transfers and Restores')
-@section('subtitle', 'WHM cpmove import job history — agent result ke saath')
+@section('subtitle', 'Server Manager cpmove import job history — agent result ke saath')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('transfer-tool.index') }}">Transfer Tool</a>
@@ -43,7 +43,7 @@
                     <tr><td colspan="8" class="error mono">{{ $job['error'] }}</td></tr>
                 @endif
             @empty
-                <tr><td colspan="8" class="empty">Koi cPanel import job nahi — Transfer Tool ya Transfer or Restore se queue karo.</td></tr>
+                <tr><td colspan="8" class="empty">Koi Account Panel import job nahi — Transfer Tool ya Transfer or Restore se queue karo.</td></tr>
             @endforelse
         </table>
     </div>

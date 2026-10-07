@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Transfer Tool')
-@section('subtitle', 'WHM cPanel → AlphaCP — cpmove archive import, source host record ke saath')
+@section('subtitle', 'Server Manager Account Panel → AlphaCP — cpmove archive import, source host record ke saath')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('transfer-review.index') }}">Job history</a>
@@ -21,7 +21,7 @@
 
 @can('accounts.view')
 <div class="card mt">
-    <h3>Import a cPanel account from an archive</h3>
+    <h3>Import a Account Panel account from an archive</h3>
     <p class="help">
         Purane server se <span class="mono">cpmove-&lt;user&gt;.tar.gz</span> yahan le aao (SFTP/root), phir path do —
         e.g. <span class="mono">/home/cpmove-alicehost.tar.gz</span>. Home import hota hai; MySQL/mail/DNS import aage ke S10 steps hain.
@@ -68,7 +68,7 @@
 <div class="card mt">
     <h3>Purane server se archive khinch lao (SSH)</h3>
     <p class="help">
-        cPanel wale purane server se <span class="mono">cpmove-&lt;user&gt;.tar.gz</span> seedha yahan lao —
+        Account Panel wale purane server se <span class="mono">cpmove-&lt;user&gt;.tar.gz</span> seedha yahan lao —
         haath se copy karne ki zaroorat nahi. Archive <span class="mono">{{ config('acp.home') }}/incoming</span>
         me aata hai (wahi drop dir jo neeche wale form me list hoti hai), phir upar wale form se import.
     </p>

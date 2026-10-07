@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Email Routing Configuration')
-@section('subtitle', 'WHM global MX mode — no Exim rewrite, no pipe')
+@section('subtitle', 'Server Manager global MX mode — no Exim rewrite, no pipe')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

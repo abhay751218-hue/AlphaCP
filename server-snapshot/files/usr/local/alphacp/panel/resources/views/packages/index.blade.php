@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Packages')
-@section('subtitle', 'Hosting plans — cPanel-compatible limits (QUOTA, MAXPOP, MAXSQL…)')
+@section('subtitle', 'Hosting plans — Account Panel-compatible limits (QUOTA, MAXPOP, MAXSQL…)')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

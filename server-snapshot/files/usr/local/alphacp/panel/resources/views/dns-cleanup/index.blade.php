@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Perform a DNS Cleanup')
-@section('subtitle', 'WHM stale zones — no BIND rewrite, no pipe')
+@section('subtitle', 'Server Manager stale zones — no BIND rewrite, no pipe')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

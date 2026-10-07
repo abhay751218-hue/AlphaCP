@@ -11,7 +11,7 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>This tool is part of the <strong>customer cPanel</strong>. Customers manage database users here.</p>
+    <p>This tool is part of the <strong>customer account panel</strong>. Customers manage database users here.</p>
 </div>
 @elseif (! $account)
 <div class="card">
@@ -21,7 +21,7 @@
 @if (session('mysql_user_password'))
 <div class="card">
     <h3>Password — sirf abhi dikhega</h3>
-    <p class="help">Copy kar lo. Panel ise store nahi karta (cPanel jaisa).</p>
+    <p class="help">Copy kar lo. Panel ise store nahi karta (Account Panel jaisa).</p>
     <p class="mono mt">{{ session('mysql_user_full') }}</p>
     <p class="mono">{{ session('mysql_user_password') }}</p>
 </div>

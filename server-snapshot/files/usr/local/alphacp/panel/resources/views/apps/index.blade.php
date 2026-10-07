@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Site Software')
-@section('subtitle', 'One-click app installs — cPanel Site Software / WordPress jaisa')
+@section('subtitle', 'One-click app installs — Account Panel Site Software / WordPress jaisa')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

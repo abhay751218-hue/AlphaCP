@@ -1,8 +1,8 @@
 @extends('layouts.panel')
 
-@section('title', $panelMode === 'whm' ? 'WHM Dashboard' : 'cPanel')
+@section('title', $panelMode === 'whm' ? 'Server Manager Dashboard' : 'Account Panel')
 @section('subtitle', $panelMode === 'whm'
-    ? 'Server health, accounts, packages — customer sites are not created on this page; they use cPanel'
+    ? 'Server health, accounts, packages — customer sites are not created on this page; they use the account panel'
     : 'Files, email, domains, databases — ye aapka hosting control panel hai')
 
 @section('actions')
@@ -158,7 +158,7 @@
 @endif
 
 <div class="card mt">
-    <h3>🎯 cPanel parity progress</h3>
+    <h3>🎯 AlphaCP feature progress</h3>
     <div class="stat">
         <span class="num">{{ $progress['live'] }}</span>
         <span class="unit">tools live · {{ $progress['planned'] }} planned · {{ $progress['addon'] }} optional · total {{ $progress['total'] }}</span>
@@ -167,7 +167,7 @@
     <p class="help">Full checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span> — 208 items,
         har item apne step me live hota jayega.
         @if ($panelMode === 'cpanel')
-            Account create / packages are WHM (admin) only — they are hidden here.
+            Account create / packages are Server Manager (admin) only — they are hidden here.
         @endif
     </p>
 </div>

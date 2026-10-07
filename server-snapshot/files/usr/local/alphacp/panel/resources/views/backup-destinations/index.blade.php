@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Backup Destinations')
-@section('subtitle', 'WHM remote backup destination — apne archives doosre server par bhejo (SSH/scp)')
+@section('subtitle', 'Server Manager remote backup destination — apne archives doosre server par bhejo (SSH/scp)')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('backup-config.index') }}">Backup Config</a>

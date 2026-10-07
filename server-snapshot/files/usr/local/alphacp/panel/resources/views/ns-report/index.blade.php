@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Nameserver Record Report')
-@section('subtitle', 'WHM NS report — no BIND rewrite, no pipe')
+@section('subtitle', 'Server Manager NS report — no BIND rewrite, no pipe')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

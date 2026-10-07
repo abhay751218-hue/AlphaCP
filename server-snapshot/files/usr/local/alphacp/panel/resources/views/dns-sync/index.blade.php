@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Synchronize DNS Records')
-@section('subtitle', 'WHM zone sync — no BIND rewrite, no pipe')
+@section('subtitle', 'Server Manager zone sync — no BIND rewrite, no pipe')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

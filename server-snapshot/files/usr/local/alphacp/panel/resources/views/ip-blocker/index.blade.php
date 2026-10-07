@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'IP Blocker')
-@section('subtitle', 'Account ke liye IPs deny karo (ufw/iptables) — cPanel IP Blocker jaisa')
+@section('subtitle', 'Account ke liye IPs deny karo (ufw/iptables) — Account Panel IP Blocker jaisa')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

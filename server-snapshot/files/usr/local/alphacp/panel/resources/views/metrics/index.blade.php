@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Metrics')
-@section('subtitle', 'Visitors / Errors / Bandwidth — access log se (cPanel Metrics jaisa)')
+@section('subtitle', 'Visitors / Errors / Bandwidth — access log se (Account Panel Metrics jaisa)')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

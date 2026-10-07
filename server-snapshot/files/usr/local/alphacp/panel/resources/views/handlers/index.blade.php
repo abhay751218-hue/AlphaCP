@@ -10,7 +10,7 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>This tool is part of the <strong>customer cPanel</strong>. Customers set Apache handlers here.</p>
+    <p>This tool is part of the <strong>customer account panel</strong>. Customers set Apache handlers here.</p>
 </div>
 @elseif (! $account)
 <div class="card">

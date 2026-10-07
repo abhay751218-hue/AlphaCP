@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Reseller Center')
-@section('subtitle', 'WHM-style Reseller Center — resellers promote/demote + privileges (ACL)')
+@section('subtitle', 'Server Manager-style Reseller Center — resellers promote/demote + privileges (ACL)')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

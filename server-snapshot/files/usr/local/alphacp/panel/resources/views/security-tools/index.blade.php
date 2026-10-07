@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Security Tools')
-@section('subtitle', 'ModSecurity (WAF) + Virus Scanner (ClamAV) — cPanel Security jaisa')
+@section('subtitle', 'ModSecurity (WAF) + Virus Scanner (ClamAV) — Account Panel Security jaisa')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

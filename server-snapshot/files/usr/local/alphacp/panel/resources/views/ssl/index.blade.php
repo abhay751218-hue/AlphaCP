@@ -21,7 +21,7 @@
 @section('content')
 @if ($panelMode === 'whm')
 <div class="card">
-    <p>This tool is part of the <strong>customer cPanel</strong>. Customer AutoSSL (Let's Encrypt) apne domains par chalayega.</p>
+    <p>This tool is part of the <strong>customer account panel</strong>. Customer AutoSSL (Let's Encrypt) apne domains par chalayega.</p>
 </div>
 @elseif (! $account)
 <div class="card">
