@@ -671,8 +671,13 @@ CREATE TABLE `license_keys` (
   `revoked` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
+  `license_uid` varchar(64) DEFAULT NULL,
+  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`payload`)),
+  `signature` text DEFAULT NULL,
+  `sig_algo` varchar(16) DEFAULT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `license_keys_key_hash_unique` (`key_hash`)
+  UNIQUE KEY `license_keys_key_hash_unique` (`key_hash`),
+  UNIQUE KEY `license_keys_license_uid_unique` (`license_uid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `login_attempts`;

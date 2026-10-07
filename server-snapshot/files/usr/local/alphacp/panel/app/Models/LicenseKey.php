@@ -11,10 +11,14 @@ final class LicenseKey extends Model
 {
     protected $table = 'license_keys';
 
-    protected $fillable = ['server_id', 'plan', 'expires_at', 'key_hash', 'revoked'];
+    protected $fillable = [
+        'server_id', 'plan', 'license_uid', 'expires_at', 'key_hash',
+        'payload', 'signature', 'sig_algo', 'revoked',
+    ];
 
     protected $casts = [
         'expires_at' => 'datetime',
         'revoked'    => 'boolean',
+        'payload'    => 'array',
     ];
 }

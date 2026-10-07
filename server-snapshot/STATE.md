@@ -254,6 +254,7 @@ alphacp:scheduled-backups
   2026_10_07_000008_create_optimize_settings_table  [63] Ran
   2026_10_07_000009_create_dns_cluster_nodes_table  [64] Ran
   2026_10_07_000010_create_port_configs_table   [65] Ran
+  2026_10_07_000011_add_payload_to_license_keys .. [66] Ran
 ```
 
 ## Routes (web)
@@ -529,6 +530,7 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/panel/app/Support/LicenseSigner.php
 /usr/local/alphacp/panel/config/license_public.pem.example
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000004_create_license_keys_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000011_add_payload_to_license_keys.php
 /usr/local/alphacp/panel/resources/views/license-server/index.blade.php
 /usr/local/alphacp/panel/resources/views/license/index.blade.php
 /usr/local/alphacp/panel/tests/Unit/LicenseClientTest.php

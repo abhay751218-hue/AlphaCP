@@ -25,17 +25,30 @@
         </label>
         <label>Plan
             <select name="plan" required>
-                <option value="starter">starter</option>
-                <option value="pro">pro</option>
-                <option value="business">business</option>
+                <option value="starter">starter (10 accounts)</option>
+                <option value="pro">pro (50 accounts)</option>
+                <option value="business">business (200 accounts)</option>
+                <option value="owner">owner (UNLIMITED + lifetime)</option>
             </select>
         </label>
-        <label>Din (validity)
-            <input type="number" name="days" value="365" min="1" max="3650" required>
+        <label>Din (validity; 0 = lifetime, sirf owner)
+            <input type="number" name="days" value="365" min="0" max="36500" required>
         </label>
         <button class="btn" type="submit">Issue license</button>
     </form>
 </div>
+
+@if ($publicPem)
+<div class="card">
+    <h3>Public key (customer panel ke .env me ACP_LICENSE_PUBLIC_KEY)</h3>
+    <pre style="word-break:break-all;white-space:pre-wrap">{{ $publicPem }}</pre>
+    <p class="muted">Customer apne panel me ye key daalega — offline Ed25519 verify ke liye.</p>
+</div>
+@else
+<div class="card">
+    <p class="muted">Sodium extension is host par nahi — licenses online-verified mode me chalenge (hmac).</p>
+</div>
+@endif
 
 <div class="card">
     <h3>Issued licenses ({{ $keys->count() }})</h3>

@@ -443,6 +443,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000008_create_optimize_settings_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000009_create_dns_cluster_nodes_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000010_create_port_configs_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000011_add_payload_to_license_keys.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php
