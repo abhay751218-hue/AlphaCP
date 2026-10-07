@@ -71,7 +71,7 @@ Persona → panel: **Owner/Admin = WHM-like (2086/87)** · **Reseller = scoped W
 |---|---|---|
 | B0 | Agent source-of-truth drift (3-task stale → downgrade risk) | ✅ `606ac97` |
 | B6 | `MysqlServer.php` missing → db.*/db.restore fatal | ✅ repo `fd9aca9` + **live `agent-fix v1.0`** |
-| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | 🔜 **Phase 1** (agent-side `ftp.*`/`git.*`/`terminal.run`/`apps.install`) |
+| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | 🟡 **FTP code done** (`35cd630`, agent 215/0) — ship baaki; Git/Terminal/Apps 🔜 |
 | B2 | Metrics `open_basedir` se blocked | 🔜 Phase 3 (`metrics.access` agent task) |
 | B3 | WebDisk sirf DB rows (WebDAV provisioning nahi) | 🔜 Phase 5 (implement ya hide — decision) |
 | B4 | 6 panel test-debt failures | 🔜 Phase 4 (suite 100% green) |
@@ -117,8 +117,16 @@ Reference: user-attached screenshots (`uploads/howtologinwhmlogin.png`, `howtolo
   Email Deliverability, Email Filters, Email Routing, Email Disk Usage, Authentication
 - **SECURITY:** IP Blocker, SSL/TLS (+Status), Hotlink Protection, Leech Protect, Two-Factor Auth
 - **SOFTWARE:** PHP MultiPHP/Selector, Site Software, Perl Modules, WordPress/App installer
-- **METRICS:** Visitors, Errors, Bandwidth, Raw Access, Awstats/Webalizer, Resource Usage
+- **METRICS:** Visitors, Errors, Bandwidth, Raw Access, Awstats/Webalizer, Resource Usage, Metrics Editor
+- **ADVANCED:** Cron Jobs, Apache Handlers, MIME Types, Track DNS, SSH Access, Terminal, Indexes,
+  Error Pages, Optimize Website (.htaccess)  ← *web-search se confirm (cPanel dashboard ka 9va section)*
 - **PREFERENCES:** Password, Contact Info, Language, Style/Theme, User Management, Notifications
+- **SIDEBAR/RIGHT:** "General Information" (Current User, Primary Domain, Home Dir, IPs, Last Login)
+  + "Statistics" (disk/bandwidth meters) + top **Search bar** — ye teeno har page par visible.
+> Note: sandbox se `docs.cpanel.net` block hai, par **web_search chalta hai** — cPanel ki section-list
+> (Files/Databases/Domains/Email/Metrics/Security/Software/Advanced/Preferences + General Info/
+> Statistics) online sources se confirm ho chuki hai (7 Oct). Har module ki detail parity baad me
+> step-by-step online verify karenge.
 ### 4.4 WHM parity checklist (root/reseller)
 Account Functions (List/Create/Suspend/Unsuspend/Terminate/Modify/Upgrade) · Packages · Resellers ·
 DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoSSL) · Service Configuration
@@ -157,5 +165,7 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | doctor v1.7 | — | `da3539029d1010f33fd550e7b4d016785c932103` / `e2915e0204df79ec41540d0ee68ef8a1c3cb3f261a39dc38651471a5115f5e88` |
 
 ## 7. Next immediate step
-**Phase 1 = B1 FTP via agent** (`ftp.*` tasks + `pure-pw` allowlist + panel queueing) → verify → pinned
-`agent-fix`/panel-update. Uske baad Git/Terminal/Apps (B1), Metrics (B2), test-debt (B4), phir **P-UI-1**.
+**Phase 1 = B1 FTP:** code DONE + verified (`35cd630`; agent 215/0, panel smoke 8/8). Ab isko **ship**
+karna hai: `installer/agent-fix.sh` v1.1 (agent: Ftp.php+handlers+tasks+allowlist) + panel files
+(Support/Ftp, FtpController) ek hi pinned command me → sim-verify → command. Uske baad Git/Terminal/
+Apps (B1), Metrics (B2), test-debt (B4), phir **P-UI-1** (theme engine).
