@@ -246,6 +246,7 @@ alphacp:scheduled-backups
   2026_10_07_000001_create_ftp_accounts_table   [57] Ran
   2026_10_07_000002_create_blocked_ips_table   [58] Ran
   2026_10_07_000003_create_api_tokens_table   [59] Ran
+  2026_10_07_000004_create_license_keys_table   [60] Ran
 ```
 
 ## Routes (web)
@@ -378,6 +379,10 @@ GET|HEAD           /json-api/removeacct
 GET|HEAD           /json-api/suspendacct                         
 GET|HEAD           /json-api/unsuspendacct                       
 GET|HEAD           /license                                      license.index
+GET|HEAD           /license-server                               license-server.index
+POST               /license-server                               license-server.store
+POST               /license-server/verify                        license-server.verify
+DELETE             /license-server/{licenseKey}                  license-server.destroy
 POST               /license/activate                             license.activate
 POST               /login                                        login.attempt
 POST               /logout                                       logout
@@ -493,8 +498,13 @@ GET|HEAD           /{fallbackPlaceholder}
 ```
 /usr/local/alphacp/panel/app/Console/Commands/LicenseRenewCommand.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
+/usr/local/alphacp/panel/app/Http/Controllers/LicenseServerController.php
+/usr/local/alphacp/panel/app/Models/LicenseKey.php
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php
+/usr/local/alphacp/panel/app/Support/LicenseSigner.php
 /usr/local/alphacp/panel/config/license_public.pem.example
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000004_create_license_keys_table.php
+/usr/local/alphacp/panel/resources/views/license-server/index.blade.php
 /usr/local/alphacp/panel/resources/views/license/index.blade.php
 /usr/local/alphacp/panel/tests/Unit/LicenseClientTest.php
 ```

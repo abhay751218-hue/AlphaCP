@@ -197,6 +197,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/IndexesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/IpBlockerController.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
+/usr/local/alphacp/panel/app/Http/Controllers/LicenseServerController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailingListsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MetricsController.php
@@ -271,6 +272,7 @@
 /usr/local/alphacp/panel/app/Models/GlobalEmailRoute.php
 /usr/local/alphacp/panel/app/Models/GlobalFilter.php
 /usr/local/alphacp/panel/app/Models/HostnameA.php
+/usr/local/alphacp/panel/app/Models/LicenseKey.php
 /usr/local/alphacp/panel/app/Models/LoginAttempt.php
 /usr/local/alphacp/panel/app/Models/MailFilter.php
 /usr/local/alphacp/panel/app/Models/Mailbox.php
@@ -317,6 +319,7 @@
 /usr/local/alphacp/panel/app/Support/Handlers.php
 /usr/local/alphacp/panel/app/Support/Indexes.php
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php
+/usr/local/alphacp/panel/app/Support/LicenseSigner.php
 /usr/local/alphacp/panel/app/Support/Mail.php
 /usr/local/alphacp/panel/app/Support/MailProvisioner.php
 /usr/local/alphacp/panel/app/Support/Metrics.php
@@ -417,6 +420,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000001_create_ftp_accounts_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000002_create_blocked_ips_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000003_create_api_tokens_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000004_create_license_keys_table.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php
@@ -479,6 +483,7 @@
 /usr/local/alphacp/panel/resources/views/ip-blocker/index.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/guest.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php
+/usr/local/alphacp/panel/resources/views/license-server/index.blade.php
 /usr/local/alphacp/panel/resources/views/license/index.blade.php
 /usr/local/alphacp/panel/resources/views/mailing-lists/index.blade.php
 /usr/local/alphacp/panel/resources/views/metrics/index.blade.php
