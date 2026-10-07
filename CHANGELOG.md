@@ -5,6 +5,35 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Panel 0.76.0 — 3 alag colour panels (cPanel company jaisa) (7 Oct)** 🎨
+  - `public/assets/panel.css` poora CSS-variable theming: `body[data-panel="whm"]` = **dark navy**
+    (Server Manager/admin), `body[data-panel="cpanel"]` = **light + cPanel blue** (customer, Jupiter-jaisa),
+    `body[data-panel="webmail"]` = **light + teal** (Roundcube-jaisa). Har colour variable se aati hai,
+    isliye naya theme = sirf naya variable block. Online research: cPanel 138 Meridian (6 hubs),
+    Jupiter light theme, WHM dark navy, Roundcube teal — `docs/09-cpanel-parity-checklist.md` row 89.
+  - `layouts/panel.blade.php`: `<body data-panel="...">` attribute (`@yield('panel-theme')` se page
+    override kar sakti hai — webmail view use karti hai). WHM mode me **left sidebar navigation**
+    (Server/Accounts/DNS/Backup/Security/System groups, `@can` checks, active-link highlight) —
+    WHM jaisa; customer mode me topnav (Domains/Email/Files/Databases/MultiPHP/Cron/SSL/Security).
+  - `tests/Feature/PanelThemeTest.php` — 4 naye tests: whm dark theme + sidebar, customer light theme
+    (koi sidebar nahi), webmail teal theme, login brand.
+- **Repo source sync (7 Oct)** — `refs/panel-2b-bundle/` (0.3.2 tha) aur `agent/` (3 tasks the) ab
+  server-snapshot (deployed 0.75.0, agent 73 tasks) ke byte-for-byte hain. Server = sath (START-HERE rule).
+  Isse repo test suite pehli baar deployed code pe chalti hai: **479 pass, 0 fail, 6 wasm-skip**
+  (pehle agent-config stale hone se 93 fail).
+
+### Fixed
+- **6 pre-existing test failures (7 Oct)** — views server pe brand-safe ho gaye the ("cPanel" →
+  "Account Panel", master plan §3 legal rule) par tests purana text assert kar rahi thi:
+  `DashboardShellTest` ('WHM Dashboard'→'Server Manager Dashboard', 'cPanel'→'Account Panel'),
+  `DomainsTest` + `MysqlUsersTest` ('customer cPanel'→'customer account panel'),
+  `TransferRestoreTest` + `TransferToolTest` ('Import a cPanel account…'→'Import an account…').
+  `MysqlUsersTest` me user-creation order bhi theek ki (acting ke dauran user create karne par
+  ResellerScopeProvider sahi 403 deta hai — wo asli behaviour hai, test setup galat tha).
+- **View grammar (7 Oct)** — blind brand-sed ne "Import a Account Panel account archive" jaisa
+  toota hua text chhoda tha; transfer-restore/transfer-tool views ab saaf English me hain.
+
+### Added
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
   PR refs se commit milta hai. sync-sim **60/60**. `panel-update 0.3.0`: artifact/sync-tool pehle `get` se,

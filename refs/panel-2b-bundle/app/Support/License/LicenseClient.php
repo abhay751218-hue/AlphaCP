@@ -64,6 +64,72 @@ final class LicenseClient
         return $this->statusFromRecord($record);
     }
 
+    /** Re-issue a fresh local trial (+$days), overwriting any existing record.
+     *  Owner-server keep-alive: local_trial is offline-valid (fingerprint-bound). */
+    public function renewTrial(int $days = 15): array
+    {
+        $now     = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $expires = $now->modify('+' . max(1, $days) . ' days');
+        $payload = [
+            'license_uid'  => 'TRIAL-' . strtoupper(substr($this->fingerprint(), 0, 16)),
+            'product'      => self::PRODUCT,
+            'tier'         => 'trial',
+            'features'     => ['core'],
+            'max_accounts' => 20,
+            'max_servers'  => 1,
+            'issued_at'    => $now->format(DATE_ATOM),
+            'expires_at'   => $expires->format(DATE_ATOM),
+            'grace_days'   => 0,
+            'bindings'     => ['fingerprint'],
+        ];
+        $record = [
+            'source'      => 'local_trial',
+            'fingerprint' => $this->fingerprint(),
+            'payload'     => $payload,
+            'signature'   => null,
+            'stored_at'   => $now->format(DATE_ATOM),
+        ];
+        $this->writeRecord($record);
+
+        return $this->statusFromRecord($record);
+    }
+
+    /**
+     * Owner-server lifetime + unlimited license — fingerprint-bound offline
+     * record (source `owner_local`). Owner ka apna server kabhi trial/cap me
+     * nahi phasna chahiye; customer keys alag se license-server se issue hoti hain.
+     *
+     * @return array<string, mixed>
+     */
+    public function installOwnerLicense(): array
+    {
+        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+
+        $payload = [
+            'license_uid'  => 'OWNER-' . strtoupper(substr($this->fingerprint(), 0, 12)),
+            'product'      => self::PRODUCT,
+            'tier'         => 'owner',
+            'features'     => ['core'],
+            'max_accounts' => -1,
+            'max_servers'  => 1,
+            'issued_at'    => $now->format(DATE_ATOM),
+            'expires_at'   => null,
+            'grace_days'   => 0,
+            'bindings'     => ['fingerprint'],
+        ];
+
+        $record = [
+            'source'      => 'owner_local',
+            'fingerprint' => $this->fingerprint(),
+            'payload'     => $payload,
+            'signature'   => null,
+            'stored_at'   => $now->format(DATE_ATOM),
+        ];
+        $this->writeRecord($record);
+
+        return $this->statusFromRecord($record);
+    }
+
     /** @return array<string, mixed> */
     public function status(): array
     {
@@ -87,7 +153,7 @@ final class LicenseClient
 
         $api = rtrim((string) config('acp.license.api_url', ''), '/');
         if ($api === '') {
-            return $this->operationFailure('License server abhi configure nahi hai. Local trial active rahega.');
+            return $this->operationFailure('License server is not configured yet. Local trial stays active.');
         }
 
         try {
@@ -101,11 +167,11 @@ final class LicenseClient
                 ]);
         } catch (\Throwable $exception) {
             report($exception);
-            return $this->operationFailure('License server reachable nahi hai. Trial/website services unaffected hain.');
+            return $this->operationFailure('License server is not reachable. Trial/website services stay up.');
         }
 
         if (! $response->successful()) {
-            return $this->operationFailure($this->responseMessage($response, 'License activation reject ho gaya.'));
+            return $this->operationFailure($this->responseMessage($response, 'License activation was rejected.'));
         }
 
         $body = $response->json();
@@ -115,7 +181,7 @@ final class LicenseClient
         $signature = is_array($body) && is_string($body['signature'] ?? null) ? $body['signature'] : '';
 
         if ($payload === null || ! $this->verifyPayload($payload, $signature)) {
-            return $this->operationFailure('License response ki signature verify nahi hui.');
+            return $this->operationFailure('License response signature did not verify.');
         }
 
         $record = [
@@ -129,12 +195,12 @@ final class LicenseClient
             $this->writeRecord($record);
         } catch (\Throwable $exception) {
             report($exception);
-            return $this->operationFailure('License verify ho gaya, lekin local store me save nahi hua.');
+            return $this->operationFailure('License verified, but the local store did not save.');
         }
 
         return [
             'ok' => true,
-            'message' => 'License activate ho gaya.',
+            'message' => 'License activated.',
             'status' => $this->statusFromRecord($record),
         ];
     }
@@ -215,23 +281,49 @@ final class LicenseClient
         }
 
         $signature = $record['signature'] ?? null;
-        $isLocalTrial = ($record['source'] ?? '') === 'local_trial';
-        if (! $isLocalTrial && (! is_string($signature) || ! $this->verifyPayload($payload, $signature))) {
+        // local_trial + owner_local: offline-valid, fingerprint-bound records
+        // (owner ka apna server — signature ki zaroorat nahi).
+        $localSource = in_array($record['source'] ?? '', ['local_trial', 'owner_local'], true);
+        if (! $localSource && (! is_string($signature) || ! $this->verifyPayload($payload, $signature))) {
             return $this->invalidStatus('License signature invalid hai.');
         }
 
-        $expiresAt = (string) ($payload['expires_at'] ?? '');
+        $now     = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $isTrial = ($payload['tier'] ?? '') === 'trial';
+
+        $common = fn (array $extra): array => array_merge([
+            'license_uid'  => (string) ($payload['license_uid'] ?? ''),
+            'tier'         => (string) ($payload['tier'] ?? ''),
+            'features'     => is_array($payload['features'] ?? null) ? $payload['features'] : [],
+            'max_accounts' => isset($payload['max_accounts']) ? (int) $payload['max_accounts'] : null,
+            'issued_at'    => (string) ($payload['issued_at'] ?? ''),
+            'source'       => $localSource ? 'local' : 'license_server',
+            'fingerprint'  => substr($this->fingerprint(), 0, 16) . '…',
+        ], $extra);
+
+        // Lifetime: expires_at null/empty = koi expiry nahi (owner tier).
+        $rawExpiry = $payload['expires_at'] ?? null;
+        if ($rawExpiry === null || (is_string($rawExpiry) && trim($rawExpiry) === '')) {
+            return $common([
+                'state'       => 'active',
+                'label'       => 'LIFETIME',
+                'message'     => 'Lifetime license — koi expiry nahi, accounts unlimited.',
+                'expires_at'  => 'lifetime',
+                'grace_until' => null,
+                'days_left'   => null,
+            ]);
+        }
+
+        $expiresAt = (string) $rawExpiry;
         try {
             $expires = new DateTimeImmutable($expiresAt, new DateTimeZone('UTC'));
-            $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
         } catch (\Throwable) {
             return $this->invalidStatus('License expiry date invalid hai.');
         }
 
-        $graceDays = max(0, (int) ($payload['grace_days'] ?? 0));
+        $graceDays  = max(0, (int) ($payload['grace_days'] ?? 0));
         $graceUntil = $expires->modify('+' . $graceDays . ' days');
-        $daysLeft = (int) $now->diff($expires)->format('%r%a');
-        $isTrial = $isLocalTrial || ($payload['tier'] ?? '') === 'trial';
+        $daysLeft   = (int) $now->diff($expires)->format('%r%a');
 
         if ($now <= $expires) {
             $state = $isTrial ? 'trial' : ($daysLeft <= 15 ? 'notice' : 'active');
@@ -243,24 +335,17 @@ final class LicenseClient
             $message = 'License grace period me hai; panel me naye privileged actions limited ho sakte hain.';
         } else {
             $state = 'locked';
-            $message = 'License renew karein. Customer websites, email, DNS aur backups band nahi honge.';
+            $message = 'Renew the license. Customer websites, email, DNS and backups stay up.';
         }
 
-        return [
-            'state' => $state,
-            'label' => strtoupper($state),
-            'message' => $message,
-            'license_uid' => (string) ($payload['license_uid'] ?? ''),
-            'tier' => (string) ($payload['tier'] ?? ''),
-            'features' => is_array($payload['features'] ?? null) ? $payload['features'] : [],
-            'max_accounts' => isset($payload['max_accounts']) ? (int) $payload['max_accounts'] : null,
-            'issued_at' => (string) ($payload['issued_at'] ?? ''),
-            'expires_at' => $expires->format(DATE_ATOM),
+        return $common([
+            'state'       => $state,
+            'label'       => strtoupper($state),
+            'message'     => $message,
+            'expires_at'  => $expires->format(DATE_ATOM),
             'grace_until' => $graceUntil->format(DATE_ATOM),
-            'days_left' => $daysLeft,
-            'source' => $isLocalTrial ? 'local' : 'license_server',
-            'fingerprint' => substr($this->fingerprint(), 0, 16) . '…',
-        ];
+            'days_left'   => $daysLeft,
+        ]);
     }
 
     /** @return array<string, mixed> */
@@ -269,7 +354,7 @@ final class LicenseClient
         return [
             'state' => 'uninitialized',
             'label' => 'UNINITIALIZED',
-            'message' => 'License/trial abhi initialize nahi hua.',
+            'message' => 'License/trial is not initialized yet.',
             'license_uid' => '',
             'tier' => '',
             'features' => [],
@@ -317,13 +402,13 @@ final class LicenseClient
         $path = $this->storePath();
         $directory = dirname($path);
         if (! is_dir($directory) && ! @mkdir($directory, 0700, true) && ! is_dir($directory)) {
-            throw new RuntimeException('License store directory create nahi hua.');
+            throw new RuntimeException('License store directory was not created.');
         }
 
         $temporary = $directory . '/.license-' . bin2hex(random_bytes(8)) . '.tmp';
         $json = json_encode($record, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
         if (@file_put_contents($temporary, $json . PHP_EOL, LOCK_EX) === false) {
-            throw new RuntimeException('License store write nahi hua.');
+            throw new RuntimeException('License store write failed.');
         }
         @chmod($temporary, 0600);
         if (! @rename($temporary, $path)) {
