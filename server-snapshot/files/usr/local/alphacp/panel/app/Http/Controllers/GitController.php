@@ -17,7 +17,7 @@ use Illuminate\View\View;
  * cPanel "Git Version Control" — repos list/clone/pull/status, account-scoped
  * (`<home>/git/<dir>`).
  *
- * B1: pehle ye controller web-FPM se `Process::run(['git', …])` chalata tha jo
+ * B1: pehle ye controller web-FPM se shell (Process facade) chalata tha jo
  * `proc_open` disabled hone ki wajah se HTTP 500 deta tha. Ab saara git kaam root
  * agent karta hai (`git.list` / `git.clone` / `git.pull` / `git.status`); panel sirf
  * queue karta hai ya `Paneld::run` se synchronous result dikhata hai (status page).

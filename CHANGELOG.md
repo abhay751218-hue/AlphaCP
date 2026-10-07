@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/b1-fix.sh` **v1.0** (+ `.in`, `tools/build-b1-fix.py`, `tools/sim/b1-fix-sim.sh`) —
+  B1 part 2 deploy: agent 10 + panel 4 files byte-for-byte; gates ftp-fix jaise (suite
+  `passed>=218 failed=0`, panel me code-level Process absence assert). **Sim 40/40**
+  (live-state `047d974` reproduce → apply → rollback → idempotent).
+  Pin: commit `ec50182305cdd324a93db159e738ec3881e74ebc`, sha256 `046bfbbce36f92c1d5af59431e95b187b14097bf749f2446c6d725f0fd21bfca`.
 - **B1-baaki: Git Version Control + Terminal + Site Software ab root-agent se** · agent par 6 naye
   tasks (`git.list/clone/pull/status`, `terminal.run`, `apps.install`; registry 83 → **89**) +
   `agent/src/Git.php` + `Tasks/GitTask` base; allowlist me git/curl/chown + terminal whitelist bins.

@@ -13,7 +13,7 @@ use Illuminate\View\View;
  * cPanel/WHM "Terminal" (simplified, non-interactive) — whitelisted read-only
  * commands only. Chaining/redirects (`;|&\`$><`) blocked.
  *
- * B1: pehle `Process::timeout(30)->run($cmd)` web-FPM me chalta tha → proc_open
+ * B1: pehle command web-FPM me Process facade se chalta tha → proc_open
  * disabled → HTTP 500. Ab command root agent chalata hai (`terminal.run`), jo
  * whitelist DOBARA validate karta hai (defense in depth); panel sirf result
  * synchronous dikhata hai (Paneld::run).

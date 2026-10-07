@@ -62,3 +62,14 @@ bash tools/sim/ftp-fix-sim.sh                # -> 40/40   (PHPBIN=/path/to/php o
 
 Note: sim `unset PHP` karta hai aur apna binary `PHPBIN` me rakhta hai — php-wasm `PHP` env ko
 version maanta hai (warna har php call chup-chaap fail hota hai).
+
+## b1-fix-sim.sh — `installer/b1-fix.sh` v1.0 (Git/Terminal/Apps via root agent)
+
+Live ki maujooda state (`047d974`: registry 83 types + Process-wale Git/Terminal/Apps
+controllers) fake ACP_HOME me reproduce karta hai, phir poora lifecycle: reproduce →
+`--diagnose` → apply (lint 10+4, smoke, suite gate `passed>=218 failed=0`, registry 89,
+panel code me Process:: 0, byte-for-byte payloads) → diagnose post → rollback → re-apply.
+
+```bash
+bash tools/sim/b1-fix-sim.sh               # -> 40/40
+```

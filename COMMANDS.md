@@ -14,9 +14,28 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-> **Abhi koi server command NAHI** — FTP live ho chuka hai. Agla pinned command tab milega jab
-> **B1-baaki (Git · Terminal · Apps · Firewall/Waf)** ka installer sim-verified ho jayega.
-> Filhal panel me **FTP Accounts → naya account** bana kar verify karo (neeche ftp-fix section).
+### 🔴 b1-fix v1.0 — Git/Terminal/Apps live par HTTP 500 (B1 part 2). **Yahi chalao.**
+```bash
+sudo alphacp-sync get ec50182305cdd324a93db159e738ec3881e74ebc installer/b1-fix.sh /tmp/b1-fix-v1.0.sh 046bfbbce36f92c1d5af59431e95b187b14097bf749f2446c6d725f0fd21bfca && sudo bash /tmp/b1-fix-v1.0.sh
+```
+- commit `ec50182305cdd324a93db159e738ec3881e74ebc`, sha256 `046bfbbce36f92c1d5af59431e95b187b14097bf749f2446c6d725f0fd21bfca`.
+- **Kya karta hai:** Git Version Control / Terminal / Site Software (WordPress) pages live par
+  **500** dete the (controllers web-FPM se shell chalate the; proc_open disabled — audit B1).
+  Ab saara kaam **root agent** karta hai: git.list/clone/pull/status (repos home ke andar
+  `<home>/git/<dir>`, `git clone --`, pull `--ff-only`), terminal.run (read-only whitelist,
+  agent par dobara validate), apps.install (public_html + `<account>_wp` DB/user/grant +
+  WordPress extract + wp-config + chown). Registry 83 → **89 types**. Panel sirf queue/dikhawa
+  (`Paneld::run` se sync list/status; baaki enqueue). Agent 10 + panel 4 files byte-for-byte.
+- **Expected output:** `backup: …/releases/b1fix-<ts>` → `agent files likhi + lint clean (10)` →
+  `SMOKE OK` → `agent suite GREEN (passed=218 failed=0)` → `paneld active` →
+  `panel files likhi + lint clean (4) — koi Process:: nahi` → `php8.4-fpm active` →
+  `panel /login HTTP 200` → `sync complete` → `FINAL VERDICT … b1-fix v1.0 APPLY ho gaya`.
+- **Fail par:** apne aap **rollback**. **Dekhna ho:** `--diagnose` · **wapas:** `--rollback`.
+- **Verify:** panel → **Git Version Control** (repo clone), **Terminal** (`ls -la`, `df`),
+  **Site Software** (WordPress queue). Terminal se:
+  `sudo php8.4 /usr/local/alphacp/agent/tests/run-tests.php | tail -1` → `passed: 218   failed: 0`.
+- Test: `bash tools/sim/b1-fix-sim.sh` → **40/40**.
+
 
 ### ✅ ftp-fix v1.0 — APPLIED 8 Oct 00:39 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
