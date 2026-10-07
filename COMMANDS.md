@@ -283,7 +283,20 @@ guest context me crash = **500**. Ab **saare error pages (403/404/405/419/429/50
 koi layout, DB ya auth dependency NAHI — galat URL kabhi 500 nahi dega.
 Sandbox proof: layout ko jaan-boojh kar **break** karke bhi **7/7 tests (16 assertions)** pass,
 exact `GET /login` no-500 test ke saath. `view:clear` bhi chalta hai (stale compiled views hat jayengi).
-Expected: banner `==> STANDALONE ERROR PAGES v2.0 APPLIED` → `alphacp-sync`.
+Expected: banner `==> STANDALONE ERROR PAGES v2.1 APPLIED (env hardened)` → `alphacp-sync`.
+(v2.1: storage ownership fix + sab caches clear + php-fpm restart — stale compiled views/opcache blind-spot khatam.)
+
+---
+
+## Command #30 — Error-pages v2.1 env hardening (agar #29 ke baad bhi 500)
+```bash
+sudo alphacp-sync get bccc913ab1936742c7bd1d0d57329d626a1bee11 installer/error-pages.sh /tmp/error-pages-v2.1.sh 9cd9953ebaccf90f5455680c7665cad6060614b2193b564588dade692472f2c4 && sudo bash /tmp/error-pages-v2.1.sh
+```
+Karta hai: 7 standalone error views (v2.0 jaisa) + `chown storage/bootstrap` (fpm user) +
+view/config/route/cache clear + **php8.4-fpm restart** (opcache flush).
+Sandbox: worst-case (broken layout) me bhi **7/7 (16 assertions)**.
+Agar iske baad bhi 500 dikhe (nahi chahiye), ye ek line paste karo — exact exception milegi:
+`sudo tail -n 60 /usr/local/alphacp/panel/storage/logs/laravel.log | grep -A6 'ERROR' | tail -20`
 
 ---
 
