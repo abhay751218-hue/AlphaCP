@@ -217,6 +217,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/RemoteMysqlController.php
 /usr/local/alphacp/panel/app/Http/Controllers/ResellersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SecurityController.php
+/usr/local/alphacp/panel/app/Http/Controllers/SecurityExtrasController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SecurityToolsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SpamFiltersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SshController.php
@@ -288,6 +289,7 @@
 /usr/local/alphacp/panel/app/Models/PhpmyadminSetting.php
 /usr/local/alphacp/panel/app/Models/Role.php
 /usr/local/alphacp/panel/app/Models/RolePermission.php
+/usr/local/alphacp/panel/app/Models/SecurityExtra.php
 /usr/local/alphacp/panel/app/Models/SpamSetting.php
 /usr/local/alphacp/panel/app/Models/TransferRestore.php
 /usr/local/alphacp/panel/app/Models/TransferReview.php
@@ -421,6 +423,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000002_create_blocked_ips_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000003_create_api_tokens_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000004_create_license_keys_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000005_create_security_extras_table.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php
@@ -505,6 +508,8 @@
 /usr/local/alphacp/panel/resources/views/privacy/index.blade.php
 /usr/local/alphacp/panel/resources/views/remote-mysql/index.blade.php
 /usr/local/alphacp/panel/resources/views/resellers/index.blade.php
+/usr/local/alphacp/panel/resources/views/secextra/hotlink.blade.php
+/usr/local/alphacp/panel/resources/views/secextra/leech.blade.php
 /usr/local/alphacp/panel/resources/views/security-tools/index.blade.php
 /usr/local/alphacp/panel/resources/views/security/index.blade.php
 /usr/local/alphacp/panel/resources/views/security/password.blade.php
