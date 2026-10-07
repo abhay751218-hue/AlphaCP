@@ -300,6 +300,16 @@ Agar iske baad bhi 500 dikhe (nahi chahiye), ye ek line paste karo — exact exc
 
 ---
 
+## Command #34 — Storage ownership FINAL fix (socket-based detection + debug off)
+```bash
+sudo alphacp-sync get 4ec2f93d4fd7e46669fb7a5c7122d1c8eb1f4cda installer/storage-fix.sh /tmp/storage-fix-v1.0.sh 7d50758a32064a0106089e47a71fe2068f5ea4fe54a0c1685f2d662a7cd714eb && sudo bash /tmp/storage-fix-v1.0.sh
+```
+nginx socket → fpm pool → **asli web user** detect karke storage/bootstrap ko deta hai
+(guess nahi), `APP_DEBUG=false` revert, fpm restart, `/` + `/login` status print.
+Expected: `web user: alphacp` → `/ => 200`, `/login => 404` → `STORAGE FIX v1.0 APPLIED`.
+
+---
+
 ## Command #33 — open_basedir 500 PERMANENT fix ⚡ PEHLE YE
 ```bash
 sudo alphacp-sync get 0df1588bd63366c78a41c64a3c4b1e949081831f installer/openbasedir-fix.sh /tmp/openbasedir-fix-v1.0.sh 4d4205ac605b6e02c07221ecfd9315a4ce6775cf26e0d010c119e29f0af1eec4 && sudo bash /tmp/openbasedir-fix-v1.0.sh
