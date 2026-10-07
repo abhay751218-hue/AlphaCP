@@ -21,6 +21,7 @@
 /usr/local/alphacp/agent/src/ErrorPages.php
 /usr/local/alphacp/agent/src/Files.php
 /usr/local/alphacp/agent/src/Ftp.php
+/usr/local/alphacp/agent/src/Git.php
 /usr/local/alphacp/agent/src/Handlers.php
 /usr/local/alphacp/agent/src/Indexes.php
 /usr/local/alphacp/agent/src/JsonSchema.php
@@ -45,6 +46,7 @@
 /usr/local/alphacp/agent/src/Tasks/AccountTerminate.php
 /usr/local/alphacp/agent/src/Tasks/AccountUnsuspend.php
 /usr/local/alphacp/agent/src/Tasks/AgentPing.php
+/usr/local/alphacp/agent/src/Tasks/AppsInstall.php
 /usr/local/alphacp/agent/src/Tasks/BackupArchiveCreate.php
 /usr/local/alphacp/agent/src/Tasks/BackupConfig.php
 /usr/local/alphacp/agent/src/Tasks/BackupCpanel.php
@@ -84,6 +86,11 @@
 /usr/local/alphacp/agent/src/Tasks/FtpDel.php
 /usr/local/alphacp/agent/src/Tasks/FtpPasswd.php
 /usr/local/alphacp/agent/src/Tasks/FtpTask.php
+/usr/local/alphacp/agent/src/Tasks/GitClone.php
+/usr/local/alphacp/agent/src/Tasks/GitList.php
+/usr/local/alphacp/agent/src/Tasks/GitPull.php
+/usr/local/alphacp/agent/src/Tasks/GitStatus.php
+/usr/local/alphacp/agent/src/Tasks/GitTask.php
 /usr/local/alphacp/agent/src/Tasks/GlobalRoutingSet.php
 /usr/local/alphacp/agent/src/Tasks/HandlersSet.php
 /usr/local/alphacp/agent/src/Tasks/HostnameASet.php
@@ -124,6 +131,7 @@
 /usr/local/alphacp/agent/src/Tasks/TaskContext.php
 /usr/local/alphacp/agent/src/Tasks/TaskInterface.php
 /usr/local/alphacp/agent/src/Tasks/TemplatesSet.php
+/usr/local/alphacp/agent/src/Tasks/TerminalRun.php
 /usr/local/alphacp/agent/src/Tasks/TtlSet.php
 /usr/local/alphacp/agent/src/Tasks/ZoneSet.php
 /usr/local/alphacp/agent/systemd/paneld.service
@@ -149,6 +157,7 @@
 /usr/local/alphacp/etc/my.cnf
 /usr/local/alphacp/etc/panel.env
 /usr/local/alphacp/logs/agent-fix-20261007143111.txt
+/usr/local/alphacp/logs/b1-fix-20261007194011.txt
 /usr/local/alphacp/logs/ftp-fix-20261007190843.txt
 /usr/local/alphacp/logs/login-fix-20261007121757.txt
 /usr/local/alphacp/logs/login-fix-20261007124842.txt
@@ -8188,6 +8197,12 @@
 /usr/local/alphacp/releases/agent-backup-20261006082529/tests/run-tests.php
 /usr/local/alphacp/releases/agentfix-20261007143111/MysqlServer.php
 /usr/local/alphacp/releases/agentfix-20261007143111/pre_existed
+/usr/local/alphacp/releases/b1fix-20261007194011/agent/config/tasks.php
+/usr/local/alphacp/releases/b1fix-20261007194011/agent/src/CommandRunner.php
+/usr/local/alphacp/releases/b1fix-20261007194011/panel/app/Http/Controllers/AppsController.php
+/usr/local/alphacp/releases/b1fix-20261007194011/panel/app/Http/Controllers/GitController.php
+/usr/local/alphacp/releases/b1fix-20261007194011/panel/app/Http/Controllers/TerminalController.php
+/usr/local/alphacp/releases/b1fix-20261007194011/panel/app/Support/AppInstaller.php
 /usr/local/alphacp/releases/ftpfix-20261007190843/agent/config/tasks.php
 /usr/local/alphacp/releases/ftpfix-20261007190843/agent/src/CommandRunner.php
 /usr/local/alphacp/releases/ftpfix-20261007190843/panel/app/Http/Controllers/FtpController.php

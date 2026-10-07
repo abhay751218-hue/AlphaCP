@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Support\AccountProvisioner;
 use App\Support\AppInstaller;
 use App\Support\Audit;
 use App\Support\ModuleCatalog;
@@ -34,11 +35,18 @@ final class AppsController extends Controller
         $data = $request->validate(['app' => ['required', 'string', 'in:wordpress']]);
 
         if ($data['app'] === 'wordpress') {
-            $result = AppInstaller::installWordPress($account, Str::random(24));
-            Audit::log('apps.install', 'info', 'account', $account->id, ['app' => 'wordpress', 'db' => $result['db']]);
+            // B1: download/extract/chown/DB sab root agent karta hai (web-FPM proc_open
+            // disabled tha → 500). Panel sirf queue karta hai.
+            AccountProvisioner::enqueue($account, 'apps.install', [
+                'username'    => $account->username,
+                'app'         => 'wordpress',
+                'db_password' => Str::random(24),
+            ]);
+            $account->recordEvent('apps.install.queued', ['app' => 'wordpress']);
+            Audit::log('apps.install', 'info', 'account', $account->id, ['app' => 'wordpress']);
 
             return redirect()->route('apps.index')
-                ->with('success', 'WordPress install ho gaya (DB: ' . $result['db'] . ').');
+                ->with('success', 'WordPress install queue me hai — public_html + DB ban kar task history me dikhega.');
         }
 
         return back()->withErrors(['app' => 'Ye app abhi available nahi.']);

@@ -4,92 +4,115 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Models\Account;
+use App\Support\AccountProvisioner;
+use App\Support\Audit;
+use App\Support\ModuleCatalog;
+use App\Support\Paneld;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Process;
 use Illuminate\View\View;
 
 /**
- * cPanel "Git Version Control" — repos list/clone/pull/status.
- * Sab git ops Process facade se (sandbox-testable via Process::fake).
- * Security: sirf config('acp.git_base') ke andar ke dirs (realpath guard).
+ * cPanel "Git Version Control" — repos list/clone/pull/status, account-scoped
+ * (`<home>/git/<dir>`).
+ *
+ * B1: pehle ye controller web-FPM se shell (Process facade) chalata tha jo
+ * `proc_open` disabled hone ki wajah se HTTP 500 deta tha. Ab saara git kaam root
+ * agent karta hai (`git.list` / `git.clone` / `git.pull` / `git.status`); panel sirf
+ * queue karta hai ya `Paneld::run` se synchronous result dikhata hai (status page).
  */
 final class GitController extends Controller
 {
-    private function base(): string
+    public function index(Request $request): View
     {
-        return rtrim((string) (config('acp.git_base') ?: storage_path('app/git')), '/');
-    }
-
-    public function index(): View
-    {
-        $base  = $this->base();
+        $account = $this->accountFor($request);
         $repos = [];
+        $note = null;
 
-        if (is_dir($base)) {
-            foreach (scandir($base) ?: [] as $d) {
-                if ($d === '.' || $d === '..') {
-                    continue;
-                }
-                if (is_dir($base . '/' . $d . '/.git')) {
-                    $repos[] = $d;
-                }
+        if ($account !== null && in_array('git.list', Paneld::taskTypes(), true)) {
+            $res = Paneld::run('git.list', ['account' => $account->username], 10);
+            $repos = is_array($res['repos'] ?? null) ? $res['repos'] : [];
+            if ($res === null) {
+                $note = 'Agent se repo list nahi mili (task timeout) — dobara try karo.';
             }
+        } elseif ($account !== null) {
+            $note = 'Agent par git tasks available nahi hain (agent update chahiye).';
         }
 
-        return view('git.index', ['repos' => $repos]);
+        return view('git.index', [
+            'repos' => $repos,
+            'note'  => $note,
+        ]);
     }
 
     public function clone(Request $request): RedirectResponse
     {
+        $account = $this->requireAccount($request);
+
         $data = $request->validate([
-            'url' => 'required|url',
-            'dir' => 'required|string|regex:/^[a-z0-9._-]+$/i',
+            'url' => ['required', 'url', 'max:300'],
+            'dir' => ['required', 'string', 'regex:/^[a-z0-9._-]{1,64}$/i'],
         ]);
 
-        $target = $this->base() . '/' . $data['dir'];
+        AccountProvisioner::enqueue($account, 'git.clone', [
+            'account' => $account->username,
+            'url'     => $data['url'],
+            'dir'     => strtolower($data['dir']),
+        ]);
+        $account->recordEvent('git.clone.queued', ['dir' => $data['dir']]);
+        Audit::log('git.clone', 'info', 'account', $account->id, ['dir' => $data['dir']]);
 
-        Process::timeout(120)->run('git clone -- ' . escapeshellarg($data['url']) . ' ' . escapeshellarg($target));
-
-        return redirect('/git');
+        return redirect()->route('git.index')->with('success', 'Clone queue me hai — thodi der me list me dikhega.');
     }
 
-    public function pull(string $dir): RedirectResponse
+    public function pull(Request $request, string $dir): RedirectResponse
     {
-        $path = $this->resolve($dir);
-        if ($path === null) {
-            return redirect('/git');
+        $account = $this->requireAccount($request);
+        $dir = strtolower($dir);
+
+        AccountProvisioner::enqueue($account, 'git.pull', [
+            'account' => $account->username,
+            'dir'     => $dir,
+        ]);
+        $account->recordEvent('git.pull.queued', ['dir' => $dir]);
+        Audit::log('git.pull', 'info', 'account', $account->id, ['dir' => $dir]);
+
+        return redirect()->route('git.index')->with('success', "Pull queue me hai ({$dir}).");
+    }
+
+    public function status(Request $request, string $dir): View|RedirectResponse
+    {
+        $account = $this->requireAccount($request);
+        $dir = strtolower($dir);
+
+        $res = Paneld::run('git.status', ['account' => $account->username, 'dir' => $dir], 35);
+        if ($res === null) {
+            return redirect()->route('git.index')->with('error', "Status nahi mila ({$dir}) — repo maujood hai?");
         }
 
-        Process::timeout(120)->run('git -C ' . escapeshellarg($path) . ' pull --ff-only');
-
-        return redirect('/git');
+        return view('git.status', [
+            'dir'    => $dir,
+            'output' => implode("\n", $res['lines'] ?? []),
+        ]);
     }
 
-    public function status(string $dir): View|RedirectResponse
+    private function accountFor(Request $request): ?Account
     {
-        $path = $this->resolve($dir);
-        if ($path === null) {
-            return redirect('/git');
-        }
-
-        $result = Process::timeout(30)->run(['git', '-C', $path, 'status', '--porcelain']);
-
-        return view('git.status', ['dir' => $dir, 'output' => $result->output()]);
-    }
-
-    private function resolve(string $dir): ?string
-    {
-        $base = realpath($this->base());
-        if ($base === false) {
+        if (ModuleCatalog::modeFor($request->user()) === 'whm') {
             return null;
         }
 
-        $path = realpath($base . '/' . $dir);
-        if ($path === false || ! str_starts_with($path, $base . '/')) {
-            return null;
+        return $request->user()->hostingAccount;
+    }
+
+    private function requireAccount(Request $request): Account
+    {
+        $account = $this->accountFor($request);
+        if ($account === null) {
+            abort(403, 'This login has no hosting account.');
         }
 
-        return $path;
+        return $account;
     }
 }
