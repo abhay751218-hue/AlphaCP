@@ -51,6 +51,14 @@ final class FakeCommandExecutor implements CommandExecutor
 
     public ?string $failWhenContains = null;
 
+    // ---- S6 FTP (ftp.add/ftp.passwd/ftp.del) ----
+    /** @var array<string, array{home: string, uid: int, gid: int}> pure-ftpd virtual users */
+    public array $purePwUsers = [];
+    /** @var list<list<string>> every pure-pw argv (password must NEVER be here) */
+    public array $purePwArgvs = [];
+    /** @var list<string> every pure-pw stdin (the password lives here, not argv) */
+    public array $purePwStdins = [];
+
     // ---- S10 remote pull (backup.pull) ----
     /** host key pubkey line returned by the fake `ssh-keyscan` */
     public string $hostKeyPubkey = 'old.example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl';
@@ -188,6 +196,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'certbot' => $this->handleCertbot($argv),
             'tar' => $this->handleTar($argv),
             'mariadb', 'mysql' => $this->handleMysql($argv, $stdin),
+            'pure-pw' => $this->handlePurePw($argv, $stdin),
             'ssh-keyscan' => $this->handleKeyscan($argv),
             'ssh-keygen' => $this->handleKeygen($argv),
             'scp' => $this->handleScp($argv),
@@ -469,6 +478,39 @@ final class FakeCommandExecutor implements CommandExecutor
             return implode("\n", $lines) . "\n";
         }
         return '';
+    }
+
+    /** @param list<string> $argv */
+    private function handlePurePw(array $argv, ?string $stdin): CommandResult
+    {
+        $this->purePwArgvs[] = $argv;
+        $this->purePwStdins[] = (string) $stdin;
+        $sub = (string) ($argv[1] ?? '');
+        $login = (string) ($argv[2] ?? '');
+        if ($this->failWhenContains !== null && str_contains(implode(' ', $argv), $this->failWhenContains)) {
+            return new CommandResult($argv, 1, '', 'injected failure: ' . $this->failWhenContains, 1);
+        }
+        if ($sub === 'useradd') {
+            $home = ''; $uid = 0; $gid = 0;
+            for ($i = 3; $i < count($argv) - 1; $i++) {
+                if ($argv[$i] === '-d') { $home = (string) $argv[$i + 1]; }
+                if ($argv[$i] === '-u') { $uid = (int) $argv[$i + 1]; }
+                if ($argv[$i] === '-g') { $gid = (int) $argv[$i + 1]; }
+            }
+            $this->purePwUsers[$login] = ['home' => $home, 'uid' => $uid, 'gid' => $gid];
+            return new CommandResult($argv, 0, '', '', 1);
+        }
+        if ($sub === 'passwd') {
+            if (!isset($this->purePwUsers[$login])) {
+                return new CommandResult($argv, 1, '', "pure-pw: unknown user {$login}", 1);
+            }
+            return new CommandResult($argv, 0, '', '', 1);
+        }
+        if ($sub === 'userdel') {
+            unset($this->purePwUsers[$login]);
+            return new CommandResult($argv, 0, '', '', 1);
+        }
+        return new CommandResult($argv, 0, '', '', 1);
     }
 
     /** @param list<string> $argv */

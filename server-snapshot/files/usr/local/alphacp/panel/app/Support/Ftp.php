@@ -4,49 +4,35 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use Illuminate\Support\Facades\Process;
+use App\Models\Account;
 
 /**
- * cPanel-style FTP Accounts backed by Pure-FTPd (pure-pw / PureDB).
+ * cPanel-style FTP Accounts (Pure-FTPd) — PANEL SIDE.
  *
- * System calls are made through Laravel's Process facade so tests can
- * Process::fake() them. On the server, the portable installer ensures
- * pure-ftpd + pure-pw exist and the PureDB is wired in.
+ * The panel NEVER shells out to `pure-pw`: it needs root, and the web FPM pool
+ * runs with `proc_open` disabled (audit B1 — this used to HTTP-500 on live).
+ * All PureDB mutations are enqueued as root-agent tasks (`ftp.add`,
+ * `ftp.passwd`, `ftp.del`); this class only reports capability (from the agent
+ * registry, which lives inside open_basedir) and derives the cPanel-style
+ * virtual-login / chroot-home names.
  */
 final class Ftp
 {
-    /** pure-ftpd binary path if present. */
-    public static function binary(): ?string
-    {
-        foreach (['/usr/sbin/pure-ftpd', '/usr/bin/pure-ftpd'] as $b) {
-            if (is_file($b)) {
-                return $b;
-            }
-        }
-
-        return null;
-    }
-
+    /** FTP is available iff the root agent exposes the `ftp.*` tasks. */
     public static function enabled(): bool
     {
-        return self::binary() !== null;
+        return in_array('ftp.add', Paneld::taskTypes(), true);
     }
 
-    /** Create a Pure-FTPd virtual user (chroot to its home). */
-    public static function addUser(string $user, string $password, string $home, int $uid = 1000, int $gid = 1000): void
+    /** `<account>_<suffix>` — the Pure-FTPd virtual login (cPanel style). */
+    public static function loginFor(Account $account, string $suffix): string
     {
-        Process::input($password . "\n" . $password . "\n")
-            ->run(['pure-pw', 'useradd', $user, '-u', (string) $uid, '-g', (string) $gid, '-d', $home, '-m']);
+        return strtolower($account->username) . '_' . strtolower($suffix);
     }
 
-    public static function delUser(string $user): void
+    /** `<account-home>/ftp/<suffix>` — the chroot home for the virtual login. */
+    public static function homeFor(Account $account, string $suffix): string
     {
-        Process::run(['pure-pw', 'userdel', $user, '-m']);
-    }
-
-    public static function passwd(string $user, string $password): void
-    {
-        Process::input($password . "\n" . $password . "\n")
-            ->run(['pure-pw', 'passwd', $user, '-m']);
+        return rtrim($account->home_path, '/') . '/ftp/' . strtolower($suffix);
     }
 }

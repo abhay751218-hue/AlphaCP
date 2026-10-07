@@ -93,6 +93,13 @@ final class CommandRunner implements CommandExecutor
         '/usr/bin/update-exim4.conf',
         '/usr/bin/openssl',
         '/usr/local/bin/openssl',
+        // S6 FTP (ftp.add/ftp.passwd/ftp.del): Pure-FTPd virtual-user management.
+        // Web FPM proc_open disabled hai (B1), isliye pure-pw sirf agent (root)
+        // chalata hai — argv-only, password stdin par, `-m` se PureDB rebuild.
+        '/usr/bin/pure-pw',
+        '/usr/sbin/pure-pw',
+        '/usr/local/bin/pure-pw',
+        '/usr/local/sbin/pure-pw',
     ];
 
     public function __construct(private readonly int $defaultTimeout = 30)

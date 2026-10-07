@@ -47,6 +47,9 @@ use Alphacp\Agent\Tasks\FilesUsage;
 use Alphacp\Agent\Tasks\HandlersSet;
 use Alphacp\Agent\Tasks\PrivacySet;
 use Alphacp\Agent\Tasks\SshSet;
+use Alphacp\Agent\Tasks\FtpAdd;
+use Alphacp\Agent\Tasks\FtpPasswd;
+use Alphacp\Agent\Tasks\FtpDel;
 use Alphacp\Agent\Tasks\MailSet;
 use Alphacp\Agent\Tasks\MailForward;
 use Alphacp\Agent\Tasks\MailAutorespond;
@@ -251,7 +254,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1518,6 +1521,88 @@ test('a finished task does not leave its password in the queue', function (): vo
     assert_true(TaskRunner::scrubSecrets(['username' => 'alicehost'])['username'] === 'alicehost', 'payloads without a secret pass through');
     assert_true(TaskRunner::scrubSecrets(['password' => '***'])['password'] === '***', 'already scrubbed stays scrubbed');
     assert_true(TaskRunner::scrubSecrets(['password' => ''])['password'] === '', 'an empty value is not a secret');
+});
+
+fwrite(STDOUT, "\nS6 FTP (Pure-FTPd virtual users, root-side)\n");
+test('ftp.add creates a chrooted virtual user; password on stdin, never in argv', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost/ftp/deploys';
+
+    $out = (new FtpAdd())->handle([
+        'account'  => 'alicehost',
+        'login'    => 'alicehost_deploys',
+        'password' => 'Ftp-Pass-123',
+        'home'     => $home,
+    ], $harness['ctx']);
+
+    assert_true($out['status'] === 'ok' && $out['login'] === 'alicehost_deploys', 'ftp.add reports ok');
+    assert_true(isset($harness['cmd']->purePwUsers['alicehost_deploys']), 'virtual user booked in PureDB');
+    assert_true($harness['cmd']->purePwUsers['alicehost_deploys']['home'] === $home, 'chroot home recorded');
+    assert_true(is_dir($home), 'chroot dir created under the account home');
+    foreach ($harness['cmd']->purePwArgvs as $argv) {
+        assert_true(!str_contains(implode(' ', $argv), 'Ftp-Pass'), 'the password is never in argv');
+    }
+    assert_true(str_contains($harness['cmd']->purePwStdins[0] ?? '', 'Ftp-Pass-123'), 'the password travels on stdin');
+    acp_account_cleanup($harness);
+});
+test('ftp.passwd resets and ftp.del removes the virtual user', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new FtpAdd())->handle([
+        'account' => 'alicehost', 'login' => 'alicehost_ci', 'password' => 'First-Pass-1',
+        'home' => $harness['root'] . '/home/alicehost/ftp/ci',
+    ], $harness['ctx']);
+
+    (new FtpPasswd())->handle([
+        'account' => 'alicehost', 'login' => 'alicehost_ci', 'password' => 'Second-Pass-2',
+    ], $harness['ctx']);
+    $stdins = $harness['cmd']->purePwStdins;
+    assert_true(str_contains((string) end($stdins), 'Second-Pass-2'), 'the new password goes on stdin');
+
+    (new FtpDel())->handle(['account' => 'alicehost', 'login' => 'alicehost_ci'], $harness['ctx']);
+    assert_true($harness['cmd']->purePwUsers === [], 'the virtual user is removed from PureDB');
+    acp_account_cleanup($harness);
+});
+test('ftp tasks refuse foreign accounts, foreign logins, weak passwords and outside homes', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost/ftp/x';
+
+    $threw = false;
+    try {
+        (new FtpAdd())->handle(['account' => 'bobhost', 'login' => 'bobhost_x', 'password' => 'Some-Pass-1', 'home' => $home], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'not an AlphaCP account');
+    }
+    assert_true($threw, 'a non-account cannot add FTP users');
+
+    $threw = false;
+    try {
+        (new FtpAdd())->handle(['account' => 'alicehost', 'login' => 'otherhost_x', 'password' => 'Some-Pass-1', 'home' => $home], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'a foreign-prefixed login is refused');
+
+    $threw = false;
+    try {
+        (new FtpAdd())->handle(['account' => 'alicehost', 'login' => 'alicehost_x', 'password' => 'short', 'home' => $home], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'a weak password is refused');
+
+    $threw = false;
+    try {
+        (new FtpAdd())->handle(['account' => 'alicehost', 'login' => 'alicehost_x', 'password' => 'Good-Pass-1', 'home' => '/etc'], $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'a chroot home outside the account is refused');
+
+    assert_true($harness['cmd']->purePwUsers === [], 'nothing was created by hostile payloads');
+    acp_account_cleanup($harness);
 });
 
 test('db.create/db.drop create and drop the real MariaDB database', function (): void {
