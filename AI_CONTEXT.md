@@ -26,10 +26,10 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **Step 2C — license client/trial deployed** 🟡 |
-| Next task | S3 account provisioning foundation; then license-server API/paid activation |
+| Phase | **Step 5 — panel 0.76.0 deployed** (3 colour panels: WHM dark / cPanel light / webmail teal) ✅ |
+| Next task | S6 File Manager + FTP polish, S12 billing API (WHM API 1), license-server API/paid activation |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
-| Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor + license client/trial |
+| Code written so far | paneld agent (73 tasks) + Laravel 13 panel bundle (0.76.0, ~85 controllers) + installer/doctor/sync/updater + license client/trial. Repo source = server-snapshot se synced; test suite 479 pass / 0 fail / 6 wasm-skip |
 | Blocking issues | PHP/Laravel test execution still needs a PHP 8.3+ build environment; server acceptance of new S2C bundle pending |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`

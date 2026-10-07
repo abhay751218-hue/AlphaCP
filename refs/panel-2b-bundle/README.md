@@ -9,11 +9,14 @@ Laravel 13 + Blade, no build step, no CDN, no Node.
 - **Privileged work:** never here. The panel writes rows to `tasks`; the root agent `paneld`
   (see `../agent/`) validates them against its allowlist and executes.
 
-## What works today (Step 3 / panel 0.4.0)
+## What works today (Step 5 / panel 0.76.0)
 Login with lockout + rate limit · TOTP 2FA · password policy + force-change ·
 RBAC · users CRUD · audit log · live server info / services / task queue ·
 offline-first license/trial · **Accounts**: create / list / suspend / unsuspend / terminate
 (OS work is paneld-only; create rolls back on failure).
+**3 colour panels (0.76.0):** `body[data-panel]` — `whm` = dark navy + left sidebar (Server Manager),
+`cpanel` = light + cPanel blue (customer), `webmail` = teal. Sab colours `public/assets/panel.css`
+ke CSS variables me; naya theme = naya variable block (`tests/Feature/PanelThemeTest.php` contract).
 
 Everything else on the cPanel tool list is planned and tracked — one row per tool — in
 `../docs/09-cpanel-parity-checklist.md` (the written contract: rows are never removed, only marked done).

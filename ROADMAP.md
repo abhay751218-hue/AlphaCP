@@ -1,7 +1,7 @@
 # ROADMAP — 16 Steps to Full cPanel Parity
 
 **Legend:** ✅ done · 🟡 in progress · ⏳ pending
-**Updated:** 2026-09-28
+**Updated:** 2026-10-07 (panel 0.76.0 — 3 colour panels live; repo source server se synced)
 
 | Step | Deliverable | Status |
 |---|---|---|
