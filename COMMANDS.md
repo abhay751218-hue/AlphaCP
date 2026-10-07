@@ -16,13 +16,14 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ### 🔴 login-fix v1.0 — LOGIN TOOTA HUA THA (5 bug: B1–B5). **Yahi chalao.**
 ```bash
-sudo alphacp-sync get c5115e718c8a454e9ea5068c53f284a59d6259cc installer/login-fix.sh /tmp/login-fix-v1.0.sh db40c7d33973620b5b926f0945380bcf7f7780273988ced8bb11e0281f330d2e && sudo bash /tmp/login-fix-v1.0.sh
+sudo alphacp-sync get 38d790b3555dac1147df20fda3e6640471c007df installer/login-fix.sh /tmp/login-fix-v1.0.sh c00b06c8da28a22a6d260b5cb3376d74f63cdf0729cebaedea255c251f73190a && sudo bash /tmp/login-fix-v1.0.sh
 ```
-- commit `c5115e718c8a454e9ea5068c53f284a59d6259cc`, sha256 `db40c7d33973620b5b926f0945380bcf7f7780273988ced8bb11e0281f330d2e`
-  (GitHub API se verify: blob `b24bf32a824872c3b7af00bbdb017d050b3cd23a`, 81,135 bytes).
+- commit `38d790b3555dac1147df20fda3e6640471c007df`, sha256 `c00b06c8da28a22a6d260b5cb3376d74f63cdf0729cebaedea255c251f73190a`
+  (GitHub API se verify: blob `7cc863274d3d14b21570252370921fdc789264ed`, 81,135 bytes).
+  Pehla pin `c5115e7`/`db40c7d3…` superseded hai (usme sirf ek comment galat tha).
 - **Expected output:** banner `AlphaCP LOGIN FIX - v1.0` → Step 1 me `BUG B1 … B5` lines (kitne bug
   the) → Step 3 `unlocked users: N` → Step 4/4b/5/6 `installed:` / `patched` → Step 7 truth file →
-  Step 9 `SELFTEST: 15 pass, 0 fail` (usme `PASS B5: session se user resolve hua`) →
+  Step 9 `SELFTEST: 16 pass, 0 fail` (usme `PASS B5: session se user resolve hua`) →
   Step 10 `==> FIX APPLY HO GAYA ✅`.
 - **Asli wajah (B5):** `ResellerScopeProvider` ke global scopes `Auth::user()` call karte the, jo
   khud `retrieveById()` → wahi scope → **infinite recursion** → PHP fatal → har authenticated page
