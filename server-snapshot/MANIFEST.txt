@@ -194,6 +194,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/GlobalFiltersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/HandlersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/HostnameAController.php
+/usr/local/alphacp/panel/app/Http/Controllers/ImagesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/IndexesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/IpBlockerController.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
@@ -208,6 +209,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlWizardController.php
 /usr/local/alphacp/panel/app/Http/Controllers/NameserverSelectionController.php
 /usr/local/alphacp/panel/app/Http/Controllers/NsReportController.php
+/usr/local/alphacp/panel/app/Http/Controllers/OptimizeController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PackagesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/ParkDomainController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PhpController.php
@@ -229,6 +231,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/TransferRestoreController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TransferReviewController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TransferToolController.php
+/usr/local/alphacp/panel/app/Http/Controllers/TrashController.php
 /usr/local/alphacp/panel/app/Http/Controllers/UsersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/WebDiskController.php
 /usr/local/alphacp/panel/app/Http/Controllers/WebmailController.php
@@ -284,6 +287,7 @@
 /usr/local/alphacp/panel/app/Models/MysqlUser.php
 /usr/local/alphacp/panel/app/Models/NameserverSelection.php
 /usr/local/alphacp/panel/app/Models/NsRecord.php
+/usr/local/alphacp/panel/app/Models/OptimizeSetting.php
 /usr/local/alphacp/panel/app/Models/Package.php
 /usr/local/alphacp/panel/app/Models/ParkedDomain.php
 /usr/local/alphacp/panel/app/Models/Permission.php
@@ -427,6 +431,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000004_create_license_keys_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000005_create_security_extras_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000006_create_webdisk_accounts_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000008_create_optimize_settings_table.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php
@@ -485,6 +490,7 @@
 /usr/local/alphacp/panel/resources/views/global-filters/index.blade.php
 /usr/local/alphacp/panel/resources/views/handlers/index.blade.php
 /usr/local/alphacp/panel/resources/views/hostname-a/index.blade.php
+/usr/local/alphacp/panel/resources/views/images/index.blade.php
 /usr/local/alphacp/panel/resources/views/indexes/index.blade.php
 /usr/local/alphacp/panel/resources/views/ip-blocker/index.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/guest.blade.php
@@ -500,6 +506,7 @@
 /usr/local/alphacp/panel/resources/views/mysql/index.blade.php
 /usr/local/alphacp/panel/resources/views/nameserver-selection/index.blade.php
 /usr/local/alphacp/panel/resources/views/ns-report/index.blade.php
+/usr/local/alphacp/panel/resources/views/optimize/index.blade.php
 /usr/local/alphacp/panel/resources/views/packages/edit.blade.php
 /usr/local/alphacp/panel/resources/views/packages/index.blade.php
 /usr/local/alphacp/panel/resources/views/park-domain/index.blade.php
@@ -529,6 +536,7 @@
 /usr/local/alphacp/panel/resources/views/transfer-restore/index.blade.php
 /usr/local/alphacp/panel/resources/views/transfer-review/index.blade.php
 /usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php
+/usr/local/alphacp/panel/resources/views/trash/index.blade.php
 /usr/local/alphacp/panel/resources/views/users/create.blade.php
 /usr/local/alphacp/panel/resources/views/users/edit.blade.php
 /usr/local/alphacp/panel/resources/views/users/index.blade.php

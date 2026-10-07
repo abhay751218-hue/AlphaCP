@@ -249,6 +249,7 @@ alphacp:scheduled-backups
   2026_10_07_000004_create_license_keys_table   [60] Ran
   2026_10_07_000005_create_security_extras_table . [61] Ran
   2026_10_07_000006_create_webdisk_accounts_table  [62] Ran
+  2026_10_07_000008_create_optimize_settings_table  [63] Ran
 ```
 
 ## Routes (web)
@@ -370,6 +371,7 @@ DELETE             /handlers/{ext}                               handlers.destro
 GET|HEAD           /hostname-a                                   hostname-a.index
 POST               /hostname-a                                   hostname-a.store
 GET|HEAD           /hotlink-protection                           secextra.hotlink
+GET|HEAD           /images                                       images.index
 GET|HEAD           /indexes                                      indexes.index
 POST               /indexes                                      indexes.update
 GET|HEAD           /ip-blocker                                   ip-blocker.index
@@ -413,6 +415,8 @@ GET|HEAD           /nameserver-selection                         nameserver-sele
 POST               /nameserver-selection                         nameserver-selection.store
 GET|HEAD           /ns-report                                    ns-report.index
 POST               /ns-report                                    ns-report.store
+GET|HEAD           /optimize-website                             optimize.index
+POST               /optimize-website                             optimize.store
 GET|HEAD           /packages                                     packages.index
 POST               /packages                                     packages.store
 GET|HEAD           /packages/create                              packages.create
@@ -478,6 +482,8 @@ GET|HEAD           /transfer-tool                                transfer-tool.i
 POST               /transfer-tool                                transfer-tool.store
 POST               /transfer-tool/probe                          transfer-tool.probe
 POST               /transfer-tool/pull                           transfer-tool.pull
+GET|HEAD           /trash                                        trash.index
+DELETE             /trash/{file}                                 trash.destroy
 GET|HEAD           /two-factor                                   twofactor.challenge
 POST               /two-factor                                   twofactor.verify
 GET|HEAD           /users                                        users.index
