@@ -177,6 +177,7 @@ alphacp-sync.timer alphacp-sync.service
 alphacp:admin-password
 alphacp:api:token
 alphacp:backup-destination-push
+alphacp:demo-accounts
 alphacp:license:renew
 alphacp:scheduled-backups
 ```
