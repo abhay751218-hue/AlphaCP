@@ -23,6 +23,7 @@ class TwoFactorController extends Controller
             return redirect()->route('login');
         }
         if (! $user->two_factor_enabled || request()->session()->get('two_factor_passed')) {
+            request()->session()->put('two_factor_passed', true);   // loop-breaker (login-fix v1.0)
             return redirect()->route('dashboard');
         }
 

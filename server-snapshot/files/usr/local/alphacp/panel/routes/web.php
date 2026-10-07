@@ -91,6 +91,8 @@ use Illuminate\Support\Facades\Route;
 // ---------------------------------------------------------------------------
 Route::middleware('guest')->group(function (): void {
     Route::get('/', [LoginController::class, 'show'])->name('login');
+    // /login bhi wahi login page — bookmark/WHMCS/cPanel aadat. Pehle 404 deta tha.
+    Route::get('/login', [LoginController::class, 'show'])->name('login.page');
     Route::post('/login', [LoginController::class, 'login'])
         ->middleware('throttle:login')
         ->name('login.attempt');
