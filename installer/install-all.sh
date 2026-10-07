@@ -39,11 +39,13 @@ run 9aaa40e830f851df887e8e82232bf18b4ba908bb monitoring.sh ae111c38f5ade9c8221f0
 run 3ff4d8723100f2f9e0457120dec5543c56754b50 whm-api.sh 755c5fb3310f88bc7b3a2fe3141b6aea515057712174a307273c93d20e1c49b8
 # 9) API Tokens UI (panel se token)
 run 930aa166a64312414129af2c417b789d39b3601c api-tokens.sh b5b05f635cbfd7766dff8b5622c57162c31d8f9c8c97388b287f781529c65f9b
+# 10) Reseller Center (WHM-style)
+run 3ae9ef5cd7037731021eed138842ef612ca6a41f resellers.sh 873c4fb3a0653ba5266df22d3be126e237c43d5cabfc3e84555f7bb04705c27b
 
 echo
 echo "=================================================="
 echo " ==> INSTALL-ALL v1.0 COMPLETE"
-echo " Pages: /ftp /metrics /license /ip-blocker /security-tools /apps /monitoring /api-tokens"
+echo " Pages: /ftp /metrics /license /ip-blocker /security-tools /apps /monitoring /api-tokens /resellers"
 echo " API:   /json-api/* (Bearer token)"
 echo "=================================================="
 alphacp-sync || true
