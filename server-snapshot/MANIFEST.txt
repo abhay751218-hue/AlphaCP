@@ -189,6 +189,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/FilesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/ForwardersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FtpController.php
+/usr/local/alphacp/panel/app/Http/Controllers/GitController.php
 /usr/local/alphacp/panel/app/Http/Controllers/GlobalEmailRoutingController.php
 /usr/local/alphacp/panel/app/Http/Controllers/GlobalFiltersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/HandlersController.php
@@ -220,6 +221,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/SshController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SslController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SystemController.php
+/usr/local/alphacp/panel/app/Http/Controllers/TerminalController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TrackDeliveryController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TrackDnsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TransferRestoreController.php
@@ -467,6 +469,8 @@
 /usr/local/alphacp/panel/resources/views/files/index.blade.php
 /usr/local/alphacp/panel/resources/views/forwarders/index.blade.php
 /usr/local/alphacp/panel/resources/views/ftp/index.blade.php
+/usr/local/alphacp/panel/resources/views/git/index.blade.php
+/usr/local/alphacp/panel/resources/views/git/status.blade.php
 /usr/local/alphacp/panel/resources/views/global-email-routing/index.blade.php
 /usr/local/alphacp/panel/resources/views/global-filters/index.blade.php
 /usr/local/alphacp/panel/resources/views/handlers/index.blade.php
@@ -506,6 +510,7 @@
 /usr/local/alphacp/panel/resources/views/system/index.blade.php
 /usr/local/alphacp/panel/resources/views/system/services.blade.php
 /usr/local/alphacp/panel/resources/views/system/tasks.blade.php
+/usr/local/alphacp/panel/resources/views/terminal/index.blade.php
 /usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php
 /usr/local/alphacp/panel/resources/views/track-dns/index.blade.php
 /usr/local/alphacp/panel/resources/views/transfer-restore/index.blade.php

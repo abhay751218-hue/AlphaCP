@@ -352,6 +352,10 @@ GET|HEAD           /ftp                                          ftp.index
 POST               /ftp                                          ftp.store
 DELETE             /ftp/{ftpAccount}                             ftp.destroy
 POST               /ftp/{ftpAccount}/password                    ftp.password
+GET|HEAD           /git                                          git.index
+POST               /git/clone                                    git.clone
+POST               /git/pull/{dir}                               git.pull
+GET|HEAD           /git/status/{dir}                             git.status
 GET|HEAD           /global-email-routing                         global-email-routing.index
 POST               /global-email-routing                         global-email-routing.store
 GET|HEAD           /global-filters                               global-filters.index
@@ -450,6 +454,8 @@ GET|HEAD           /system                                       system.index
 GET|HEAD           /system/services                              system.services
 GET|HEAD           /system/tasks                                 system.tasks
 POST               /system/tasks/run                             system.tasks.run
+GET|HEAD           /terminal                                     terminal.index
+POST               /terminal                                     terminal.run
 GET|HEAD           /track-delivery                               track-delivery.index
 POST               /track-delivery                               track-delivery.store
 GET|HEAD           /track-dns                                    track-dns.index
