@@ -25,7 +25,7 @@ nginx/ss/systemctl/ufw/curl stub hain. `/usr/bin/php8.4` ka stub banta hai — i
 throwaway sandbox me** chalao.
 
 ```bash
-sudo bash tools/sim/login-entry-sim.sh       # P0..P9  -> 50/50
+sudo bash tools/sim/login-entry-sim.sh       # P0..P9  -> 53/53
 ```
 
 | Phase | Kya |
@@ -33,7 +33,7 @@ sudo bash tools/sim/login-entry-sim.sh       # P0..P9  -> 50/50
 | P0 | build drift — `login-fix.sh` payload ke saath byte-for-byte sync me (`tools/build-login-fix.py --check`) |
 | P1 | `acp-entry-ports`: nginx ke ASLI listen ports hi truth file me jaayein (6 scenario, B1 samet) |
 | P2 | `--diagnose` read-only hai — code bilkul nahi badalta |
-| P3 | full run: 4 PHP/route fix + truth file + cron + unlock + SELFTEST (B5 recursion check samet) + live login probe |
+| P3 | full run: 4 PHP/route fix + truth file + cron + unlock + SELFTEST (B5 recursion check samet) + live login probe. Ownership layout LIVE jaisi (code root, storage alphacp, pool conf alphacp) taaki `PANEL_USER` detection ka imtihaan ho |
 | P4 | idempotent — dobara chalane par "skip", routes dobara nahi judte |
 | P5 | `--enable-ports`: vhost me 2083/2087/2096, `nginx -t` fail par auto-rollback |
 | P6 | `--rollback` — backup se purani files wapas |

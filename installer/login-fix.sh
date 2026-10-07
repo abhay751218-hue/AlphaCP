@@ -52,7 +52,8 @@
 #    5  EnsureTwoFactorIsVerified v2 + TwoFactorController loop-breaker
 #    6  routes: GET /login alias
 #    7  acp-entry-ports truth generator + cron (nginx ke ASLI ports se)
-#    8  permission heal + optimize:clear + php-fpm restart (opcache)
+#    8  permission heal (runtime user = fpm pool user, write-test guard ke saath)
+#       + optimize:clear + php-fpm restart (opcache)
 #    9  SELFTEST — decide() truth table + routes + B5 recursion check
 #   10  LIVE LOGIN PROBE dobara -> FINAL VERDICT
 #
@@ -114,9 +115,37 @@ say "${C_B}===============================================================${C_0}
 
 # ------------------------------------------------------------------ preflight
 [[ -f "${PANEL}/artisan" ]] || { err "${PANEL} me panel nahi mila"; exit 1; }
-PANEL_USER="$(stat -c '%U' "${PANEL}/artisan" 2>/dev/null || echo alphacp)"
-[[ -n "${PANEL_USER}" ]] || PANEL_USER="alphacp"
-id -u "${PANEL_USER}" >/dev/null 2>&1 || PANEL_USER="root"
+# Panel ka RUNTIME user = php-fpm pool ka user — YAHI storage/bootstrap ka owner
+# hona chahiye. artisan/panel files ke OWNER se detect karna DHOKA hai (deploy
+# aksar root se hota hai): tab Step 8 storage ko root:root 0770/0660 kar deta aur
+# fpm (alphacp) compiled views / file-cache / log PADH bhi nahi pata -> har page
+# 500. (Live server par 7 Oct ko yahi pakda gaya: diagnose "user: root" bola,
+# jabki pool alphacp tha.) Tarkeeb: env override -> chalte fpm workers -> pool
+# conf -> storage/logs owner -> artisan owner -> alphacp -> root.
+detect_pool_user() { # pool conf = declarative sach (restart ke baad yahi chalega)
+  local pool u
+  for pool in /etc/php/*/fpm/pool.d/*.conf; do
+    [[ -f "${pool}" ]] || continue
+    grep -q "${ACP_HOME##*/}\|${PANEL}" "${pool}" 2>/dev/null || continue   # www.conf se bacho
+    u="$(awk -F= '/^[[:space:]]*user[[:space:]]*=/ {gsub(/[[:space:]]/,"",$2); print $2; exit}' "${pool}" 2>/dev/null)"
+    [[ -n "${u}" ]] && { printf '%s' "${u}"; return 0; }
+  done
+  return 1
+}
+PANEL_USER="${ACP_PANEL_USER:-}"; PANEL_USER_SRC="env ACP_PANEL_USER"
+if [[ -z "${PANEL_USER}" ]] && POOL_U="$(detect_pool_user)"; then
+  PANEL_USER="${POOL_U}"; PANEL_USER_SRC="fpm pool conf"
+fi
+if [[ -z "${PANEL_USER}" ]]; then
+  # chalte workers ka title: "php-fpm[8.4]: pool <name>". NOTE: awk ka APNA cmdline
+  # bhi pattern rakhta hai, isliye $2 (comm) se filter karo — warna self-match root dega.
+  PANEL_USER="$(ps -eo user=,comm=,args= 2>/dev/null | awk '$2 ~ /^php-fpm/ && index($0, ": pool ") {print $1; exit}')"
+  PANEL_USER_SRC="fpm worker process"
+fi
+if [[ -z "${PANEL_USER}" ]]; then PANEL_USER="$(stat -c '%U' "${PANEL}/storage/logs" 2>/dev/null | head -1)"; PANEL_USER_SRC="storage/logs owner"; fi
+if [[ -z "${PANEL_USER}" ]]; then PANEL_USER="$(stat -c '%U' "${PANEL}/artisan" 2>/dev/null | head -1)"; PANEL_USER_SRC="artisan owner"; fi
+if [[ -z "${PANEL_USER}" ]]; then PANEL_USER="alphacp"; PANEL_USER_SRC="default alphacp"; fi
+id -u "${PANEL_USER}" >/dev/null 2>&1 || { PANEL_USER="root"; PANEL_USER_SRC="fallback root"; }
 
 PHPBIN="/usr/bin/php"
 for v in 8.5 8.4 8.3; do [[ -x "/usr/bin/php${v}" ]] && { PHPBIN="/usr/bin/php${v}"; break; }; done
@@ -169,7 +198,9 @@ mkdir -p "${BK}" 2>/dev/null || true
 # =========================================================== STEP 1: DIAGNOSE
 hdr "Step 1: DIAGNOSE (read-only — asli wajah yahan dikhegi)"
 {
-say "panel root      : ${PANEL}   (user: ${PANEL_USER})"
+say "panel root      : ${PANEL}"
+say "runtime user    : ${PANEL_USER}  [${PANEL_USER_SRC}]   (artisan owner: $(stat -c '%U' "${PANEL}/artisan" 2>/dev/null || echo '?'))"
+say "                  ^ fpm isi user se chalta hai; storage/bootstrap isi ka hona chahiye"
 say "panel version   : $(grep -o '"version":[^,]*' "${PANEL}/MANIFEST.json" 2>/dev/null | head -1 | tr -d '" ' || echo '?')"
 say "php (fpm/cli)   : ${PHPBIN}  $(${PHPBIN} -r 'echo PHP_VERSION;' 2>/dev/null)"
 say "panel HTTP      : $(hit)"
@@ -1203,6 +1234,21 @@ mkdir -p "${PANEL}/storage/framework/views" "${PANEL}/storage/framework/sessions
          "${PANEL}/storage/framework/cache/data" "${PANEL}/storage/logs" "${PANEL}/bootstrap/cache"
 chown -R "${PANEL_USER}:${PANEL_USER}" "${PANEL}/storage" "${PANEL}/bootstrap/cache" 2>/dev/null || true
 ok "ownership ${PANEL_USER}:${PANEL_USER}"
+# REGRESSION GUARD: fpm user sach me likh pata hai ya nahi (views/cache/logs).
+# Na padh sakta = har page 500 (compiled views). Ye check usi ko pakadta hai.
+WTEST_OK=1
+for wd in storage/framework/cache/data storage/framework/views storage/logs; do
+  if runuser -u "${PANEL_USER}" -- touch "${PANEL}/${wd}/.acp-wtest" 2>/dev/null; then
+    rm -f "${PANEL}/${wd}/.acp-wtest" 2>/dev/null || true
+  else
+    WTEST_OK=0; err "fpm user likh NAHI sakta: ${wd}"
+  fi
+done
+if [[ ${WTEST_OK} -eq 1 ]]; then
+  ok "fpm user (${PANEL_USER}) storage me likh sakta hai (cache/views/logs)"
+else
+  err "storage ownership abhi bhi galat — alag se chalao: sudo bash installer/panel-perm-fix.sh"
+fi
 rm -f "${PANEL}/storage/framework/views/"* 2>/dev/null || true
 ASK optimize:clear >/dev/null 2>&1 && ok "optimize:clear (config/route/view/cache/event)" || warn "optimize:clear nahi chala"
 ASK config:clear >/dev/null 2>&1 || true

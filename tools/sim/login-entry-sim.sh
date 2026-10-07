@@ -18,6 +18,9 @@
 #       * AuthTest 8/8  — ports.json(2083) MAUJOOD hone par bhi (v1 me yahi fail hota tha)
 #   P8  BUG PROOF: purana v1 controller + ports.json(2083) -> AuthTest FAIL hona CHAHIYE
 #       (yani sim asli shikayat ko sach me reproduce karta hai)
+#       ownership layout LIVE jaisi hai (code root, storage alphacp, pool conf
+#       alphacp) taaki PANEL_USER detection ka imtihaan ho: galat detection
+#       (artisan-owner=root) Step 8 me storage root:root kar deta.
 #   P9  BUG PROOF (B5 — ASLI WAJAH): purana v1 ResellerScopeProvider ->
 #       SessionAuthTest par PHP FATAL (global-scope <-> Auth::user() infinite
 #       recursion). v2 wapas -> 12/12 OK.
@@ -141,6 +144,18 @@ PHPEOF
 chown alphacp:alphacp "${PANEL}/seed-sim.php"
 SEED_OUT="$(cd "${PANEL}" && runuser -u alphacp -- env ACP_HOME="${ACP}" /usr/bin/php8.4 seed-sim.php 2>&1)"
 echo "  (sim seed: ${SEED_OUT##*$'\n'})"
+
+# LIVE (13.207.123.177) jaisi ownership-mess + fpm pool:
+#   panel code root-owned (deploy root se), storage/bootstrap/database alphacp,
+#   pool conf /etc/php/8.4/fpm/pool.d/alphacp.conf me user = alphacp.
+# Isse PANEL_USER detection ka asli imtihaan hota hai: artisan owner (root) par
+# gaya to Step 8 storage ko root:root karke panel ko aur tod dega.
+chown -R root:root "${PANEL}"
+chown -R alphacp:alphacp "${PANEL}/storage" "${PANEL}/bootstrap/cache" "${PANEL}/database"
+mkdir -p /etc/php/8.4/fpm/pool.d
+printf '[alphacp]\nuser = alphacp\ngroup = alphacp\nlisten = /run/php/alphacp-fpm.sock\n' \
+  > /etc/php/8.4/fpm/pool.d/alphacp.conf
+echo "  (sim ownership: code=root, storage/bootstrap/database=alphacp; pool conf=alphacp)"
 
 # ---- stubs: curl / systemctl / nginx / ufw ----------------------------------
 cat > "${W}/stub/curl" <<'EOF'
@@ -287,6 +302,13 @@ t_chk "acp-entry-ports install + cron laga" \
       '[[ -x "${ACP}/bin/acp-entry-ports" && -f /etc/cron.d/alphacp-entry-ports ]]'
 t_chk "truth file bani (sirf 8090 live -> customer khaali)" \
       '[[ "$(jqv "${ACP}/etc/entry-ports.json" customer)" == "[]" ]]'
+t_chk "runtime user fpm pool se detect hua (alphacp), artisan-owner (root) se nahi" \
+      'grep -q "runtime user    : alphacp" <<<"${RUN1}"'
+t_chk "Step 8: storage ka owner fpm user (alphacp) hai, root nahi" \
+      '[ "$(stat -c %U "${PANEL}/storage")" = "alphacp" ] \
+       && [ "$(stat -c %U "${PANEL}/bootstrap/cache")" = "alphacp" ]'
+t_chk "Step 8: fpm user storage me likh sakta hai (write-test guard OK)" \
+      'grep -q "storage me likh sakta hai" <<<"${RUN1}"'
 t_chk "ResellerScopeProvider v2 install hua (B5 recursion-breaker)" \
       'grep -q "installed: .*app/Providers/ResellerScopeProvider.php" <<<"${RUN1}"'
 t_chk "SELFTEST ka B5 recursion check PASS hua" \
@@ -412,7 +434,8 @@ OUT="$(phpunit_run tests/Feature/AuthorizationTest.php)"; echo "${OUT}" > "${W}/
 t_chk "AuthorizationTest abhi bhi OK (reseller/root parity intact)" 'grep -qE "^OK \(" <<<"${OUT}"'
 
 # ---------------------------------------------------------------- cleanup
-rm -f /etc/nginx/sites-available/alphacp-panel.conf /etc/cron.d/alphacp-entry-ports 2>/dev/null || true
+rm -f /etc/nginx/sites-available/alphacp-panel.conf /etc/cron.d/alphacp-entry-ports \
+      /etc/php/8.4/fpm/pool.d/alphacp.conf 2>/dev/null || true
 echo ""
 echo "=== LOGIN-ENTRY SIM: ${PASS} pass, ${FAIL} fail ==="
 echo "logs: ${W}/run1.log run2.log run3.log p7a.log p7b.log p8.log p9-v1.log p9-v2.log p9-authz.log"

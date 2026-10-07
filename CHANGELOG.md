@@ -63,7 +63,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   (backup `<ACP_HOME>/releases/loginfix-<ts>/`). End me `alphacp-sync`.
 - `acp-entry-ports` (`/usr/local/alphacp/bin/` + `/etc/cron.d/alphacp-entry-ports`, har 5 min +
   `@reboot`) — truth file generator. Kabhi `exit 1` nahi karta.
-- `tools/sim/login-entry-sim.sh` — 50 assertions (build drift, truth-file ke 6 scenario, diagnose
+- `tools/sim/login-entry-sim.sh` — 53 assertions (build drift, truth-file ke 6 scenario, diagnose
   read-only, full run, idempotency, `--enable-ports` + nginx-fail rollback, `--rollback`, PHPUnit,
   **P8 bug-proof**: v1 controller + `ports.json(2083)` par `AuthTest` FAIL hona chahiye, aur
   **P9 bug-proof**: v1 `ResellerScopeProvider` par `SessionAuthTest` ka PHP fatal hona chahiye).
@@ -78,6 +78,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `forgetGuards()` → `Auth::user()`; recursion ho to PHP jaldi fatal de isliye `runphp` ab
   `-d memory_limit=${ACP_FIX_PHP_MEM:-256M}` ke saath chalta hai (sirf us CLI call par, php-fpm
   settings ko haath nahi lagta).
+- **PANEL_USER detection fix (live run 7 Oct se pakda gaya):** pehle runtime user `artisan` file ke
+  owner se detect hota tha. Live server par deploy root se hua hai isliye `root` mila, jabki php-fpm
+  pool `alphacp` se chalta hai. Step 8 us galat user ko `storage/`+`bootstrap/cache/` de deta
+  (0770/0660) → fpm compiled views/file-cache/log **padh bhi nahi pata** → har page 500. Ab detection:
+  `ACP_PANEL_USER` override → chalte `php-fpm: pool <name>` workers → pool conf (sirf wo jo ACP home
+  ka zikr kare, `www.conf` se bachne ke liye) → `storage/logs` owner → `artisan` owner → `alphacp` →
+  `root`. Diagnose ab `runtime user : <user> [<source>]` + artisan owner alag-alag dikhata hai.
+- **Step 8 write-test guard:** chown ke baad fpm user se `storage/framework/cache/data`,
+  `storage/framework/views`, `storage/logs` me `touch` karwaya jata hai; fail ho to saaf error
+  (+ `panel-perm-fix.sh` ka ishara). Ye guard isi bug-class ko dobara server par jaane se rokta hai.
 - `installer/payload/tests/EntryLoginTest.php` — panel me install hone wala regression test
   (10 tests / 42 assertions): `decide()` truth table, truth-file parsing, gate-off, sirf-8090-live
   (B1 regression), asli separation, generic password error, array-input crash, 2FA loop, `GET /login`.
@@ -88,7 +98,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 | `AuthTest` | 2 FAIL (B1: "Account Panel login 2083 par hota hai") | **8/8 OK** |
 | `EntryLoginTest` (naya) | — | **10/10 OK** |
 | `SessionAuthTest` (naya) | PHP **fatal** (606,955 stack frames) | **12/12 OK** |
-| `tools/sim/login-entry-sim.sh` | — | **50/50 PASS** |
+| `tools/sim/login-entry-sim.sh` | — | **53/53 PASS** |
 | `AuthorizationTest` (reseller/root parity) | OK | **OK** (parity bilkul waisi hi) |
 
 Fix ne 2 login failures hataye aur **ek bhi naya failure nahi** laaya.
