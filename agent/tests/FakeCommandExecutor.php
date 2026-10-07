@@ -71,6 +71,21 @@ final class FakeCommandExecutor implements CommandExecutor
     /** @var list<list<string>> terminal whitelist argvs (ls/cat/pwd/…) */
     public array $termArgvs = [];
 
+    /** @var list<list<string>> ufw argvs */
+    public array $ufwArgvs = [];
+
+    /** @var list<list<string>> a2enmod/a2dismod/a2query argvs */
+    public array $apacheModArgvs = [];
+
+    /** @var list<list<string>> clamscan argvs */
+    public array $clamArgvs = [];
+
+    /** ModSecurity enabled state (a2query/a2enmod/a2dismod se badalti hai) */
+    public bool $modsecEnabled = true;
+
+    /** clamscan infected simulate kare? */
+    public bool $clamInfected = false;
+
     /** git status ka canned porcelain output */
     public string $gitStatusOut = "M changed.php\n?? new-dir/\n";
 
@@ -238,6 +253,13 @@ final class FakeCommandExecutor implements CommandExecutor
             'curl' => $this->handleCurl($argv),
             'chown' => $this->handleChown($argv),
             'cat' => $this->handleCat($argv),
+            'ufw' => $this->handleUfw($argv),
+            'a2query' => $this->modsecEnabled
+                ? new CommandResult($argv, 0, "security2 (enabled)\n", '', 1)
+                : new CommandResult($argv, 1, '', "Module security2 disabled\n", 1),
+            'a2enmod' => $this->handleModToggle($argv, true),
+            'a2dismod' => $this->handleModToggle($argv, false),
+            'clamscan' => $this->handleClam($argv),
             'ls', 'pwd', 'whoami', 'date', 'uname' => $this->handleTerm($argv),
             default => new CommandResult($argv, 0, '', '', 1),
         };
@@ -498,6 +520,31 @@ final class FakeCommandExecutor implements CommandExecutor
             return implode("\n", $lines) . "\n";
         }
         return '';
+    }
+
+    /** @param list<string> $argv */
+    private function handleUfw(array $argv): CommandResult
+    {
+        $this->ufwArgvs[] = $argv;
+        return new CommandResult($argv, 0, "Rule updated\n", '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleModToggle(array $argv, bool $enable): CommandResult
+    {
+        $this->apacheModArgvs[] = $argv;
+        $this->modsecEnabled = $enable;
+        return new CommandResult($argv, 0, $enable ? "Enabling module security2.\n" : "Disabling module security2.\n", '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleClam(array $argv): CommandResult
+    {
+        $this->clamArgvs[] = $argv;
+        if ($this->clamInfected) {
+            return new CommandResult($argv, 1, "Scanned dirs: 1\nInfected files: 1\n/home/x/public_html/eicar.txt: Eicar-Signature FOUND\n", '', 1);
+        }
+        return new CommandResult($argv, 0, "Scanned dirs: 1\nInfected files: 0\n", '', 1);
     }
 
     /** @param list<string> $argv */

@@ -72,7 +72,7 @@ Persona → panel: **Owner/Admin = WHM-like (2086/87)** · **Reseller = scoped W
 |---|---|---|
 | B0 | Agent source-of-truth drift (3-task stale → downgrade risk) | ✅ `606ac97` |
 | B6 | `MysqlServer.php` missing → db.*/db.restore fatal | ✅ repo `fd9aca9` + **live `agent-fix v1.0`** |
-| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | ✅ FTP **live**; 🟡 Git/Terminal/Apps installer **`ec50182` READY (sim 40/40) — LIVE APPLY baaki**; Firewall/Waf = B1-ext 🔜 |
+| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | ✅ FTP **live**; ✅ Git/Terminal/Apps **live** (`ec50182` applied); 🟡 Firewall/Waf = **B1-ext abhi** 🔜 |
 | B2 | Metrics `open_basedir` se blocked | 🔜 Phase 3 (`metrics.access` agent task) |
 | B3 | WebDisk sirf DB rows (WebDAV provisioning nahi) | 🔜 Phase 5 (implement ya hide — decision) |
 | B4 | 6 panel test-debt failures | 🔜 Phase 4 (suite 100% green) |
@@ -166,7 +166,7 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | `login-fix.sh` v1.0 | APPLIED 7 Oct 13:04Z | `269eb3c22ae49dd5bba76a5ce2750b594f65ff2c` / `6ca53d4d163f7dc736963f5d8cb18084c3b44c6185a8891a8b61981a8960e6cf` |
 | `agent-fix.sh` v1.0 | APPLIED 7 Oct 14:31Z | `321c81929df94e6d2b05a29b912eaa31fba4209d` / `d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1` |
 | `ftp-fix.sh` v1.0 | **APPLIED 8 Oct 00:39 IST** | `047d974540aceff0fa686a8b3e3fc65a104f0f21` / `8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809` |
-| `b1-fix.sh` v1.0 | **READY (apply baaki)** | `ec50182305cdd324a93db159e738ec3881e74ebc` / `046bfbbce36f92c1d5af59431e95b187b14097bf749f2446c6d725f0fd21bfca` |
+| `b1-fix.sh` v1.0 | **APPLIED 8 Oct 01:10 IST** | `ec50182305cdd324a93db159e738ec3881e74ebc` / `046bfbbce36f92c1d5af59431e95b187b14097bf749f2446c6d725f0fd21bfca` |
 | sync tool v1.2 (bootstrap) | — | `4b4573f96f55927ee1fbf526037785dcdb82aea1` / `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852` |
 | doctor v1.7 | — | `da3539029d1010f33fd550e7b4d016785c932103` / `e2915e0204df79ec41540d0ee68ef8a1c3cb3f261a39dc38651471a5115f5e88` |
 

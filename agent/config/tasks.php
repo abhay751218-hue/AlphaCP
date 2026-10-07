@@ -355,6 +355,79 @@ return [
         ],
     ],
 
+    // ------------------------------------------------------------------
+    //  B1-ext: cPanel Security suite (IP Blocker / ModSecurity / ClamAV).
+    //  Web-FPM se ufw/a2enmod/clamscan proc_open disabled hone se 500 dete the.
+    // ------------------------------------------------------------------
+    'security.ipBlock' => [
+        'handler'     => Tasks\IpBlock::class,
+        'safety'      => 'mutating',
+        'timeout'     => 40,
+        'description' => 'ufw deny from <ip> (cPanel IP Blocker).',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['ip'],
+            'properties'           => ['ip' => ['type' => 'string', 'minLength' => 7, 'maxLength' => 45]],
+        ],
+    ],
+
+    'security.ipUnblock' => [
+        'handler'     => Tasks\IpUnblock::class,
+        'safety'      => 'mutating',
+        'timeout'     => 40,
+        'description' => 'ufw delete deny from <ip>.',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['ip'],
+            'properties'           => ['ip' => ['type' => 'string', 'minLength' => 7, 'maxLength' => 45]],
+        ],
+    ],
+
+    'waf.status' => [
+        'handler'     => Tasks\WafStatus::class,
+        'safety'      => 'readonly',
+        'timeout'     => 20,
+        'description' => 'ModSecurity (security2) enabled? (a2query -m security2).',
+        'paths'       => ['/home'],
+        'schema'      => ['type' => 'object', 'additionalProperties' => false, 'properties' => []],
+    ],
+
+    'waf.enable' => [
+        'handler'     => Tasks\WafEnable::class,
+        'safety'      => 'mutating',
+        'timeout'     => 100,
+        'description' => 'a2enmod security2 + apache2 restart.',
+        'paths'       => ['/home'],
+        'schema'      => ['type' => 'object', 'additionalProperties' => false, 'properties' => []],
+    ],
+
+    'waf.disable' => [
+        'handler'     => Tasks\WafDisable::class,
+        'safety'      => 'mutating',
+        'timeout'     => 100,
+        'description' => 'a2dismod security2 + apache2 restart.',
+        'paths'       => ['/home'],
+        'schema'      => ['type' => 'object', 'additionalProperties' => false, 'properties' => []],
+    ],
+
+    'security.scan' => [
+        'handler'     => Tasks\VirusScan::class,
+        'safety'      => 'readonly',
+        'timeout'     => 130,
+        'description' => 'clamscan -r --quiet <path> (PathGuard ke andar); exit 1 = infected result.',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['path'],
+            'properties'           => ['path' => ['type' => 'string', 'maxLength' => 255]],
+        ],
+    ],
+
     'php.setVersion' => [
         'handler'     => Tasks\PhpSetVersion::class,
         'safety'      => 'mutating',

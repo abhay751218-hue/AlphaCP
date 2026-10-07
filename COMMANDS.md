@@ -14,7 +14,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 b1-fix v1.0 — Git/Terminal/Apps live par HTTP 500 (B1 part 2). **Yahi chalao.**
+### ✅ b1-fix v1.0 — APPLIED 8 Oct 01:10 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get ec50182305cdd324a93db159e738ec3881e74ebc installer/b1-fix.sh /tmp/b1-fix-v1.0.sh 046bfbbce36f92c1d5af59431e95b187b14097bf749f2446c6d725f0fd21bfca && sudo bash /tmp/b1-fix-v1.0.sh
 ```

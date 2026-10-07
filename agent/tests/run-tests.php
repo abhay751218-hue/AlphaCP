@@ -56,6 +56,12 @@ use Alphacp\Agent\Tasks\GitPull;
 use Alphacp\Agent\Tasks\GitStatus;
 use Alphacp\Agent\Tasks\TerminalRun;
 use Alphacp\Agent\Tasks\AppsInstall;
+use Alphacp\Agent\Tasks\IpBlock;
+use Alphacp\Agent\Tasks\IpUnblock;
+use Alphacp\Agent\Tasks\WafStatus;
+use Alphacp\Agent\Tasks\WafEnable;
+use Alphacp\Agent\Tasks\WafDisable;
+use Alphacp\Agent\Tasks\VirusScan;
 use Alphacp\Agent\Tasks\MailSet;
 use Alphacp\Agent\Tasks\MailForward;
 use Alphacp\Agent\Tasks\MailAutorespond;
@@ -260,7 +266,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del', 'git.list', 'git.clone', 'git.pull', 'git.status', 'terminal.run', 'apps.install'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del', 'git.list', 'git.clone', 'git.pull', 'git.status', 'terminal.run', 'apps.install', 'security.ipBlock', 'security.ipUnblock', 'waf.status', 'waf.enable', 'waf.disable', 'security.scan'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1718,6 +1724,60 @@ test('apps.install: WordPress = public_html + <acct>_wp DB + extract + wp-config
         }
         assert_true($threw, 'apps.install refuses: ' . json_encode($bad));
     }
+    acp_account_cleanup($harness);
+});
+
+test('security.ipBlock/ipUnblock: ufw argv-only, invalid IP reject', function (): void {
+    $harness = acp_account_harness();
+
+    $out = (new IpBlock())->handle(['ip' => '203.0.113.9'], $harness['ctx']);
+    assert_true($out['status'] === 'ok' && $out['action'] === 'block', 'ipBlock ok');
+    assert_true(end($harness['cmd']->ufwArgvs) === [end($harness['cmd']->ufwArgvs)[0], 'deny', 'from', '203.0.113.9'], 'ufw deny from <ip> argv');
+
+    (new IpUnblock())->handle(['ip' => '2001:db8::1'], $harness['ctx']);
+    $u = end($harness['cmd']->ufwArgvs);
+    assert_true($u[1] === 'delete' && $u[4] === '2001:db8::1', 'ufw delete deny from <ipv6>');
+
+    foreach (['999.1.1.1', 'not-an-ip', '1.2.3.4; rm -rf /'] as $bad) {
+        $threw = false;
+        try {
+            (new IpBlock())->handle(['ip' => $bad], $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'invalid IP reject: ' . $bad);
+    }
+    assert_true(count($harness['cmd']->ufwArgvs) === 2, 'sirf 2 valid ufw calls hue');
+    acp_account_cleanup($harness);
+});
+test('waf.status/enable/disable + security.scan: agent-side, clam exit-1 = infected result', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    assert_true((new WafStatus())->handle([], $harness['ctx'])['enabled'] === true, 'modsec enabled (fake default)');
+    (new WafDisable())->handle([], $harness['ctx']);
+    $dis = end($harness['cmd']->apacheModArgvs);
+    assert_true(basename((string) $dis[0]) === 'a2dismod' && in_array('security2', $dis, true), 'a2dismod security2 chala');
+    $restarts = array_filter($harness['cmd']->calls, static fn (array $c): bool => ($c[0] ?? '') === '/bin/systemctl' || ($c[0] ?? '') === '/usr/bin/systemctl');
+    assert_true(count($restarts) >= 1, 'apache2 restart hua');
+    assert_true((new WafStatus())->handle([], $harness['ctx'])['enabled'] === false, 'ab disabled');
+    (new WafEnable())->handle([], $harness['ctx']);
+    assert_true((new WafStatus())->handle([], $harness['ctx'])['enabled'] === true, 'enable ke baad wapas enabled');
+
+    $scan = (new VirusScan())->handle(['path' => $root . '/home/alicehost'], $harness['ctx']);
+    assert_true($scan['infected'] === false && str_contains($scan['output'], 'Infected files: 0'), 'clean scan');
+    $harness['cmd']->clamInfected = true;
+    $scan2 = (new VirusScan())->handle(['path' => $root . '/home/alicehost'], $harness['ctx']);
+    assert_true($scan2['infected'] === true, 'exit 1 = infected result (failure nahi)');
+
+    $threw = false;
+    try {
+        (new VirusScan())->handle(['path' => '/etc'], $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'PathGuard ke bahar scan reject');
     acp_account_cleanup($harness);
 });
 
