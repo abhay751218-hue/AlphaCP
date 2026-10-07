@@ -85,6 +85,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `ACP_PANEL_USER` override → chalte `php-fpm: pool <name>` workers → pool conf (sirf wo jo ACP home
   ka zikr kare, `www.conf` se bachne ke liye) → `storage/logs` owner → `artisan` owner → `alphacp` →
   `root`. Diagnose ab `runtime user : <user> [<source>]` + artisan owner alag-alag dikhata hai.
+- **Koi interactive prompt nahi:** pehle Step 2 terminal par username/password poochta tha
+  (`read -s`). 7 Oct ko mobile SSH par run wahin atak kar adhoora reh gaya (password prompt par
+  script khatam) — fix apply hi nahi hui. Ab live login probe **sirf env-vars** se hoti hai
+  (`ACP_FIX_USER` + `ACP_FIX_PASS`); warna skip. Verification phir bhi poori hai: SELFTEST ka
+  B5 runtime check + Step 8 write-test + Step 10 HTTP + aapka browser login.
 - **Step 8 write-test guard:** chown ke baad fpm user se `storage/framework/cache/data`,
   `storage/framework/views`, `storage/logs` me `touch` karwaya jata hai; fail ho to saaf error
   (+ `panel-perm-fix.sh` ka ishara). Ye guard isi bug-class ko dobara server par jaane se rokta hai.

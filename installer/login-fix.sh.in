@@ -63,7 +63,8 @@
 #    sudo bash login-fix.sh --enable-ports     # upar wala + nginx par 2083/2087/2096
 #                                              #   ASLI me listen karwao (separation live)
 #    sudo bash login-fix.sh --rollback         # is script ke pichle backup par wapas
-#    ACP_FIX_USER=root ACP_FIX_PASS='...' sudo -E bash login-fix.sh   # non-interactive
+#    ACP_FIX_USER=admin ACP_FIX_PASS='...' sudo bash login-fix.sh    # + live login probe
+#  (koi interactive prompt NAHI — mobile SSH par prompt trap ban gaya tha 7 Oct)
 #
 #  Kuch delete nahi hota: har badlav <releases>/loginfix-<ts>/ me backup hota hai.
 # =============================================================================
@@ -353,13 +354,16 @@ else:
     print(' | '.join(dict.fromkeys(out))[:600])
 PYEOF
 
+# KOI INTERACTIVE PROMPT NAHI. (7 Oct: mobile SSH par read -s wala prompt trap
+# ban gaya — run wahin atak kar adhoora reh gaya, fix apply hi nahi hui.)
+# Live login probe sirf env-vars se: ACP_FIX_USER + ACP_FIX_PASS.
+# Probe ke bina bhi verification poori hai: SELFTEST ka B5 runtime check
+# (session se user resolve) + Step 8 write-test + Step 10 HTTP + browser login.
 PROBE_USER="${ACP_FIX_USER:-}"
 PROBE_PASS="${ACP_FIX_PASS:-}"
-if [[ -z "${PROBE_USER}" && -t 0 && "${MODE}" != "diagnose" ]]; then
-  read -r -p "Test ke liye panel username (khaali = live login test skip): " PROBE_USER || true
-  if [[ -n "${PROBE_USER}" ]]; then
-    read -r -s -p "Uska password (screen par nahi dikhega): " PROBE_PASS || true; echo
-  fi
+if [[ -n "${PROBE_USER}" && -z "${PROBE_PASS}" ]]; then
+  warn "ACP_FIX_USER diya par ACP_FIX_PASS khaali -> probe skip"
+  PROBE_USER=""
 fi
 
 login_probe() { # login_probe <label> <user> <pass>
@@ -408,7 +412,8 @@ if [[ -n "${PROBE_USER}" && -n "${PROBE_PASS}" ]]; then
   printf '%s\n' "${OUT}" | tee_report
 else
   hdr "Step 2: LIVE LOGIN PROBE"
-  warn "username/password nahi mile -> live probe skip. (Non-interactive: ACP_FIX_USER=.. ACP_FIX_PASS=.. sudo -E bash $0)"
+  warn "username/password nahi mile -> live probe skip. Probe chahiye to: ACP_FIX_USER=admin ACP_FIX_PASS='...' sudo bash $0"
+  say "     (fix aur verification phir bhi poori hoti hai: SELFTEST B5 + Step 10 HTTP + browser login)"
 fi
 
 if [[ "${MODE}" == "diagnose" ]]; then
