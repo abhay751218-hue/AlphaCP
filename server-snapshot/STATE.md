@@ -18,10 +18,11 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ```
 laravel       : 
 In StreamHandler.php line 282:
-                                                                               
-  There is no existing directory at "/usr/local/alphacp/panel/storage/logs" a  
-  nd it could not be created: Permission denied                                
-                                                                               
+                                                            
+  There is no existing directory at "/usr/local/alphacp/pa  
+  nel/storage/logs" and it could not be created: Permissio  
+  n denied                                                  
+                                                            
 panel code    : 0.75.0   (MANIFEST.json = asli deployed code version)
 ACP_VERSION   : 0.83.0   (.env)
 AGENT_VERSION : 0.83.0
@@ -136,7 +137,7 @@ panel-failed-20260928223644
 
 ## Services
 ```
-alphacp-sync               activating
+alphacp-sync               inactive
 alphacp-sync.timer         active
 apache2                    active
 fail2ban                   active

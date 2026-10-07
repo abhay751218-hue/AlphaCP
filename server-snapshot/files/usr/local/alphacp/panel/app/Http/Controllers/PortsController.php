@@ -57,7 +57,11 @@ final class PortsController extends Controller
             PortConfig::query()->create(['data' => $cfg]);
         }
 
-        File::put($this->portsFile(), json_encode($cfg, JSON_PRETTY_PRINT));
+        try {
+            File::put($this->portsFile(), json_encode($cfg, JSON_PRETTY_PRINT));
+        } catch (\Throwable) {
+            // DB source-of-truth hai; file copy agent/apply-step bhi sync karta hai.
+        }
 
         return redirect('/ports')->with('success', 'Ports save ho gaye. Ab apply-step chalayen (ya agent auto-apply).');
     }
@@ -72,6 +76,7 @@ final class PortsController extends Controller
 
     private function portsFile(): string
     {
-        return (string) (config('acp.ports_file') ?: '/usr/local/alphacp/var/ports.json');
+        // etc/ open_basedir-allowed hai (web user read/write kar sakta hai).
+        return (string) (config('acp.ports_file') ?: '/usr/local/alphacp/etc/ports.json');
     }
 }
