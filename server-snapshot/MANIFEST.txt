@@ -151,6 +151,7 @@
 /usr/local/alphacp/panel/app/Console/Commands/BackupDestinationPushCommand.php
 /usr/local/alphacp/panel/app/Console/Commands/DemoAccountsCommand.php
 /usr/local/alphacp/panel/app/Console/Commands/LicenseRenewCommand.php
+/usr/local/alphacp/panel/app/Console/Commands/OwnerLicenseCommand.php
 /usr/local/alphacp/panel/app/Console/Commands/ScheduledBackupsCommand.php
 /usr/local/alphacp/panel/app/Http/Controllers/AccountsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AddressImporterController.php
@@ -333,6 +334,7 @@
 /usr/local/alphacp/panel/app/Support/Handlers.php
 /usr/local/alphacp/panel/app/Support/Indexes.php
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php
+/usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
 /usr/local/alphacp/panel/app/Support/LicenseSigner.php
 /usr/local/alphacp/panel/app/Support/Mail.php
 /usr/local/alphacp/panel/app/Support/MailProvisioner.php

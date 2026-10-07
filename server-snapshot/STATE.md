@@ -27,9 +27,9 @@ panel http    : 200
 ## License / trial (sirf state + dates; fingerprint/signature nahi)
 ```
 store      : /usr/local/alphacp/panel/storage/app/private/license.json
-source     : local_trial   tier: trial   max_accounts: 20
-issued_at  : 2026-10-07T05:41:58+00:00
-expires_at : 2026-10-22T05:41:58+00:00   -> valid (expiry se pehle)
+source     : owner_local   tier: owner   max_accounts: -1
+issued_at  : 2026-10-07T07:19:35+00:00
+expires_at : ?   -> ?
 signed     : no (local trial)
 ```
 
@@ -178,6 +178,7 @@ alphacp:admin-password
 alphacp:api:token
 alphacp:backup-destination-push
 alphacp:demo-accounts
+alphacp:license:owner
 alphacp:license:renew
 alphacp:scheduled-backups
 ```
@@ -520,6 +521,7 @@ GET|HEAD           /{fallbackPlaceholder}
 ## License / trial se jude files (naam se)
 ```
 /usr/local/alphacp/panel/app/Console/Commands/LicenseRenewCommand.php
+/usr/local/alphacp/panel/app/Console/Commands/OwnerLicenseCommand.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseServerController.php
 /usr/local/alphacp/panel/app/Models/LicenseKey.php
@@ -554,6 +556,7 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (1) — repo se panel dobara banane par ye pages tootenge:
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (2) — repo se panel dobara banane par ye pages tootenge:
+/usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
 ```
