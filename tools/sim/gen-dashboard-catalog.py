@@ -30,6 +30,16 @@ for name, route in FLIP.items():
     text, n = pattern.subn(r"\1live', 'route' => '" + route + r"\2", text)
     changed += n
 
+# Naye tiles insert (agar maujood nahi)
+if "'Web Disk'" not in text:
+    lines = text.split("\n")
+    for i, line in enumerate(lines):
+        if "'FTP Accounts'" in line:
+            lines.insert(i + 1, "                    ['name' => 'Web Disk',          'step' => 'S6',  'status' => 'live', 'route' => 'webdisk.index'],")
+            break
+    text = "\n".join(lines)
+    changed += 1
+
 out = repo / "features/dashboard/ModuleCatalog.php"
 out.parent.mkdir(parents=True, exist_ok=True)
 out.write_text(text)

@@ -44,6 +44,7 @@ final class ModuleCatalog
                     ['name' => 'Directory Privacy',   'step' => 'S6',  'status' => 'live', 'route' => 'privacy.index'],
                     ['name' => 'Disk Usage',          'step' => 'S6',  'status' => 'live', 'route' => 'disk.index'],
                     ['name' => 'FTP Accounts',        'step' => 'S6',  'status' => 'live', 'route' => 'ftp.index'],
+                    ['name' => 'Web Disk',          'step' => 'S6',  'status' => 'live', 'route' => 'webdisk.index'],
                     ['name' => 'Backup',              'step' => 'S10', 'status' => 'live', 'route' => 'backup.index'],
                     ['name' => 'Backup Wizard',       'step' => 'S10', 'status' => 'live', 'route' => 'backup-wizard.index'],
                     ['name' => 'Git Version Control', 'step' => 'S6',  'status' => 'live', 'route' => 'git.index'],
