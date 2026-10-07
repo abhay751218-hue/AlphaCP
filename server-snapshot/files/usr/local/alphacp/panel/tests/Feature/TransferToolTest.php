@@ -60,7 +60,7 @@ class TransferToolTest extends TestCase
         $this->account();
         $this->asPanelUser($root)->get('/transfer-tool')
             ->assertOk()
-            ->assertSee('Import a cPanel account from an archive')
+            ->assertSee('Import an Account Panel account from an archive')
             ->assertSee('/home/cpmove-alicehost.tar.gz');
 
         $this->asPanelUser($root)->post('/transfer-tool', [

@@ -117,6 +117,10 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Preferences — cPanel jaisa "Change Style" (theme engine, P-UI-1).
+    Route::post('/preferences/style', [\App\Http\Controllers\PreferencesController::class, 'style'])
+        ->name('preferences.style');
+
     Route::get('/domains', [DomainsController::class, 'index'])
         ->middleware('perm:domains.view')->name('domains.index');
     Route::post('/domains', [DomainsController::class, 'store'])

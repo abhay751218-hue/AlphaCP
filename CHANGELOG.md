@@ -5,6 +5,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **P-UI-1 — per-panel colour/theme engine (panel 0.77.0)** · cPanel company ke 3 panels ka
+  alag look, ek hi shell se: **WHM** (navy `#293A4A` sidebar + orange `#FF6C2C` accent),
+  **cPanel** (paper-white, icon-grid Tools, orange accent), **Webmail** (white bar, orange accent).
+  Naye: `app/Support/Theme.php` (tokens + user/role se theme resolve), `app/Support/NavIcon.php`,
+  `ModuleCatalog` me `audience` (cpanel | whm | both) + icon + cPanel-order sections,
+  `partials/general-info.blade.php` + `partials/statistics.blade.php` (right rail har page par),
+  `panel.js` me "Find functions quickly…" search (JSON nav index), `POST /preferences/style`
+  (Change Style — same-mode only), `config/acp.php` me `ui` block + version 0.77.0.
+  Detail: `docs/10-ui-parity-design.md` (cPanel 138 live demos + official brand guide se).
+  **Panel suite 482/0** (php-wasm 8.5.10; 6 wasm-skip = sandbox limit).
+- `tools/build-panel-artifact.py` — snapshot panel dir se deterministic code-only artifact
+  (`artifacts/panel-code-0.77.0.tar.gz`, 507 files; uid/gid 0, mtime 0). `--list` = sirf sha.
+- `tests/Feature/ThemeShellTest.php` — 8 tests: teeno shells, tokens, General Information/Statistics,
+  style switcher (same-mode only), search index.
 - `installer/agent-fix.sh` **v1.0** (+ `tools/build-agent-fix.py`, `tools/sim/agent-fix-sim.sh`) —
   B6 fix ko live agent par deploy karne wala self-contained, commit-pinned, sha256-verified installer.
   Sirf `src/MysqlServer.php` rakhta hai; backup → `php -l` → static smoke (bina pdo) → full agent

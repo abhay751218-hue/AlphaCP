@@ -10,8 +10,16 @@ declare(strict_types=1);
  */
 return [
     // Panel + agent versions (shown in the UI footer and system page)
-    'version'       => env('ACP_VERSION', '0.72.0'),
-    'agent_version' => env('ACP_AGENT_VERSION', '0.62.0'),
+    'version'       => env('ACP_VERSION', '0.77.0'),
+    'agent_version' => env('ACP_AGENT_VERSION', '0.83.0'),
+
+    // UI / theme engine (cPanel-parity workstream: docs/10-ui-parity-design.md).
+    // theme: '' = role se auto (WHM/cPanel/Webmail) · warna jupiter|whm|webmail force.
+    'ui' => [
+        'theme'              => (string) env('ACP_UI_THEME', ''),
+        'brand_name'         => (string) env('ACP_BRAND_NAME', 'AlphaCP'),
+        'allow_style_switch' => (bool) env('ACP_UI_ALLOW_SWITCH', true),
+    ],
 
     // AlphaCP install root (agent, etc/, logs/, panel/)
     'home'          => rtrim((string) env('ACP_HOME', '/usr/local/alphacp'), '/'),

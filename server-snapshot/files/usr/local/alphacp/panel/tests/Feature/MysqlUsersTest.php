@@ -265,12 +265,16 @@ class MysqlUsersTest extends TestCase
     public function test_customer_and_mail_cannot_open_the_users_page(): void
     {
         [, $account] = $this->customerWithAccount();
+
+        // Users pehle banao, phir login karo — User::creating guard logged-in
+        // actor ke permissions check karta hai (mail role root user nahi bana sakta).
         $mail = $this->userWithRole('mail');
+        $whm = $this->userWithRole('root');
+
         $this->asPanelUser($mail)->get('/mysql-users')->assertForbidden();
 
-        $whm = $this->userWithRole('root');
         $this->asPanelUser($whm)->get('/mysql-users')
             ->assertOk()
-            ->assertSee('customer cPanel');
+            ->assertSee('customer account panel');
     }
 }

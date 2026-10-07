@@ -14,17 +14,51 @@ use App\Models\User;
  *           'step'   = us step me banega (number ke saath dikhta hai)
  *           'addon'  = optional module (baad me, chahein to)
  *
+ * `audience` batata hai kaun dekhega (cPanel parity workstream, docs/10-ui-parity-design.md):
+ *   'cpanel' = hosting customer (Files/Databases/Domains/... cPanel order)
+ *   'whm'    = root/reseller (WHM categories: Account Functions, Packages, DNS Functions…)
+ *   'both'   = dono (jaise 2FA, security)
+ *
  * Naya module banane par: yahan tile ka status 'live' kar do aur route do.
  * Ise chhod kar dashboard me kahin tiles hardcode na karo.
  */
 final class ModuleCatalog
 {
     /**
-     * @return array<string, array{label:string, icon:string, items:list<array<string,mixed>>}>
+     * cPanel (Jupiter) ke section order se milta-julta order:
+     * Email · Files · Databases · Domains · Metrics · Security · Software · Advanced · Preferences.
+     * Uske baad WHM ke categories (root/reseller) jinke naam WHM ke tool-name se match karte hain.
+     *
+     * @return array<string, array{label:string, icon:string, audience:string, items:list<array<string,mixed>>}>
      */
     public static function sections(): array
     {
         return [
+            // ---------------------------------------------------------- cPanel
+            'email' => [
+                'label' => 'Email',
+                'icon'  => 'mail',
+                'audience' => 'cpanel',
+                'items' => [
+                    ['name' => 'Email Accounts',      'step' => 'S7', 'status' => 'live', 'route' => 'email.index'],
+                    ['name' => 'Forwarders',          'step' => 'S7', 'status' => 'live', 'route' => 'forwarders.index'],
+                    ['name' => 'Email Routing',       'step' => 'S7', 'status' => 'live', 'route' => 'email-routing.index'],
+                    ['name' => 'Autoresponders',      'step' => 'S7', 'status' => 'live', 'route' => 'autoresponders.index'],
+                    ['name' => 'Default Address',     'step' => 'S7', 'status' => 'live', 'route' => 'default-address.index'],
+                    ['name' => 'Mailing Lists',       'step' => 'S7', 'status' => 'live', 'route' => 'mailing-lists.index'],
+                    ['name' => 'Track Delivery',      'step' => 'S7', 'status' => 'live', 'route' => 'track-delivery.index'],
+                    ['name' => 'Global Email Filters', 'step' => 'S7', 'status' => 'live', 'route' => 'global-filters.index'],
+                    ['name' => 'Email Filters',       'step' => 'S7', 'status' => 'live', 'route' => 'email-filters.index'],
+                    ['name' => 'Email Deliverability', 'step' => 'S7', 'status' => 'live', 'route' => 'deliverability.index'],
+                    ['name' => 'Address Importer',    'step' => 'S7', 'status' => 'live', 'route' => 'address-importer.index'],
+                    ['name' => 'Spam Filters',        'step' => 'S7', 'status' => 'live', 'route' => 'spam-filters.index'],
+                    ['name' => 'Encryption',          'step' => 'S7', 'status' => 'live', 'route' => 'encryption.index'],
+                    ['name' => 'BoxTrapper',          'step' => 'S7', 'status' => 'live', 'route' => 'boxtrapper.index'],
+                    ['name' => 'Calendars and Contacts', 'step' => 'S7', 'status' => 'live', 'route' => 'calendar.index'],
+                    ['name' => 'Email Disk Usage',    'step' => 'S7', 'status' => 'live', 'route' => 'email-disk.index'],
+                    ['name' => 'Webmail',             'step' => 'S7', 'status' => 'live', 'route' => 'webmail.index'],
+                ],
+            ],
             'files' => [
                 'label' => 'Files',
                 'icon'  => 'folder',
@@ -34,37 +68,26 @@ final class ModuleCatalog
                     ['name' => 'Images',              'step' => 'S6',  'status' => 'live', 'route' => 'images.index'],
                     ['name' => 'Directory Privacy',   'step' => 'S6',  'status' => 'live', 'route' => 'privacy.index'],
                     ['name' => 'Disk Usage',          'step' => 'S6',  'status' => 'live', 'route' => 'disk.index'],
+                    ['name' => 'Web Disk',            'step' => 'S6',  'status' => 'live', 'route' => 'webdisk.index'],
                     ['name' => 'FTP Accounts',        'step' => 'S6',  'status' => 'live', 'route' => 'ftp.index'],
-                    ['name' => 'Web Disk',          'step' => 'S6',  'status' => 'live', 'route' => 'webdisk.index'],
                     ['name' => 'Backup',              'step' => 'S10', 'status' => 'live', 'route' => 'backup.index'],
                     ['name' => 'Backup Wizard',       'step' => 'S10', 'status' => 'live', 'route' => 'backup-wizard.index'],
                     ['name' => 'Git Version Control', 'step' => 'S6',  'status' => 'live', 'route' => 'git.index'],
-                    ['name' => 'File Restoration',    'step' => 'S10', 'status' => 'live', 'route' => 'file-restoration.index'],
+                    ['name' => 'File Restoration', 'step' => 'S10', 'status' => 'live', 'route' => 'file-restoration.index'],
                     ['name' => 'Trash',               'step' => 'S6',  'status' => 'live', 'route' => 'trash.index'],
                 ],
             ],
-            'email' => [
-                'label' => 'Email',
-                'icon'  => 'mail',
+            'databases' => [
+                'label' => 'Databases',
+                'icon'  => 'database',
                 'audience' => 'cpanel',
                 'items' => [
-                    ['name' => 'Email Accounts',      'step' => 'S7', 'status' => 'live', 'route' => 'email.index'],
-                    ['name' => 'Forwarders',          'step' => 'S7', 'status' => 'live', 'route' => 'forwarders.index'],
-                    ['name' => 'Autoresponders',      'step' => 'S7', 'status' => 'live', 'route' => 'autoresponders.index'],
-                    ['name' => 'Default Address',     'step' => 'S7', 'status' => 'live', 'route' => 'default-address.index'],
-                    ['name' => 'Email Filters',       'step' => 'S7', 'status' => 'live', 'route' => 'email-filters.index'],
-                    ['name' => 'Deliverability',      'step' => 'S7', 'status' => 'live', 'route' => 'deliverability.index'],
-                    ['name' => 'Spam Filters',        'step' => 'S7', 'status' => 'live', 'route' => 'spam-filters.index'],
-                    ['name' => 'Mailing Lists',       'step' => 'S7', 'status' => 'live', 'route' => 'mailing-lists.index'],
-                    ['name' => 'Email Routing',       'step' => 'S7', 'status' => 'live', 'route' => 'email-routing.index'],
-                    ['name' => 'Track Delivery',      'step' => 'S7', 'status' => 'live', 'route' => 'track-delivery.index'],
-                    ['name' => 'Global Email Filters', 'step' => 'S7', 'status' => 'live', 'route' => 'global-filters.index'],
-                    ['name' => 'Address Importer',    'step' => 'S7', 'status' => 'live', 'route' => 'address-importer.index'],
-                    ['name' => 'Encryption',          'step' => 'S7', 'status' => 'live', 'route' => 'encryption.index'],
-                    ['name' => 'BoxTrapper',          'step' => 'S7', 'status' => 'live', 'route' => 'boxtrapper.index'],
-                    ['name' => 'Calendar',            'step' => 'S7', 'status' => 'live', 'route' => 'calendar.index'],
-                    ['name' => 'Email Disk Usage',    'step' => 'S7', 'status' => 'live', 'route' => 'email-disk.index'],
-                    ['name' => 'Webmail',             'step' => 'S7', 'status' => 'live', 'route' => 'webmail.index'],
+                    ['name' => 'phpMyAdmin',       'step' => 'S8', 'status' => 'live', 'route' => 'phpmyadmin.index'],
+                    ['name' => 'MySQL Databases',  'step' => 'S8', 'status' => 'live', 'route' => 'mysql.index'],
+                    ['name' => 'MySQL Users',      'step' => 'S8', 'status' => 'live', 'route' => 'mysql-users.index'],
+                    ['name' => 'Database Wizard',  'step' => 'S8', 'status' => 'live', 'route' => 'mysql-wizard.index'],
+                    ['name' => 'Remote MySQL',     'step' => 'S8', 'status' => 'live', 'route' => 'remote-mysql.index'],
+                    ['name' => 'PostgreSQL',       'step' => 'post-v1', 'status' => 'addon'],
                 ],
             ],
             'domains' => [
@@ -76,22 +99,9 @@ final class ModuleCatalog
                     ['name' => 'Subdomains',     'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
                     ['name' => 'Addon Domains',  'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
                     ['name' => 'Aliases',        'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
-                    ['name' => 'Redirects',      'step' => 'S5', 'status' => 'live', 'route' => 'domains.index'],
+                    ['name' => 'Redirects',      'step' => 'S5', 'status' => 'live', 'route' => 'domain-forward.index'],
                     ['name' => 'Zone Editor',    'step' => 'S9', 'status' => 'live', 'route' => 'zone-editor.index'],
                     ['name' => 'Dynamic DNS',    'step' => 'S9', 'status' => 'live', 'route' => 'dynamic-dns.index'],
-                ],
-            ],
-            'databases' => [
-                'label' => 'Databases',
-                'icon'  => 'database',
-                'audience' => 'cpanel',
-                'items' => [
-                    ['name' => 'MySQL Databases',  'step' => 'S8', 'status' => 'live', 'route' => 'mysql.index'],
-                    ['name' => 'Database Wizard',  'step' => 'S8', 'status' => 'live', 'route' => 'mysql-wizard.index'],
-                    ['name' => 'MySQL Users',      'step' => 'S8', 'status' => 'live', 'route' => 'mysql-users.index'],
-                    ['name' => 'phpMyAdmin',       'step' => 'S8', 'status' => 'live', 'route' => 'phpmyadmin.index'],
-                    ['name' => 'Remote MySQL',     'step' => 'S8', 'status' => 'live', 'route' => 'remote-mysql.index'],
-                    ['name' => 'PostgreSQL',       'step' => 'post-v1', 'status' => 'addon'],
                 ],
             ],
             'metrics' => [
@@ -112,15 +122,16 @@ final class ModuleCatalog
                 'icon'  => 'shield',
                 'audience' => 'both',
                 'items' => [
-                    ['name' => 'Two-Factor Auth', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.index'],
+                    ['name' => 'SSH Access',      'step' => 'S6',  'status' => 'live', 'route' => 'ssh.index', 'audience' => 'cpanel'],
+                    ['name' => 'IP Blocker',      'step' => 'S13', 'status' => 'live', 'route' => 'ip-blocker.index'],
+                    ['name' => 'SSL/TLS',         'step' => 'S5',  'status' => 'live', 'route' => 'ssl.index', 'audience' => 'cpanel'],
+                    ['name' => 'SSL/TLS Status',  'step' => 'S5',  'status' => 'live', 'route' => 'ssl.index', 'audience' => 'cpanel'],
+                    ['name' => 'Two-Factor Authentication', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.index'],
                     ['name' => 'Password & Security', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.index'],
                     ['name' => 'Active Sessions', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.sessions'],
-                    ['name' => 'SSL/TLS',        'step' => 'S5',  'status' => 'live', 'route' => 'ssl.index', 'audience' => 'cpanel'],
-                    ['name' => 'SSL/TLS Status', 'step' => 'S5',  'status' => 'live', 'route' => 'ssl.index', 'audience' => 'cpanel'],
-                    ['name' => 'IP Blocker',     'step' => 'S13', 'status' => 'live', 'route' => 'ip-blocker.index'],
-                    ['name' => 'ModSecurity',    'step' => 'S13', 'status' => 'live', 'route' => 'security-tools.index'],
-                    ['name' => 'SSH Access',     'step' => 'S6',  'status' => 'live', 'route' => 'ssh.index', 'audience' => 'cpanel'],
                     ['name' => 'Hotlink Protection', 'step' => 'S13', 'status' => 'live', 'route' => 'secextra.hotlink'],
+                    ['name' => 'Leech Protection', 'step' => 'S13', 'status' => 'live', 'route' => 'secextra.leech'],
+                    ['name' => 'ModSecurity',     'step' => 'S13', 'status' => 'live', 'route' => 'security-tools.index', 'audience' => 'whm'],
                 ],
             ],
             'software' => [
@@ -128,13 +139,13 @@ final class ModuleCatalog
                 'icon'  => 'box',
                 'audience' => 'cpanel',
                 'items' => [
-                    ['name' => 'App Installer',      'step' => 'S14', 'status' => 'live', 'route' => 'apps.index'],
-                    ['name' => 'WordPress Toolkit',  'step' => 'S14', 'status' => 'live', 'route' => 'apps.index'],
-                    ['name' => 'MultiPHP Manager',   'step' => 'S5',  'status' => 'live', 'route' => 'php.index'],
-                    ['name' => 'MultiPHP INI Editor', 'step' => 'S5', 'status' => 'live', 'route' => 'php.ini'],
-                    ['name' => 'Node.js Selector',   'step' => 'S14', 'status' => 'step'],
-                    ['name' => 'Optimize Website',   'step' => 'S14', 'status' => 'live', 'route' => 'optimize.index'],
-                    ['name' => 'PHP Composer',       'step' => 'S14', 'status' => 'step'],
+                    ['name' => 'App Installer',       'step' => 'S14', 'status' => 'live', 'route' => 'apps.index'],
+                    ['name' => 'WordPress Toolkit',   'step' => 'S14', 'status' => 'live', 'route' => 'apps.index'],
+                    ['name' => 'MultiPHP Manager',    'step' => 'S5',  'status' => 'live', 'route' => 'php.index'],
+                    ['name' => 'MultiPHP INI Editor', 'step' => 'S5',  'status' => 'live', 'route' => 'php.ini'],
+                    ['name' => 'Optimize Website',    'step' => 'S14', 'status' => 'live', 'route' => 'optimize.index'],
+                    ['name' => 'Node.js Selector',    'step' => 'S14', 'status' => 'step'],
+                    ['name' => 'PHP Composer',        'step' => 'S14', 'status' => 'step'],
                 ],
             ],
             'advanced' => [
@@ -146,50 +157,175 @@ final class ModuleCatalog
                     ['name' => 'Track DNS',      'step' => 'S9',  'status' => 'live', 'route' => 'track-dns.index'],
                     ['name' => 'Indexes',        'step' => 'S5',  'status' => 'live', 'route' => 'indexes.index'],
                     ['name' => 'Error Pages',    'step' => 'S5',  'status' => 'live', 'route' => 'errorpages.index'],
+                    ['name' => 'Apache Handlers', 'step' => 'S5', 'status' => 'live', 'route' => 'handlers.index'],
                     ['name' => 'MIME Types',     'step' => 'S5',  'status' => 'live', 'route' => 'mime.index'],
-                    ['name' => 'Apache Handlers','step' => 'S5',  'status' => 'live', 'route' => 'handlers.index'],
                     ['name' => 'Terminal',       'step' => 'S6',  'status' => 'live', 'route' => 'terminal.index'],
                     ['name' => 'Network Tools',  'step' => 'S11', 'status' => 'step'],
                 ],
             ],
-            'server' => [
-                'label' => 'WHM — Account Functions',
+            'preferences' => [
+                'label' => 'Preferences',
+                'icon'  => 'user',
+                'audience' => 'cpanel',
+                'items' => [
+                    ['name' => 'Password & Security', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.index'],
+                    ['name' => 'User Manager',        'step' => 'S2B', 'status' => 'live', 'route' => 'users.index'],
+                    ['name' => 'Change Style',        'step' => 'P-UI', 'status' => 'step'],
+                    ['name' => 'Contact Information', 'step' => 'P-UI', 'status' => 'step'],
+                    ['name' => 'Account Preferences', 'step' => 'P-UI', 'status' => 'step'],
+                    ['name' => 'Change Language',     'step' => 'P-UI', 'status' => 'step'],
+                ],
+            ],
+
+            // ------------------------------------------------------- WHM (root/reseller)
+            // Naam WHM ke tool-naam se match karte hain (docs/10-ui-parity-design.md §4).
+            'whm_accounts' => [
+                'label' => 'Account Functions',
                 'icon'  => 'server',
                 'audience' => 'whm',
                 'items' => [
-                    ['name' => 'System Information',  'step' => 'S2B', 'status' => 'live', 'route' => 'system.index'],
+                    ['name' => 'Create Account',   'step' => 'S3', 'status' => 'live', 'route' => 'accounts.create'],
+                    ['name' => 'List Accounts',          'step' => 'S3', 'status' => 'live', 'route' => 'accounts.index'],
+                    ['name' => 'Modify an Account',      'step' => 'S3', 'status' => 'live', 'route' => 'accounts.index'],
+                    ['name' => 'Upgrade/Downgrade an Account', 'step' => 'S4', 'status' => 'live', 'route' => 'accounts.index'],
+                    ['name' => 'Manage Account Suspension', 'step' => 'S3', 'status' => 'live', 'route' => 'accounts.index'],
+                    ['name' => 'Terminate Accounts',     'step' => 'S3', 'status' => 'live', 'route' => 'accounts.index'],
+                    ['name' => 'Quota Modification',     'step' => 'S4', 'status' => 'live', 'route' => 'accounts.index'],
+                    ['name' => 'Force Password Change',  'step' => 'S2B', 'status' => 'live', 'route' => 'users.index'],
+                ],
+            ],
+            'whm_info' => [
+                'label' => 'Account Information',
+                'icon'  => 'search',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'List Accounts',            'step' => 'S3',  'status' => 'live', 'route' => 'accounts.index'],
+                    ['name' => 'Show Accounts Over Quota', 'step' => 'S4',  'status' => 'live', 'route' => 'accounts.index'],
+                    ['name' => 'View Bandwidth Usage',     'step' => 'S11', 'status' => 'live', 'route' => 'metrics.index'],
+                    ['name' => 'List Parked Domains',      'step' => 'S5',  'status' => 'live', 'route' => 'park-domain.index'],
+                    ['name' => 'List Subdomains',          'step' => 'S5',  'status' => 'live', 'route' => 'domains.index'],
+                ],
+            ],
+            'whm_packages' => [
+                'label' => 'Packages',
+                'icon'  => 'box',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'Add a Package',    'step' => 'S4', 'status' => 'live', 'route' => 'packages.index'],
+                    ['name' => 'Edit a Package',   'step' => 'S4', 'status' => 'live', 'route' => 'packages.index'],
+                    ['name' => 'Delete a Package', 'step' => 'S4', 'status' => 'live', 'route' => 'packages.index'],
+                    ['name' => 'Feature Manager',  'step' => 'S4', 'status' => 'live', 'route' => 'packages.index'],
+                ],
+            ],
+            'whm_dns' => [
+                'label' => 'DNS Functions',
+                'icon'  => 'globe',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'DNS Zone Manager',        'step' => 'S9', 'status' => 'live', 'route' => 'dns-zones.index'],
+                    ['name' => 'Add a DNS Zone',          'step' => 'S9', 'status' => 'live', 'route' => 'dns-zones.index'],
+                    ['name' => 'Add an A Entry for Your Hostname', 'step' => 'S9', 'status' => 'live', 'route' => 'hostname-a.index'],
+                    ['name' => 'Edit Zone Templates',     'step' => 'S9', 'status' => 'live', 'route' => 'zone-templates.index'],
+                    ['name' => 'Email Routing Configuration', 'step' => 'S9', 'status' => 'live', 'route' => 'global-email-routing.index'],
+                    ['name' => 'Nameserver Record Report', 'step' => 'S9', 'status' => 'live', 'route' => 'ns-report.index'],
+                    ['name' => 'Park a Domain',           'step' => 'S9', 'status' => 'live', 'route' => 'park-domain.index'],
+                    ['name' => 'Perform a DNS Cleanup',   'step' => 'S9', 'status' => 'live', 'route' => 'dns-cleanup.index'],
+                    ['name' => 'Set Zone TTL',            'step' => 'S9', 'status' => 'live', 'route' => 'zone-ttl.index'],
+                    ['name' => 'Setup/Edit Domain Forwarding', 'step' => 'S9', 'status' => 'live', 'route' => 'domain-forward.index'],
+                    ['name' => 'Synchronize DNS Records', 'step' => 'S9', 'status' => 'live', 'route' => 'dns-sync.index'],
+                    ['name' => 'Nameserver Selection',    'step' => 'S9', 'status' => 'live', 'route' => 'nameserver-selection.index'],
+                ],
+            ],
+            'whm_email' => [
+                'label' => 'Email',
+                'icon'  => 'mail',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'Email Deliverability',    'step' => 'S7', 'status' => 'live', 'route' => 'deliverability.index'],
+                    ['name' => 'Email Routing',           'step' => 'S7', 'status' => 'live', 'route' => 'email-routing.index'],
+                    ['name' => 'Track Delivery',          'step' => 'S7', 'status' => 'live', 'route' => 'track-delivery.index'],
+                    ['name' => 'Global Email Filters',    'step' => 'S7', 'status' => 'live', 'route' => 'global-filters.index'],
+                    ['name' => 'Mail Queue Manager',      'step' => 'S7', 'status' => 'live', 'route' => 'track-delivery.index'],
+                    ['name' => 'View Mail Statistics Summary', 'step' => 'S7', 'status' => 'live', 'route' => 'email-disk.index'],
+                ],
+            ],
+            'whm_backup' => [
+                'label' => 'Backup',
+                'icon'  => 'backup',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'Backup Configuration',            'step' => 'S10', 'status' => 'live', 'route' => 'backup-config.index'],
+                    ['name' => 'Backup Destinations',             'step' => 'S10', 'status' => 'live', 'route' => 'backup-destinations.index'],
+                    ['name' => 'Backup Restoration',              'step' => 'S10', 'status' => 'live', 'route' => 'backup-restoration.index'],
+                    ['name' => 'Backup User Selection',           'step' => 'S10', 'status' => 'live', 'route' => 'backup-user-selection.index'],
+                    ['name' => 'File and Directory Restoration',  'step' => 'S10', 'status' => 'live', 'route' => 'file-directory-restoration.index'],
+                    ['name' => 'Backup Wizard',                   'step' => 'S10', 'status' => 'live', 'route' => 'backup-wizard.index'],
+                ],
+            ],
+            'whm_transfers' => [
+                'label' => 'Transfers',
+                'icon'  => 'transfer',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'Transfer Tool',                    'step' => 'S10', 'status' => 'live', 'route' => 'transfer-tool.index'],
+                    ['name' => 'Transfer or Restore a cPanel Account', 'step' => 'S10', 'status' => 'live', 'route' => 'transfer-restore.index'],
+                    ['name' => 'Review Transfers and Restores',    'step' => 'S10', 'status' => 'live', 'route' => 'transfer-review.index'],
+                ],
+            ],
+            'whm_security' => [
+                'label' => 'Security Center',
+                'icon'  => 'shield',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'ModSecurity Configuration', 'step' => 'S13', 'status' => 'live', 'route' => 'security-tools.index'],
+                    ['name' => 'IP Blocker',                'step' => 'S13', 'status' => 'live', 'route' => 'ip-blocker.index'],
+                    ['name' => 'Two-Factor Authentication', 'step' => 'S2B', 'status' => 'live', 'route' => 'security.index'],
+                    ['name' => 'Manage API Tokens',         'step' => 'S12', 'status' => 'live', 'route' => 'api-tokens.index'],
+                    ['name' => 'Manage Shell Access',       'step' => 'S6',  'status' => 'live', 'route' => 'ssh.index'],
+                    ['name' => 'Audit Log',                 'step' => 'S2B', 'status' => 'live', 'route' => 'audit.index'],
+                    ['name' => 'Manage Wheel Group Users',  'step' => 'S2B', 'status' => 'live', 'route' => 'users.index'],
+                    ['name' => 'Host Access Control',       'step' => 'S13', 'status' => 'live', 'route' => 'security.sessions'],
+                ],
+            ],
+            'whm_status' => [
+                'label' => 'Server Status',
+                'icon'  => 'pulse',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'Server Information',  'step' => 'S2B', 'status' => 'live', 'route' => 'system.index'],
                     ['name' => 'Service Status',      'step' => 'S2B', 'status' => 'live', 'route' => 'system.services'],
                     ['name' => 'Task Queue Monitor',  'step' => 'S2B', 'status' => 'live', 'route' => 'system.tasks'],
-                    ['name' => 'Audit Log',           'step' => 'S2B', 'status' => 'live', 'route' => 'audit.index'],
-                    ['name' => 'User Manager',        'step' => 'S2B', 'status' => 'live', 'route' => 'users.index'],
-                    ['name' => 'Packages',            'step' => 'S4',  'status' => 'live', 'route' => 'packages.index'],
-                    ['name' => 'Create Account',      'step' => 'S3',  'status' => 'live', 'route' => 'accounts.create'],
-                    ['name' => 'List Accounts',       'step' => 'S3',  'status' => 'live', 'route' => 'accounts.index'],
-                    ['name' => 'DNS Zone Manager',    'step' => 'S9',  'status' => 'live', 'route' => 'dns-zones.index'],
-                    ['name' => 'Add / Delete a DNS Zone', 'step' => 'S9',  'status' => 'live', 'route' => 'dns-zones.index'],
-                    ['name' => 'Add an A Entry for Your Hostname', 'step' => 'S9',  'status' => 'live', 'route' => 'hostname-a.index'],
-                    ['name' => 'Edit Zone Templates', 'step' => 'S9',  'status' => 'live', 'route' => 'zone-templates.index'],
-                    ['name' => 'Email Routing Configuration', 'step' => 'S9',  'status' => 'live', 'route' => 'global-email-routing.index'],
-                    ['name' => 'Nameserver Record Report', 'step' => 'S9',  'status' => 'live', 'route' => 'ns-report.index'],
-                    ['name' => 'Park a Domain', 'step' => 'S9',  'status' => 'live', 'route' => 'park-domain.index'],
-                    ['name' => 'Perform a DNS Cleanup', 'step' => 'S9',  'status' => 'live', 'route' => 'dns-cleanup.index'],
-                    ['name' => 'Set Zone TTL', 'step' => 'S9',  'status' => 'live', 'route' => 'zone-ttl.index'],
-                    ['name' => 'Setup/Edit Domain Forwarding', 'step' => 'S9',  'status' => 'live', 'route' => 'domain-forward.index'],
-                    ['name' => 'Synchronize DNS Records', 'step' => 'S9',  'status' => 'live', 'route' => 'dns-sync.index'],
-                    ['name' => 'Nameserver Selection', 'step' => 'S9',  'status' => 'live', 'route' => 'nameserver-selection.index'],
-                    ['name' => 'DNS Cluster',         'step' => 'S15', 'status' => 'live', 'route' => 'dns-cluster.index'],
-                    ['name' => 'Backup Config',       'step' => 'S10', 'status' => 'live', 'route' => 'backup-config.index'],
-                    ['name' => 'Backup Destinations', 'step' => 'S10', 'status' => 'live', 'route' => 'backup-destinations.index'],
-                    ['name' => 'Backup Restoration',  'step' => 'S10', 'status' => 'live', 'route' => 'backup-restoration.index'],
-                    ['name' => 'Backup User Selection', 'step' => 'S10', 'status' => 'live', 'route' => 'backup-user-selection.index'],
-                    ['name' => 'File and Directory Restoration', 'step' => 'S10', 'status' => 'live', 'route' => 'file-directory-restoration.index'],
-                    ['name' => 'Transfer Tool',       'step' => 'S10', 'status' => 'live', 'route' => 'transfer-tool.index'],
-                    ['name' => 'Transfer or Restore a cPanel Account', 'step' => 'S10', 'status' => 'live', 'route' => 'transfer-restore.index'],
-                    ['name' => 'Review Transfers and Restores', 'step' => 'S10', 'status' => 'live', 'route' => 'transfer-review.index'],
-                    ['name' => 'Security Center',     'step' => 'S13', 'status' => 'step'],
-                    ['name' => 'API Tokens',          'step' => 'S12', 'status' => 'live', 'route' => 'api-tokens.index'],
-                    ['name' => 'License & Trial',      'step' => 'S2C', 'status' => 'live', 'route' => 'license.index'],
-                    ['name' => 'Updates',             'step' => 'S15', 'status' => 'step'],
+                    ['name' => 'Daily Process Log',   'step' => 'S11', 'status' => 'live', 'route' => 'monitoring.index'],
+                    ['name' => 'Ports / Entry Points', 'step' => 'P-UI', 'status' => 'live', 'route' => 'ports.index'],
+                ],
+            ],
+            'whm_resellers' => [
+                'label' => 'Resellers',
+                'icon'  => 'users',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'Reseller Center',              'step' => 'S15', 'status' => 'live', 'route' => 'resellers.index'],
+                    ['name' => 'Show Reseller Accounts',       'step' => 'S15', 'status' => 'live', 'route' => 'resellers.index'],
+                    ['name' => 'Change Ownership of an Account', 'step' => 'S15', 'status' => 'live', 'route' => 'resellers.index'],
+                ],
+            ],
+            'whm_clusters' => [
+                'label' => 'Clusters',
+                'icon'  => 'globe',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'DNS Cluster',           'step' => 'S15', 'status' => 'live', 'route' => 'dns-cluster.index'],
+                    ['name' => 'Configuration Cluster', 'step' => 'S15', 'status' => 'step'],
+                ],
+            ],
+            'whm_license' => [
+                'label' => 'License & Updates',
+                'icon'  => 'license',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'License & Trial',   'step' => 'S2C',  'status' => 'live', 'route' => 'license.index'],
+                    ['name' => 'License Server',    'step' => 'S2C',  'status' => 'live', 'route' => 'license-server.index'],
+                    ['name' => 'Updates',           'step' => 'S15',  'status' => 'step'],
                 ],
             ],
         ];
@@ -237,6 +373,7 @@ final class ModuleCatalog
     public static function sectionsFor(User $user): array
     {
         $mode = self::modeFor($user);
+        $theme = Theme::forUser($user);
         $mailOnly = $user->role?->name === 'mail';
         $out = [];
         foreach (self::sections() as $key => $section) {
@@ -251,6 +388,9 @@ final class ModuleCatalog
             foreach ($section['items'] as $item) {
                 $itemAudience = $item['audience'] ?? $audience;
                 if ($itemAudience !== $mode && $itemAudience !== 'both') {
+                    continue;
+                }
+                if ($theme === Theme::CPANEL && $itemAudience === 'whm') {
                     continue;
                 }
                 $items[] = $item;

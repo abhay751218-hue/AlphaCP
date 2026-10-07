@@ -144,7 +144,7 @@ class DomainsTest extends TestCase
     public function test_whm_user_does_not_use_customer_domain_form(): void
     {
         $root = $this->userWithRole('root');
-        $this->asPanelUser($root)->get('/domains')->assertOk()->assertSee('customer cPanel');
+        $this->asPanelUser($root)->get('/domains')->assertOk()->assertSee('Account Panel');
         $this->asPanelUser($root)->post('/domains', [
             'type' => 'addon',
             'domain' => 'nope.example.com',

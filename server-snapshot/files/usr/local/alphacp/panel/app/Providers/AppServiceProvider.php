@@ -70,10 +70,27 @@ class AppServiceProvider extends ServiceProvider
         // Every authenticated page uses the same header. Supplying the server
         // row here prevents pages such as User Manager/Audit from showing
         // `server: unknown` merely because their controller is not a dashboard.
+        //
+        // Theme engine (docs/10-ui-parity-design.md): layout ko $theme, nav
+        // sections, search index aur right-hand General Information/Statistics
+        // columns yahin se milte hain — page code ko kuch pass karne ki zaroorat
+        // nahi.
         View::composer('layouts.panel', static function ($view): void {
             $user = auth()->user();
+            $theme = \App\Support\Theme::forUser($user);
+            $sections = $user ? \App\Support\ModuleCatalog::sectionsFor($user) : [];
+
             $view->with('server', \App\Support\Panel::server());
-            $view->with('panelMode', $user ? \App\Support\ModuleCatalog::modeFor($user) : 'cpanel');
+            $view->with('panelMode', \App\Support\ModuleCatalog::modeFor($user));
+            $view->with('theme', $theme);
+            $view->with('themeLabel', \App\Support\Theme::label($theme));
+            $view->with('themePanel', \App\Support\Theme::panelName($theme));
+            $view->with('themeTokens', \App\Support\Theme::tokens($theme));
+            $view->with('navSections', $sections);
+            $view->with('searchIndex', \App\Support\Theme::searchIndex($sections));
+            $view->with('generalInfo', \App\Support\Panel::generalInfo($user));
+            $view->with('statistics', \App\Support\Panel::statistics($user));
+            $view->with('styleOptions', \App\Support\Theme::allowedFor($user));
         });
 
         // ---- Blade helpers ---------------------------------------------------

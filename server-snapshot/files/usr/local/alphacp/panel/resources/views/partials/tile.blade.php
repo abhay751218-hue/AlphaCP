@@ -3,21 +3,23 @@
     $live    = ($item['status'] ?? 'step') === 'live';
     $addon   = ($item['status'] ?? 'step') === 'addon';
     $href    = $live ? route($item['route']) : null;
-    $classes = 'tile' . ($live ? ' live' : ' disabled');
+    $classes = 'cp-tile' . ($live ? ' live' : ' disabled');
+    $icon    = \App\Support\NavIcon::glyph($icon ?? 'cog');
 @endphp
 
 @if ($live)
-    <a class="{{ $classes }}" href="{{ $href }}">
+    <a class="{{ $classes }}" href="{{ $href }}" data-tool="{{ $item['name'] }}">
 @else
-    <div class="{{ $classes }}" title="{{ $addon ? 'Optional module' : 'Step ' . $item['step'] . ' me aayega' }}">
+    <div class="{{ $classes }}" data-tool="{{ $item['name'] }}"
+         title="{{ $addon ? 'Optional module' : 'Step ' . $item['step'] . ' me aayega' }}">
 @endif
 
-    <span class="ico">{{ $addon ? '🔌' : ($live ? '✅' : '🧩') }}</span>
-    <span>
+    <span class="cp-tile-icon" aria-hidden="true">{{ $icon }}</span>
+    <span class="cp-tile-body">
         <span class="name">{{ $item['name'] }}</span>
         <span class="sub">
             @if ($live)
-                Ready
+                Manage
             @elseif ($addon)
                 Optional ({{ $item['step'] }})
             @else

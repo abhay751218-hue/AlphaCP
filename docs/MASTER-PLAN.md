@@ -3,12 +3,13 @@
 > **Ye file kholo sabse pehle.** Agar ye chat toote ya naya chat/AI se kaam karwana ho, to
 > bas itna bolo: *"AlphaCP repo kholo, `docs/MASTER-PLAN.md` padho, wahin se continue karo."*
 > Repo hi source of truth hai — is file + `docs/FEATURE-AUDIT.md` + `COMMANDS.md` + `CHANGELOG.md`
-> me sab kuch recorded hai. Branch: `arena/79da9999-alphacp`.
+> me sab kuch recorded hai. Branch: **`arena/ef1a681e-alphacp`** (7 Oct: pichhli session
+> `arena/79da9999-alphacp` isi me merge ho gayi — `763c01f`; aage ka kaam yahin hota hai).
 
 ---
 
 ## 0. Kaise resume karein (naye chat / kisi bhi AI ke liye)
-1. Repo: `abhay751218-hue/AlphaCP` (PRIVATE), branch `arena/79da9999-alphacp`.
+1. Repo: `abhay751218-hue/AlphaCP` (PRIVATE), branch `arena/ef1a681e-alphacp`.
 2. Padho (is order me): `START-HERE.md` → `AGENTS.md` → **`docs/MASTER-PLAN.md` (ye)** →
    `docs/FEATURE-AUDIT.md` → `COMMANDS.md` → `CHANGELOG.md`.
 3. **Binding rules** (`START-HERE.md` §3 / `AGENTS.md`): reply Hinglish me; har message me
@@ -23,21 +24,25 @@
    - **Agent** = root `agent/` (canonical, live 80-task; snapshot mirror sync se refresh hota hai).
    - Tests: agent = `php8.4 agent/tests/run-tests.php`; panel = php-wasm (`tools/sim/panel-tests.sh`);
      sims = `tools/sim/*.sh`.
+   - Panel artifact build (naya): `python3 tools/build-panel-artifact.py` →
+     `artifacts/panel-code-<ver>.tar.gz` (snapshot panel dir se, reproducible; `--list` = sirf sha).
+   - UI/design spec: **`docs/10-ui-parity-design.md`** (cPanel 138 live demo + brand guide se, 7 Oct).
 
 ---
 
 ## 1. Version inventory (7 Oct 2026 tak)
 | Component | Live | Repo/template | Note |
 |---|---|---|---|
-| Panel app | **0.75.0** | `config/acp.php` default `0.72.0` (stale) | live `.env ACP_VERSION` se override |
+| Panel app | **0.75.0** (live) → **0.77.0** (repo, deploy pending) | `config/acp.php` default **0.77.0** ✅ (drift fix ho gaya) | UI parity (P-UI-1) isi me hai |
 | Agent (`paneld`) | **0.83.0** | `agent/src/Bootstrap.php` `0.83.0`; `config/acp.php` default `0.62.0` (stale) | |
 | `alphacp-sync` | **v1.5** | `installer/alphacp-sync.sh` header `1.2` (bootstrap) | live self-upgrade hua |
-| `panel-update.sh` (updater) | 0.3.0 | bundle `0.3.2` | |
+| `panel-update.sh` (updater) | 0.3.0 | **0.82.2 → bundle `0.77.0`** (P-UI-1) | agent-fix/login-fix jaise pinned pattern me |
 | `install.sh` / `panel-install.sh` / `step2-install.sh` / `step2b-*` | — | 0.1.2 / 0.3.0 / 0.2.0 / 0.3.8 | |
 | `login-fix.sh` | **v1.0 APPLIED** (7 Oct 13:04Z) | same | pin `269eb3c`/`6ca53d4d…` |
 | `agent-fix.sh` | **v1.0 APPLIED** (7 Oct 14:31Z) | same | pin `321c819`/`d03f3cd6…` |
-**Drift notes:** `config/acp.php` ke default versions (0.72/0.62) live (0.75/0.83) se peeche hain —
-UI footer galat version dikhata hai; ek chhota fix chahiye (env se override theek hai par default update karo).
+**Drift notes:** (7 Oct, fix ho gaya) `config/acp.php` ke default versions ab live jaisa
+(panel `0.77.0`, agent `0.83.0`) — UI footer drift khatam. `0.76.0` version number **skip** kiya gaya
+kyunki dusri branch (`arena/01a10111-alphacp`) pe wahi number ka alag artifact hai (0.77.0 = is session ka).
 
 ---
 
@@ -137,7 +142,7 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 ### 4.5 Phases (UI parity)
 | Phase | Kaam |
 |---|---|
-| P-UI-1 | Theme engine: 3 alag themes/layouts (WHM / cPanel / Webmail) + design tokens (colours, sidebar, cards, icons) |
+| P-UI-1 ✅ | Theme engine: 3 alag themes/layouts (WHM / cPanel / Webmail) + design tokens (colours, sidebar, cards, icons) — **panel 0.77.0** |
 | P-UI-2 | **cPanel (customer)** icon-grid home + sections + right General-Info column + top search + footer |
 | P-UI-3 | **WHM (root/reseller)** sidebar nav-tree + Favorites + Statistics home |
 | P-UI-4 | **Webmail** alag app (Roundcube SSO) + alag login (2095/96 opt-in) |
@@ -165,7 +170,15 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | doctor v1.7 | — | `da3539029d1010f33fd550e7b4d016785c932103` / `e2915e0204df79ec41540d0ee68ef8a1c3cb3f261a39dc38651471a5115f5e88` |
 
 ## 7. Next immediate step
-**Phase 1 = B1 FTP:** code DONE + verified (`35cd630`; agent 215/0, panel smoke 8/8). Ab isko **ship**
-karna hai: `installer/agent-fix.sh` v1.1 (agent: Ftp.php+handlers+tasks+allowlist) + panel files
-(Support/Ftp, FtpController) ek hi pinned command me → sim-verify → command. Uske baad Git/Terminal/
-Apps (B1), Metrics (B2), test-debt (B4), phir **P-UI-1** (theme engine).
+**P-UI-1 ✅ (7 Oct, panel 0.77.0)** — theme engine + cPanel/WHM/Webmail looks + General
+Information/Statistics + search + Change Style. Detail: `docs/10-ui-parity-design.md`.
+Ship channel = **`installer/panel-update.sh` 0.82.2** (bundle 0.77.0, commit-pinned) — COMMANDS.md me
+pinned command. Panel suite: **482 pass / 0 fail** (php-wasm 8.5.10; 6 wasm-skip = sandbox limit).
+
+Uske baad (order):
+1. **B1 FTP ship** — `installer/agent-fix.sh` v1.1 (Ftp.php + handlers + tasks + allowlist) + panel
+   files (Support/Ftp, FtpController) ek pinned command me → sim-verify → command.
+2. **P-UI-2/3** — cPanel Tools page polish + WHM nav-tree polish (drag-reorder, per-tool help, SVG icons).
+3. **B2 Metrics** (`metrics.access` agent task), **B4** (ho gaya ✅ — 482/0), **B5** (6 wasm-skip server
+   par record).
+4. **P-UI-4** Webmail app (Roundcube SSO) + 2095/2096 opt-in.

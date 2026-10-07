@@ -60,7 +60,7 @@ class TransferRestoreTest extends TestCase
         $this->account();
         $this->asPanelUser($root)->get('/transfer-restore')
             ->assertOk()
-            ->assertSee('Import a cPanel account archive')
+            ->assertSee('Import an Account Panel account archive')
             ->assertSee('/home/cpmove-alicehost.tar.gz');
 
         $this->asPanelUser($root)->post('/transfer-restore', [
