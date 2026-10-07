@@ -1,0 +1,167 @@
+<?php
+declare(strict_types=1);
+
+namespace Alphacp\Agent;
+
+/**
+ * Customer MySQL database names under the account prefix.
+ *
+ * @deprecated 0.70.0 — this class backs the JSON-only `db.set` task. The real
+ * provisioning lives in MysqlServer + the `db.create` / `db.user.*` tasks.
+ * Kept because the registry still ships `db.set` for older panels.
+ */
+final class Mysql
+{
+    public const MAX = 50;
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{name: string, full: string}>
+     */
+    public static function sanitize(array $raw, string $username): array
+    {
+        if (count($raw) > self::MAX) {
+            throw new TaskRejectedException('too many databases (50 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException('database row must be an object');
+            }
+            $name = self::normalizeName((string) ($row['name'] ?? ''));
+            if (isset($seen[$name])) {
+                throw new TaskRejectedException('duplicate database name');
+            }
+            $seen[$name] = true;
+            $out[] = [
+                'name' => $name,
+                'full' => $username . '_' . $name,
+            ];
+        }
+
+        return $out;
+    }
+
+    public static function normalizeName(string $name): string
+    {
+        $name = strtolower(trim($name));
+        if (preg_match('/^[a-z][a-z0-9_]{0,15}$/', $name) !== 1) {
+            throw new TaskRejectedException('invalid database name');
+        }
+        if (str_contains($name, '..') || str_contains($name, '/') || str_contains($name, '|')) {
+            throw new TaskRejectedException('database name path escape');
+        }
+
+        return $name;
+    }
+
+    /**
+     * @param  list<array{name: string, full: string}> $rows
+     */
+    public static function databasesJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('database json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  array<string, mixed> $raw
+     * @return array{enabled: bool}
+     */
+    public static function sanitizePma(array $raw): array
+    {
+        return ['enabled' => self::normalizeEnabled($raw['enabled'] ?? false)];
+    }
+
+    public static function normalizeEnabled(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if ($value === 1 || $value === '1' || $value === 'true') {
+            return true;
+        }
+        if ($value === 0 || $value === '0' || $value === 'false' || $value === '') {
+            return false;
+        }
+
+        throw new TaskRejectedException('invalid phpmyadmin enabled');
+    }
+
+    /**
+     * @param  array{enabled: bool} $cfg
+     */
+    public static function pmaJson(array $cfg): string
+    {
+        $json = json_encode($cfg, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('phpmyadmin json encode failed');
+        }
+
+        return $json . "\n";
+    }
+
+    /**
+     * @param  list<mixed> $raw
+     * @return list<array{host: string}>
+     */
+    public static function sanitizeRemote(array $raw): array
+    {
+        if (count($raw) > self::MAX) {
+            throw new TaskRejectedException('too many remote hosts (50 max)');
+        }
+        $out = [];
+        $seen = [];
+        foreach ($raw as $row) {
+            if (!is_array($row)) {
+                throw new TaskRejectedException('remote host row must be an object');
+            }
+            $host = self::normalizeHost((string) ($row['host'] ?? ''));
+            if (isset($seen[$host])) {
+                throw new TaskRejectedException('duplicate remote host');
+            }
+            $seen[$host] = true;
+            $out[] = ['host' => $host];
+        }
+
+        return $out;
+    }
+
+    public static function normalizeHost(string $host): string
+    {
+        $host = strtolower(trim($host));
+        if ($host === '' || str_contains($host, '..') || str_contains($host, '/') || str_contains($host, '|') || str_contains($host, ' ')) {
+            throw new TaskRejectedException('remote host path escape');
+        }
+        if ($host === '%') {
+            return $host;
+        }
+        if (preg_match('/^(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/', $host) === 1) {
+            return $host;
+        }
+        $err = AccountIdentity::domain($host);
+        if ($err !== null) {
+            throw new TaskRejectedException('invalid remote host');
+        }
+
+        return $host;
+    }
+
+    /**
+     * @param  list<array{host: string}> $rows
+     */
+    public static function remoteJson(array $rows): string
+    {
+        $json = json_encode($rows, JSON_UNESCAPED_SLASHES);
+        if (!is_string($json)) {
+            throw new TaskRejectedException('remote host json encode failed');
+        }
+
+        return $json . "\n";
+    }
+}
