@@ -36,6 +36,7 @@
 | `install.sh` / `panel-install.sh` / `step2-install.sh` / `step2b-*` | — | 0.1.2 / 0.3.0 / 0.2.0 / 0.3.8 | |
 | `login-fix.sh` | **v1.0 APPLIED** (7 Oct 13:04Z) | same | pin `269eb3c`/`6ca53d4d…` |
 | `agent-fix.sh` | **v1.0 APPLIED** (7 Oct 14:31Z) | same | pin `321c819`/`d03f3cd6…` |
+| `ftp-fix.sh` | **v1.0 READY — user ko command diya, apply baaki** | same | pin `047d974`/`8f2cdafec…` |
 **Drift notes:** `config/acp.php` ke default versions (0.72/0.62) live (0.75/0.83) se peeche hain —
 UI footer galat version dikhata hai; ek chhota fix chahiye (env se override theek hai par default update karo).
 
@@ -71,12 +72,14 @@ Persona → panel: **Owner/Admin = WHM-like (2086/87)** · **Reseller = scoped W
 |---|---|---|
 | B0 | Agent source-of-truth drift (3-task stale → downgrade risk) | ✅ `606ac97` |
 | B6 | `MysqlServer.php` missing → db.*/db.restore fatal | ✅ repo `fd9aca9` + **live `agent-fix v1.0`** |
-| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | 🟡 **FTP code done** (`35cd630`, agent 215/0) — ship baaki; Git/Terminal/Apps 🔜 |
+| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | 🟡 **FTP: code `35cd630` + installer `047d974` (sim 40/40) — LIVE APPLY baaki**; Git/Terminal/Apps 🔜 |
 | B2 | Metrics `open_basedir` se blocked | 🔜 Phase 3 (`metrics.access` agent task) |
 | B3 | WebDisk sirf DB rows (WebDAV provisioning nahi) | 🔜 Phase 5 (implement ya hide — decision) |
 | B4 | 6 panel test-debt failures | 🔜 Phase 4 (suite 100% green) |
 | B5 | 6 wasm-skip tests (server par record karna) | 🔜 |
-**Ship channel:** agent-side = pinned `installer/agent-fix.sh` pattern; panel-side = panel-update artifact.
+**Ship channel:** chhote agent-only fix = `installer/agent-fix.sh` pattern; **agent+panel dono** =
+`installer/ftp-fix.sh` pattern (multi-token builder `tools/build-<x>-fix.py` + `tools/sim/<x>-fix-sim.sh`).
+Panel-only bada change = panel-update artifact.
 **Gate har phase par:** `php8.4 agent/tests/run-tests.php` (212/0) + `tools/sim/update-sim.sh` (54/54) +
 `tools/sim/panel-tests.sh` + `tools/sim/login-entry-sim.sh` (53/53) + `tools/sim/agent-fix-sim.sh` (17/17).
 
@@ -149,9 +152,10 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 ## 5. Decisions pending (user se)
 1. Entry separation **live** karni hai? (`login-fix --enable-ports`, nginx 2083/87/96) — opt-in.
 2. License hardening scope: per-key limits, offline grace, revoke-propagation, white-label, docs.
-3. Brand/product name jo license + UI me dikhega.
-4. **Priority order:** functional fixes (B1–B5) pehle, phir UI parity (P-UI-1…)? ya parallel?
-   (Default: pehle B1–B4 functional, phir P-UI. Batana agar ulta chahiye.)
+3. ~~Brand/product name~~ → **DECIDED (7 Oct): `AlphaCP` hi rahega** (license + UI me wahi naam).
+4. ~~Priority order~~ → **DECIDED (7 Oct): sab kuch cPanel-jaisa karna hai** — logo/naam/trademark
+   chhod kar baaki 100% cPanel-company jaisa system; agent apni marzi se order banaye aur
+   **verified commands deti rahe** (functional fixes + P-UI parity saath-saath aage badhenge).
 5. WebDisk: implement (WebDAV) ya UI se hide.
 
 ---
@@ -161,11 +165,45 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 |---|---|---|
 | `login-fix.sh` v1.0 | APPLIED 7 Oct 13:04Z | `269eb3c22ae49dd5bba76a5ce2750b594f65ff2c` / `6ca53d4d163f7dc736963f5d8cb18084c3b44c6185a8891a8b61981a8960e6cf` |
 | `agent-fix.sh` v1.0 | APPLIED 7 Oct 14:31Z | `321c81929df94e6d2b05a29b912eaa31fba4209d` / `d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1` |
+| `ftp-fix.sh` v1.0 | **READY (apply baaki)** | `047d974540aceff0fa686a8b3e3fc65a104f0f21` / `8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809` |
 | sync tool v1.2 (bootstrap) | — | `4b4573f96f55927ee1fbf526037785dcdb82aea1` / `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852` |
 | doctor v1.7 | — | `da3539029d1010f33fd550e7b4d016785c932103` / `e2915e0204df79ec41540d0ee68ef8a1c3cb3f261a39dc38651471a5115f5e88` |
 
 ## 7. Next immediate step
-**Phase 1 = B1 FTP:** code DONE + verified (`35cd630`; agent 215/0, panel smoke 8/8). Ab isko **ship**
-karna hai: `installer/agent-fix.sh` v1.1 (agent: Ftp.php+handlers+tasks+allowlist) + panel files
-(Support/Ftp, FtpController) ek hi pinned command me → sim-verify → command. Uske baad Git/Terminal/
-Apps (B1), Metrics (B2), test-debt (B4), phir **P-UI-1** (theme engine).
+**Phase 1 = B1 FTP → LIVE APPLY.** Installer ready + sim-verified (`installer/ftp-fix.sh` v1.0,
+sim **40/40**, agent suite **215/0**). User ko diya gaya pinned command:
+
+```bash
+sudo alphacp-sync get 047d974540aceff0fa686a8b3e3fc65a104f0f21 installer/ftp-fix.sh /tmp/ftp-fix-v1.0.sh 8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809 && sudo bash /tmp/ftp-fix-v1.0.sh
+```
+
+Apply ke baad user panel → **FTP Accounts** me ek account banaye (pehle HTTP 500 aata tha) aur
+`pure-pw list` me user dikhe. Uske baad queue:
+1. **B1 baaki:** Git · Terminal · Apps (same `Process` → agent-task pattern; `git.*`, `terminal.run`,
+   `apps.install`) — FTP wala hi blueprint.
+2. **B2 Metrics** (`open_basedir` se blocked) → agent-side `metrics.*` tasks.
+3. **B4 test-debt** (6 failures) + **B5 wasm-skips** record.
+4. **P-UI-1…6 cPanel parity:** alag WHM / cPanel / Webmail experiences, AlphaCP branding,
+   cPanel-jaise sections (Files/Databases/Domains/Email/Metrics/Security/Software/Advanced/
+   Preferences + General Information/Statistics + top search) — §4 ke design tokens ke saath.
+
+---
+
+## 8. Sandbox / env gotchas (koi bhi AI resume kare to ye zaroor padhe)
+- **php-wasm `PHP` env ko VERSION maanta hai.** Agar `PHP=/path/to/php` export ho to har child php
+  call `Error: Unsupported PHP version /path/...` par fail hota hai (output khaali, exit non-zero —
+  bahut confusing). Isliye: installer scripts `PHP_BIN` use karte hain + `unset PHP`; sims `PHPBIN`.
+- Sandbox **reprovision** ho sakta hai: native `php8.4`, `/home/user/phpw` (php-wasm), `/tmp/live`
+  (Laravel lab) sab gayab ho jaate hain, aur local `.git` base commit par reset ho sakta hai jabki
+  working tree files reh jaati hain. Recovery: `git fetch origin arena/79da9999-alphacp` →
+  `git reset --hard <tip>` (push kiya hua kaam kabhi lost nahi hota) → php-wasm dobara:
+  `mkdir -p /home/user/phpw && cd /home/user/phpw && npm i @php-wasm/cli` → wrapper
+  `/home/user/bin/php` = `exec node /home/user/phpw/node_modules/@php-wasm/cli/php-wasm.js "$@"`.
+- **`packagist.org` blocked** hai (http 000) → Laravel `vendor/` rebuild nahi ho sakta → panel
+  PHPUnit sims (`panel-tests.sh`, `login-entry-sim.sh`, `update-sim.sh`, `sync-sim.sh`,
+  `doctor-sim.sh`) is sandbox me **nahi** chal sakte (root/`useradd`/systemd bhi missing).
+  Panel-side verification ke liye: static lint + agent sims + (agar lab mile) php-wasm PHPUnit.
+  `bash tools/sim/agent-fix-sim.sh` (17/17) aur `bash tools/sim/ftp-fix-sim.sh` (40/40) chalte hain.
+- **`docs.cpanel.net` curl = blocked**, par **`web_search` tool chalta hai** — cPanel parity ki
+  online verification web_search se karo (§4 me confirmed section-list already hai).
+- Agent suite: `php agent/tests/run-tests.php` → `passed: 215   failed: 0` (php-wasm par ~3s).

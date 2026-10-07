@@ -45,3 +45,20 @@ P8/P9 isliye zaroori hain: agar kabhi fixture itna weak ho jaye ki purana (toota
 "pass" karne lage, to sim khud FAIL hokar bata dega.
 
 Logs: `/tmp/acp-loginfix-sim/{run1..run4,p7a,p7b,p8,p9-v1,p9-v2,p9-authz}.log`.
+
+## ftp-fix-sim.sh — `installer/ftp-fix.sh` v1.0 (B1 part 1: FTP via root agent)
+
+Fake `ACP_HOME` me **PRE-FTP live state** banata hai (`git show 35cd630^` se: agent registry 80
+types, `src/Ftp.php` absent, allowlist me `pure-pw` nahi, panel `Support/Ftp` me `Process::` ×4) —
+yani wahi bug jo live par HTTP 500 deta tha. Phir poora lifecycle prove karta hai:
+reproduce → `--diagnose` (read-only) → `apply` (backup, 9 files lint, static smoke, agent suite
+gate `passed>=215 failed=0`, registry 83, panel `Process::` 0 / `enqueue` 3, embedded payloads
+byte-for-byte match) → `--diagnose` post → `--rollback` (80 types + Process-wala panel wapas) →
+re-apply (idempotent).
+
+```bash
+bash tools/sim/ftp-fix-sim.sh                # -> 40/40   (PHPBIN=/path/to/php override)
+```
+
+Note: sim `unset PHP` karta hai aur apna binary `PHPBIN` me rakhta hai — php-wasm `PHP` env ko
+version maanta hai (warna har php call chup-chaap fail hota hai).

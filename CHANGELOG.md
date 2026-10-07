@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/ftp-fix.sh` **v1.0** (+ `installer/ftp-fix.sh.in`, `tools/build-ftp-fix.py`,
+  `tools/sim/ftp-fix-sim.sh`) — B1 ka pehla deploy: FTP ko web-FPM ke `Process` se nikaal kar
+  **root agent** par le jaata hai. Agent ki 7 + panel ki 2 files byte-for-byte embed;
+  backup → `php -l` (fail par error print) → static smoke → poora agent suite gate
+  (`passed>=215 failed=0`) → paneld restart → panel files → `Process::` absence assert →
+  `artisan optimize:clear` + php-fpm restart (opcache) → HTTP smoke → `alphacp-sync`;
+  kahin bhi fail = **auto-rollback**. Flags `--diagnose` / `--rollback` / `--help`.
+  **Sim 40/40** (PRE-FTP state `35cd630^` se reproduce: registry 80 types + `Process::` wala panel
+  → apply → 83 types/215 green/panel Process 0 → rollback → re-apply idempotent).
+  Pin: commit `047d974540aceff0fa686a8b3e3fc65a104f0f21`, sha256 `8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809`.
+- Portability: installer scripts apna php binary ab `PHP_BIN` me rakhte hain aur inherited `PHP`
+  env ko `unset` karte hain — php-wasm `PHP` ko *version* maanta hai, warna CI/sim me har child
+  php call `Unsupported PHP version /path/to/php` par fail hota tha.
 - `installer/agent-fix.sh` **v1.0** (+ `tools/build-agent-fix.py`, `tools/sim/agent-fix-sim.sh`) —
   B6 fix ko live agent par deploy karne wala self-contained, commit-pinned, sha256-verified installer.
   Sirf `src/MysqlServer.php` rakhta hai; backup → `php -l` → static smoke (bina pdo) → full agent
@@ -19,6 +32,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   (B3) WebDisk sirf DB rows; (B4) 6 test-debt failures; (B5) 6 wasm-skip record karne hain.
   7-phase fix plan bhi usi doc me (har phase = verified increment + pinned command).
 ### Fixed
+- **B1 (part 1) — FTP Accounts live par HTTP 500** · panel `App\Support\Ftp` web-FPM se
+  `Process::run(['pure-pw', …])` chalata tha; pool me `proc_open` disabled hone se har FTP
+  create/password/delete 500 deta tha (aur `installer/ftp-accounts.sh` view me reference hone ke
+  bawajood maujood hi nahi tha). Ab cPanel-tareeka: agent par `ftp.add` / `ftp.passwd` / `ftp.del`
+  tasks (`agent/src/Ftp.php` + `Tasks/FtpTask` base + 3 handlers), `pure-pw` CommandRunner
+  allowlist me, registry 80 → **83 types**. Panel `Support/Ftp` sirf capability (agent registry se,
+  `open_basedir`-safe) + login/home helpers deta hai; `FtpController` `AccountProvisioner::enqueue`
+  karta hai. Guards: password stdin par (argv me kabhi nahi), chroot home PathGuard se account-home
+  ke andar, virtual login `<account>_<suffix>` prefix-locked, uid/gid `getent` se >=1000,
+  min length 8. Agent suite **215/0** (3 naye FTP tests), panel boot smoke 8/8.
 - **B6 — real MySQL provisioning + backup-restore FATAL (7 Oct, repo me fix; deploy baaki)** ·
   agent `src/MysqlServer.php` **missing** tha live par. `DbTask`, saare `Db*` handlers
   (`db.create/drop/user.create|grant|password|drop/list`), `db.restore`, `CpanelMysql` aur

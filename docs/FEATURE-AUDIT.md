@@ -29,6 +29,11 @@
 ## 🔴 B. Production me TOOTA hua (evidence ke saath) — fix queue
 
 ### B1 · `proc_open` disabled, par 4 features web-FPM se `Process` chalate hain → **HTTP 500**
+
+> **STATUS (7 Oct): FTP fix ho gaya** — code `35cd630` (agent `ftp.add`/`ftp.passwd`/`ftp.del`
+> + `pure-pw` allowlist + panel `AccountProvisioner::enqueue`), installer `installer/ftp-fix.sh`
+> v1.0 (`047d974`, sim **40/40**, agent suite **215/0**). Live apply COMMANDS.md ke NEXT STEP se.
+> **Baaki: Git · Terminal · Apps** — isi blueprint par agent tasks banenge.
 `alphacp.conf:26` → `disable_functions = exec,passthru,shell_exec,system,proc_open,popen,pcntl_exec`.
 Live `laravel.log` 05:41:18 → *"The Process class relies on proc_open…"* (userId=1).
 - **FTP Accounts** — `Support/Ftp.php` → `pure-pw useradd/…` (server par pure-ftpd **active**, port 21)

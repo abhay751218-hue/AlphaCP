@@ -14,7 +14,40 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 agent-fix v1.0 — MySQL provisioning live par FATAL tha (B6). **Yahi chalao.**
+### 🔴 ftp-fix v1.0 — FTP Accounts live par HTTP 500 (B1 part 1). **Yahi chalao.**
+```bash
+sudo alphacp-sync get 047d974540aceff0fa686a8b3e3fc65a104f0f21 installer/ftp-fix.sh /tmp/ftp-fix-v1.0.sh 8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809 && sudo bash /tmp/ftp-fix-v1.0.sh
+```
+- commit `047d974540aceff0fa686a8b3e3fc65a104f0f21`, sha256 `8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809`.
+- **Kya karta hai:** live par **FTP Accounts** kholte hi / naya account banate hi **HTTP 500**
+  aata tha — panel web-FPM se `Process::run(['pure-pw', …])` chalata tha aur pool me `proc_open`
+  disabled hai (audit B1). cPanel ki tarah ab shell kaam **root agent** karta hai aur panel sirf
+  **queue** karta hai. Script agent ki 7 files (`src/Ftp.php`, `src/Tasks/FtpTask|FtpAdd|FtpPasswd|
+  FtpDel.php`, `src/CommandRunner.php` = pure-pw allowlist, `config/tasks.php` = 83 types) +
+  panel ki 2 files (`app/Support/Ftp.php`, `app/Http/Controllers/FtpController.php`)
+  **byte-for-byte** deploy karti hai. Password hamesha **stdin** par jaata hai (argv me nahi),
+  chroot home account ke andar hi ban sakta hai (PathGuard), virtual login `<account>_<name>`
+  hi allow hai, uid/gid `getent` se (>=1000). **Koi interactive prompt nahi.**
+- **Expected output:** `backup: /usr/local/alphacp/releases/ftpfix-<ts>` →
+  `agent files likhi + lint clean (7)` → `SMOKE OK` → `agent static smoke PASS` →
+  `suite: passed: 215   failed: 0` → `agent suite GREEN (passed=215 failed=0)` → `paneld active` →
+  `panel files likhi + lint clean (2) — koi Process:: nahi` → `php8.4-fpm active (opcache clear)` →
+  `panel /login HTTP 200` → `sync complete` → `FINAL VERDICT … ftp-fix v1.0 APPLY ho gaya`.
+- **Fail par:** script **apne aap rollback** (backup se purani files + paneld/fpm restart) —
+  server toota hua nahi chhoda jaata.
+- **Sirf dekhna ho, kuch badle nahi:** `sudo bash /tmp/ftp-fix-v1.0.sh --diagnose`
+  (dikhata hai: agent `src/Ftp.php` PRESENT/MISSING · registry me `ftp.add` (1) · `ftp` total (3) ·
+  allowlist me `pure-pw` (>0) · panel `Support/Ftp` me `Process::` (**0** = theek) ·
+  `FtpController` me `AccountProvisioner::enqueue` (**3** = theek))
+- **Wapas jaana ho:** `sudo bash /tmp/ftp-fix-v1.0.sh --rollback`
+  (backup: `/usr/local/alphacp/releases/ftpfix-<ts>/`)
+- **Verify (apply ke baad):** panel → **FTP Accounts** → ek account banao (pehle 500 aata tha, ab
+  queue me ja kar banna chahiye). Terminal se:
+  `sudo php8.4 /usr/local/alphacp/agent/tests/run-tests.php | tail -1` → `passed: 215   failed: 0`;
+  `sudo pure-pw list` → tumhara `<account>_<name>` user dikhega.
+- Test: `bash tools/sim/ftp-fix-sim.sh` → **40/40** (reproduce → apply → rollback → re-apply).
+
+### ✅ agent-fix v1.0 — APPLIED 7 Oct 14:31Z, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 321c81929df94e6d2b05a29b912eaa31fba4209d installer/agent-fix.sh /tmp/agent-fix-v1.0.sh d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1 && sudo bash /tmp/agent-fix-v1.0.sh
 ```
