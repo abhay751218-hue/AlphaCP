@@ -14,14 +14,232 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### alphacp-sync v1.2 — private repo support (`get` mode). Repo PRIVATE karne se PEHLE chalao.
+### alphacp-sync v1.5 — **ho chuka** (22:11Z, SYNC OK ✅)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f55927ee1fbf526037785dcdb82aea1/installer/alphacp-sync.sh -o /tmp/acp-sync-v1.2.sh && sudo bash /tmp/acp-sync-v1.2.sh
+sudo alphacp-sync get aa22e5fac292ddfce6086dc44db3752fea334c72 installer/alphacp-sync.sh /tmp/acp-sync-v1.5.sh 1e197e0860ca3c59e400e1b5c8504d894ec889e316007143493d5e3855557db5 && sudo bash /tmp/acp-sync-v1.5.sh
 ```
-- sha256: `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852`
-- Expected: banner `v1.2` → (key pehle se hai, dobara add nahi karni) → `==> SYNC OK ✅` (ya "koi badlav nahi").
-- Test: `sudo bash tools/sim/sync-sim.sh` → 60/60 (Run 8 = get: sha verify, galat sha, traversal, PR-ref commit, no key).
-  GitHub par SHA-fetch + `refs/pull/*` fetch asli repo par verify kiya (29 Sep).
+
+### ⭐ Command #2 — FTP Accounts (Pure-FTPd) v1.0. **Abhi yahi chalao.**
+Sandbox-tested (FtpTest 4/4 pass). Portable: naye VPS/dedicated par bhi pure-ftpd khud install karega.
+```bash
+sudo alphacp-sync get dc72b2e48ba8de2592e9dbadc3517a3a6c19ff4b installer/ftp-accounts.sh /tmp/ftp-accounts-v1.0.sh 21c7e6531e68d7b8fc14e18805142a6c78dcca1d79a18485ba36febeeba9e904 && sudo bash /tmp/ftp-accounts-v1.0.sh
+```
+Expected banner: `AlphaCP FTP Accounts installer v1.0` + end `==> FTP ACCOUNTS v1.0 INSTALLED`.
+Phir panel me `https://<host>:8090/ftp` kholo — FTP Accounts page dikhega. **HO CHUKA ✅ (7 Oct, 70 tables).**
+
+### ⭐ Command #3 — Metrics (Visitors/Errors/Bandwidth) v1.0. **Abhi yahi chalao.**
+Sandbox-tested (MetricsTest 3/3 pass). Koi daemon/migration nahi — access-log se stats.
+```bash
+sudo alphacp-sync get 57234320bf6c0553570fb6e2f0146d2568471a3a installer/metrics.sh /tmp/metrics-v1.0.sh 4882374e29d2ba6287fc5549b917c51dd62f23faf90e011bdb9f1867078b6367 && sudo bash /tmp/metrics-v1.0.sh
+```
+Expected banner: `AlphaCP Metrics installer v1.0` + end `==> METRICS v1.0 INSTALLED`.
+Phir `https://<host>:8090/metrics` kholo — Bandwidth/Visitors/Requests/Errors dashboard. **HO CHUKA ✅ (7 Oct).**
+
+### ⭐⭐ Command #4 — License keep-alive v1.0. **PRIORITY — 13 Oct trial-lock se pehle chalao.**
+Sandbox-tested (LicenseRenewTest 2/2). Trial ko +365 din re-issue karta hai (owner server).
+Customer websites/email/DNS/backups par KOI asar nahi (golden rule).
+```bash
+sudo alphacp-sync get 3f9ada2861c61c3410a695ee37f0d4e22bb0a1eb installer/license-keepalive.sh /tmp/license-keepalive-v1.0.sh c6589f0889243747a6f9673392af0ded759e0fc416b25b8657bf283eb5cde8d3 && sudo bash /tmp/license-keepalive-v1.0.sh
+```
+Expected: `License state=trial expires=<+365d> days_left=365` + `==> LICENSE KEEP-ALIVE v1.0 DONE`.
+Phir panel me `/license` kholo — trial active (+365 din) dikhega, 13 Oct wali lock khatam. **HO CHUKA ✅ (trial ab 2027-10-07 tak).**
+
+### ⭐ Command #5 — IP Blocker (cPanel Security) v1.0. **Abhi yahi chalao.**
+Sandbox-tested (IpBlockerTest 4/4). `user` role ko `security.view` bhi grant karta hai (re-seed).
+```bash
+sudo alphacp-sync get 24850f1a388dc0579e467eb091f753d53124d2ed installer/ip-blocker.sh /tmp/ip-blocker-v1.0.sh 041bd9c9fb36d6f699296bae09d73459c265db5456f5d0d5822b4251ac6ef34a && sudo bash /tmp/ip-blocker-v1.0.sh
+```
+Expected: `AlphaCP IP Blocker installer v1.0` → files + routes + migrate + seed → `==> IP BLOCKER v1.0 INSTALLED`.
+Phir `https://<host>:8090/ip-blocker` kholo — IP block/unblock (ufw) page. **HO CHUKA ✅ (71 tables, 7aa2d72).**
+
+### ⭐ Command #6 — Security Tools (ModSecurity WAF + Virus Scanner) v1.0. **Abhi yahi chalao.**
+Sandbox-tested (SecurityToolsTest 3/3). Fresh VPS par clamav + modsecurity bhi install karta hai.
+```bash
+sudo alphacp-sync get 996b7cee96516f0728e91077c24a737e10aaf64a installer/waf.sh /tmp/waf-v1.0.sh 4a6660104723a65500fa162aac735f783ec7220a9d600c47330d2addedf2a8ea && sudo bash /tmp/waf-v1.0.sh
+```
+Expected: `AlphaCP Security Tools installer v1.0` → clamav/modsec + files + routes + seed → `==> SECURITY TOOLS v1.0 INSTALLED`.
+Phir `https://<host>:8090/security-tools` — WAF on/off + Virus Scan. **HO CHUKA ✅ (ff65606).**
+
+### ⭐ Command #7 — App Installer (WordPress one-click) v1.0. **Abhi yahi chalao.**
+Sandbox-tested (AppsTest 2/2). WordPress install: DB + download + wp-config + chown.
+```bash
+sudo alphacp-sync get 955ba3753443928e443d2f3d3401a359a847720d installer/app-installer.sh /tmp/app-installer-v1.0.sh 9882cc4172df9b9fcc3b9348cd881f7d4ee2397bb04c0365a4737d8b42bdd066 && sudo bash /tmp/app-installer-v1.0.sh
+```
+Expected: `AlphaCP App Installer v1.0` → files + routes + clear → `==> APP INSTALLER v1.0 INSTALLED`.
+Phir `https://<host>:8090/apps` — WordPress install button. **HO CHUKA ✅ (2577bc1).**
+
+### ⭐ Command #8 — Monitoring / Resource Usage v1.0. **Abhi yahi chalao.**
+Sandbox-tested (MonitoringTest 1/1). Disk/Memory/Load/CPU dashboard (WHM jaisa).
+```bash
+sudo alphacp-sync get 9aaa40e830f851df887e8e82232bf18b4ba908bb installer/monitoring.sh /tmp/monitoring-v1.0.sh ae111c38f5ade9c8221f0fd171155a044f5b6196172a404a2c10b0bc08bd5057 && sudo bash /tmp/monitoring-v1.0.sh
+```
+Expected: `AlphaCP Monitoring installer v1.0` → files + routes + clear → `==> MONITORING v1.0 INSTALLED`.
+Phir `https://<host>:8090/monitoring` — Memory/Disk/Load/CPU dashboard. **HO CHUKA ✅ (19471ab).**
+
+### ⭐ Command #9 — WHM API 1 (Billing integration) v1.0. **Abhi yahi chalao.**
+Sandbox-tested (WhmApiTest 4/4). WHMCS/Blesta-ready: `/json-api/createacct|listaccts|suspendacct|…` (Bearer token).
+```bash
+sudo alphacp-sync get 3ff4d8723100f2f9e0457120dec5543c56754b50 installer/whm-api.sh /tmp/whm-api-v1.0.sh 755c5fb3310f88bc7b3a2fe3141b6aea515057712174a307273c93d20e1c49b8 && sudo bash /tmp/whm-api-v1.0.sh
+```
+Expected: `AlphaCP WHM API installer v1.0` → files + routes + migrate → `==> WHM API v1.0 INSTALLED`.
+Token: `cd /usr/local/alphacp/panel && sudo php artisan alphacp:api:token admin --name=billing` (plain token EK baar dikhega → billing software me daalo).
+Test: `curl -sk -H "Authorization: Bearer <token>" https://<host>:8090/json-api/listaccts`
+
+### ⭐ Command #10 — Manage API Tokens UI (cPanel jaisa) v1.0. **Abhi yahi chalao.**
+Sandbox-tested (ApiTokensTest 3/3). Panel UI se token generate/revoke — customer apni billing me daal sake.
+```bash
+sudo alphacp-sync get 930aa166a64312414129af2c417b789d39b3601c installer/api-tokens.sh /tmp/api-tokens-v1.0.sh b5b05f635cbfd7766dff8b5622c57162c31d8f9c8c97388b287f781529c65f9b && sudo bash /tmp/api-tokens-v1.0.sh
+```
+Expected: `==> API TOKENS UI v1.0 INSTALLED`. Phir `https://<host>:8090/api-tokens` — Generate/Revoke tokens (plain token ek baar dikhta hai). **HO CHUKA ✅ (72 tables, 3a1b01c).**
+
+---
+
+## Command #11 — Reseller Center (WHM-style, G8)
+```bash
+sudo alphacp-sync get ca6398ffbf661da5ca811e10eba8796ce00be65f installer/resellers.sh /tmp/resellers-v1.0.sh c2b48bd6c7aa5a8aa515b11c8dcec016fa82e8a8099f87cd1319d29596f30bdd && sudo bash /tmp/resellers-v1.0.sh
+```
+Expected: `==> RESELLER CENTER v1.0 INSTALLED`. Phir `https://<host>:8090/resellers` — resellers promote/demote + ACL privileges.
+Sandbox test: ResellersTest **5/5 pass**.
+
+---
+
+## Command #12 — REBRAND (cPanel/WHM company-words hatao)
+```bash
+sudo alphacp-sync get dfbd379474547fb1ba96547a7ac5b4493233fb7f installer/rebrand.sh /tmp/rebrand-v1.0.sh cad5d5c039b5800e2acd2c288f58700e8f5557ca9add5fbcaae843d6aafcca77 && sudo bash /tmp/rebrand-v1.0.sh
+```
+Expected: `==> REBRAND v1.0 APPLIED`. Header → `AlphaCP Server Manager` / `Account Panel`; dashboard → `Server Manager Dashboard`;
+footer → `AlphaCP control panel`. Sandbox-verified: views me `WHM=0, cPanel=0`. Idempotent (REBRAND_DONE).
+**⚠️ USER ko manually KABHI nahi chalana — ye sirf legacy base ke liye tha aur ab install-all ka internal automatic step hai.
+Naye features brand-clean hain (`tools/sim/check-brand.sh` guard), isliye dobara zaroorat nahi padegi.**
+
+---
+
+## Command #13 — G5: Git Version Control + Terminal
+```bash
+sudo alphacp-sync get ca6398ffbf661da5ca811e10eba8796ce00be65f installer/g5.sh /tmp/g5-v1.0.sh 38f26d8c1eb72da5122ffc98106fa6c0a70aa61b47752f2b6d64a8d1267f37cb && sudo bash /tmp/g5-v1.0.sh
+```
+Expected: `==> G5 (GIT + TERMINAL) v1.0 INSTALLED`. Pages: `/git` (clone/pull/status) + `/terminal` (whitelisted commands).
+Sandbox test: G5Test **7/7 pass** (traversal + dangerous-command blocked). **Brand-clean (AlphaCP) — rebrand ki zaroorat NAHI.**
+
+---
+
+## Command #14 — License Server (sellable signed licenses, S15)
+```bash
+sudo alphacp-sync get 0b6acfa24c54e7a149d7b4e436935d9467429439 installer/license-server.sh /tmp/license-server-v1.0.sh 8964067df7aad6ef31531a18ee82a34d0b482891d682a887da0b08795b2b631d && sudo bash /tmp/license-server-v1.0.sh
+```
+Expected: `==> LICENSE SERVER v1.0 INSTALLED`. Page: `/license-server` — keys issue/verify/revoke.
+`ACP_LICENSE_SECRET` `.env` me set karo (signing secret). Sandbox test: LicenseServerTest **5/5 pass** (tamper+revoke blocked).
+**Brand-clean — rebrand ki zaroorat NAHI.**
+
+---
+
+## Command #15 — Hotlink + Leech Protection (Security complete)
+```bash
+sudo alphacp-sync get 2ad97e22f4559f590d57e86bb310215016be6dc3 installer/secextra.sh /tmp/secextra-v1.0.sh 36fbd9f89f19b94f541d4bc257d83b0eec4b53bac669b0be96392fbccd548c6b && sudo bash /tmp/secextra-v1.0.sh
+```
+Expected: `==> HOTLINK + LEECH PROTECTION v1.0 INSTALLED`. Pages: `/hotlink-protection` + `/leech-protection`.
+Sandbox test: SecExtraTest **4/4 pass**. **Brand-clean — rebrand ki zaroorat NAHI.**
+
+---
+
+## Command #16 — Dashboard sync (tiles ko live dikhao — user ki "problem" ka fix)
+```bash
+sudo alphacp-sync get a0f22a05c9b0184a37745a378b904f386b2bf1a6 installer/dashboard-sync.sh /tmp/dashboard-sync-v1.0.sh f8c3f19f92de77e3bcd3750a0d755baacefacbbab73377bc263e1d673cb1b6b7 && sudo bash /tmp/dashboard-sync-v1.0.sh
+```
+Expected: `==> DASHBOARD SYNC v1.0 APPLIED`. Dashboard refresh karo — FTP/Git/Terminal/IP Blocker/ModSecurity/Hotlink/
+Apps/API Tokens/Monitoring tiles ab **live (green)** dikhenge, parity count update hoga. Sandbox test: 1/1 (27 assertions).
+
+---
+
+## Command #17 — Web Disk (Files section complete)
+```bash
+sudo alphacp-sync get 11c2d134e21794992e08e5b187c9165428e7f955 installer/webdisk.sh /tmp/webdisk-v1.0.sh f5dcd1acc8aa253ca5e677c231bd3b2cb7b82e3633fab2e56071c71db1efbd8e && sudo bash /tmp/webdisk-v1.0.sh
+```
+Expected: `==> WEB DISK v1.0 INSTALLED`. Page: `/webdisk` — WebDAV accounts (ro/rw). Sandbox test: WebDiskTest **4/4 pass**.
+Dashboard tile bhi live (dashboard-sync #16 ke saath). **Brand-clean — rebrand NAHI.**
+
+---
+
+## Command #18 — File extras: Images + Optimize Website + Trash
+```bash
+sudo alphacp-sync get a0f22a05c9b0184a37745a378b904f386b2bf1a6 installer/filextras.sh /tmp/filextras-v1.0.sh 6ce28d9b8c306896f56a46789260f6b17221d1680fcc56a3cd925ffb1c9efa3f && sudo bash /tmp/filextras-v1.0.sh
+```
+Expected: `==> FILE EXTRAS v1.0 INSTALLED`. Pages: `/images`, `/optimize-website`, `/trash`. Sandbox test: FileXtrasTest **4/4 pass**
+(traversal-guarded). Dashboard tiles live (dashboard-sync #16 ke saath). **Brand-clean — rebrand NAHI.**
+
+> ⚠️ **SSL note:** base panel me **SSL Status + AutoSSL pehle se live** hai (`/ssl`) — alag se install NAHI karna (maine duplicate feature drop kar di).
+
+---
+
+## Command #19 — DNS Cluster (WHM) — dashboard tile KHUD update hota hai
+```bash
+sudo alphacp-sync get 6308c465ca3ad95a921ccf9e0f50d4c85478e35b installer/dns-cluster.sh /tmp/dns-cluster-v1.0.sh 5b201540a0d7dfc4316b4c6a75924d14dbec2d9e1f92d0c04f8595dff65fbaca && sudo bash /tmp/dns-cluster-v1.0.sh
+```
+Expected: `==> DNS CLUSTER v1.0 INSTALLED`. Page: `/dns-cluster` — nodes add/remove + zone sync.
+Sandbox test: DnsClusterTest **4/4 pass**. **Is installer me tile self-flip hai — dashboard-sync alag se NAHI chalana.**
+
+> 📌 **Naya rule:** ab har naya feature-installer apna dashboard tile **khud** live karta hai, isliye `dashboard-sync`
+> dobara **kabhi** manually nahi chalana. (install-all me wo sirf fresh-install ke liye internal catch-all hai.)
+
+---
+
+## Command #20 — cPanel PORTS PARITY (2082/2083/2086/2087/2095/2096)
+```bash
+sudo alphacp-sync get d2a54510170378bedfa99546b33e17551589a2da installer/ports-parity.sh /tmp/ports-parity-v1.0.sh 7520598cceb2117d193e00be07c349a28469d8eb56e54f6a624e3ebcf69ea3cb && sudo bash /tmp/ports-parity-v1.0.sh
+```
+Expected: `==> PORTS PARITY v1.0 APPLIED`. Phir panel in ports par bhi khulega:
+- **cPanel:** `https://<host>:2083` (http 2082 redirect)
+- **WHM:** `https://<host>:2087` (http 2086 redirect)
+- **Webmail:** `https://<host>:2096` (http 2095 redirect)
+Sandbox me sed-transform verified (8 listen lines). Server par `nginx -t` + **auto-revert** guard — fail ho to config wapas, panel safe.
+`ufw` me ye 6 ports allow hote hain. Idempotent.
+
+---
+
+## 🚀 MASTER — naye/fresh VPS par SAB KUCH ek command se (portable 100%)
+Base panel (alphacp-sync v1.5) ke baad, ye EK script saare 9 features laga deti hai
+(FTP, Metrics, License, IP Blocker, WAF, App Installer, Monitoring, WHM API, API Tokens):
+```bash
+sudo alphacp-sync get 39efc018c41d7d8e2d429d9b4a1996ee8aa6ed4a installer/install-all.sh /tmp/install-all-v1.0.sh 7d300cedd04ce5106cbfc5798c8fd54125632d6ea504cca007a6a5ab9a2f18b2 && sudo bash /tmp/install-all-v1.0.sh
+```
+(Current server par sab already live hai — ye **future fresh servers** ke liye hai; idempotent, dobara chalana safe.)
+- sha256: `1e197e0860ca3c59e400e1b5c8504d894ec889e316007143493d5e3855557db5`
+- **Kyun:** v1.4 ke live run me bhi 4 files gayab rahi — un views/tests me placeholder
+  (`-----BEGIN OPENSSH PRIVATE KEY-----`) / dummy `ghp_` token ko v1.4 ke hard patterns "secret"
+  samajhte the. v1.5 me saare patterns **sirf config files** par; source par sirf literal
+  server-secret scan. Ab completeness **khaali** aani chahiye aur asli 4 views GitHub par aayengi.
+- Expected: banner `v1.5` → `completeness: panel ki har source file … snapshot me hai` →
+  `==> SYNC OK ✅`.
+- Verify (push ke baad):
+  `gh api repos/abhay751218-hue/AlphaCP/contents/server-snapshot/files/usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php`
+  → 200 (pehle 404).
+- Test: `sudo bash tools/sim/sync-sim.sh` → **72/72**.
+- ⚠️ Sync tool update + turant sync; panel code ko nahi chhoota. Safe.
+
+### alphacp-sync v1.4 — ✅ chal chuka (7 Oct, 21:58Z). Superseded by v1.5.
+```bash
+sudo alphacp-sync get ff810fb2dacc19a0ce1f36ebad965fc64e71df07 installer/alphacp-sync.sh /tmp/acp-sync-v1.4.sh d32bc3fc9196867bd96fcafa34ba3c803a17bf893bdf27ed14f5a0f1f1ee0515 && sudo bash /tmp/acp-sync-v1.4.sh
+```
+- sha256: `d32bc3fc9196867bd96fcafa34ba3c803a17bf893bdf27ed14f5a0f1f1ee0515`
+- **Kyun:** v1.3 ke live run me completeness check ne dikhaya ki 4 files phir bhi nahi aayi —
+  un views me `PASSWORD: password,` jaisi JS lines ko v1.3 ka pattern abhi bhi "secret" samajhta
+  tha, aur `bootstrap/cache`/`logs`/`backups` junk leak hone laga tha. v1.4 me KEY=VALUE scan
+  **sirf config files** par hai aur junk prune hota hai. Tafseel `CHANGELOG.md`.
+- Expected: banner `v1.4` → `completeness: panel ki har source file … snapshot me hai` →
+  `==> SYNC OK ✅`. Ab STATE.md me missing list **khaali** honi chahiye.
+- Verify (push ke baad):
+  `gh api repos/abhay751218-hue/AlphaCP/contents/server-snapshot/files/usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php`
+  → 200 aana chahiye (pehle 404 tha).
+- Test: `sudo bash tools/sim/sync-sim.sh` → **70/70**.
+- ⚠️ Ye sync tool update karta hai + turant sync karta hai. **Panel code ko chhoota tak nahi** —
+  websites/email/DNS safe hain. Dobara chalana safe hai.
+
+### alphacp-sync v1.3 — snapshot completeness fix. ✅ chal chuka (6 Oct, 21:35Z)
+Superseded by **v1.4** (upar). v1.3 ne completeness check diya (usi ne 4 missing files pakdi),
+par secret-scan abhi bhi unhe gira raha tha — isliye v1.4 zaroori hai.
+
+### alphacp-sync v1.2 — ✅ chal chuka (server par `tool: alphacp-sync v1.2`, LAST-SYNC 6 Oct 08:47Z)
+Superseded by **v1.3** (upar). Dobara mat chalao.
 
 ### Uske baad panel updates: panel-update 0.3.0 (private-ready) — agli panel release ke saath
 - commit `0c90863a10e6c70984e627af1b819e66ae60b600`, sha256 `204b78af0b59b75614a61455df1ca96b5eb3c05f744b744647da1a33c4da8480`
