@@ -3,11 +3,11 @@
 #  AlphaCP — panel-update.sh simulation test  (sirf throwaway sandbox/container me!)
 #
 #  Setup : doctor-sim.sh chalata hai => server ki asli haalat (panel 0.3.0 + doctor v1.7
-#          drop-in, HTTP 200). Phir installer/panel-update.sh ko stubs ke saath chalata hai:
+#          drop-in, HTTP 200). Phir installer/panel-update.sh (0.77.0) ko stubs ke saath chalata hai:
 #            curl     : raw.githubusercontent -> local artifact;  127.0.0.1:8090 -> asli Laravel request
 #            composer : 0.3.0 bundle ka vendor/ (composer.lock same hona chahiye — check hota hai)
 #            systemctl: doctor-sim ka stub
-#  U1 normal update 0.3.0 -> 0.3.2      U2 sha256 mismatch -> kuch nahi chhedta
+#  U1 normal update 0.3.0 -> 0.77.0 (P-UI-1)   U2 sha256 mismatch -> kuch nahi chhedta
 #  U3 health fail -> auto rollback       U4 backups prune (KEEP=1) + sync-tool checksum fail
 #  U1 me alphacp-sync v1.0 -> v1.2 upgrade + sync hook bhi
 #  U5 private repo (raw 404) + sync v1.2 -> get      U6 private + purana sync -> saaf error
@@ -94,7 +94,8 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.3.0'" grep -q "updater 0.3.0" "${U}/update-U1.out"
+chk "banner 'updater 0.77.0'" grep -q "updater 0.77.0" "${U}/update-U1.out"
+chk "banner 'Panel bundle: 0.77.0'" grep -q "Panel bundle: 0.77.0" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -110,6 +111,11 @@ chk "update ke baad HTTP 200" test "$(http_now)" = 200
 chk "admin password hash same (DB data preserve)" pw_works
 chk "License code present" test -f "${PANEL}/app/Support/License/LicenseClient.php"
 chk "PasswordGenerator present (0.3.2 fix)" test -f "${PANEL}/app/Support/PasswordGenerator.php"
+chk "P-UI-1: Theme.php present" test -f "${PANEL}/app/Support/Theme.php"
+chk "P-UI-1: NavIcon.php present" test -f "${PANEL}/app/Support/NavIcon.php"
+chk "P-UI-1: panel.js present" test -f "${PANEL}/public/assets/panel.js"
+chk "P-UI-1: general-info + statistics partials" bash -c "test -f '${PANEL}/resources/views/partials/general-info.blade.php' && test -f '${PANEL}/resources/views/partials/statistics.blade.php'"
+chk "P-UI-1: config default version 0.77.0" grep -q "'version' => '0.77.0'" "${PANEL}/config/acp.php"
 chk "route cache me /license" grep -rqs "license" "${PANEL}/bootstrap/cache/"
 chk "backup bana (1)" test "$(nbackups)" -eq 1
 chk "backup = purana ${BEFORE_VER}" grep -q "\"version\": \"${BEFORE_VER}\"" "$(find "${REL}" -maxdepth 1 -name 'panel-backup-*' | head -1)/MANIFEST.json"

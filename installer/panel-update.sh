@@ -1,7 +1,16 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.3.0  ·  default panel bundle 0.3.2  ·  alphacp-sync v1.2
+# updater 0.77.0  ·  default panel bundle 0.77.0 (P-UI-1)  ·  alphacp-sync v1.2
+#
+# 0.77.0: P-UI-1 — per-panel colour/theme engine. Ek hi shell, teen looks:
+#         WHM (navy sidebar #293A4A + orange accent) / cPanel (paper-white, icon-grid Tools,
+#         right rail General Information + Statistics) / Webmail (white bar). Plus "Find
+#         functions quickly…" search, Change Style (same-mode only) aur nav icons.
+#         Panel suite 482/0 (php-wasm 8.5.10; 6 wasm-skip = sandbox limit). Panel-only ship:
+#         agent chhua nahi (live 0.83.0 already naya). Ye live 0.75.0 + P-UI-1 hai.
+#         NOTE: parallel lineage (arena/01a10111-alphacp) ka panel 0.76.0 (S7 address-importer
+#         hardening) ismein NAHI hai — agle release me dono merge honge (0.78.0).
 #
 # 0.3.0: PRIVATE repo support — artifact/sync-tool pehle `alphacp-sync get` (deploy key) se,
 #        na ho to public raw.githubusercontent (fallback). sha256 dono raaston par check.
@@ -22,13 +31,13 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.3.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.3.2}"
+UPDATER_VERSION="0.77.0"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.77.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-6001033f0ee6e76614a390bc394e8d7e76ea4bdf}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-33c638e7ceb138e59b00fc38e43e5276f393a556}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-e7edd19b395ecd9da589da98658111243b639f63bfe304f3b2003235be62da5d}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"
