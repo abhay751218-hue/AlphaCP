@@ -210,6 +210,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/PrivacyController.php
 /usr/local/alphacp/panel/app/Http/Controllers/RemoteMysqlController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SecurityController.php
+/usr/local/alphacp/panel/app/Http/Controllers/SecurityToolsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SpamFiltersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SshController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SslController.php
@@ -323,6 +324,7 @@
 /usr/local/alphacp/panel/app/Support/ShadowHash.php
 /usr/local/alphacp/panel/app/Support/Ssh.php
 /usr/local/alphacp/panel/app/Support/Totp.php
+/usr/local/alphacp/panel/app/Support/Waf.php
 /usr/local/alphacp/panel/artisan
 /usr/local/alphacp/panel/bootstrap/app.php
 /usr/local/alphacp/panel/bootstrap/providers.php
@@ -479,6 +481,7 @@
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php
 /usr/local/alphacp/panel/resources/views/privacy/index.blade.php
 /usr/local/alphacp/panel/resources/views/remote-mysql/index.blade.php
+/usr/local/alphacp/panel/resources/views/security-tools/index.blade.php
 /usr/local/alphacp/panel/resources/views/security/index.blade.php
 /usr/local/alphacp/panel/resources/views/security/password.blade.php
 /usr/local/alphacp/panel/resources/views/security/sessions.blade.php

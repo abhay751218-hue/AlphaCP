@@ -407,6 +407,9 @@ GET|HEAD           /remote-mysql                                 remote-mysql.in
 POST               /remote-mysql                                 remote-mysql.store
 DELETE             /remote-mysql/{mysql_remote_host}             remote-mysql.destroy
 GET|HEAD           /security                                     security.index
+GET|HEAD           /security-tools                               security-tools.index
+POST               /security-tools/modsec                        security-tools.modsec
+POST               /security-tools/scan                          security-tools.scan
 POST               /security/2fa/confirm                         security.2fa.confirm
 POST               /security/2fa/disable                         security.2fa.disable
 POST               /security/2fa/start                           security.2fa.start
