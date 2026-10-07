@@ -216,6 +216,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/PhpController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PhpIniController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PhpmyadminController.php
+/usr/local/alphacp/panel/app/Http/Controllers/PortsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PrivacyController.php
 /usr/local/alphacp/panel/app/Http/Controllers/RemoteMysqlController.php
 /usr/local/alphacp/panel/app/Http/Controllers/ResellersController.php
@@ -294,6 +295,7 @@
 /usr/local/alphacp/panel/app/Models/ParkedDomain.php
 /usr/local/alphacp/panel/app/Models/Permission.php
 /usr/local/alphacp/panel/app/Models/PhpmyadminSetting.php
+/usr/local/alphacp/panel/app/Models/PortConfig.php
 /usr/local/alphacp/panel/app/Models/Role.php
 /usr/local/alphacp/panel/app/Models/RolePermission.php
 /usr/local/alphacp/panel/app/Models/SecurityExtra.php
@@ -435,6 +437,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000006_create_webdisk_accounts_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000008_create_optimize_settings_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000009_create_dns_cluster_nodes_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000010_create_port_configs_table.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php
@@ -519,6 +522,7 @@
 /usr/local/alphacp/panel/resources/views/php/index.blade.php
 /usr/local/alphacp/panel/resources/views/php/ini.blade.php
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php
+/usr/local/alphacp/panel/resources/views/ports/index.blade.php
 /usr/local/alphacp/panel/resources/views/privacy/index.blade.php
 /usr/local/alphacp/panel/resources/views/remote-mysql/index.blade.php
 /usr/local/alphacp/panel/resources/views/resellers/index.blade.php
