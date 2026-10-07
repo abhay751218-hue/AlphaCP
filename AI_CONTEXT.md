@@ -1,6 +1,8 @@
 # AI_CONTEXT.md — Read This First
 
-> 👉 **Naya AI/developer? Sabse pehle [`START-HERE.md`](START-HERE.md) padho** — server ki live state `server-snapshot/STATE.md` me hai.
+> 👉 **Naya AI/developer? Sabse pehle [`START-HERE.md`](START-HERE.md) padho** — server ki live state
+> `server-snapshot/STATE.md` me hai, aur **resume checklist / master list [`docs/MASTER-PLAN.md`](docs/MASTER-PLAN.md)** me
+> (versions, S0–S15 status, fix-queue B0–B6, cPanel-parity plan, pinned commands).
 
 > **Purpose:** This file gives ANY AI assistant (or new developer) complete context to work on
 > this project safely. Keep it updated whenever architecture, conventions, or status change.

@@ -4,6 +4,11 @@
 > Iska apna license system hai (15 din ka trial), aur ye billing software se WHM API 1 compatible banega.
 > Server: AWS Lightsail Mumbai, Ubuntu 24.04, 4 GB / 2 vCPU / 80 GB, static IP `13.207.123.177`, panel `https://<ip>:8090`.
 
+> 🧭 **RESUME CHECKLIST / MASTER LIST:** [`docs/MASTER-PLAN.md`](docs/MASTER-PLAN.md) — versions ka
+> inventory, **S0–S15 step status**, functional fix-queue (B0–B6), **cPanel-parity (design/colour/alag
+> panels) plan**, pinned-command history, aur "naye chat me kaise continue karein".
+> **Koi bhi kaam shuru karne se pehle ye file zaroor padho.**
+
 ## 1. Isi order me padho
 | # | File | Kyun |
 |---|---|---|
