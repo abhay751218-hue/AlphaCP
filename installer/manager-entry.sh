@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# AlphaCP manager-entry v0.1.0: add TLS 2087, preserve 8090 and all panel code.
+# AlphaCP manager-entry v0.1.1: add TLS 2087, preserve 8090 and all panel code.
 set -Eeuo pipefail
-VERSION=0.1.0
+VERSION=0.1.1
 printf 'AlphaCP manager-entry v%s — HTTPS 2087 only; 8090 preserved\n' "$VERSION"
 [[ $EUID -eq 0 ]] || { echo 'Run with sudo.' >&2; exit 1; }
 CONF="${ACP_ENTRY_CONF:-/etc/nginx/sites-available/alphacp-panel.conf}"
@@ -13,7 +13,21 @@ exec 9>"$LOCK"; flock -n 9 || { echo 'Another entry update is running.' >&2; exi
 nginx -t
 DUMP=$(nginx -T 2>&1)
 # Ensure the edited file is actually loaded, not merely present on disk.
-grep -Fq "# configuration file $CONF:" <<<"$DUMP" || { echo 'Panel vhost is not loaded by nginx; refusing change.' >&2; exit 1; }
+python3 - "$CONF" 3<<<"$DUMP" <<'PYIDENTITY'
+import os, re, sys
+conf = sys.argv[1]
+with os.fdopen(3) as dump:
+    paths = re.findall(r'^# configuration file (.+):$', dump.read(), re.M)
+for path in paths:
+    try:
+        if os.path.samefile(conf, path):
+            print('Loaded panel vhost verified (same file): ' + path)
+            break
+    except OSError:
+        continue
+else:
+    raise SystemExit('Panel vhost is not loaded by nginx (no same-file match); refusing change.')
+PYIDENTITY
 health() {
     local port="$1" body
     body=$(curl --noproxy '*' --silent --show-error --fail --insecure --connect-timeout 5 --max-time 20 "https://127.0.0.1:${port}/login") || return 1
@@ -56,7 +70,7 @@ if text.count('# ACP_PORTS_START') != 1 or text.count('# ACP_PORTS_END') != 1:
 if 'root /usr/local/alphacp/panel/public;' not in text:
     raise SystemExit('Unexpected panel document root')
 if not re.search(r'^\s*listen\s+2087\s+ssl;', text, re.M):
-    text=text.replace('# ACP_PORTS_START', '# ACP_PORTS_START\n    listen 2087 ssl; # AlphaCP manager-entry v0.1.0', 1)
+    text=text.replace('# ACP_PORTS_START', '# ACP_PORTS_START\n    listen 2087 ssl; # AlphaCP manager-entry v0.1.1', 1)
 p.write_text(text)
 PY
 nginx -t

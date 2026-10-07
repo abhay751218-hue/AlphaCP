@@ -208,3 +208,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 - **Manager entry stage 1 (0.1.0):** standalone installer adds TLS 2087 only, preserves 8090,
   backs up/reverts vhost on validation/reload/health failures, checks loaded config and port collision,
   and syncs snapshot. Five simulated rollout scenarios pass; not full service isolation or UI deployment.
+
+- Stage-one owner run safely refused before mutation: default nginx dump did not name
+  sites-available vhost. Investigate master config arguments/symlink identity before revision.
+
+- **manager-entry v0.1.1:** fix loaded-vhost check to accept verified sites-enabled symlinks
+  using same-file identity, still reject distinct copies/unloaded paths. Eight simulated rollout
+  scenarios pass; existing rollback and 8090 preservation unchanged. Owner nginx mode not yet fully verified.

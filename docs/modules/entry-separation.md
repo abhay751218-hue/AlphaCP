@@ -62,3 +62,12 @@ End: attempt alphacp-sync. No full panel bundle deployed (its suite is still und
 Tests: success + syntax failure + reload failure + new-port health failure + occupied-port scenarios
 with simulated nginx/systemctl/ss/curl; 2 unittest methods cover 5 scenarios. Bash syntax pass.
 Real nginx/TLS/firewall/browser acceptance must still be performed on owner server.
+
+### Manager-entry v0.1.1 — loaded symlink identity fix
+Owner master-process screenshot shows no visible custom `-c`, but output is truncated.
+Actual loaded include path remains unconfirmed. v0.1.0 compared literal paths and wrongly
+rejected a loaded sites-enabled symlink. v0.1.1 accepts nginx dump paths only when
+`os.path.samefile()` proves the same inode as the target; identical-content copies and
+missing/unloaded files still fail closed. No safety check bypass.
+Tests: 8 rollout scenarios (direct/symlink success; syntax/reload/health/collision/copy/unloaded
+failures), 3 unittest methods. Plus 5 source-guard tests: all 8 methods pass. Real nginx pending.

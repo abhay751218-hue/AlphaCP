@@ -14,11 +14,22 @@ class ManagerEntryTest(unittest.TestCase):
             conf=w/'panel.conf'
             original=(ROOT/'server-snapshot/files/etc/nginx/sites-available/alphacp-panel.conf').read_bytes()
             conf.write_bytes(original)
+            alias=w/'enabled.conf'
+            if mode == 'symlink':
+                alias.symlink_to(conf)
+            else:
+                alias.write_bytes(original)
+
             stub='''#!/bin/bash
 name=${0##*/}
 case "$name" in
 nginx)
- if [[ "$1" == -T ]]; then echo "# configuration file $ACP_ENTRY_CONF:"; cat "$ACP_ENTRY_CONF"; exit; fi
+ if [[ "$1" == -T ]]; then
+   if [[ "$MODE" == symlink || "$MODE" == copy ]]; then echo "# configuration file ${ACP_ENTRY_CONF%/*}/enabled.conf:";
+   elif [[ "$MODE" == unloaded ]]; then echo '# configuration file /missing.conf:';
+   else echo "# configuration file $ACP_ENTRY_CONF:"; fi
+   cat "$ACP_ENTRY_CONF"; exit
+ fi
  if [[ "$MODE" == syntax ]] && grep -q 'listen 2087' "$ACP_ENTRY_CONF"; then exit 1; fi ;;
 systemctl)
  if [[ "$MODE" == reload ]] && grep -q 'listen 2087' "$ACP_ENTRY_CONF"; then exit 1; fi ;;
@@ -48,8 +59,14 @@ esac
         self.assertIn('MANAGER ENTRY READY',run.stdout)
 
     def test_failures_preserve_or_restore_original_config(self):
-        for mode in ['syntax','reload','health','collision']:
+        for mode in ['syntax','reload','health','collision','copy','unloaded']:
             with self.subTest(mode=mode):
                 run,current,original=self.scenario(mode)
                 self.assertNotEqual(0,run.returncode,run.stdout+run.stderr)
                 self.assertEqual(original,current)
+
+    def test_loaded_symlink_is_accepted(self):
+        run,current,original=self.scenario('symlink')
+        self.assertEqual(0,run.returncode,run.stdout+run.stderr)
+        self.assertIn('same file',run.stdout)
+        self.assertIn(b'listen 2087 ssl;',current)

@@ -133,3 +133,17 @@ Next owner read-only check: current nginx panel vhost (listen/fastcgi parameters
 Manager-entry v0.1.0 is a standalone listener-only rollout; it does not ship the candidate panel bundle.
 TLS 2087 added; 8090 retained; no auth/DB/PHP/firewall/2083/2096 changes. Five simulated rollout
 scenarios pass; real nginx and external acceptance remain pending. See entry-separation module doc.
+
+### Owner stage-one result (7 Oct 23:09 screenshot)
+manager-entry 0.1.0 checksum verified; default `nginx -t` passed, but loaded-vhost
+identity check refused: `Panel vhost is not loaded by nginx; refusing change.`
+Stopped before config edit/reload/backup phase: no listener added by this invocation.
+Possible causes: sites-enabled symlink path differs from sites-available, or master uses
+custom `-c` wrapper config. Not confirmed; do not remove safety check or rerun unchanged.
+Next read-only diagnostic: `ps -C nginx -o pid=,args=` to identify running master arguments.
+
+### Follow-up manager-entry v0.1.1
+Owner master command has no visible custom `-c`, though screenshot line is truncated.
+Fixed exact-string include check to same-inode verification; symlink accepted, distinct copy/unloaded
+path rejected. Eight simulated scenarios pass. Retry only the new pinned/checksummed script;
+if it still refuses, inspect actual nginx dump paths instead of bypassing identity checks.
