@@ -43,10 +43,10 @@
     </div>
 
     <div class="user">
-        <span class="avatar">{{ strtoupper(substr(auth()->user()->username, 0, 1)) }}</span>
+        <span class="avatar">{{ strtoupper(substr(auth()->user()?->username ?? 'A', 0, 1)) }}</span>
         <span class="meta">
-            {{ auth()->user()->username }}<br>
-            <span class="muted">{{ auth()->user()->role?->label ?? 'user' }}</span>
+            {{ auth()->user()?->username ?? 'Guest' }}<br>
+            <span class="muted">{{ auth()->user()?->role?->label ?? 'user' }}</span>
         </span>
         <form method="post" action="{{ route('logout') }}">
             @csrf
