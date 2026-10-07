@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
-# Overlay-run sirf PortsTest — base 0.3.2 + vendor, php-wasm.
+# DemoAccountsTest — base = FULL server-snapshot app (accounts/packages models
+# chahiye) + vendor bundle, php-wasm.
 set -uo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-ART="${REPO}/artifacts/panel-code-0.3.2.tar.gz"
+SRC="${REPO}/server-snapshot/files/usr/local/alphacp/panel"
 VENDOR="${REPO}/artifacts/panel-bundle-0.3.0.tar.gz"
 PHPWASM_DIR="${PHPWASM_DIR:-/tmp/phpw}"
 if [[ ! -f "${PHPWASM_DIR}/node_modules/@php-wasm/cli/php-wasm.js" ]]; then
   mkdir -p "${PHPWASM_DIR}"; (cd "${PHPWASM_DIR}" && npm init -y >/dev/null && npm i @php-wasm/cli >/dev/null)
 fi
 PHPW=(node "${PHPWASM_DIR}/node_modules/@php-wasm/cli/php-wasm.js" -d memory_limit=1G)
-W=/tmp/ports-overlay
+W=/tmp/demoaccounts-overlay
 rm -rf "${W}"; mkdir -p "${W}/home"
-tar xzf "${ART}" -C "${W}"
+cp -a "${SRC}" "${W}/panel"
 tar xzf "${VENDOR}" -C "${W}" panel/vendor
 P="${W}/panel"
 mkdir -p "${P}"/storage/app/private "${P}"/storage/framework/{cache/data,sessions,views} "${P}"/storage/logs "${P}"/bootstrap/cache
@@ -21,16 +22,11 @@ import sys; p=sys.argv[1]; s=open(p).read()
 s=s.replace("abstract class TestCase extends BaseTestCase\n{","abstract class TestCase extends BaseTestCase\n{\n    public $mockConsoleOutput = false; // SANDBOX ONLY\n",1)
 open(p,'w').write(s)
 PY
-# ---- overlay: ports feature ----
-F="${REPO}/features/ports"
-mkdir -p "${P}/resources/views/ports"
-cp "${F}/app/Models/PortConfig.php" "${P}/app/Models/"
-cp "${F}/app/Http/Controllers/PortsController.php" "${P}/app/Http/Controllers/"
-cp "${F}/resources/views/ports/index.blade.php" "${P}/resources/views/ports/"
-cp "${F}/database/migrations/2026_10_07_000010_create_port_configs_table.php" "${P}/database/migrations/"
-cp "${F}/tests/Feature/PortsTest.php" "${P}/tests/Feature/"
-cat "${F}/routes-ports.php" >> "${P}/routes/web.php"
+# ---- overlay: demo-accounts feature ----
+F="${REPO}/features/demoaccounts"
+cp "${F}/app/Console/Commands/DemoAccountsCommand.php" "${P}/app/Console/Commands/"
+cp "${F}/tests/Feature/DemoAccountsTest.php" "${P}/tests/Feature/"
 cd "${P}" || exit 1
 DB="${W}/t.sqlite"; rm -f "${DB}"; touch "${DB}"
 PHP=8.5 DB_CONNECTION=sqlite DB_DATABASE="${DB}" ACP_TEST_DATABASE="${DB}" ACP_HOME="${W}/home" \
-  timeout 600 "${PHPW[@]}" vendor/bin/phpunit --colors=never --do-not-cache-result --testdox tests/Feature/PortsTest.php 2>&1
+  timeout 900 "${PHPW[@]}" vendor/bin/phpunit --colors=never --do-not-cache-result --testdox "$@" tests/Feature/DemoAccountsTest.php 2>&1
