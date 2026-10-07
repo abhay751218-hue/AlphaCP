@@ -153,6 +153,7 @@
 /usr/local/alphacp/panel/app/Console/Commands/ScheduledBackupsCommand.php
 /usr/local/alphacp/panel/app/Http/Controllers/AccountsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AddressImporterController.php
+/usr/local/alphacp/panel/app/Http/Controllers/ApiTokensController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AppsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AuditController.php
 /usr/local/alphacp/panel/app/Http/Controllers/Auth/LoginController.php
@@ -428,6 +429,7 @@
 /usr/local/alphacp/panel/resources/views/accounts/index.blade.php
 /usr/local/alphacp/panel/resources/views/accounts/show.blade.php
 /usr/local/alphacp/panel/resources/views/address-importer/index.blade.php
+/usr/local/alphacp/panel/resources/views/api-tokens/index.blade.php
 /usr/local/alphacp/panel/resources/views/apps/index.blade.php
 /usr/local/alphacp/panel/resources/views/audit/index.blade.php
 /usr/local/alphacp/panel/resources/views/auth/login.blade.php
