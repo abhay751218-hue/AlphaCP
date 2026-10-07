@@ -47,7 +47,7 @@ out = [
     '  [ -n "${PA:-}" ] && ALLPORTS="$PA"\n',
     "fi\n",
     'IP=$(hostname -I 2>/dev/null | awk \'{print $1}\' || true)\n',
-    'echo "  Login URL : https://${IP:-<server-ip>}:${PORT}/login   (open ports: ${ALLPORTS})"\n',
+    'echo "  Login URL : https://${IP:-<server-ip>}:${PORT}/   (login page / par hai; open ports: ${ALLPORTS})"\n',
     'echo "  Personas  : demoresel (reseller) · democust (hosting customer) · demomail (email-only)"\n',
     'echo "  Root admin: pehle se hai (installer wala admin user)"\n',
     'echo "=================================================="\n',

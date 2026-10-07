@@ -11,6 +11,7 @@ use App\Models\User;
 use Database\Seeders\RolesAndPermissionsSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 /**
@@ -93,6 +94,19 @@ class DemoAccountsTest extends TestCase
         ]));
 
         $this->assertTrue(Hash::check('Other1Passw0rd!', User::query()->where('username', 'democust')->firstOrFail()->password_hash));
+    }
+
+    public function test_the_login_page_is_at_root_not_slash_login(): void
+    {
+        // Hum users ko yahi URL dete hain — isliye ye assert zaroori hai.
+        $this->get('/')->assertOk()->assertSee('Panel Login');
+
+        // GET /login ka koi route nahi (sirf POST) — isliye "/login" URL dena galat hai.
+        $hasGetLogin = collect(Route::getRoutes()->getRoutes())
+            ->contains(fn ($r) => $r->uri() === 'login' && in_array('GET', $r->methods(), true));
+
+        $this->assertFalse($hasGetLogin);
+        $this->assertTrue(Route::getRoutes()->getByName('login') !== null);
     }
 
     public function test_it_rejects_a_weak_password(): void

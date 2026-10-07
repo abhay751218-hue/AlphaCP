@@ -128,7 +128,7 @@ final class DemoAccountsCommand extends Command
         $this->table(['Role', 'Username', 'Password', 'Hosting account', 'Status'], $rows);
 
         $this->newLine();
-        $this->info('Login: https://<server-ip>:8090/login  (owner ke chune doosre ports par bhi wahi panel khulta hai)');
+        $this->info('Login: https://<server-ip>:8090/   (login page "/" hai — "/login" sirf POST accept karta hai)');
         $this->line('Hosted domain: ' . $domain . ' (demo account ka main domain)');
 
         return self::SUCCESS;

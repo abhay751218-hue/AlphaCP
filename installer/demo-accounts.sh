@@ -141,7 +141,7 @@ final class DemoAccountsCommand extends Command
         $this->table(['Role', 'Username', 'Password', 'Hosting account', 'Status'], $rows);
 
         $this->newLine();
-        $this->info('Login: https://<server-ip>:8090/login  (owner ke chune doosre ports par bhi wahi panel khulta hai)');
+        $this->info('Login: https://<server-ip>:8090/   (login page "/" hai — "/login" sirf POST accept karta hai)');
         $this->line('Hosted domain: ' . $domain . ' (demo account ka main domain)');
 
         return self::SUCCESS;
@@ -250,7 +250,7 @@ if [ -f /usr/local/alphacp/var/ports.json ]; then
   [ -n "${PA:-}" ] && ALLPORTS="$PA"
 fi
 IP=$(hostname -I 2>/dev/null | awk '{print $1}' || true)
-echo "  Login URL : https://${IP:-<server-ip>}:${PORT}/login   (open ports: ${ALLPORTS})"
+echo "  Login URL : https://${IP:-<server-ip>}:${PORT}/   (login page / par hai; open ports: ${ALLPORTS})"
 echo "  Personas  : demoresel (reseller) · democust (hosting customer) · demomail (email-only)"
 echo "  Root admin: pehle se hai (installer wala admin user)"
 echo "=================================================="
