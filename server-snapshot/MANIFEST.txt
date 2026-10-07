@@ -191,6 +191,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/HandlersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/HostnameAController.php
 /usr/local/alphacp/panel/app/Http/Controllers/IndexesController.php
+/usr/local/alphacp/panel/app/Http/Controllers/IpBlockerController.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailingListsController.php
@@ -238,6 +239,7 @@
 /usr/local/alphacp/panel/app/Models/BackupRestore.php
 /usr/local/alphacp/panel/app/Models/BackupUserSelection.php
 /usr/local/alphacp/panel/app/Models/BackupWizard.php
+/usr/local/alphacp/panel/app/Models/BlockedIp.php
 /usr/local/alphacp/panel/app/Models/BoxTrapperSetting.php
 /usr/local/alphacp/panel/app/Models/CalendarItem.php
 /usr/local/alphacp/panel/app/Models/Catchall.php
@@ -298,6 +300,7 @@
 /usr/local/alphacp/panel/app/Support/DynamicDnsProvisioner.php
 /usr/local/alphacp/panel/app/Support/ErrorPages.php
 /usr/local/alphacp/panel/app/Support/Files.php
+/usr/local/alphacp/panel/app/Support/Firewall.php
 /usr/local/alphacp/panel/app/Support/Ftp.php
 /usr/local/alphacp/panel/app/Support/Handlers.php
 /usr/local/alphacp/panel/app/Support/Indexes.php
@@ -398,6 +401,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_05_000061_create_backup_destination_pushes_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_05_000062_add_members_to_mailing_lists_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000001_create_ftp_accounts_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000002_create_blocked_ips_table.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php
@@ -453,6 +457,7 @@
 /usr/local/alphacp/panel/resources/views/handlers/index.blade.php
 /usr/local/alphacp/panel/resources/views/hostname-a/index.blade.php
 /usr/local/alphacp/panel/resources/views/indexes/index.blade.php
+/usr/local/alphacp/panel/resources/views/ip-blocker/index.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/guest.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php
 /usr/local/alphacp/panel/resources/views/license/index.blade.php

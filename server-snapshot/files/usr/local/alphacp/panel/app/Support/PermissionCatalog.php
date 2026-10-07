@@ -162,7 +162,7 @@ final class PermissionCatalog
             'user' => [
                 'core.access', 'core.self', 'files.view', 'files.manage',
                 'email.view', 'email.manage', 'domains.view', 'domains.manage',
-                'databases.view', 'databases.manage', 'dns.view', 'dns.manage', 'backup.view', 'metrics.view',
+                'databases.view', 'databases.manage', 'dns.view', 'dns.manage', 'backup.view', 'metrics.view', 'security.view',
                 'software.view', 'software.manage', 'cron.view', 'cron.manage',
                 'ssl.view', 'ssl.manage', 'errorpages.view', 'errorpages.manage',
                 'indexes.view', 'indexes.manage', 'mime.view', 'mime.manage',
