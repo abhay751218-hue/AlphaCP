@@ -43,7 +43,9 @@ run 930aa166a64312414129af2c417b789d39b3601c api-tokens.sh b5b05f635cbfd7766dff8
 run ca6398ffbf661da5ca811e10eba8796ce00be65f resellers.sh c2b48bd6c7aa5a8aa515b11c8dcec016fa82e8a8099f87cd1319d29596f30bdd
 # 11) G5 Git Version Control + Terminal (brand-clean)
 run ca6398ffbf661da5ca811e10eba8796ce00be65f g5.sh 38f26d8c1eb72da5122ffc98106fa6c0a70aa61b47752f2b6d64a8d1267f37cb
-# 12) REBRAND (cPanel/WHM words -> AlphaCP) — hamesha last
+# 12) License Server (sellable signed licenses)
+run 0b6acfa24c54e7a149d7b4e436935d9467429439 license-server.sh 8964067df7aad6ef31531a18ee82a34d0b482891d682a887da0b08795b2b631d
+# 13) REBRAND (legacy base words -> AlphaCP) — internal, hamesha last
 run dfbd379474547fb1ba96547a7ac5b4493233fb7f rebrand.sh cad5d5c039b5800e2acd2c288f58700e8f5557ca9add5fbcaae843d6aafcca77
 
 echo
