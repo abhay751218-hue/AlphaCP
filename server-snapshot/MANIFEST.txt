@@ -309,6 +309,7 @@
 /usr/local/alphacp/panel/app/Models/WebmailSetting.php
 /usr/local/alphacp/panel/app/Models/ZoneTtl.php
 /usr/local/alphacp/panel/app/Providers/AppServiceProvider.php
+/usr/local/alphacp/panel/app/Providers/ResellerScopeProvider.php
 /usr/local/alphacp/panel/app/Support/AccountIdentity.php
 /usr/local/alphacp/panel/app/Support/AccountProvisioner.php
 /usr/local/alphacp/panel/app/Support/AppInstaller.php
