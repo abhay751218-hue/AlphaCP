@@ -5,7 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AuditController;
 use App\Http\Controllers\PackagesController;
-use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\EntryLoginController as LoginController; // ACP-ENTRY-GATE
 use App\Http\Controllers\Auth\TwoFactorController;
 use App\Http\Controllers\CronController;
 use App\Http\Controllers\DashboardController;

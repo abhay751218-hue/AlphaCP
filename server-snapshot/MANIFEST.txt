@@ -158,6 +158,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/ApiTokensController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AppsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AuditController.php
+/usr/local/alphacp/panel/app/Http/Controllers/Auth/EntryLoginController.php
 /usr/local/alphacp/panel/app/Http/Controllers/Auth/LoginController.php
 /usr/local/alphacp/panel/app/Http/Controllers/Auth/TwoFactorController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AutorespondersController.php
@@ -560,6 +561,7 @@
 /usr/local/alphacp/panel/resources/views/zone-ttl/index.blade.php
 /usr/local/alphacp/panel/routes/console.php
 /usr/local/alphacp/panel/routes/web.php
+/usr/local/alphacp/panel/routes/web.php.bak.entry
 /usr/local/alphacp/panel/tests/Feature/AccountsTest.php
 /usr/local/alphacp/panel/tests/Feature/AddressImporterTest.php
 /usr/local/alphacp/panel/tests/Feature/AdminPasswordCommandTest.php
