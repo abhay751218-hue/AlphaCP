@@ -6,6 +6,53 @@
 
 ---
 
+## ⚡ LATEST STATE (7 Oct 2026) — NAYE AI KE LIYE READ FIRST
+
+> Neeche wala pura doc **historical** hai (purane 500-blocker/paste.rs zamane ka). **Asli current
+> state ye section + linked docs** me hai. Server ab theek hai aur panel live hai.
+
+**Product goal (binding):** AlphaCP = **100% cPanel/WHM-jaisa** panel jo customers ko **license
+ke roop me becha jayega** → har cheez **portable, idempotent installer** se (koi bhi fresh
+Ubuntu VPS, one command), aur repo **self-documenting** taaki **koi bhi AI naye chat me**
+continue kar sake bina is chat ke context ke.
+
+**Current (sab tool-verified, 7 Oct):**
+- `alphacp-sync` v1.5 live → `server-snapshot/` = **server ka byte-barabar copy**. Panel **0.75.0**, HTTP 200, Laravel 13.33, 70 DB tables.
+- Deployed-code test suite: **453 pass, 0 fail** → `bash tools/sim/panel-tests-deployed.sh` (php-wasm; SRC env override se feature-overlay test hota hai).
+- Roadmap **S1–S10 + S13/S15 core LIVE**; status `ROADMAP.md` me (stale nahi).
+- **G1 FTP Accounts LIVE** (Pure-FTPd) — parity-gap ka pehla feature, server par installed.
+- Baaki gaps + build order: **`docs/11-cpanel-100-parity-map.md`** (G2 Metrics, G3 App Installer, G4 WAF/Virus, G5 Terminal/Git, G6–G8).
+- A–Z live/complete plan: `docs/10-live-and-complete-plan.md`. ⚠️ **License trial 13 Oct** ko khatam — sabse pehle ye.
+
+**Versioning (do alag numbers — koi error nahi, par scheme samjho):**
+- `server-snapshot/.../panel/MANIFEST.json` → `version` = **deployed code build** (abhi `0.75.0`); sync isi ko "panel code" report karta hai.
+- `.env` → `ACP_VERSION` = **product version jo UI/footer me dikhta hai** (`config('acp.version')`, abhi `0.83.0`). `ACP_AGENT_VERSION` = agent (`0.83.0`).
+- `config/acp.php` ke `0.72.0`/`0.62.0` sirf **fallback** hain (.env override karta hai) — inhe ignore karo.
+- "0.74.0" jo kabhi dikha wo purana build tha; ab code-build `0.75.0` hai.
+- **Going forward (sellable product):** har feature-release par `ACP_VERSION` bump hoga (0.84.0 → 0.85.0 …)
+  aur portable installer `.env` me use set karega; code-build (MANIFEST) sync khud update karta hai.
+  Customer ko ek consistent version dikhega (cPanel jaisa `118.0.x` style).
+
+**Feature add karne ka STANDARD FLOW (har AI yahi use kare):**
+1. Code likho `features/<name>/` me: `app/Http/Controllers/`, `app/Models/`, `app/Support/`,
+   `database/migrations/`, `resources/views/<name>/`, `routes-<name>.php`, `tests/Feature/<Name>Test.php`.
+   (Panel conventions: `accountFor/requireAccount` private helpers, `perm:files.*`-style middleware,
+   system-ops `App\Support\*` me + `Process` facade taaki test fake kar sake.)
+2. Overlay: `cp -a server-snapshot/files/usr/local/alphacp/panel /tmp/ov` → feature files copy →
+   `cat features/<name>/routes-<name>.php >> /tmp/ov/routes/web.php` → test file `/tmp/ov/tests/Feature/`.
+3. Test: `SRC=/tmp/ov bash tools/sim/panel-tests-deployed.sh tests/Feature/<Name>Test.php` → **0 fail** chahiye.
+4. Portable installer `installer/<name>.sh` (idempotent, fresh-VPS par daemon khud install kare;
+   **version banner** + end me `alphacp-sync`). Generator: `features/` se exact embed karo (heredoc, quoted delimiter).
+5. Commit+push branch par; `git show <commit>:installer/<name>.sh | sha256sum` → **pinned deploy command**
+   `COMMANDS.md` me (`alphacp-sync get <COMMIT> installer/<name>.sh /tmp/... <SHA> && sudo bash ...`).
+6. User ko **EK** command do; output aane par hi agla step. Server ko sandbox se direct touch mat karo.
+
+**Binding rules:** Hinglish jawab; ek message me **EK** command; **untested command KABHI nahi**
+(reproduce→fix→verify→phir command); `docs/09` ki row **delete nahi**; **secrets push nahi**;
+`server-snapshot/STATE.md` manual edit nahi (sync overwrite karta hai).
+
+---
+
 ## 0. TL;DR (naye AI ke liye — 15 lines me sab kuch)
 
 1. Project: **AlphaCP** — ek **custom web hosting control panel** jo **100% cPanel/WHM jaisa** hoga (har feature + har limit), plus apna **license system** (commercially bechne ke liye) + **one-click install/upgrade** (cPanel jaisa).
