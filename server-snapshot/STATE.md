@@ -261,6 +261,8 @@ POST               /accounts/{account}/unsuspend                 accounts.unsusp
 POST               /accounts/{account}/upgrade                   accounts.upgrade
 GET|HEAD           /address-importer                             address-importer.index
 POST               /address-importer                             address-importer.store
+GET|HEAD           /apps                                         apps.index
+POST               /apps                                         apps.store
 GET|HEAD           /audit                                        audit.index
 GET|HEAD           /autoresponders                               autoresponders.index
 POST               /autoresponders                               autoresponders.store

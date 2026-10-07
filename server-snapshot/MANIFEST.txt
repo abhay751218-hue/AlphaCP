@@ -152,6 +152,7 @@
 /usr/local/alphacp/panel/app/Console/Commands/ScheduledBackupsCommand.php
 /usr/local/alphacp/panel/app/Http/Controllers/AccountsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AddressImporterController.php
+/usr/local/alphacp/panel/app/Http/Controllers/AppsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/AuditController.php
 /usr/local/alphacp/panel/app/Http/Controllers/Auth/LoginController.php
 /usr/local/alphacp/panel/app/Http/Controllers/Auth/TwoFactorController.php
@@ -286,6 +287,7 @@
 /usr/local/alphacp/panel/app/Providers/AppServiceProvider.php
 /usr/local/alphacp/panel/app/Support/AccountIdentity.php
 /usr/local/alphacp/panel/app/Support/AccountProvisioner.php
+/usr/local/alphacp/panel/app/Support/AppInstaller.php
 /usr/local/alphacp/panel/app/Support/Audit.php
 /usr/local/alphacp/panel/app/Support/Backup.php
 /usr/local/alphacp/panel/app/Support/BackupDestinations.php
@@ -419,6 +421,7 @@
 /usr/local/alphacp/panel/resources/views/accounts/index.blade.php
 /usr/local/alphacp/panel/resources/views/accounts/show.blade.php
 /usr/local/alphacp/panel/resources/views/address-importer/index.blade.php
+/usr/local/alphacp/panel/resources/views/apps/index.blade.php
 /usr/local/alphacp/panel/resources/views/audit/index.blade.php
 /usr/local/alphacp/panel/resources/views/auth/login.blade.php
 /usr/local/alphacp/panel/resources/views/auth/twofactor.blade.php
