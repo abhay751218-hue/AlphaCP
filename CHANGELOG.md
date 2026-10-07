@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/sec-fix.sh` **v1.0** (+ `.in`, `tools/build-sec-fix.py`, `tools/sim/sec-fix-sim.sh`) —
+  B1-ext deploy: agent 9 + panel 2 files byte-for-byte; gates wahi (suite `passed>=220
+  failed=0`, Support files me code-level Process absence). **Sim 40/40** (live-state
+  `b97d76f` reproduce → apply → rollback → idempotent).
+  Pin: commit `935a3e392436ed2c04b393219cd50208666f23eb`, sha256 `f9f85ccd456dcfc96f542e432dd15e293bb4b898594d7ecfaadb2a82b564bee6`.
 - `installer/b1-fix.sh` **v1.0** (+ `.in`, `tools/build-b1-fix.py`, `tools/sim/b1-fix-sim.sh`) —
   B1 part 2 deploy: agent 10 + panel 4 files byte-for-byte; gates ftp-fix jaise (suite
   `passed>=218 failed=0`, panel me code-level Process absence assert). **Sim 40/40**

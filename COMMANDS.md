@@ -14,6 +14,28 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### 🔴 sec-fix v1.0 — IP Blocker / ModSecurity / virus scan live par HTTP 500 (B1-ext). **Yahi chalao.**
+```bash
+sudo alphacp-sync get 935a3e392436ed2c04b393219cd50208666f23eb installer/sec-fix.sh /tmp/sec-fix-v1.0.sh f9f85ccd456dcfc96f542e432dd15e293bb4b898594d7ecfaadb2a82b564bee6 && sudo bash /tmp/sec-fix-v1.0.sh
+```
+- commit `935a3e392436ed2c04b393219cd50208666f23eb`, sha256 `f9f85ccd456dcfc96f542e432dd15e293bb4b898594d7ecfaadb2a82b564bee6`.
+- **Kya karta hai:** Security section ke actions live par **500** dete the — `Support/Firewall`
+  (ufw deny/delete) aur `Support/Waf` (a2query/a2enmod/a2dismod/apache restart/clamscan)
+  web-FPM se shell chalate the (proc_open disabled — audit B1-ext). Ab sab **root agent**:
+  `security.ipBlock` / `security.ipUnblock` (ufw, IP filter_var-validate), `waf.status` /
+  `waf.enable` / `waf.disable` (ModSecurity + apache restart), `security.scan` (clamscan;
+  exit 1 = "infected" result, failure nahi). Registry 89 → **95 types**. Panel Support files
+  ab sirf Paneld enqueue/run — **poore panel app/ me kahin Process:: nahi bacha**.
+- **Expected output:** `backup: …/releases/secfix-<ts>` → `agent files likhi + lint clean (9)` →
+  `SMOKE OK` → `agent suite GREEN (passed=220 failed=0)` → `paneld active` →
+  `panel files likhi + lint clean (2) — koi Process:: nahi` → `php8.4-fpm active` →
+  `panel /login HTTP 200` → `sync complete` → `FINAL VERDICT … sec-fix v1.0 APPLY ho gaya`.
+- **Fail par:** auto-rollback. **Dekhna ho:** `--diagnose` · **wapas:** `--rollback`.
+- **Verify:** panel → **IP Blocker** se ek IP block/unblock karo · **Security Tools** me
+  ModSecurity toggle + public_html scan chalao (pehle 500 aata tha).
+  `sudo php8.4 /usr/local/alphacp/agent/tests/run-tests.php | tail -1` → `passed: 220   failed: 0`.
+- Test: `bash tools/sim/sec-fix-sim.sh` → **40/40**.
+
 ### ✅ b1-fix v1.0 — APPLIED 8 Oct 01:10 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get ec50182305cdd324a93db159e738ec3881e74ebc installer/b1-fix.sh /tmp/b1-fix-v1.0.sh 046bfbbce36f92c1d5af59431e95b187b14097bf749f2446c6d725f0fd21bfca && sudo bash /tmp/b1-fix-v1.0.sh

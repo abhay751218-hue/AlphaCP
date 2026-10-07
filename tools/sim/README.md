@@ -73,3 +73,14 @@ panel code me Process:: 0, byte-for-byte payloads) → diagnose post → rollbac
 ```bash
 bash tools/sim/b1-fix-sim.sh               # -> 40/40
 ```
+
+## sec-fix-sim.sh — `installer/sec-fix.sh` v1.0 (Security suite via root agent)
+
+Live state `b97d76f` (89 types + Process-wali Support/Firewall+Waf) reproduce karke
+poora lifecycle: reproduce → diagnose → apply (lint 9+2, smoke, suite gate
+`passed>=220 failed=0`, registry 95, Support files Process-free, byte-for-byte
+payloads) → diagnose post → rollback → re-apply.
+
+```bash
+bash tools/sim/sec-fix-sim.sh              # -> 40/40
+```
