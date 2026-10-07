@@ -18,7 +18,7 @@ echo "  php bin : $PHP_BIN"
 # ---- asli fpm WORKER user (workers master se zyada hote hain) ----
 WU="$(ps axo user=,comm= 2>/dev/null | awk '$2 ~ /php-fpm/ {print $1}' | sort | uniq -c | sort -rn | awk 'NR==1 {print $2}')"
 if [ -z "$WU" ] || [ "$WU" = "root" ]; then
-  WU="$(awk -F'=' '/^[[:space:]]*user[[:space:]]*=/{gsub(/ /,"",$2); print $2; exit}' /etc/php/*/fpm/pool.d/*.conf 2>/dev/null | head -1)"
+  WU="$(awk -F'=' '/^[[:space:]]*user[[:space:]]*=/{gsub(/ /,"",$2); print $2; exit}' /etc/php/*/fpm/pool.d/*.conf 2>/dev/null | head -1 || true)"
 fi
 WU="${WU:-www-data}"
 echo "  fpm worker user: $WU"

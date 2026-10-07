@@ -98,15 +98,29 @@ final class EntryLoginController extends LoginController
     /** @return list<int> */
     private function listeningSslPorts(): array
     {
-        $path = (string) (config('acp.ports_file') ?: '/usr/local/alphacp/var/ports.json');
+        $cfgPath = (string) (config('acp.ports_file') ?: '');
+
+        $candidates = array_filter([
+            $cfgPath,
+            '/usr/local/alphacp/etc/ports.json',
+            '/usr/local/alphacp/var/ports.json',
+        ]);
 
         $ports = [8090];
 
-        if (is_file($path)) {
-            $cfg = json_decode((string) @file_get_contents($path), true);
+        foreach ($candidates as $path) {
+            try {
+                if (! is_file($path)) {
+                    continue;
+                }
+                $cfg = json_decode((string) @file_get_contents($path), true);
+            } catch (\Throwable) {
+                continue; // open_basedir ErrorException etc.
+            }
 
             if (is_array($cfg) && is_array($cfg['ssl'] ?? null)) {
                 $ports = array_map('intval', $cfg['ssl']);
+                break;
             }
         }
 

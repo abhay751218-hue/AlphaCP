@@ -243,9 +243,10 @@ fi
 echo "== Step 3: login info =="
 PORT=8090
 ALLPORTS=8090
-if [ -f /usr/local/alphacp/var/ports.json ]; then
-  P2=$(python3 -c "import json;d=json.load(open('/usr/local/alphacp/var/ports.json'));s=d.get('ssl') or [8090];print(s[0]);" 2>/dev/null || true)
-  PA=$(python3 -c "import json;d=json.load(open('/usr/local/alphacp/var/ports.json'));s=d.get('ssl') or [8090];print(' '.join(str(x) for x in s));" 2>/dev/null || true)
+PORTS_JSON=/usr/local/alphacp/etc/ports.json; [ -f "$PORTS_JSON" ] || PORTS_JSON=/usr/local/alphacp/var/ports.json
+if [ -f "$PORTS_JSON" ]; then
+  P2=$(python3 -c "import json;d=json.load(open('$PORTS_JSON'));s=d.get('ssl') or [8090];print(s[0]);" 2>/dev/null || true)
+  PA=$(python3 -c "import json;d=json.load(open('$PORTS_JSON'));s=d.get('ssl') or [8090];print(' '.join(str(x) for x in s));" 2>/dev/null || true)
   [ -n "${P2:-}" ] && PORT="$P2"
   [ -n "${PA:-}" ] && ALLPORTS="$PA"
 fi

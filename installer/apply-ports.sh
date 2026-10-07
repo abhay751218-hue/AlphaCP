@@ -7,7 +7,8 @@
 # ============================================================================
 set -euo pipefail
 CONF=/etc/nginx/sites-available/alphacp-panel.conf
-PORTS=/usr/local/alphacp/var/ports.json
+PORTS=/usr/local/alphacp/etc/ports.json
+[ -f "$PORTS" ] || PORTS=/usr/local/alphacp/var/ports.json
 echo "=================================================="
 echo " AlphaCP Apply Ports installer  v1.0"
 echo "=================================================="
