@@ -213,6 +213,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/PhpmyadminController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PrivacyController.php
 /usr/local/alphacp/panel/app/Http/Controllers/RemoteMysqlController.php
+/usr/local/alphacp/panel/app/Http/Controllers/ResellersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SecurityController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SecurityToolsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SpamFiltersController.php
@@ -494,6 +495,7 @@
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php
 /usr/local/alphacp/panel/resources/views/privacy/index.blade.php
 /usr/local/alphacp/panel/resources/views/remote-mysql/index.blade.php
+/usr/local/alphacp/panel/resources/views/resellers/index.blade.php
 /usr/local/alphacp/panel/resources/views/security-tools/index.blade.php
 /usr/local/alphacp/panel/resources/views/security/index.blade.php
 /usr/local/alphacp/panel/resources/views/security/password.blade.php

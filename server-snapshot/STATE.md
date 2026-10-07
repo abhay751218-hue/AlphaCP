@@ -420,6 +420,10 @@ POST               /privacy/delete                               privacy.destroy
 GET|HEAD           /remote-mysql                                 remote-mysql.index
 POST               /remote-mysql                                 remote-mysql.store
 DELETE             /remote-mysql/{mysql_remote_host}             remote-mysql.destroy
+GET|HEAD           /resellers                                    resellers.index
+POST               /resellers                                    resellers.store
+POST               /resellers/privileges                         resellers.privileges
+DELETE             /resellers/{user}                             resellers.destroy
 GET|HEAD           /security                                     security.index
 GET|HEAD           /security-tools                               security-tools.index
 POST               /security-tools/modsec                        security-tools.modsec
