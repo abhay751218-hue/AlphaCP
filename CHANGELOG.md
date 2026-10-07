@@ -108,6 +108,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 Fix ne 2 login failures hataye aur **ek bhi naya failure nahi** laaya.
 
+### Live deploy — 7 Oct 13:04Z, ip-172-26-4-65 (pin `269eb3c`, sha256 `6ca53d4d…`)
+- Step 9 SELFTEST **16 pass, 0 fail** — jisme `PASS B5: session se user resolve hua
+  (recursion nahi)` **live DB par** (pehle yahi request PHP fatal karti thi).
+- Step 8: `ownership alphacp:alphacp` + `fpm user (alphacp) storage me likh sakta hai`
+  + `restart php8.4-fpm` + panel HTTP 200.
+- Step 7: truth file `{"manager":[8090],"customer":[]}` (single-entry, gate fail-open)
+  + cron `/etc/cron.d/alphacp-entry-ports` (`*/5` + `@reboot`).
+- Step 3: `login_attempts cleared: 72`, koi locked user nahi.
+- Server ke apne `alphacp-sync` ne post-fix snapshot push kiya (**`e50f842`, 11 files**) —
+  usse byte-level tasdeeq hui ki live par v2 payloads hi chal rahe hain
+  (`ResellerScopeProvider` me `resolvingActor`, `EntryLoginController` me `decide()`,
+  `routes/web.php` me `login.page`, naya `bin/acp-entry-ports` + cron).
+- nginx error log ke recursion fatals **12:53:32 par ruk gaye** (fix 13:04Z par lagi);
+  uske baad koi naya fatal nahi.
+
 ### Known issues (login se related NAHI — pehle se the, is change me chhede nahi)
 - 6 tests fail hote hain, sab **purane assertions** ki wajah se (production bug nahi):
   - `DashboardShellTest` ×2 — `assertSee('WHM Dashboard')`, par UI ab `'Server Manager Dashboard'`
