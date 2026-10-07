@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# AlphaCP — Standalone error pages installer  v2.0
+# AlphaCP — Standalone error pages installer  v2.1
 # Error pages ab NA layout extend karti hain NA DB/auth use karti hain —
 # galat URL / 405 / 500 kabhi layout-crash se 500 nahi denge.
 set -euo pipefail
 PANEL="${ACP_PANEL:-/usr/local/alphacp/panel}"
 echo "=================================================="
-echo " AlphaCP Standalone Error Pages installer  v2.0"
+echo " AlphaCP Standalone Error Pages installer  v2.1"
 echo "=================================================="
 mkdir -p "$PANEL/resources/views/errors"
 cat > "$PANEL/resources/views/errors/403.blade.php" <<'ACP_FILE_EOF'
@@ -213,8 +213,20 @@ ACP_FILE_EOF
 echo "  + errors/503.blade.php"
 
 cd "$PANEL"
-php artisan view:clear || true
+# ---- env hardening: stale compiled views / opcache / ownership ----
+FPM_USER=$(ps axo user=,comm= 2>/dev/null | awk '/php-fpm/{print $1; exit}')
+FPM_USER=${FPM_USER:-www-data}
+echo "  fpm user: $FPM_USER"
+chown -R "$FPM_USER":"$FPM_USER" storage bootstrap/cache 2>/dev/null || \
+  chown -R "$FPM_USER" storage bootstrap/cache 2>/dev/null || true
+chmod -R ug+rwX storage bootstrap/cache 2>/dev/null || true
+php artisan view:clear   2>&1 | tail -1 || true
+php artisan config:clear 2>&1 | tail -1 || true
+php artisan route:clear  2>&1 | tail -1 || true
+php artisan cache:clear  2>&1 | tail -1 || true
+systemctl restart php8.4-fpm 2>/dev/null || systemctl restart php-fpm 2>/dev/null || \
+  service php8.4-fpm restart 2>/dev/null || echo "  (fpm restart manually: sudo systemctl restart php8.4-fpm)"
 echo "=================================================="
-echo " ==> STANDALONE ERROR PAGES v2.0 APPLIED"
+echo " ==> STANDALONE ERROR PAGES v2.1 APPLIED (env hardened)"
 echo "=================================================="
 alphacp-sync || true
