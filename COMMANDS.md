@@ -80,10 +80,27 @@ curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f5
 - Test: `sudo bash tools/sim/sync-sim.sh` → 60/60 (Run 8 = get: sha verify, galat sha, traversal, PR-ref commit, no key).
   GitHub par SHA-fetch + `refs/pull/*` fetch asli repo par verify kiya (29 Sep).
 
-### Uske baad panel updates: panel-update 0.3.0 (private-ready) — agli panel release ke saath
-- commit `0c90863a10e6c70984e627af1b819e66ae60b600`, sha256 `204b78af0b59b75614a61455df1ca96b5eb3c05f744b744647da1a33c4da8480`
-- artifact + sync tool pehle `alphacp-sync get` se, fallback public URL. update-sim **54/54** (U5 private+get, U6 private+purana sync → saaf error).
-- Abhi chalane ki zaroorat nahi (server already 0.3.2).
+### ✅ AB CHALAO — panel-update 0.77.0 (P-UI-1: cPanel / WHM / Webmail alag-alag colours)
+```bash
+sudo alphacp-sync get 3255940d55549f3e26f73364c143ccd758ad800b installer/panel-update.sh /tmp/panel-update-0.77.0.sh a21a65d8c409a73d903d5a8e7c3887fdbb2f094868783306c4b58d583411d253 && sudo bash /tmp/panel-update-0.77.0.sh
+```
+- sha256 (script): `a21a65d8c409a73d903d5a8e7c3887fdbb2f094868783306c4b58d583411d253`
+- **Kya badlega:** panel 0.75.0 → **0.77.0** = P-UI-1 per-panel theme engine —
+  `root/reseller` → **WHM look** (navy sidebar `#293A4A` + orange `#FF6C2C`), `customer` → **cPanel look**
+  (paper-white Tools grid + right rail **General Information + Statistics**), `mail` role → **Webmail look**.
+  Saath me: top **"Find functions quickly…"** search, **Change Style** page, nav icons.
+  Detail: `docs/10-ui-parity-design.md`. Panel suite **483/0** (6 wasm-skip = sandbox limit).
+- **Kya nahi badlega:** agent (0.83.0 hi), database/schema (koi migration nahi), `.env`, APP_KEY,
+  storage, admin password. Health check fail = **auto rollback**.
+- Backups: `/usr/local/alphacp/releases/panel-backup-<ts>/` (aakhri 3 rakhta hai).
+  Log: `/var/log/alphacp-panel-update.log`.
+- Expected banner: `AlphaCP existing-server updater 0.77.0` → `Panel bundle: 0.77.0` →
+  `artifact source: alphacp-sync get (deploy key)` → `==> UPDATE COMPLETE ✅`.
+- Test: `sudo bash tools/sim/update-sim.sh` → **60/60** (U1 update 0.3.0→0.77.0, U2 sha mismatch,
+  U3 health-fail rollback, U4 prune + sync-tool checksum fail, U5 private repo + `get`, U6 private +
+  purana sync → saaf error; + 5 naye P-UI-1 file checks).
+- Wapas jaana ho: `sudo mv /usr/local/alphacp/releases/panel-backup-<ts> /usr/local/alphacp/panel && sudo systemctl restart php8.4-fpm`
+  (batao to rollback script bhi de denge).
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |

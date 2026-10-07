@@ -115,7 +115,7 @@ chk "P-UI-1: Theme.php present" test -f "${PANEL}/app/Support/Theme.php"
 chk "P-UI-1: NavIcon.php present" test -f "${PANEL}/app/Support/NavIcon.php"
 chk "P-UI-1: panel.js present" test -f "${PANEL}/public/assets/panel.js"
 chk "P-UI-1: general-info + statistics partials" bash -c "test -f '${PANEL}/resources/views/partials/general-info.blade.php' && test -f '${PANEL}/resources/views/partials/statistics.blade.php'"
-chk "P-UI-1: config default version 0.77.0" grep -q "'version' => '0.77.0'" "${PANEL}/config/acp.php"
+chk "P-UI-1: config default version 0.77.0" grep -q "ACP_VERSION', '0.77.0')" "${PANEL}/config/acp.php"
 chk "route cache me /license" grep -rqs "license" "${PANEL}/bootstrap/cache/"
 chk "backup bana (1)" test "$(nbackups)" -eq 1
 chk "backup = purana ${BEFORE_VER}" grep -q "\"version\": \"${BEFORE_VER}\"" "$(find "${REL}" -maxdepth 1 -name 'panel-backup-*' | head -1)/MANIFEST.json"

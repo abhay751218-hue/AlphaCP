@@ -36,7 +36,7 @@
 | Panel app | **0.75.0** (live) → **0.77.0** (repo, deploy pending) | `config/acp.php` default **0.77.0** ✅ (drift fix ho gaya) | UI parity (P-UI-1) isi me hai |
 | Agent (`paneld`) | **0.83.0** | `agent/src/Bootstrap.php` `0.83.0`; `config/acp.php` default `0.62.0` (stale) | |
 | `alphacp-sync` | **v1.5** | `installer/alphacp-sync.sh` header `1.2` (bootstrap) | live self-upgrade hua |
-| `panel-update.sh` (updater) | 0.3.0 | **0.82.2 → bundle `0.77.0`** (P-UI-1) | agent-fix/login-fix jaise pinned pattern me |
+| `panel-update.sh` (updater) | 0.3.0 | **0.77.0 → bundle `0.77.0`** (P-UI-1) | pin `3255940`/`a21a65d8…`; update-sim **60/60** |
 | `install.sh` / `panel-install.sh` / `step2-install.sh` / `step2b-*` | — | 0.1.2 / 0.3.0 / 0.2.0 / 0.3.8 | |
 | `login-fix.sh` | **v1.0 APPLIED** (7 Oct 13:04Z) | same | pin `269eb3c`/`6ca53d4d…` |
 | `agent-fix.sh` | **v1.0 APPLIED** (7 Oct 14:31Z) | same | pin `321c819`/`d03f3cd6…` |
@@ -164,6 +164,7 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 ## 6. Pinned-command history (superseded mat chalao)
 | Script | Status | Pin (commit / sha256) |
 |---|---|---|
+| `panel-update.sh` 0.77.0 (P-UI-1) | READY — command diya gaya (7 Oct) | `3255940d55549f3e26f73364c143ccd758ad800b` / `a21a65d8c409a73d903d5a8e7c3887fdbb2f094868783306c4b58d583411d253` |
 | `login-fix.sh` v1.0 | APPLIED 7 Oct 13:04Z | `269eb3c22ae49dd5bba76a5ce2750b594f65ff2c` / `6ca53d4d163f7dc736963f5d8cb18084c3b44c6185a8891a8b61981a8960e6cf` |
 | `agent-fix.sh` v1.0 | APPLIED 7 Oct 14:31Z | `321c81929df94e6d2b05a29b912eaa31fba4209d` / `d03f3cd69620d21e1f0c4aef9f84b85fa1e7ec115899526f69c805bcb567e9a1` |
 | sync tool v1.2 (bootstrap) | — | `4b4573f96f55927ee1fbf526037785dcdb82aea1` / `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852` |
@@ -172,8 +173,10 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 ## 7. Next immediate step
 **P-UI-1 ✅ (7 Oct, panel 0.77.0)** — theme engine + cPanel/WHM/Webmail looks + General
 Information/Statistics + search + Change Style. Detail: `docs/10-ui-parity-design.md`.
-Ship channel = **`installer/panel-update.sh` 0.82.2** (bundle 0.77.0, commit-pinned) — COMMANDS.md me
-pinned command. Panel suite: **482 pass / 0 fail** (php-wasm 8.5.10; 6 wasm-skip = sandbox limit).
+Ship channel = **`installer/panel-update.sh` 0.77.0** — pinned command COMMANDS.md §"AB CHALAO" me:
+commit `3255940d55549f3e26f73364c143ccd758ad800b`, sha256 `a21a65d8c409a73d903d5a8e7c3887fdbb2f094868783306c4b58d583411d253`.
+Panel suite: **483 pass / 0 fail** (php-wasm 8.5.10; 6 wasm-skip = sandbox limit);
+`tools/sim/update-sim.sh` **60/60** (U1–U6 + 5 naye P-UI-1 checks).
 
 Uske baad (order):
 1. **B1 FTP ship** — `installer/agent-fix.sh` v1.1 (Ftp.php + handlers + tasks + allowlist) + panel
