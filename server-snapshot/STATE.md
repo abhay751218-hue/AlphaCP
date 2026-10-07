@@ -123,6 +123,10 @@ agent-backup-20261005145330
 agent-backup-20261005165927
 agent-backup-20261006014708
 agent-backup-20261006082529
+loginfix-20261007121757
+loginfix-20261007124842
+loginfix-20261007124915
+loginfix-20261007130420
 panel-backup-20261005165927
 panel-backup-20261006014708
 panel-backup-20261006082529
@@ -399,6 +403,7 @@ POST               /license-server                               license-server.
 POST               /license-server/verify                        license-server.verify
 DELETE             /license-server/{licenseKey}                  license-server.destroy
 POST               /license/activate                             license.activate
+GET|HEAD           /login                                        login.page
 POST               /login                                        login.attempt
 POST               /logout                                       logout
 GET|HEAD           /mailing-lists                                mailing-lists.index
@@ -540,6 +545,7 @@ GET|HEAD           /{fallbackPlaceholder}
 ```
 /usr/local/alphacp/etc/check.token  
 /usr/local/alphacp/etc/database.env  keys: ACP_DB_HOST ACP_DB_PORT ACP_DB_NAME ACP_DB_USER ACP_DB_PASS ACP_SERVER_ID 
+/usr/local/alphacp/etc/entry-ports.json  
 /usr/local/alphacp/etc/install.env  keys: ACP_INSTALLER_VERSION ACP_PROFILE ACP_INSTALLED_AT ACP_OS ACP_ARCH ACP_PHP_PRIMARY ACP_PHP_VERSIONS ACP_PANEL_INSTALLED ACP_LICENSE_STATUS 
 /usr/local/alphacp/etc/mail-server-configured  
 /usr/local/alphacp/etc/my.cnf  keys: user password host port database 

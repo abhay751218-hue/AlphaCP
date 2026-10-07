@@ -1,0 +1,5 @@
+# AlphaCP entry-ports truth file refresh (login-fix v1.0). Managed file; do not edit.
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+*/5 * * * * root /usr/local/alphacp/bin/acp-entry-ports --quiet >/dev/null 2>&1
+@reboot      root sleep 20 && /usr/local/alphacp/bin/acp-entry-ports --quiet >/dev/null 2>&1

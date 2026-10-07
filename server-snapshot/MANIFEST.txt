@@ -127,10 +127,12 @@
 /usr/local/alphacp/backups/locks/acpv5xodbb.lock
 /usr/local/alphacp/backups/locks/acpvjfyq4t.lock
 /usr/local/alphacp/backups/locks/acpvlyzljk.lock
+/usr/local/alphacp/bin/acp-entry-ports
 /usr/local/alphacp/bin/alphacp
 /usr/local/alphacp/bin/alphacp-sync
 /usr/local/alphacp/etc/check.token
 /usr/local/alphacp/etc/database.env
+/usr/local/alphacp/etc/entry-ports.json
 /usr/local/alphacp/etc/install.env
 /usr/local/alphacp/etc/mail-server-configured
 /usr/local/alphacp/etc/mail/dkim/acp-deliverability-check.test.key
@@ -141,6 +143,10 @@
 /usr/local/alphacp/etc/mail/exim-options.json
 /usr/local/alphacp/etc/my.cnf
 /usr/local/alphacp/etc/panel.env
+/usr/local/alphacp/logs/login-fix-20261007121757.txt
+/usr/local/alphacp/logs/login-fix-20261007124842.txt
+/usr/local/alphacp/logs/login-fix-20261007124915.txt
+/usr/local/alphacp/logs/login-fix-20261007130420.txt
 /usr/local/alphacp/logs/verify-report-20260928-142610.txt
 /usr/local/alphacp/logs/verify-step2-20260928-161141.txt
 /usr/local/alphacp/panel/.env
@@ -598,6 +604,7 @@
 /usr/local/alphacp/panel/tests/Feature/EmailFiltersTest.php
 /usr/local/alphacp/panel/tests/Feature/EmailRoutingTest.php
 /usr/local/alphacp/panel/tests/Feature/EncryptionTest.php
+/usr/local/alphacp/panel/tests/Feature/EntryLoginTest.php
 /usr/local/alphacp/panel/tests/Feature/ErrorPagesTest.php
 /usr/local/alphacp/panel/tests/Feature/FileDirectoryRestorationTest.php
 /usr/local/alphacp/panel/tests/Feature/FileRestorationTest.php
@@ -625,6 +632,7 @@
 /usr/local/alphacp/panel/tests/Feature/RemoteMysqlTest.php
 /usr/local/alphacp/panel/tests/Feature/ScheduledBackupsTest.php
 /usr/local/alphacp/panel/tests/Feature/SecurityHeadersTest.php
+/usr/local/alphacp/panel/tests/Feature/SessionAuthTest.php
 /usr/local/alphacp/panel/tests/Feature/SoftwareCronTest.php
 /usr/local/alphacp/panel/tests/Feature/SpamFiltersTest.php
 /usr/local/alphacp/panel/tests/Feature/SshTest.php
@@ -8171,6 +8179,11 @@
 /usr/local/alphacp/releases/agent-backup-20261006082529/systemd/paneld.service
 /usr/local/alphacp/releases/agent-backup-20261006082529/tests/FakeCommandExecutor.php
 /usr/local/alphacp/releases/agent-backup-20261006082529/tests/run-tests.php
+/usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Http/Controllers/Auth/EntryLoginController.php
+/usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Http/Controllers/Auth/TwoFactorController.php
+/usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Http/Middleware/EnsureTwoFactorIsVerified.php
+/usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Providers/ResellerScopeProvider.php
+/usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/routes/web.php
 /usr/local/alphacp/releases/panel-backup-20261005165927/.env
 /usr/local/alphacp/releases/panel-backup-20261005165927/MANIFEST.json
 /usr/local/alphacp/releases/panel-backup-20261005165927/README.md
