@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# ============================================================================
+# AlphaCP — RESELLER SCOPING (WHM parity) installer  v1.0
+# Base app me reseller ko SAB accounts/users dikhte the (cPanel me sirf apne).
+# Ye installer ek additive ServiceProvider lagata hai jo:
+#   * reseller ke accounts sirf uske apne karta hai (URL-binding samet),
+#   * users list scoped karta hai (apne customers + khud),
+#   * reseller ko reseller/root role banane se rokta hai.
+# Root/CLI par zero asar. Base controllers untouched. Idempotent + backup.
+# ============================================================================
+set -euo pipefail
+PANEL="${ACP_PANEL:-/usr/local/alphacp/panel}"
+echo "=================================================="
+echo " AlphaCP Reseller Scoping installer  v1.0"
+echo "=================================================="
+
+echo "== Step 1: provider file =="
+mkdir -p "$PANEL/app/Providers"
+if [[ -f "$PANEL/app/Providers/ResellerScopeProvider.php" && ! -f "$PANEL/app/Providers/ResellerScopeProvider.php.bak" ]]; then
+  cp "$PANEL/app/Providers/ResellerScopeProvider.php" "$PANEL/app/Providers/ResellerScopeProvider.php.bak"
+fi
+cat > "$PANEL/app/Providers/ResellerScopeProvider.php" <<'ACP_FILE_EOF'
+__PROVIDER__
+ACP_FILE_EOF
+echo "  + app/Providers/ResellerScopeProvider.php"
+
+echo "== Step 2: bootstrap/providers.php me register (idempotent) =="
+ACP_PROVIDERS="$PANEL/bootstrap/providers.php" python3 - <<'PY'
+import os, sys
+path = os.environ['ACP_PROVIDERS']
+src = open(path).read()
+if 'ResellerScopeProvider' in src:
+    print('[OK] provider pehle se registered')
+    sys.exit(0)
+if 'return [' not in src:
+    print('[FAIL] bootstrap/providers.php ka format samajh nahi aaya')
+    sys.exit(1)
+src = src.replace('return [', 'return [\n    App\\Providers\\ResellerScopeProvider::class,', 1)
+open(path, 'w').write(src)
+print('[OK] ResellerScopeProvider registered')
+PY
+
+echo "== Step 3: autoload + caches =="
+cd "$PANEL"
+if command -v composer >/dev/null 2>&1; then
+  composer dump-autoload -o || true
+elif [[ -x /usr/local/bin/composer ]]; then
+  /usr/local/bin/composer dump-autoload -o || true
+else
+  php /usr/local/alphacp/tools/composer.phar dump-autoload -o 2>/dev/null || echo "[WARN] composer nahi mila — agla deploy/update dump karega"
+fi
+php artisan config:clear || true
+php artisan route:clear || true
+php artisan view:clear || true
+
+echo "=================================================="
+echo " ==> RESELLER SCOPING v1.0 APPLIED  (reseller ab sirf apne accounts dekhta hai)"
+echo "=================================================="
+alphacp-sync || true
