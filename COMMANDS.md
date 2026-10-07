@@ -94,11 +94,20 @@ Expected: `==> API TOKENS UI v1.0 INSTALLED`. Phir `https://<host>:8090/api-toke
 
 ---
 
+## Command #11 — Reseller Center (WHM-style, G8)
+```bash
+sudo alphacp-sync get 3ae9ef5cd7037731021eed138842ef612ca6a41f installer/resellers.sh /tmp/resellers-v1.0.sh 873c4fb3a0653ba5266df22d3be126e237c43d5cabfc3e84555f7bb04705c27b && sudo bash /tmp/resellers-v1.0.sh
+```
+Expected: `==> RESELLER CENTER v1.0 INSTALLED`. Phir `https://<host>:8090/resellers` — resellers promote/demote + ACL privileges.
+Sandbox test: ResellersTest **5/5 pass**.
+
+---
+
 ## 🚀 MASTER — naye/fresh VPS par SAB KUCH ek command se (portable 100%)
 Base panel (alphacp-sync v1.5) ke baad, ye EK script saare 9 features laga deti hai
 (FTP, Metrics, License, IP Blocker, WAF, App Installer, Monitoring, WHM API, API Tokens):
 ```bash
-sudo alphacp-sync get 4d11029aa7ca6515a28d6ad7dfb2a68d05b408a2 installer/install-all.sh /tmp/install-all-v1.0.sh fa1ae937b2c6c5053900caea37b7d3a3c5197cc1c80ddea89915b4cc463bb243 && sudo bash /tmp/install-all-v1.0.sh
+sudo alphacp-sync get 28ec97f2cfa810365dda5672713f442a8bc9a1c0 installer/install-all.sh /tmp/install-all-v1.0.sh 5b4f687d17c72aae2b94c0900c3991908a47b5d375063bc93072472f2bd91dea && sudo bash /tmp/install-all-v1.0.sh
 ```
 (Current server par sab already live hai — ye **future fresh servers** ke liye hai; idempotent, dobara chalana safe.)
 - sha256: `1e197e0860ca3c59e400e1b5c8504d894ec889e316007143493d5e3855557db5`
