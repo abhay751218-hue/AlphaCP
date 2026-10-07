@@ -123,11 +123,21 @@ Sandbox test: G5Test **7/7 pass** (traversal + dangerous-command blocked). **Bra
 
 ---
 
+## Command #14 — License Server (sellable signed licenses, S15)
+```bash
+sudo alphacp-sync get 0b6acfa24c54e7a149d7b4e436935d9467429439 installer/license-server.sh /tmp/license-server-v1.0.sh 8964067df7aad6ef31531a18ee82a34d0b482891d682a887da0b08795b2b631d && sudo bash /tmp/license-server-v1.0.sh
+```
+Expected: `==> LICENSE SERVER v1.0 INSTALLED`. Page: `/license-server` — keys issue/verify/revoke.
+`ACP_LICENSE_SECRET` `.env` me set karo (signing secret). Sandbox test: LicenseServerTest **5/5 pass** (tamper+revoke blocked).
+**Brand-clean — rebrand ki zaroorat NAHI.**
+
+---
+
 ## 🚀 MASTER — naye/fresh VPS par SAB KUCH ek command se (portable 100%)
 Base panel (alphacp-sync v1.5) ke baad, ye EK script saare 9 features laga deti hai
 (FTP, Metrics, License, IP Blocker, WAF, App Installer, Monitoring, WHM API, API Tokens):
 ```bash
-sudo alphacp-sync get 804a19d8d91929176f34ded59236a2d7b1eee6bc installer/install-all.sh /tmp/install-all-v1.0.sh 439ab532204b6dd0afe84662d597afa278d162418aff3c540161de4d320c4af7 && sudo bash /tmp/install-all-v1.0.sh
+sudo alphacp-sync get e7a18919b7374baabc7596a30e4fa5bea36963f6 installer/install-all.sh /tmp/install-all-v1.0.sh 16e7d3e9ec0fcc2a7d41c07d3474cbed94b514d1916d55252f7427deaca674f6 && sudo bash /tmp/install-all-v1.0.sh
 ```
 (Current server par sab already live hai — ye **future fresh servers** ke liye hai; idempotent, dobara chalana safe.)
 - sha256: `1e197e0860ca3c59e400e1b5c8504d894ec889e316007143493d5e3855557db5`
