@@ -166,7 +166,7 @@
 | 86 | Getting Started Wizard | Pehli setup guidance |S2B|🟡 2B-1|
 | 87 | Video Tutorials | Help videos | S2B | 🟡 2B |
 | 88 | Change Language | Multi-language | S2B | 🟡 2B |
-| 89 | Change Style | Theme/colors, dark mode | S2B | 🟡 2B |
+| 89 | Change Style | Theme/colors, dark mode | S2B | 🟡 Four identity-based palettes locally tested 7 Oct (12 tests); full theme/acceptance pending |
 | 90 | Change Password | Password update | S2B | ✅ |
 | 91 | Contact Information | Email + alerts |S2B|🟡 2B-2|
 | 92 | User Manager | Sub-users + roles |S2B|🟡 2B-2|
@@ -219,7 +219,7 @@
 | 124 | Feature Manager (feature lists) | S4 | ⏳ S4 |
 | 125 | Feature Showcase (client panel sections on/off) | S2B | 🟡 2B |
 | 126 | Reseller Center + ACLs + Reseller packages | S15 | ⏳ S15 |
-| 127 | Themes / Theme Manager | S2B | 🟡 2B |
+| 127 | Themes / Theme Manager | S2B | 🟡 Official customization reference audited 7 Oct; implementation pending |
 
 ### DNS Functions
 | # | WHM tool | Step | Status |
@@ -370,3 +370,5 @@
 | cPanel ke andar ka closed-source code | Available nahi hai + legal nahi. Hum har feature **khud** bana rahe hain (behaviour same). |
 | LiteSpeed/Imunify jaise paid third-party add-ons | 🔵 Chahein to baad me integrate kar sakte hain (inme alag license lagta hai) — customer ki marzi. |
 | Purane mar chuke tools (Analog/Webalizer bina support) | 🔵 Rakh sakte hain compatibility ke liye, par by default Awstats + apna stats engine chalega. |
+
+> 7 Oct entry rollout: manager TLS 2087 installer locally simulated (5 scenarios); 8090 retained. This does not promote any feature to ✅ or prove strict isolation. Live acceptance pending.

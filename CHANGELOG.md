@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **7 Oct source restoration + local palette candidate:** restored captured panel/agent into editable source (hash inventory retained). Panel 0.84.0 candidate has identity-based navy/purple/teal/blue workspace labels and mail navigation; login/ports untouched. Appearance tests 12 pass; captured agent tests 212 pass; full panel suite review remains a release blocker. Not deployed.
+- **Continuation baseline audit (7 Oct):** new `docs/MASTER-PLAN.md` with official customer/WHM/customization/webmail references, proposed separate AlphaCP palettes, and source-reconciliation-first execution order. Captured panel code is 0.75.0 while editable source is 0.3.2; no live deployment or UI completion claimed.
+- **Stale-source release guard:** panel builder refuses older or unverifiable source manifests before creating an artifact. Five Python regression tests pass; existing updater/artifacts unchanged. Detailed drift findings in `docs/research/2026-10-07-source-baseline.md`.
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
   PR refs se commit milta hai. sync-sim **60/60**. `panel-update 0.3.0`: artifact/sync-tool pehle `get` se,
@@ -193,3 +196,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 ### Added
 - Project inception: 16-step roadmap, master plan, dev server provisioned
   (AWS Lightsail `dev-srv1`, Ubuntu 24.04, 4 GB, Mumbai).
+
+### Entry rollout planning (7 Oct)
+- Owner approved cPanel-style TLS entry target (2087/2083/2096). Official login reference audited;
+  service-separation contract records shared-cookie, POST-only gate, mailbox-auth and listener truth
+  gaps. Existing EntryLoginTest: 10 pass, 42 assertions in wasm. No live ports changed.
+
+- Test runner diagnostics: retain per-file PHPUnit logs and fail closed on missing test results;
+  BackupRestorationTest isolated rerun 6 pass / 25 assertions. No live server changes.
+
+- **Manager entry stage 1 (0.1.0):** standalone installer adds TLS 2087 only, preserves 8090,
+  backs up/reverts vhost on validation/reload/health failures, checks loaded config and port collision,
+  and syncs snapshot. Five simulated rollout scenarios pass; not full service isolation or UI deployment.

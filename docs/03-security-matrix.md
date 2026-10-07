@@ -160,3 +160,13 @@ Unmapped tokens = denied (fail closed). Mapping file: `panel/config/whm_token_pe
 8. Destructive task without `confirm:true` in payload is rejected and audited.
 9. License failure never disables customer services (only panel degradation).
 10. Rate limits: login (per IP+user), API (per token), mail (per account/hour).
+
+## 2026-10-07 presentation-only continuation
+`PanelAppearance` changes labels/palettes only; no new permission or role grants.
+Active code uses `PermissionCatalog` and root/reseller/user/mail roles (levels 1–4), unlike
+historical design slugs above. `core.access` plus existing endpoint middleware remains the contract.
+No privileged operation, task, schema change or new audit event is introduced by the palette change.
+
+Manager-entry v0.1.0 is a root-invoked deployment script, not a web endpoint or panel agent task.
+It adds only a manager listener and does not grant permissions. No new runtime permission entry.
+Root-only backups + version banner/console diagnostics; panel privileged action audit contract unchanged.
