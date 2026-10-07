@@ -40,7 +40,7 @@ final class ModuleCatalog
                 'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'File Manager',        'step' => 'S6',  'status' => 'live', 'route' => 'files.index'],
-                    ['name' => 'Images',              'step' => 'S6',  'status' => 'step'],
+                    ['name' => 'Images',              'step' => 'S6',  'status' => 'live', 'route' => 'images.index'],
                     ['name' => 'Directory Privacy',   'step' => 'S6',  'status' => 'live', 'route' => 'privacy.index'],
                     ['name' => 'Disk Usage',          'step' => 'S6',  'status' => 'live', 'route' => 'disk.index'],
                     ['name' => 'FTP Accounts',        'step' => 'S6',  'status' => 'live', 'route' => 'ftp.index'],
@@ -49,7 +49,7 @@ final class ModuleCatalog
                     ['name' => 'Backup Wizard',       'step' => 'S10', 'status' => 'live', 'route' => 'backup-wizard.index'],
                     ['name' => 'Git Version Control', 'step' => 'S6',  'status' => 'live', 'route' => 'git.index'],
                     ['name' => 'File Restoration',    'step' => 'S10', 'status' => 'live', 'route' => 'file-restoration.index'],
-                    ['name' => 'Trash',               'step' => 'S6',  'status' => 'step'],
+                    ['name' => 'Trash',               'step' => 'S6',  'status' => 'live', 'route' => 'trash.index'],
                 ],
             ],
             'email' => [
@@ -142,7 +142,7 @@ final class ModuleCatalog
                     ['name' => 'MultiPHP Manager',   'step' => 'S5',  'status' => 'live', 'route' => 'php.index'],
                     ['name' => 'MultiPHP INI Editor', 'step' => 'S5', 'status' => 'live', 'route' => 'php.ini'],
                     ['name' => 'Node.js Selector',   'step' => 'S14', 'status' => 'step'],
-                    ['name' => 'Optimize Website',   'step' => 'S14', 'status' => 'step'],
+                    ['name' => 'Optimize Website',   'step' => 'S14', 'status' => 'live', 'route' => 'optimize.index'],
                     ['name' => 'PHP Composer',       'step' => 'S14', 'status' => 'step'],
                 ],
             ],

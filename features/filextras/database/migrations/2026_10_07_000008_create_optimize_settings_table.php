@@ -10,18 +10,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('webdisk_accounts', function (Blueprint $table): void {
+        Schema::create('optimize_settings', function (Blueprint $table): void {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->string('login');
-            $table->string('permissions', 4)->default('rw'); // ro | rw
+            $table->string('level', 12)->default('disabled'); // disabled|all|html
             $table->timestamps();
-            $table->unique(['user_id', 'login']);
+            $table->unique('user_id');
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('webdisk_accounts');
+        Schema::dropIfExists('optimize_settings');
     }
 };

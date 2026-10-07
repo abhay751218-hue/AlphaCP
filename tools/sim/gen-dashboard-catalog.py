@@ -22,6 +22,9 @@ FLIP = {
     "WordPress Toolkit": "apps.index",
     "API Tokens": "api-tokens.index",
     "License": "license.index",
+    "Images": "images.index",
+    "Trash": "trash.index",
+    "Optimize Website": "optimize.index",
 }
 
 changed = 0
@@ -30,15 +33,23 @@ for name, route in FLIP.items():
     text, n = pattern.subn(r"\1live', 'route' => '" + route + r"\2", text)
     changed += n
 
-# Naye tiles insert (agar maujood nahi)
-if "'Web Disk'" not in text:
+# Naye tiles insert (marker ke baad, agar maujood nahi)
+INSERTS = [
+    ("'FTP Accounts'", "['name' => 'Web Disk',          'step' => 'S6',  'status' => 'live', 'route' => 'webdisk.index'],"),
+]
+for marker, item in INSERTS:
+    name = item.split("'")[3]
+    if f"'{name}'" in text:
+        continue
     lines = text.split("\n")
     for i, line in enumerate(lines):
-        if "'FTP Accounts'" in line:
-            lines.insert(i + 1, "                    ['name' => 'Web Disk',          'step' => 'S6',  'status' => 'live', 'route' => 'webdisk.index'],")
+        if marker in line:
+            lines.insert(i + 1, "                    " + item)
             break
     text = "\n".join(lines)
     changed += 1
+
+# NOTE: SSL/TLS Status + AutoSSL base (0.83.0) me PEHLE SE live hai — alag se add NAHI karna.
 
 out = repo / "features/dashboard/ModuleCatalog.php"
 out.parent.mkdir(parents=True, exist_ok=True)

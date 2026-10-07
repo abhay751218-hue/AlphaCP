@@ -19,6 +19,7 @@ class DashboardRoutesTest extends TestCase
             'monitoring.index', 'ip-blocker.index', 'security-tools.index',
             'secextra.hotlink', 'secextra.leech', 'apps.index', 'api-tokens.index',
             'resellers.index', 'license-server.index', 'webdisk.index',
+            'images.index', 'trash.index', 'optimize.index',
         ];
 
         foreach ($routes as $name) {
