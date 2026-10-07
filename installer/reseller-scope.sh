@@ -109,6 +109,7 @@ print('[OK] ResellerScopeProvider registered')
 PY
 
 echo "== Step 3: autoload + caches =="
+export COMPOSER_ALLOW_SUPERUSER=1   # root se composer chalna normal hai (server setup)
 cd "$PANEL"
 if command -v composer >/dev/null 2>&1; then
   composer dump-autoload -o || true
