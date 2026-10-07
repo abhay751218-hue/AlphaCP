@@ -16,10 +16,13 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ### 🔴 login-fix v1.0 — LOGIN TOOTA HUA THA (5 bug: B1–B5). **Yahi chalao.**
 ```bash
-sudo alphacp-sync get a965399c25d9c6bf9638182258ffa94576b9de75 installer/login-fix.sh /tmp/login-fix-v1.0.sh adb269b8c2473f56f7a2b15af75538c5bd4e9253d4e24b93796eac9ee7de7318 && sudo bash /tmp/login-fix-v1.0.sh
+sudo alphacp-sync get 269eb3c22ae49dd5bba76a5ce2750b594f65ff2c installer/login-fix.sh /tmp/login-fix-v1.0.sh 6ca53d4d163f7dc736963f5d8cb18084c3b44c6185a8891a8b61981a8960e6cf && sudo bash /tmp/login-fix-v1.0.sh
 ```
-- commit `a965399c25d9c6bf9638182258ffa94576b9de75`, sha256 `adb269b8c2473f56f7a2b15af75538c5bd4e9253d4e24b93796eac9ee7de7318`
-  (GitHub API se verify: byte-for-byte identical, `bash -n` OK).
+- commit `269eb3c22ae49dd5bba76a5ce2750b594f65ff2c`, sha256 `6ca53d4d163f7dc736963f5d8cb18084c3b44c6185a8891a8b61981a8960e6cf`
+  (GitHub API se verify: byte-for-byte identical). **Isme koi interactive prompt NAHI hai** —
+  mobile SSH par pichla run Step 2 ke prompt par atak kar adhoora reh gaya tha, isliye fix
+  apply hi nahi hui thi. Purane pin (`a965399`/`adb269b8…`, `38d790b`/`c00b06c8…`,
+  `c5115e7`/`db40c7d3…`) superseded — dobara mat chalao.
   Superseded pins: `38d790b`/`c00b06c8…` (PANEL_USER detection artisan-owner se hoti thi —
   live par `root` mila, jabki fpm pool `alphacp` hai; Step 8 storage root:root kar deta)
   aur `c5115e7`/`db40c7d3…` (comment count). **Purane pin dobara mat chalao.**
@@ -37,10 +40,9 @@ sudo alphacp-sync get a965399c25d9c6bf9638182258ffa94576b9de75 installer/login-f
   `sudo bash /tmp/login-fix-v1.0.sh --enable-ports`  (`nginx -t` fail → apne aap rollback)
 - **Wapas jaana ho:** `sudo bash /tmp/login-fix-v1.0.sh --rollback`
   (backup: `/usr/local/alphacp/releases/loginfix-<ts>/`; kuch delete nahi hota)
-- **Prompt par kya bharein:** "Test ke liye panel username" par apna root username
-  (`login_attempts` ke hisaab se `admin`) + password → script asli login probe karegi
-  (pehle FAIL dikhega = purana bug ka proof; fix ke baad Step 10 me PASS).
-  Khaali chhodoge to probe skip — fix phir bhi poori hoti hai.
+- **Koi prompt nahi** — command chalte hi poori hogi, kuch type nahi karna. Live login probe
+  chahiye to alag se: `sudo ACP_FIX_USER=admin ACP_FIX_PASS='******' bash /tmp/login-fix-v1.0.sh`
+  (password shell history me jaayega, isliye default run me probe skip hi theek hai).
 - Test: `sudo bash tools/sim/login-entry-sim.sh` → **53/53** (P8+P9 = bug-proof).
 - Agar `alphacp-sync get` par `unknown option` aaye to server ka sync tool v1.2 se purana hai —
   batao, pehle sync-tool upgrade denge.
