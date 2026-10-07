@@ -175,6 +175,7 @@ alphacp-sync.timer alphacp-sync.service
 ## Custom artisan commands (alphacp / license / trial)
 ```
 alphacp:admin-password
+alphacp:api:token
 alphacp:backup-destination-push
 alphacp:license:renew
 alphacp:scheduled-backups
@@ -244,6 +245,7 @@ alphacp:scheduled-backups
   2026_10_05_000062_add_members_to_mailing_lists_table  [56] Ran
   2026_10_07_000001_create_ftp_accounts_table   [57] Ran
   2026_10_07_000002_create_blocked_ips_table   [58] Ran
+  2026_10_07_000003_create_api_tokens_table   [59] Ran
 ```
 
 ## Routes (web)
@@ -362,6 +364,12 @@ POST               /indexes                                      indexes.update
 GET|HEAD           /ip-blocker                                   ip-blocker.index
 POST               /ip-blocker                                   ip-blocker.store
 DELETE             /ip-blocker/{blockedIp}                       ip-blocker.destroy
+GET|HEAD           /json-api/accountsummary                      
+POST               /json-api/createacct                          
+GET|HEAD           /json-api/listaccts                           
+GET|HEAD           /json-api/removeacct                          
+GET|HEAD           /json-api/suspendacct                         
+GET|HEAD           /json-api/unsuspendacct                       
 GET|HEAD           /license                                      license.index
 POST               /license/activate                             license.activate
 POST               /login                                        login.attempt

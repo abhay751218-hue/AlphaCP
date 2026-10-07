@@ -147,6 +147,7 @@
 /usr/local/alphacp/panel/MANIFEST.json
 /usr/local/alphacp/panel/README.md
 /usr/local/alphacp/panel/app/Console/Commands/AdminPasswordCommand.php
+/usr/local/alphacp/panel/app/Console/Commands/ApiTokenCommand.php
 /usr/local/alphacp/panel/app/Console/Commands/BackupDestinationPushCommand.php
 /usr/local/alphacp/panel/app/Console/Commands/LicenseRenewCommand.php
 /usr/local/alphacp/panel/app/Console/Commands/ScheduledBackupsCommand.php
@@ -224,15 +225,18 @@
 /usr/local/alphacp/panel/app/Http/Controllers/TransferToolController.php
 /usr/local/alphacp/panel/app/Http/Controllers/UsersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/WebmailController.php
+/usr/local/alphacp/panel/app/Http/Controllers/WhmApiController.php
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneEditorController.php
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneTemplatesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneTtlController.php
+/usr/local/alphacp/panel/app/Http/Middleware/EnsureApiToken.php
 /usr/local/alphacp/panel/app/Http/Middleware/EnsurePasswordIsFresh.php
 /usr/local/alphacp/panel/app/Http/Middleware/EnsurePermission.php
 /usr/local/alphacp/panel/app/Http/Middleware/EnsureTwoFactorIsVerified.php
 /usr/local/alphacp/panel/app/Http/Middleware/PanelSecurityHeaders.php
 /usr/local/alphacp/panel/app/Models/Account.php
 /usr/local/alphacp/panel/app/Models/AccountEvent.php
+/usr/local/alphacp/panel/app/Models/ApiToken.php
 /usr/local/alphacp/panel/app/Models/Autoresponder.php
 /usr/local/alphacp/panel/app/Models/BackupConfig.php
 /usr/local/alphacp/panel/app/Models/BackupDestination.php
@@ -408,6 +412,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_05_000062_add_members_to_mailing_lists_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000001_create_ftp_accounts_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000002_create_blocked_ips_table.php
+/usr/local/alphacp/panel/database/migrations/2026_10_07_000003_create_api_tokens_table.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php
