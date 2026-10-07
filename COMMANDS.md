@@ -1,3 +1,15 @@
+> **7 Oct 2026 safety notice:** `docs/MASTER-PLAN.md` is the continuation entry point. Editable panel source 0.3.2 predates captured code 0.75.0. Historical updater commands below are not approved for the newer captured server; reconcile/test first. No new server command is issued by this audit.
+
+## Current continuation — read-only diagnostics (7 Oct)
+
+Owner screenshot confirmed panel MANIFEST 0.75.0. Owner reports working single-entry login after an earlier HTTP 500; its cause remains unverified. Keep the working login unchanged.
+
+Next: inspect actual TCP listeners (no writes, reloads or new ports):
+```bash
+sudo ss -ltn '( sport = :8090 or sport = :2087 or sport = :2083 or sport = :2096 )'
+```
+Sandbox syntax/exit test: exit 0; no matching sandbox listeners. This does not verify live server reachability, TLS, firewall or role access. Await owner output before any entry configuration change.
+
 # COMMANDS.md — server par chalane wali LIVE commands (sirf yahi chalao)
 
 > Har command ek **commit-pinned GitHub link** se script download karti hai — link kabhi badalta nahi,
@@ -59,3 +71,12 @@ Har naye feature/fix ke saath yahan ek nayi row aayegi:
 | paste.rs/G72oK (doctor v1.6) | v1.7 me cwd bug fix + security step |
 | paste.rs/pnV7U, LxbJT, vbVD9, wsPmr (doctor v1.5–v1.1) | superseded |
 | paste.rs/0r1Mi, VD0Px, vVdFC, EPW3b (installer v0.3.3–v0.3.6) | panel install ho chuka hai; v0.3.7 aayega |
+
+## Stage 1 — TLS manager entry 2087 (7 Oct; owner acceptance pending)
+Only adds listener; preserves 8090 and panel code. No firewall/UI/auth/2083/2096 changes.
+Tests: 5 stubbed rollout scenarios; Bash syntax; GitHub bytes compared with tested source.
+```bash
+sudo alphacp-sync get 05eccbd42b1a7deed719157e123d842bf19a5daa installer/manager-entry.sh /tmp/acp-manager-entry-0.1.0.sh c28c77be6cc72087c5b07fe33a2f3b69edb9ac20adc83524ab55d6d17a685e08 && sudo bash /tmp/acp-manager-entry-0.1.0.sh
+```
+Expected banner manager-entry v0.1.0 then MANAGER ENTRY READY. Validation/reload/new-port health
+failures restore old config; if rollback reload fails, stop and report output. Full separation not claimed.
