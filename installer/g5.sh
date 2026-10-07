@@ -171,7 +171,7 @@ cat > "$PANEL/resources/views/git/index.blade.php" <<'ACP_FILE_EOF'
 @extends('layouts.panel')
 
 @section('title', 'Git Version Control')
-@section('subtitle', 'cPanel-style Git — repos clone/pull/status')
+@section('subtitle', 'AlphaCP Git — repos clone/pull/status')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
@@ -239,7 +239,7 @@ cat > "$PANEL/resources/views/terminal/index.blade.php" <<'ACP_FILE_EOF'
 @extends('layouts.panel')
 
 @section('title', 'Terminal')
-@section('subtitle', 'cPanel-style Terminal (read-only whitelist — non-interactive)')
+@section('subtitle', 'AlphaCP Terminal (read-only whitelist — non-interactive)')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

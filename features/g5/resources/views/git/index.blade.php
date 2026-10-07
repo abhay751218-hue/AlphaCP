@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Git Version Control')
-@section('subtitle', 'cPanel-style Git — repos clone/pull/status')
+@section('subtitle', 'AlphaCP Git — repos clone/pull/status')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>

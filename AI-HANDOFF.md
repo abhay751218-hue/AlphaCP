@@ -26,6 +26,20 @@
 
 ---
 
+## 0.5 BRANDING RULE — rebrand DOBARA kabhi nahi chalana (binding)
+
+- **Brand = `AlphaCP`**. Admin side = **"Server Manager"**, user side = **"Account Panel"**.
+- **User-facing strings (views/subtitles/buttons) me `cPanel` ya `WHM` (company names) KABHI mat likho.**
+  Behavior/API cPanel-jaisa ho sakta hai, lekin brand-copy nahi. (Technical terms jaise `WHMCS` billing
+  software ka naam hai — wo allowed hai; sirf `\bcPanel\b` / `\bWHM\b` brand-words banned.)
+- **Guard:** `bash tools/sim/check-brand.sh` — ye fail hota hai agar koi feature-view me banned word ho.
+  Naya feature banate hi ye chalao; PASS hona zaroori hai. Isse **rebrand installer dobara chalane ki zaroorat hi nahi padti**.
+- `installer/rebrand.sh` sirf **legacy base** (purane deployed views) ke liye tha; wo ab **install-all ka internal
+  last step** hai (fresh install par automatic). **User ko ye manually KABHI nahi chalana.** Naye features brand-clean
+  hone chahiye taaki ye kabhi na lage.
+
+---
+
 ## 1. User ka project — kya ban raha hai, kyun
 
 - User apni **hosting company** ke liye **apna control panel** bana raha hai (cPanel/WHM ka paid license bachane + apna product bechne ke liye).
