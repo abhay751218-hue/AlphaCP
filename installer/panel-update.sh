@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — safe panel code updater
-# updater 0.3.0  ·  default panel bundle 0.3.2  ·  alphacp-sync v1.2
+# updater 0.3.1  ·  default panel bundle 0.76.0  ·  alphacp-sync v1.2
+#
+# 0.3.1: panel 0.76.0 — 3 colour panels (WHM dark navy / cPanel light / webmail teal),
+#        WHM left sidebar, PanelThemeTest. Source refs/panel-2b-bundle (deployed 0.75.0 se synced).
 #
 # 0.3.0: PRIVATE repo support — artifact/sync-tool pehle `alphacp-sync get` (deploy key) se,
 #        na ho to public raw.githubusercontent (fallback). sha256 dono raaston par check.
@@ -22,13 +25,13 @@ ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 PANEL_ROOT="${PANEL_ROOT:-${ACP_HOME}/panel}"
 PANEL_USER="${PANEL_USER:-alphacp}"
 PANEL_PORT="${PANEL_PORT:-8090}"
-UPDATER_VERSION="0.3.0"
-PANEL_VERSION="${ACP_PANEL_VERSION:-0.3.2}"
+UPDATER_VERSION="0.3.1"
+PANEL_VERSION="${ACP_PANEL_VERSION:-0.76.0}"
 REPO_SLUG="abhay751218-hue/AlphaCP"
-BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-6001033f0ee6e76614a390bc394e8d7e76ea4bdf}"
+BUNDLE_COMMIT="${ACP_PANEL_BUNDLE_COMMIT:-8a6be3c5c4235d9eb1c1df32ae0a9966eaf5a1a1}"
 BUNDLE_PATH="artifacts/panel-code-${PANEL_VERSION}.tar.gz"
 BUNDLE_URL="${ACP_PANEL_BUNDLE_URL:-}"   # custom URL diya ho to sirf curl
-BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-7734b0c1d661cad83c3be6b432228b0ae61b20d522dda6aa743fca5605d73aab}"
+BUNDLE_SHA256="${ACP_PANEL_BUNDLE_SHA256:-ddbfb44a840218e434831fa53d5beecdea02b5e88d676aebd4d44522f6c4a706}"
 KEEP_BACKUPS="${ACP_KEEP_BACKUPS:-3}"
 SYNC_TOOL_VERSION="1.2"
 SYNC_TOOL_COMMIT="${ACP_SYNC_TOOL_COMMIT:-4b4573f96f55927ee1fbf526037785dcdb82aea1}"

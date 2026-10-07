@@ -35,7 +35,16 @@ cp "${TMPV}/artifacts/panel-bundle-0.3.0.tar.gz" "${U}/vendor-bundle.tar.gz"; rm
 cp "${ART}" "${U}/artifact.tar.gz"
 cp "${REPO}/installer/alphacp-sync.sh" "${U}/sync-v11.sh"
 SYNC_BIN="${ACP_HOME}/bin/alphacp-sync"
-install_old_sync() { mkdir -p "${ACP_HOME}/bin"; git -C "${REPO}" show aa2091dc3ee28850266b8348aea1ea89408c64c2:installer/alphacp-sync.sh > "${SYNC_BIN}"; chmod 0755 "${SYNC_BIN}"; }
+say() { printf "%s\n" "$*"; }
+HISTORY_OK=1
+install_old_sync() {  # v1.0 sync tool — commit is clone me ho to; na ho to SKIP flag
+  mkdir -p "${ACP_HOME}/bin"
+  if ! git -C "${REPO}" show aa2091dc3ee28850266b8348aea1ea89408c64c2:installer/alphacp-sync.sh > "${SYNC_BIN}" 2>/dev/null || [[ ! -s "${SYNC_BIN}" ]]; then
+    HISTORY_OK=0; say "  SKIP: v1.0 sync commit is clone me nahi (history truncated) — old-sync content checks skip"
+  fi
+  # hamesha executable: updater ka v1.0->v1.2 upgrade path isi se chalta hai (U1)
+  chmod 0755 "${SYNC_BIN}"
+}
 install_old_sync   # server par v1.0 setup hai
 install_new_sync() { install -m 0755 "${REPO}/installer/alphacp-sync.sh" "${SYNC_BIN}"; }
 # alphacp-sync get ke liye "GitHub" = is repo ka bare clone (file://), deploy key = dummy file
@@ -94,7 +103,8 @@ echo; echo "=== U1: normal update ${BEFORE_VER} -> ${ART_VER} ==="
 chk "update se pehle HTTP 200" test "$(http_now)" = 200
 run_update U1; rc=$?
 chk "exit 0" test ${rc} -eq 0
-chk "banner 'updater 0.3.0'" grep -q "updater 0.3.0" "${U}/update-U1.out"
+UPDATER_VER="$(grep -m1 '^UPDATER_VERSION=' "${UPDATER}" | cut -d'"' -f2)"
+chk "banner 'updater ${UPDATER_VER}'" grep -q "updater ${UPDATER_VER}" "${U}/update-U1.out"
 chk "purana sync (no get) -> public URL se artifact" grep -q "artifact source: raw.githubusercontent (public)" "${U}/update-U1.out"
 chk "alphacp-sync v1.0 -> v1.2 upgrade hua" grep -q '^SYNC_VERSION="1.2"' "${SYNC_BIN}"
 chk "sync tool = GitHub wali file (sha256)" test "$(sha256sum < "${SYNC_BIN}")" = "$(sha256sum < "${REPO}/installer/alphacp-sync.sh")"
@@ -146,7 +156,11 @@ chk "admin password hash same" pw_works
 echo; echo "=== U4: backups prune (ACP_KEEP_BACKUPS=1) ==="
 sleep 1; install_old_sync
 run_update U4 ACP_KEEP_BACKUPS=1 ACP_SYNC_TOOL_SHA256=badbadbad; rc=$?
-chk "sync tool checksum galat -> warning, v1.0 hi rehta" grep -q '^SYNC_VERSION="1.0"' "${SYNC_BIN}"
+if (( HISTORY_OK )); then
+  chk "sync tool checksum galat -> warning, v1.0 hi rehta" grep -q '^SYNC_VERSION="1.0"' "${SYNC_BIN}"
+else
+  say "  SKIP: sync tool checksum check (v1.0 commit unavailable)"
+fi
 chk "sync tool fail par bhi panel update safal" grep -q "UPDATE COMPLETE" "${U}/update-U4.out"
 chk "exit 0" test ${rc} -eq 0
 chk "sirf 1 backup bacha" test "$(nbackups)" -eq 1
