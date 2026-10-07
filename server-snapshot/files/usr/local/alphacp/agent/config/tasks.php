@@ -191,6 +191,64 @@ return [
         ],
     ],
 
+    // ---------------------------------------------------------------------
+    //  S6 FTP — Pure-FTPd virtual users (root-side; web FPM proc_open disabled)
+    // ---------------------------------------------------------------------
+    'ftp.add' => [
+        'handler'     => Tasks\FtpAdd::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Create a Pure-FTPd virtual user <account>_<suffix> chrooted to <home>/ftp/<suffix>.',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account', 'login', 'password', 'home'],
+            'properties'           => [
+                'account'  => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'login'    => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{2,31}$', 'maxLength' => 32],
+                'password' => ['type' => 'string', 'minLength' => 8, 'maxLength' => 72],
+                'home'     => ['type' => 'string', 'maxLength' => 255],
+                'quota_mb' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 102400],
+            ],
+        ],
+    ],
+
+    'ftp.passwd' => [
+        'handler'     => Tasks\FtpPasswd::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Change a Pure-FTPd virtual user password (stdin only).',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account', 'login', 'password'],
+            'properties'           => [
+                'account'  => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'login'    => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{2,31}$', 'maxLength' => 32],
+                'password' => ['type' => 'string', 'minLength' => 8, 'maxLength' => 72],
+            ],
+        ],
+    ],
+
+    'ftp.del' => [
+        'handler'     => Tasks\FtpDel::class,
+        'safety'      => 'mutating',
+        'timeout'     => 20,
+        'description' => 'Remove a Pure-FTPd virtual user (chroot files are preserved).',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account', 'login'],
+            'properties'           => [
+                'account' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'login'   => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{2,31}$', 'maxLength' => 32],
+            ],
+        ],
+    ],
+
     'php.setVersion' => [
         'handler'     => Tasks\PhpSetVersion::class,
         'safety'      => 'mutating',

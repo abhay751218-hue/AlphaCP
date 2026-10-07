@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\FtpAccount;
+use App\Support\AccountProvisioner;
 use App\Support\Audit;
 use App\Support\Ftp;
 use App\Support\ModuleCatalog;
@@ -44,12 +45,12 @@ final class FtpController extends Controller
             'quota_mb' => ['nullable', 'integer', 'min:0', 'max:102400'],
         ]);
 
-        $login = strtolower($account->username) . '_' . strtolower($data['username']);
+        $login = Ftp::loginFor($account, $data['username']);
         if (FtpAccount::query()->where('username', $login)->exists()) {
             return back()->withErrors(['username' => 'FTP login already exists.'])->withInput();
         }
 
-        $home = rtrim($account->home_path, '/') . '/ftp/' . strtolower($data['username']);
+        $home = Ftp::homeFor($account, $data['username']);
 
         FtpAccount::query()->create([
             'account_id' => $account->id,
@@ -59,7 +60,15 @@ final class FtpController extends Controller
             'status'     => 'active',
         ]);
 
-        Ftp::addUser($login, $data['password'], $home);
+        // Root-side: the agent runs pure-pw (web FPM has proc_open disabled — B1).
+        AccountProvisioner::enqueue($account, 'ftp.add', [
+            'account'  => $account->username,
+            'login'    => $login,
+            'password' => $data['password'],
+            'home'     => $home,
+            'quota_mb' => (int) ($data['quota_mb'] ?? 0),
+        ]);
+        $account->recordEvent('ftp.add.queued', ['login' => $login]);
         Audit::log('ftp.add', 'info', 'account', $account->id, ['user' => $login]);
 
         return redirect()->route('ftp.index')->with('success', 'FTP account created.');
@@ -74,7 +83,12 @@ final class FtpController extends Controller
 
         $data = $request->validate(['password' => ['required', 'string', 'min:8', 'max:72']]);
 
-        Ftp::passwd($ftpAccount->username, $data['password']);
+        AccountProvisioner::enqueue($account, 'ftp.passwd', [
+            'account'  => $account->username,
+            'login'    => $ftpAccount->username,
+            'password' => $data['password'],
+        ]);
+        $account->recordEvent('ftp.passwd.queued', ['login' => $ftpAccount->username]);
         Audit::log('ftp.passwd', 'info', 'account', $account->id, ['user' => $ftpAccount->username]);
 
         return redirect()->route('ftp.index')->with('success', 'FTP password changed.');
@@ -87,7 +101,11 @@ final class FtpController extends Controller
             abort(404);
         }
 
-        Ftp::delUser($ftpAccount->username);
+        AccountProvisioner::enqueue($account, 'ftp.del', [
+            'account' => $account->username,
+            'login'   => $ftpAccount->username,
+        ]);
+        $account->recordEvent('ftp.del.queued', ['login' => $ftpAccount->username]);
         $ftpAccount->delete();
         Audit::log('ftp.del', 'info', 'account', $account->id, ['user' => $ftpAccount->username]);
 

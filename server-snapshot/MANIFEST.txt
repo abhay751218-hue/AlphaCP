@@ -20,6 +20,7 @@
 /usr/local/alphacp/agent/src/Dns.php
 /usr/local/alphacp/agent/src/ErrorPages.php
 /usr/local/alphacp/agent/src/Files.php
+/usr/local/alphacp/agent/src/Ftp.php
 /usr/local/alphacp/agent/src/Handlers.php
 /usr/local/alphacp/agent/src/Indexes.php
 /usr/local/alphacp/agent/src/JsonSchema.php
@@ -79,6 +80,10 @@
 /usr/local/alphacp/agent/src/Tasks/FilesSet.php
 /usr/local/alphacp/agent/src/Tasks/FilesUsage.php
 /usr/local/alphacp/agent/src/Tasks/ForwardSet.php
+/usr/local/alphacp/agent/src/Tasks/FtpAdd.php
+/usr/local/alphacp/agent/src/Tasks/FtpDel.php
+/usr/local/alphacp/agent/src/Tasks/FtpPasswd.php
+/usr/local/alphacp/agent/src/Tasks/FtpTask.php
 /usr/local/alphacp/agent/src/Tasks/GlobalRoutingSet.php
 /usr/local/alphacp/agent/src/Tasks/HandlersSet.php
 /usr/local/alphacp/agent/src/Tasks/HostnameASet.php
@@ -144,6 +149,7 @@
 /usr/local/alphacp/etc/my.cnf
 /usr/local/alphacp/etc/panel.env
 /usr/local/alphacp/logs/agent-fix-20261007143111.txt
+/usr/local/alphacp/logs/ftp-fix-20261007190843.txt
 /usr/local/alphacp/logs/login-fix-20261007121757.txt
 /usr/local/alphacp/logs/login-fix-20261007124842.txt
 /usr/local/alphacp/logs/login-fix-20261007124915.txt
@@ -8182,6 +8188,10 @@
 /usr/local/alphacp/releases/agent-backup-20261006082529/tests/run-tests.php
 /usr/local/alphacp/releases/agentfix-20261007143111/MysqlServer.php
 /usr/local/alphacp/releases/agentfix-20261007143111/pre_existed
+/usr/local/alphacp/releases/ftpfix-20261007190843/agent/config/tasks.php
+/usr/local/alphacp/releases/ftpfix-20261007190843/agent/src/CommandRunner.php
+/usr/local/alphacp/releases/ftpfix-20261007190843/panel/app/Http/Controllers/FtpController.php
+/usr/local/alphacp/releases/ftpfix-20261007190843/panel/app/Support/Ftp.php
 /usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Http/Controllers/Auth/EntryLoginController.php
 /usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Http/Controllers/Auth/TwoFactorController.php
 /usr/local/alphacp/releases/loginfix-20261007130420/usr/local/alphacp/panel/app/Http/Middleware/EnsureTwoFactorIsVerified.php
