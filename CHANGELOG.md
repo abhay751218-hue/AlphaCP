@@ -4,6 +4,10 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Fixed
+- **GET /login 500 (7 Oct)** — fallback `errors.404` → `layouts.panel` (DB + auth) guest context me crash karta tha.
+  `installer/error-pages.sh` v2.0: saare error pages (403/404/405/419/429/500/503) ab **standalone** — no layout/DB/auth.
+  Sandbox proof: broken-layout worst case me bhi **7/7 tests (16 assertions)**. Command #29.
 ### Added
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi

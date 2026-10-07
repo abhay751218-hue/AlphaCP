@@ -63,6 +63,14 @@ Legend: ✅ = controller+view+test hai · 🟡 = partial · ❌ = missing (banan
     GuestErrorPageTest **3/3** (unpatched run me bug reproduce).
 17. **Reseller scoping** ✅ (7 Oct): `installer/reseller-scope.sh` — WHM parity: reseller sirf apne accounts/users;
     reseller/root role create nahi. ResellerScopeTest **5/5**.
+18. **Owner license** ✅ (7 Oct): `installer/owner-license.sh` — lifetime + unlimited (caps -1), UID OWNER-605B2C6BEB30;
+    LicenseOwner+Renew **5/5 (18)**.
+19. **Entry separation** ✅ (7 Oct): `installer/entry-gate.sh` — cPanel jaisa: 8090/2087 Server Manager,
+    2083/2096 Account Panel; galat entry par reject. EntryGateTest **3/3 (25)**.
+20. **License plans v2** ✅ (7 Oct): starter=10/pro=50/business=200/owner=unlimited+lifetime;
+    `/license-server` issue + customer `/api/v1/activate`. LicensePlanFlow+LicenseServer **10/10 (53)**.
+21. **Standalone error pages** ✅ (7 Oct): `installer/error-pages.sh` — errors 403/404/405/419/429/500/503 bina
+    layout/DB/auth ke; galat URL kabhi 500 nahi. Worst-case (broken layout) me bhi **7/7 (16)**. GET /login 500 fix.
     → **AGLA: Joomla/Drupal (apps) · Updates · awstats reports · multi-server hardening.**
 
 **Har feature ka flow (project rule):** sandbox me code + test (453-suite me add) → `installer/<feature>.sh`

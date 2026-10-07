@@ -274,6 +274,19 @@ Sandbox: LicensePlanFlow + LicenseServer **10/10 (53 assertions)** + owner regre
 
 ---
 
+## Command #29 — Standalone error pages (GET /login 500 ka DECISIVE fix)
+```bash
+sudo alphacp-sync get 8a4f61334cb09bd542896818f2a004d9ce5977c8 installer/error-pages.sh /tmp/error-pages-v2.0.sh fbb0808b057f4c84d8339db7e2e464d067eac798900cd865ea528647b48c75ed && sudo bash /tmp/error-pages-v2.0.sh
+```
+Root cause: fallback → `errors/404` → `layouts.panel` (DB `Panel::server()` + `auth()->user()`) —
+guest context me crash = **500**. Ab **saare error pages (403/404/405/419/429/500/503) standalone**:
+koi layout, DB ya auth dependency NAHI — galat URL kabhi 500 nahi dega.
+Sandbox proof: layout ko jaan-boojh kar **break** karke bhi **7/7 tests (16 assertions)** pass,
+exact `GET /login` no-500 test ke saath. `view:clear` bhi chalta hai (stale compiled views hat jayengi).
+Expected: banner `==> STANDALONE ERROR PAGES v2.0 APPLIED` → `alphacp-sync`.
+
+---
+
 ## 🚀 MASTER — naye/fresh VPS par SAB KUCH ek command se (portable 100%)
 Base panel (alphacp-sync v1.5) ke baad, ye EK script saare 9 features laga deti hai
 (FTP, Metrics, License, IP Blocker, WAF, App Installer, Monitoring, WHM API, API Tokens):
