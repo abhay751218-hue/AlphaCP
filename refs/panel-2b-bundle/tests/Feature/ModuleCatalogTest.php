@@ -22,6 +22,7 @@ class ModuleCatalogTest extends TestCase
     {
         foreach (ModuleCatalog::sections() as $sectionKey => $section) {
             foreach ($section['items'] as $item) {
+                $this->assertContains($section['audience'] ?? '', ['cpanel', 'whm', 'reseller', 'both'], "{$sectionKey} audience");
                 $this->assertContains($item['status'], ['live', 'step', 'addon'], "{$sectionKey}/{$item['name']}");
                 $this->assertNotEmpty($item['name']);
                 $this->assertNotEmpty($item['step']);

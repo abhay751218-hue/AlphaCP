@@ -218,8 +218,8 @@
 | 123 | Add / Edit / Delete a Package | S4 | ⏳ S4 |
 | 124 | Feature Manager (feature lists) | S4 | ⏳ S4 |
 | 125 | Feature Showcase (client panel sections on/off) | S2B | 🟡 2B |
-| 126 | Reseller Center + ACLs + Reseller packages | S15 | ⏳ S15 |
-| 127 | Themes / Theme Manager | S2B | 🟡 2B |
+| 126 | Reseller Center + ACLs + Reseller packages | S15 | 🟡 S15 — workspace and account/package ownership scope partial; full ACLs/multi-server pending |
+| 127 | Themes / Theme Manager | S2B | 🟡 2B — AlphaCP role palettes in source; full theme manager pending |
 
 ### DNS Functions
 | # | WHM tool | Step | Status |
@@ -332,7 +332,7 @@
 | # | Naya cPanel feature | Humara plan | Status |
 |---|---|---|---|
 | 203 | Meridian task-based layout | S2B me wahi 6-area layout (Websites/Email/Files/Databases/Security/Performance) + classic grid toggle |S2B|🟡 2B-1| 204 | Guided Setup wizard | Onboarding wizard (domain→site→email) | ⏳ S2B |
-| 205 | AI Assistant (panel ke andar) | 🔵 Optional — apna AI assistant (customer ke apne API key se) | 🔵 post-v1 |
+| 205 | AI Assistant (panene API key se) | 🔵 post-v1 |
 | 206 | Node.js AI Toolkit | Node.js selector + app manager | ⏳ S14 |
 | 207 | MCP support (AI agents se cPanel control) | 🔵 AlphaCP MCP server (panel ko AI se chalane ke liye) | 🔵 post-v1 |
 | 208 | Nova AI website builder | 🔵 Optional website builder module | 🔵 post-v1 |
@@ -370,3 +370,4 @@
 | cPanel ke andar ka closed-source code | Available nahi hai + legal nahi. Hum har feature **khud** bana rahe hain (behaviour same). |
 | LiteSpeed/Imunify jaise paid third-party add-ons | 🔵 Chahein to baad me integrate kar sakte hain (inme alag license lagta hai) — customer ki marzi. |
 | Purane mar chuke tools (Analog/Webalizer bina support) | 🔵 Rakh sakte hain compatibility ke liye, par by default Awstats + apna stats engine chalega. |
+y ke liye, par by default Awstats + apna stats engine chalega. |

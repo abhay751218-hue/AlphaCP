@@ -93,6 +93,16 @@ final class TaskRunner
                   finished_at = NOW(), duration_ms = ?, updated_at = NOW() WHERE id = ?'
             )->execute([json_encode($result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), $durationMs, $taskId]);
 
+            $scrubbed = self::scrubSecrets($payload);
+            if ($scrubbed !== $payload) {
+                try {
+                    $this->db->prepare('UPDATE tasks SET payload = ?, updated_at = NOW() WHERE id = ?')
+                        ->execute([json_encode($scrubbed, JSON_UNESCAPED_SLASHES), $taskId]);
+                } catch (Throwable $e) {
+                    $log->warning('could not scrub the stored payload: ' . $e->getMessage());
+                }
+            }
+
             $log->info("done in {$durationMs}ms");
             Db::audit('task.executed', 'agent', null, 'task', $taskId, 'info', [
                 'type' => $type, 'safety' => $safety, 'duration_ms' => $durationMs, 'attempt' => (int) $task['attempts'],
@@ -124,6 +134,34 @@ final class TaskRunner
         Db::audit('security.agent.rejected', 'agent', null, 'task', $taskId, $retry ? 'warning' : 'critical', [
             'type' => $type, 'error' => $message, 'retry' => $retry,
         ]);
+    }
+
+    /**
+     * A finished task must not leave its secret in the queue.
+     *
+     * The panel sends a database-user password as part of the payload (that is
+     * how the agent receives it at all); once the task has succeeded the stored
+     * payload is rewritten with `***`, so a later DB dump or Task Queue view
+     * does not expose a live MariaDB password. Failed tasks keep the payload so
+     * a retry can still work.
+     *
+     * @param  array<string, mixed> $payload
+     * @return array<string, mixed>
+     */
+    public static function scrubSecrets(array $payload): array
+    {
+        if (isset($payload['password']) && is_string($payload['password'])
+            && $payload['password'] !== '' && $payload['password'] !== '***') {
+            $payload['password'] = '***';
+        }
+        // S10 remote pull: an inline SSH private key is just as sensitive as a
+        // password — the job history must never keep it after the task finished.
+        if (isset($payload['private_key']) && is_string($payload['private_key'])
+            && $payload['private_key'] !== '' && $payload['private_key'] !== '***') {
+            $payload['private_key'] = '***';
+        }
+
+        return $payload;
     }
 
     /** @return array<string, mixed> */

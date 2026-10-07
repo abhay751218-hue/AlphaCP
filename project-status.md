@@ -1,9 +1,18 @@
 # 📊 PROJECT STATUS — Custom Hosting Panel
-**Last updated:** 28 Sep 2026
+**Last updated:** 7 Oct 2026
+
+## Latest release/source state
+
+- Deployed baseline: redacted `server-snapshot/` at panel **v0.75.0**; that remains canonical for production.
+- Current branch prepares panel **v0.76.0** with WHM/operator, reseller and customer workspaces plus reseller account/package ownership scoping. It has **not** been deployed.
+- Full panel test matrix: **481 pass, 0 fail, 6 wasm-skip** (77 files, four isolated php-wasm workers). Browser/release acceptance remains; see `START-HERE.md`.
+- Deployment or server-side changes require the owner's explicit authorization. The branch artifact is a build output, not approval to update the server.
+
+> Historical server setup and step notes below are retained as a project record. For current facts, use the latest `server-snapshot/STATE.md`, `ROADMAP.md` and this release-state section.
 
 ---
 
-## 🖥️ Server Setup Progress
+## 🖥️ Initial Server Setup Progress (historical record; snapshot is authoritative)
 
 | # | Kaam | Status | Date |
 |---|---|---|---|
@@ -18,7 +27,7 @@
 
 > 🟢 **SERVER VERIFIED & READY** — 28 Sep 2026. Step 0 start karne ke liye tayyar!
 
-## 📐 Project Steps Progress
+## 📐 Initial Project Steps (historical; current status is in ROADMAP.md)
 
 | Step | Kaam | Status |
 |---|---|---|

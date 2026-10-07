@@ -1,67 +1,41 @@
-# AlphaCP Panel
+# AlphaCP Panel Bundle
 
-The panel app for **AlphaCP** — a cPanel-equivalent hosting control panel (our own code, own brand).
-Laravel 13 + Blade, no build step, no CDN, no Node.
+**Source status:** v0.76.0 branch build, **not deployed**. The canonical deployed baseline remains v0.75.0 in `../../server-snapshot/`.
 
-- **URL (installed):** `https://<server>:8090/` (8090 is AlphaCP's primary port, CyberPanel-style;
-  2082/2083/2086/2087 stay reserved for cPanel-compatible clients + WHM API 1).
-- **Runs as:** unprivileged system user `alphacp`, behind its own nginx vhost and PHP-FPM pool.
-- **Privileged work:** never here. The panel writes rows to `tasks`; the root agent `paneld`
-  (see `../agent/`) validates them against its allowlist and executes.
+This is the active Laravel 13.33.0 / PHP 8.3+ panel source. It provides one shared application with separate AlphaCP-branded WHM/operator, reseller and customer workspaces. Role-aware navigation and colors are presentation only; every route, query and mutation must continue to enforce permission and ownership server-side. The web process is unprivileged; privileged server work must go through allowlisted `paneld` tasks.
 
-## What works today (Step 2B)
-Login with lockout + rate limit · TOTP 2FA (replay-protected) · password policy + force-change ·
-RBAC (root / reseller / user / mail, per-permission gates) · users CRUD + admin password reset ·
-audit log viewer · live server info, services and task queue (from `paneld`) · dashboard with the
-full cPanel tool grid and parity progress · offline-first license/trial status and admin activation page.
+## v0.76.0 scope
 
-Everything else on the cPanel tool list is planned and tracked — one row per tool — in
-`../docs/09-cpanel-parity-checklist.md` (the written contract: rows are never removed, only marked done).
+- Distinct indigo WHM/operator, emerald/teal reseller, and light-blue customer palettes/navigation.
+- Reseller dashboard with scoped account/package summaries and recent clients.
+- Reseller account and package access restricted to owned records plus explicitly global packages.
+- Reseller-created accounts/packages record the reseller owner; resellers cannot set the global default package.
+- `/resellers` requires `roles.manage`.
 
-## Local development
+This is not three independent deployments or a claim of full cPanel/WHM feature parity. Complete reseller ACLs, resource caps, white-label branding, browser acceptance, and API ownership review remain. See `../../docs/modules/panel-experience.md` and `../../docs/09-cpanel-parity-checklist.md`.
 
-```bash
-cp .env.example .env          # if you don't have one yet
-php artisan key:generate
-# point DB_* at a dev database, then:
-php artisan migrate --seed
-php artisan serve --host=0.0.0.0 --port=8090
-```
+## Important code locations
 
-On a real server the database credentials live in `/usr/local/alphacp/etc/panel.env`
-(mode 0640, root:alphacp) and are read by `config/database.php` — see `../docs/07-decision-log.md`
-ADR-0011. Do not put them in `.env`.
-
-## Tests
-
-```bash
-php artisan config:clear     # required: a cached config overrides phpunit.xml
-php artisan test             # 41 tests / 543 assertions
-```
-
-The suite runs against a dedicated database (`alphacp_test`; override with `ACP_TEST_DATABASE`) and
-**refuses to run against anything else** — it uses `RefreshDatabase`, and refusing is the point
-(ADR-0012). These same tests are executed by the installer as its self-test, so the suite is
-effectively production code: keep it green.
-
-## Installing / upgrading on a server
-
-```bash
-curl -sSL https://paste.rs/VuP2l -o /tmp/alphacp-step2b.sh
-sudo bash /tmp/alphacp-step2b.sh --yes
-```
-
-Full runbook (Hindi): `../docs/runbooks/step-2b-panel.md`.
-Reset a locked-out admin: `sudo -u alphacp php artisan alphacp:admin-password admin --password='…' --reset-2fa`.
-
-## Layout
-
-| Path | What lives there |
+| Path | Responsibility |
 |---|---|
-| `app/Support/` | `Paneld` (task client), `Panel`, `Audit`, `Totp`, `PanelEnv`, `ModuleCatalog`, `PermissionCatalog`, `LicenseClient` |
-| `app/Http/Controllers/` | thin controllers (validate → Support/model → audit → redirect) |
-| `app/Http/Middleware/` | `2fa`, `password.fresh`, `perm`, `PanelSecurityHeaders` |
-| `resources/views/` | Blade templates (layouts, partials, one folder per area) |
-| `public/assets/panel.css` | the entire frontend (hand-written, CSP-safe) |
-| `deploy/` | nginx + php-fpm templates the installer writes to the server |
-| `database/migrations/` | panel tables (+ agent-side tables as a no-op-on-servers safety net) |
+| `app/Support/ModuleCatalog.php` | Workspace mode and audience-aware module navigation |
+| `resources/views/layouts/panel.blade.php` | Shared role-aware shell |
+| `public/assets/panel.css` | AlphaCP color tokens and responsive shell styling |
+| `app/Http/Controllers/DashboardController.php` | Role-scoped dashboard data |
+| `app/Http/Controllers/AccountsController.php` | Account listing, creation, ownership and mutations |
+| `app/Http/Controllers/PackagesController.php` | Package visibility, ownership and mutation checks |
+| `routes/web.php` | Authenticated routes and permission middleware |
+| `tests/Feature/` | Feature/security regression tests |
+
+## Build and verify
+
+From the repository root:
+
+```bash
+python3 tools/build-panel-2b-bundle.py
+bash tools/sim/panel-tests.sh artifacts/panel-code-0.76.0.tar.gz
+```
+
+The current code-only archive is `artifacts/panel-code-0.76.0.tar.gz` (500 files). The build tool prints its SHA-256; the repository-root `CHANGELOG.md` and `START-HERE.md` record the current checksum. The complete 77-file PHP 8.5/php-wasm test matrix passed **481 tests, 0 failures, 6 wasm-only skips** using four isolated workers. The sandbox lacks system PHP; the documented runner uses the vendor bundle whose lockfile matches this source.
+
+Do not upload, install or deploy this artifact without explicit owner authorization. `server-snapshot/` remains unchanged and is the production source of truth.

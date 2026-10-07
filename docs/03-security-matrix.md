@@ -15,12 +15,12 @@
 | `superadmin` | Platform Owner | 10 | Everything incl. license, panel updates, multi-server |
 | `admin` | Server Admin | 20 | Full server management except license/panel-core |
 | `support` | Support Staff | 30 | Read + limited actions (no terminate, no root tasks) |
-| `reseller` | Reseller | 40 | Own packages + own accounts + own branding |
+| `reseller` | Reseller | 40 | Own accounts + global/own packages in the reseller workspace; white-label branding controls are future work |
 | `user` | Hosting Customer | 90 | Own account only (client panel) |
 
 Rules:
 - Higher level number = fewer powers. A role can only manage roles with **higher** level numbers.
-- `reseller` sees only rows where `accounts.reseller_id = own reseller id`.
+- `reseller` sees only rows where `accounts.reseller_id = own reseller id`; package access is limited to global or own (`packages.owner_id`) packages. The current workspace enforces this in application queries/actions; complete reseller ACLs and white-label controls remain planned.
 - `user` sees only accounts linked via `account_users`.
 - Superadmin-only actions: license activation/transfer, panel update/rollback, server add/remove,
   API token creation for other admins, audit log purge (which is never allowed — see §6).

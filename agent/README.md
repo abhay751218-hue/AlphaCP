@@ -1,47 +1,49 @@
-# agent/ — paneld (Privileged Task Agent)
+# `agent/` — paneld privileged task agent
 
-**Language:** PHP 8.3 CLI (long-running via systemd) · **Runs as:** `root` · **Interface:** none (DB queue only)
-**Status:** ✅ **Implemented (Step 2A, v0.1.0)** — installed by `installer/step2-install.sh`, tested end-to-end
-(install → migrate → queue → result). 3 readonly tasks ship today: `agent.ping`, `system.info`, `service.status`.
+**Runtime:** PHP 8.3+ CLI · **Runs as:** `root` under systemd · **Interface:** database task queue only
+**Current source version:** `0.83.0` (`src/Bootstrap.php`), synchronized from the redacted deployed snapshot.
+**Tests:** `php agent/tests/run-tests.php` — 212 no-database tests; latest php-wasm run: **212 passed, 0 failed**.
 
-## What it is
-The ONLY component allowed to perform privileged operations (useradd, config writes, service
-reloads, quota, file ops). It polls the `tasks` table, validates payloads, executes allowlisted
-handlers, and writes `task_logs`.
+## Role in AlphaCP
 
-## Hard rules (see ../docs/03-security-matrix.md §4)
-- Allowlist in `config/tasks.php` with safety class per task
-  (`readonly` | `mutating` | `destructive`)
-- **Array-form exec only** — never shell strings, never interpolation
-- Every path validated by shared `PathGuard` (canonical + prefix allowlist)
-- JSON-schema validation of every payload BEFORE execution
-- Idempotent handlers; compensating rollback for multi-step operations
-- No network listeners; no web interface
+`paneld` is the only component allowed to perform privileged operations such as provisioning Linux accounts, writing server configuration, manipulating hosting files, and reloading services. The web panel only enqueues allowlisted tasks; `paneld` validates and runs them, then records results in `tasks` and `task_logs`.
 
-## Actual layout (as built)
+The active allowlist in `config/tasks.php` covers task families for diagnostics, accounts, websites/domains, files, PHP, mail, databases, DNS, backups/restores, security and server services. The exact task types, JSON schemas, safety classes, paths and timeouts in that file are the contract; do not infer permission from a task's presence in the registry.
+
+## Security invariants
+
+- Task type must appear in `config/tasks.php`; unknown types fail closed.
+- Every payload is validated against its JSON schema before execution.
+- Safety classes are `readonly`, `mutating` and `destructive`; destructive tasks require explicit confirmation as defined by the task schema.
+- Use array-form process execution through the command allowlist; never interpolate untrusted input into a shell string.
+- Paths are canonicalized and restricted to configured allowlisted roots by `PathGuard`.
+- Handlers should be idempotent; multi-step changes must provide rollback/compensation or fail safely.
+- The agent has no network listener or web UI.
+
+## Layout
+
 ```
 agent/
-├── bin/paneld                  # entry point (--daemon/--once/--status/--selftest/--run/--tasks)
-├── config/tasks.php            # ALLOWLIST: handler + safety + schema + timeout + services
-├── src/
-│   ├── Bootstrap.php  Db.php  Cli.php
-│   ├── Daemon.php              # poll loop (FOR UPDATE SKIP LOCKED) + heartbeat + stale recovery
-│   ├── TaskRunner.php          # validate → execute → success/retry/fail + audit
-│   ├── JsonSchema.php          # hand-rolled validator (fails closed), no deps
-│   ├── PathGuard.php           # canonicalised roots, escapes blocked
-│   ├── CommandRunner.php       # array-exec + binary allowlist + SIGTERM→SIGKILL timeouts
-│   ├── TaskLogger.php  TaskRejectedException.php
-│   └── Tasks/                  # TaskInterface, TaskContext, AgentPing, SystemInfo, ServiceStatus
-├── tests/run-tests.php         # 16 unit tests, no DB needed: php agent/tests/run-tests.php
+├── bin/paneld                  # daemon/once/status/selftest/run/tasks entry point
+├── config/tasks.php            # task allowlist, schemas, safety classes, timeout and path policy
+├── src/                        # bootstrap, DB, CLI, daemon, runner, validators and task handlers
+├── tests/run-tests.php         # 212 no-DB security/handler tests
+├── tests/FakeCommandExecutor.php
 └── systemd/paneld.service
 ```
 
-## Run (dev)
+## Local development
+
 ```bash
-php agent/bin/paneld --selftest        # env/db/registry/guards — no queue writes
-php agent/bin/paneld --status          # JSON snapshot (queue counts, task list)
-php agent/bin/paneld --once            # process one task and exit
-php agent/bin/paneld --run system.info # run a task immediately, verbose
-php agent/bin/paneld --daemon          # daemon mode (systemd runs this)
+php agent/bin/paneld --selftest
+php agent/bin/paneld --status
+php agent/bin/paneld --once
+php agent/bin/paneld --run system.info
+php agent/tests/run-tests.php
 ```
-On a live server use the CLI instead: `alphacp agent selftest` · `alphacp task run system.info`.
+
+On a live server, use the installed `alphacp` CLI. Do not run privileged tasks directly from a web request.
+
+## Snapshot alignment note
+
+The agent source here was synchronized from the redacted deployed snapshot so local panel tests use the same task registry as the v0.75.0 panel. The v0.76.0 UI work did not change agent behavior. Full agent tests passed in the sandbox with PHP 8.5 php-wasm; run them under the supported server PHP before any production agent release.

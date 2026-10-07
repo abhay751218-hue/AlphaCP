@@ -23,6 +23,7 @@ class TwoFactorController extends Controller
             return redirect()->route('login');
         }
         if (! $user->two_factor_enabled || request()->session()->get('two_factor_passed')) {
+            request()->session()->put('two_factor_passed', true);   // loop-breaker (login-fix v1.0)
             return redirect()->route('dashboard');
         }
 
@@ -41,7 +42,7 @@ class TwoFactorController extends Controller
 
         if ($step === null) {
             Audit::log('auth.2fa_failed', 'warning', 'user', $user->id);
-            return back()->withErrors(['code' => 'Code galat hai ya purana hai. Dobara try karo.']);
+            return back()->withErrors(['code' => 'The code is wrong or expired. Try again.']);
         }
 
         $user->forceFill(['two_factor_last_step' => $step])->save();

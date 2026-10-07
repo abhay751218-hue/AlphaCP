@@ -4,7 +4,7 @@
 
 > **Purpose:** This file gives ANY AI assistant (or new developer) complete context to work on
 > this project safely. Keep it updated whenever architecture, conventions, or status change.
-> **Last updated:** 2026-09-28 (Step 0 complete)
+> **Last updated:** 2026-10-07 (v0.76.0 reseller-workspace source in progress)
 
 ---
 
@@ -26,11 +26,11 @@ reseller/OEM deals).
 
 | Item | State |
 |---|---|
-| Phase | **Step 2C — license client/trial deployed** 🟡 |
-| Next task | S3 account provisioning foundation; then license-server API/paid activation |
-| Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
-| Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor + license client/trial |
-| Blocking issues | PHP/Laravel test execution still needs a PHP 8.3+ build environment; server acceptance of new S2C bundle pending |
+| Phase | **Deployed v0.75.0 baseline; v0.76.0 reseller-workspace source in progress** 🟡 |
+| Next task | Browser/responsive acceptance, full reseller ACL/API ownership audit, then await explicit owner deployment authorization |
+| Dev server | AWS Lightsail `dev-srv1`; deployed state is recorded in `server-snapshot/STATE.md` |
+| Code written so far | Active Laravel 13 panel modules + `paneld` agent + license client/trial; this branch adds role-specific WHM/reseller/customer workspaces and reseller account/package ownership scopes |
+| Blocking issues | System PHP is absent locally; php-wasm full test matrix passes (481 pass, 0 fail, 6 wasm-skip). Browser acceptance, complete reseller ACLs, paid license-server API and deployment authorization remain |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 
@@ -84,47 +84,33 @@ Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`
 ## 5. Repository Layout
 
 ```
-/                          ← workspace root
-├── README.md              ← project overview
-├── AI_CONTEXT.md          ← THIS FILE (context for AI/devs)
-├── AGENTS.md              ← rules for AI assistants
-├── ROADMAP.md             ← 16-step plan + status
-├── CHANGELOG.md
-├── project-status.md
-├── docs/                  ← all design docs (numbered)
-│   ├── 00-requirements-freeze.md
-│   ├── 01-architecture.md
-│   ├── 02-database-schema.sql
-│   ├── 03-security-matrix.md
-│   ├── 04-coding-standards.md
-│   ├── 05-license-system.md
-│   ├── 06-installer-updater.md
-│   ├── 07-decision-log.md
-│   ├── 08-module-blueprint.md
-│   └── modules/           ← per-module docs (grows with code)
-├── panel/                 ← Laravel + React application (Step 2+)
-├── agent/                 ← paneld root task worker (Step 2+)
-├── installer/             ← one-click install/update system (Step 1+)
-└── license-server/        ← central license server app (separate deploy)
+/                           ← workspace root
+├── README.md / START-HERE.md / AI_CONTEXT.md / AGENTS.md
+├── ROADMAP.md / CHANGELOG.md / project-status.md
+├── docs/                    ← design docs, parity checklist and module guides
+├── refs/panel-2b-bundle/    ← active Laravel 13 panel source (v0.76.0 branch source)
+├── artifacts/               ← reproducible code-only panel builds (not deployments)
+├── server-snapshot/         ← latest redacted deployed snapshot; panel baseline v0.75.0
+├── agent/                   ← current paneld source/allowlist synced from deployed snapshot
+├── installer/               ← install/update/sync/doctor scripts (do not run without authorization)
+├── panel/                   ← older scaffold, not the active Laravel panel
+└── license-server/          ← separate licensing API app (still pending)
 ```
 
 ---
 
-## 6. Where Things Live (once code exists)
+## 6. Where Active Code Lives (v0.76.0 source)
 
-| Concern | Location (planned) |
+| Concern | Location |
 |---|---|
-| HTTP routes (admin panel) | `panel/routes/admin.php` |
-| HTTP routes (client panel) | `panel/routes/client.php` |
-| WHM API 1 endpoints | `panel/routes/api/whm.php` |
-| Native REST API | `panel/routes/api/v1.php` |
-| Modules (business logic) | `panel/app/Modules/<Module>/` |
-| Agent task handlers | `agent/src/Tasks/<TaskName>Handler.php` |
-| Permissions registry | `panel/config/permissions.php` |
+| Active panel routes | `refs/panel-2b-bundle/routes/web.php` |
+| WHM-compatible endpoints | `refs/panel-2b-bundle/app/Http/Controllers/WhmApiController.php` (partial coverage) |
+| Role/workspace catalog | `refs/panel-2b-bundle/app/Support/ModuleCatalog.php` |
+| Permission registry/middleware | `refs/panel-2b-bundle/app/Support/PermissionCatalog.php`, `app/Http/Middleware/EnsurePermission.php` |
+| Reseller account/package scope | `refs/panel-2b-bundle/app/Http/Controllers/AccountsController.php`, `PackagesController.php` |
+| Agent task handlers | `agent/src/Tasks/` |
 | Agent task allowlist | `agent/config/tasks.php` |
-| Error codes | `docs/error-codes.md` + `panel/app/Support/ErrorCodes.php` |
-| Translations | `panel/lang/{en,hi}/...` |
-| Tests | `panel/tests/Feature/<Module>/`, `agent/tests/` |
+| Module experience guide | `docs/modules/panel-experience.md` |
 
 ---
 

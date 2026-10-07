@@ -44,6 +44,7 @@ class AuthorizationTest extends TestCase
         $this->asPanelUser($root)->get('/users')->assertOk();
         $this->asPanelUser($root)->get('/audit')->assertOk();
         $this->asPanelUser($root)->get('/system')->assertOk();
+        $this->asPanelUser($root)->get('/resellers')->assertOk();
     }
 
     public function test_customer_role_is_denied_admin_areas(): void
@@ -53,6 +54,10 @@ class AuthorizationTest extends TestCase
         $this->asPanelUser($customer)->get('/users')->assertForbidden();
         $this->asPanelUser($customer)->get('/audit')->assertForbidden();
         $this->asPanelUser($customer)->get('/system')->assertForbidden();
+        $this->asPanelUser($customer)->get('/accounts')->assertForbidden();
+        $this->asPanelUser($customer)->get('/packages')->assertForbidden();
+        $this->asPanelUser($customer)->get('/resellers')->assertForbidden();
+        $this->asPanelUser($customer)->get('/domains')->assertOk();
     }
 
     public function test_mail_only_role_can_only_reach_its_own_security_page(): void
@@ -62,6 +67,8 @@ class AuthorizationTest extends TestCase
         $this->asPanelUser($mail)->get('/security')->assertOk();
         $this->asPanelUser($mail)->get('/users')->assertForbidden();
         $this->asPanelUser($mail)->get('/system')->assertForbidden();
+        $this->asPanelUser($mail)->get('/domains')->assertForbidden();
+        $this->asPanelUser($mail)->get('/accounts')->assertForbidden();
     }
 
     public function test_root_bypasses_permission_checks_by_design(): void
