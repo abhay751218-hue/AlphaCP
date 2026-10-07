@@ -51,6 +51,10 @@ rm -f "$FAKE/agent/src/Ftp.php" "$FAKE/agent/src/Tasks/FtpTask.php" \
 
 # ---- panel: PRE-FTP (Process-wala) Support/Ftp + FtpController ----
 PANEL_REL="server-snapshot/files/usr/local/alphacp/panel"
+# test-suite bhi ARTIFACT-era se pin: purana pinned installer purani suite ke
+# against green hona chahiye (nayi suite nayi tasks maangti hai).
+git -C "$REPO" show '047d974:agent/tests/run-tests.php'          > "$FAKE/agent/tests/run-tests.php"
+git -C "$REPO" show '047d974:agent/tests/FakeCommandExecutor.php' > "$FAKE/agent/tests/FakeCommandExecutor.php"
 git -C "$REPO" show "${PRE_FTP}:${PANEL_REL}/app/Support/Ftp.php"                    > "$FAKE/panel/app/Support/Ftp.php"
 git -C "$REPO" show "${PRE_FTP}:${PANEL_REL}/app/Http/Controllers/FtpController.php" > "$FAKE/panel/app/Http/Controllers/FtpController.php"
 
@@ -100,8 +104,10 @@ t "post-fix registry me 3 ftp.* tasks"  test "$(ftp_types)" -eq 3
 t "post-fix allowlist me pure-pw hai"   test "$(grepc 'pure-pw' "$FAKE/agent/src/CommandRunner.php")" -gt 0
 t "post-fix panel me Process:: NAHI"    test "$(grepc 'Process::' "$FAKE/panel/app/Support/Ftp.php")" -eq 0
 t "post-fix panel 3 baar enqueue karta hai" test "$(grepc 'AccountProvisioner::enqueue' "$FAKE/panel/app/Http/Controllers/FtpController.php")" -eq 3
-t "post-fix embedded payload byte-for-byte match (tasks.php)" bash -c "cmp -s '$FAKE/agent/config/tasks.php' '$REPO/agent/config/tasks.php'"
-t "post-fix embedded payload byte-for-byte match (FtpController)" bash -c "cmp -s '$FAKE/panel/app/Http/Controllers/FtpController.php' '$REPO/$PANEL_REL/app/Http/Controllers/FtpController.php'"
+git -C "$REPO" show '047d974:agent/config/tasks.php' > "$FAKE/.expect-tasks.php"
+t "post-fix embedded payload byte-for-byte match (tasks.php, artifact-era)" bash -c "cmp -s '$FAKE/agent/config/tasks.php' '$FAKE/.expect-tasks.php'"
+git -C "$REPO" show "047d974:${PANEL_REL}/app/Http/Controllers/FtpController.php" > "$FAKE/.expect-fc.php"
+t "post-fix embedded payload byte-for-byte match (FtpController, artifact-era)" bash -c "cmp -s '$FAKE/panel/app/Http/Controllers/FtpController.php' '$FAKE/.expect-fc.php'"
 
 echo "== --diagnose (fix ke baad) =="
 D2="$(ACP_HOME="$FAKE" bash "$FIX" --diagnose 2>&1)"

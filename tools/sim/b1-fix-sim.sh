@@ -51,6 +51,9 @@ rm -f "$FAKE/agent/src/Git.php" "$FAKE/agent/src/Tasks/GitTask.php" "$FAKE/agent
 
 # ---- panel: PRE (Process-wale) controllers + AppInstaller ----
 PANEL_REL="server-snapshot/files/usr/local/alphacp/panel"
+# test-suite ARTIFACT-era (ec50182) se pin — post-gate usi suite par chalta hai.
+git -C "$REPO" show 'ec50182:agent/tests/run-tests.php'           > "$FAKE/agent/tests/run-tests.php"
+git -C "$REPO" show 'ec50182:agent/tests/FakeCommandExecutor.php' > "$FAKE/agent/tests/FakeCommandExecutor.php"
 for f in app/Http/Controllers/GitController.php app/Http/Controllers/TerminalController.php app/Http/Controllers/AppsController.php app/Support/AppInstaller.php; do
   git -C "$REPO" show "${PRE}:${PANEL_REL}/${f}" > "$FAKE/panel/${f}"
 done
