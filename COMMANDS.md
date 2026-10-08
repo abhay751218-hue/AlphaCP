@@ -14,8 +14,23 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-_(koi live command pending nahi — agla kaam P-UI-2 (WHM sidebar parity) build hai;
-jab uska installer banega tab nayi pin yahan aayegi.)_
+### 🔴 ui2-fix v1.0 — ABHI CHALAO (WHM left sidebar — cPanel WHM navigation parity)
+```bash
+sudo alphacp-sync get b25ad61d88c3410b9fca0a9e9891d448f037e95d installer/ui2-fix.sh /tmp/ui2-fix-v1.0.sh 900cc726295b80b2e9ad1741a339039820dc1990dbc1f92eb7e5b4fbc7cb8b1c && sudo bash /tmp/ui2-fix-v1.0.sh
+```
+- commit `b25ad61d88c3410b9fca0a9e9891d448f037e95d`, sha256 `900cc726295b80b2e9ad1741a339039820dc1990dbc1f92eb7e5b4fbc7cb8b1c`.
+- **Kya karta hai:** WHM (root/reseller) mode me cPanel WHM jaisa LEFT SIDEBAR:
+  search box (live filter), collapsible 8 category groups (Account Functions,
+  Packages, DNS Functions, Backup, Transfers, Security Center, Server Status,
+  Server Configuration — cPanel WHM sidebar se online verified), live modules apni
+  routes par + baqi "soon" chips. 4 panel files byte-for-byte (koi agent/DB change
+  nahi). Customer (cPanel) mode bilkul unchanged.
+- **Expected output:** `backup: …/releases/ui2fix-<ts>` → `ModuleCatalog lint clean` →
+  `panel files likhi (4) — WHM sidebar asserts pass` → `optimize:clear` → fpm active →
+  `panel /login HTTP 200` → sync → `FINAL VERDICT … ui2-fix v1.0 APPLY ho gaya`.
+- **Fail par:** auto-rollback. **Wapas:** `--rollback`. **Check:** root/reseller login →
+  Ctrl+Shift+R → left sidebar dikhega.
+- Test: `bash tools/sim/ui2-fix-sim.sh` → **32/32**.
 
 
 ### ✅ mail-fix v1.1 — APPLIED 8 Oct 20:15 IST, user-confirmed (suite LIVE par 222/0 GREEN; ab MAT chalao)

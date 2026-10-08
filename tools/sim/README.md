@@ -161,3 +161,14 @@ diagnose post → rollback (v1.0-era wapas) → re-apply.
 ```bash
 bash tools/sim/mail-fix-sim.sh             # -> 36/36
 ```
+
+## ui2-fix-sim.sh — `installer/ui2-fix.sh` v1.0 (WHM left sidebar parity)
+
+PRE = `4526624` (pre-P-UI-2 panel = live state: koi WHM sidebar nahi):
+reproduce (markers 0 / partial MISSING) → diagnose → apply (lint + 6 structural
+asserts + 4 files byte-for-byte era `0beb285`) → diagnose post → rollback
+(partial delete samet) → re-apply.
+
+```bash
+bash tools/sim/ui2-fix-sim.sh              # -> 32/32
+```

@@ -4,6 +4,13 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Added
+- `installer/ui2-fix.sh` **v1.0** (+ `.in`, `tools/build-ui2-fix.py`,
+  `tools/sim/ui2-fix-sim.sh` **32/32**) — P-UI-2: WHM mode me cPanel WHM jaisa left
+  sidebar (search + 8 collapsible category groups, live routes + soon chips);
+  ModuleCatalog ka single 'server' blob → proper WHM groups; layout whm-shell wrap;
+  panel.css .whm-side styles. Pin: `b25ad61d88c3410b9fca0a9e9891d448f037e95d` /
+  `900cc726295b80b2e9ad1741a339039820dc1990dbc1f92eb7e5b4fbc7cb8b1c`.
 ### Fixed
 - **Live-root suite ke 3 asli failures (`380ce91`)** — (1+2) `MailServer::installed()`
   / `BindServer::installed()` asli FS par `is_executable()` dekhte the; live par
