@@ -5724,9 +5724,13 @@ test('#145 sync — DNS/zone likhna fail ho to bhi sync ki baaki cheezein zinda 
     $h = acp_mail_harness();
     acp_mail_seed_extras($h);
     $home = $h['root'] . '/home/alicehost';
-    // zone.json likhna hi na ho: uske parent ko read-only kar do (jaise disk full/EACCES)
+    // zone.json likhna hi na ho: write fail hona chahiye. chmod-read-only trick ROOT
+    // par kaam nahi karti (root unix permissions bypass karta hai — live par suite
+    // root chalta hai), isliye zone.json ko DIRECTORY bana do: file_put_contents
+    // har uid par EISDIR se fail hota hai (fail-closed path wahi demonstrate hota hai).
     @unlink($home . '/etc/dns/zone.json');
-    @chmod($home . '/etc/dns', 0555);
+    @rmdir($home . '/etc/dns/zone.json');
+    @mkdir($home . '/etc/dns/zone.json', 0755);
 
     $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
     assert_true(($out['mailboxes'] ?? -1) >= 0, 'sync khud fail nahi hona chahiye (mailboxes key maujood)');
@@ -5735,7 +5739,7 @@ test('#145 sync — DNS/zone likhna fail ho to bhi sync ki baaki cheezein zinda 
     assert_true(!empty($deliv['failed']), 'failure ki wajah report ho');
     assert_true(($deliv['failed'][0]['domain'] ?? '') === 'alice.test', 'kaunsa domain fail hua wo bhi batao');
     assert_true(str_contains((string) ($deliv['failed'][0]['error'] ?? ''), 'zone.json'), 'error message me zone.json ho');
-    @chmod($home . '/etc/dns', 0755);
+    @rmdir($home . '/etc/dns/zone.json');
     acp_mail_cleanup($h);
 });
 
