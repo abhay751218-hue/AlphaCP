@@ -1849,15 +1849,34 @@ final class MailServer
             return 'filter parent ~/etc search permission could not be set';
         }
 
-        $after = @lstat($etcDir);
-        if (!is_array($after) || (($after['mode'] & 0170000) !== 0040000)) {
-            return 'filter parent ~/etc changed while setting permissions';
+        // Self-healing verify: kuch filesystems/PHP builds chgrp/chown ko true
+        // return kar ke no-op kar dete hain (aur stat cache bhi stale hota hai),
+        // isliye fresh stat lo aur zaroorat par agla fallback azmao:
+        //   1) chown owner=mailbox uid (+ owner search bit)   [root agents]
+        //   2) world search bit (sirf +x — read/list nahi)    [last resort]
+        $verify = function () use ($etcDir, $uid, $gid): array {
+            clearstatcache(false, $etcDir);
+            $st = @lstat($etcDir);
+            if (!is_array($st) || (($st['mode'] & 0170000) !== 0040000)) {
+                return [-1, -1, -1, false];
+            }
+            $mode  = (int) ($st['mode'] & 0777);
+            $owner = (int) ($st['uid'] ?? -1);
+            $group = (int) ($st['gid'] ?? -1);
+            $bit   = $owner === $uid ? 0100 : ($group === $gid ? 0010 : 0001);
+
+            return [$mode, $owner, $group, ($mode & $bit) !== 0];
+        };
+        [, , , $searchable] = $verify();
+        if (!$searchable && @chown($etcDir, $uid) && @chmod($etcDir, $targetMode | 0100)) {
+            [, , , $searchable] = $verify();
         }
-        $afterMode = (int) ($after['mode'] & 0777);
-        $afterOwner = (int) ($after['uid'] ?? -1);
-        $afterGroup = (int) ($after['gid'] ?? -1);
-        $effectiveBit = $afterOwner === $uid ? 0100 : ($afterGroup === $gid ? 0010 : 0001);
-        $searchable = ($afterMode & $effectiveBit) !== 0;
+        if (!$searchable) {
+            [$modeNow] = $verify();
+            if ($modeNow >= 0 && @chmod($etcDir, $modeNow | 0001)) {
+                [, , , $searchable] = $verify();
+            }
+        }
 
         return $searchable ? null : 'filter parent ~/etc remains inaccessible to the mailbox uid/gid';
     }
