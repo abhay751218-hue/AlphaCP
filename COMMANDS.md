@@ -14,7 +14,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 ui2-fix v1.0 — ABHI CHALAO (WHM left sidebar — cPanel WHM navigation parity)
+### ✅ ui2-fix v1.0 — APPLIED 8 Oct 20:36 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get b25ad61d88c3410b9fca0a9e9891d448f037e95d installer/ui2-fix.sh /tmp/ui2-fix-v1.0.sh 900cc726295b80b2e9ad1741a339039820dc1990dbc1f92eb7e5b4fbc7cb8b1c && sudo bash /tmp/ui2-fix-v1.0.sh
 ```

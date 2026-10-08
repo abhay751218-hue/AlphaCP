@@ -11,6 +11,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   ModuleCatalog ka single 'server' blob → proper WHM groups; layout whm-shell wrap;
   panel.css .whm-side styles. Pin: `b25ad61d88c3410b9fca0a9e9891d448f037e95d` /
   `900cc726295b80b2e9ad1741a339039820dc1990dbc1f92eb7e5b4fbc7cb8b1c`.
+  **8 Oct 20:36 IST LIVE APPLIED, user-confirmed** (backup `ui2fix-20261008150600`,
+  /login HTTP 200, sync complete). Known cosmetic: apply-header subtitle ui1 wala
+  dikhta hai (sirf display text; koi functional impact nahi) — agle ui2 build me theek hoga.
 ### Fixed
 - **Live-root suite ke 3 asli failures (`380ce91`)** — (1+2) `MailServer::installed()`
   / `BindServer::installed()` asli FS par `is_executable()` dekhte the; live par

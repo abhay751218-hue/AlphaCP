@@ -174,7 +174,7 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | `tests-sync.sh` v1.0 | ❌ RAN 8 Oct 19:36 IST — gate blocked (219/3, root MailServer bug), auto-rollback → SUPERSEDED by mail-fix | `3d649d8f8f225db2bd7ac46b45b302e0ad8bc3b7` / `f9b298f580d87a8ad5f662059cda1e2ecfe7baedb929d84e07911a3c56706478` |
 | `mail-fix.sh` v1.0 | ❌ RAN 8 Oct 19:57 IST — gate blocked (219/3: installed-detection ×2 + root-owned Maildir), SUPERSEDED | `3195ff6fdd69de57537c43b1b96554e3ba239aa9` / `487f0f163bfbac46e8e4dffc0dfd689e8b3c2a2359aeef8e138d42ed3e99e703` |
 | `mail-fix.sh` v1.1 | ✅ APPLIED 8 Oct 20:15 IST — live suite 222/0 GREEN (authoritative); sim 36/36 | `f2ce8cd163e9725e0d7dcac0247f9596a58c0b8f` / `c3bd9568377e7dc9cdc77c6909ea7eeff5f441d6e45c8fbd54780818de82e442` |
-| P-UI-2 WHM sidebar | 🔴 ui2-fix v1.0 SHIPPED — apply pending (sim 32/32) | `b25ad61d88c3410b9fca0a9e9891d448f037e95d` / `900cc726295b80b2e9ad1741a339039820dc1990dbc1f92eb7e5b4fbc7cb8b1c` |
+| P-UI-2 WHM sidebar | ✅ APPLIED 8 Oct 20:36 IST (sim 32/32; backup ui2fix-20261008150600) | `b25ad61d88c3410b9fca0a9e9891d448f037e95d` / `900cc726295b80b2e9ad1741a339039820dc1990dbc1f92eb7e5b4fbc7cb8b1c` |
 | `ui1-fix.sh` v1.0 | **APPLIED 8 Oct 09:01 IST** | `4cd18899a942ef7b92e1d9256938ad530bc101fb` / `0085da7ea7e0675c48b32c316ec222ea90573160c09c0a28a01ea552da5a9b0e` |
 | sync tool v1.2 (bootstrap) | — | `4b4573f96f55927ee1fbf526037785dcdb82aea1` / `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852` |
 | doctor v1.7 | — | `da3539029d1010f33fd550e7b4d016785c932103` / `e2915e0204df79ec41540d0ee68ef8a1c3cb3f261a39dc38651471a5115f5e88` |
