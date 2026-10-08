@@ -57,7 +57,13 @@
     </div>
 </header>
 
+@if (($panelMode ?? 'cpanel') === 'whm')
+<div class="whm-shell">
+    @include('partials.whm-sidebar', [])
+    <main class="wrap whm-main">
+@else
 <main class="wrap">
+@endif
     @include('partials.flash', [])
 
     <div class="page-head">
@@ -72,6 +78,9 @@
 
     @yield('content')
 </main>
+@if (($panelMode ?? 'cpanel') === 'whm')
+</div>
+@endif
 
 <footer class="wrap muted" style="padding-top:0; font-size:12.5px">
     AlphaCP {{ config('acp.version') }} — AlphaCP control panel ·
