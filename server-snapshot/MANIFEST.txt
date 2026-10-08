@@ -95,6 +95,8 @@
 /usr/local/alphacp/agent/src/Tasks/HandlersSet.php
 /usr/local/alphacp/agent/src/Tasks/HostnameASet.php
 /usr/local/alphacp/agent/src/Tasks/IndexesSet.php
+/usr/local/alphacp/agent/src/Tasks/IpBlock.php
+/usr/local/alphacp/agent/src/Tasks/IpUnblock.php
 /usr/local/alphacp/agent/src/Tasks/MailAutorespond.php
 /usr/local/alphacp/agent/src/Tasks/MailBoxtrapper.php
 /usr/local/alphacp/agent/src/Tasks/MailCalendar.php
@@ -122,6 +124,7 @@
 /usr/local/alphacp/agent/src/Tasks/PhpmyadminSet.php
 /usr/local/alphacp/agent/src/Tasks/PrivacySet.php
 /usr/local/alphacp/agent/src/Tasks/RemoteMysqlSet.php
+/usr/local/alphacp/agent/src/Tasks/SecurityTask.php
 /usr/local/alphacp/agent/src/Tasks/ServiceStatus.php
 /usr/local/alphacp/agent/src/Tasks/SshSet.php
 /usr/local/alphacp/agent/src/Tasks/SslIssue.php
@@ -133,6 +136,10 @@
 /usr/local/alphacp/agent/src/Tasks/TemplatesSet.php
 /usr/local/alphacp/agent/src/Tasks/TerminalRun.php
 /usr/local/alphacp/agent/src/Tasks/TtlSet.php
+/usr/local/alphacp/agent/src/Tasks/VirusScan.php
+/usr/local/alphacp/agent/src/Tasks/WafDisable.php
+/usr/local/alphacp/agent/src/Tasks/WafEnable.php
+/usr/local/alphacp/agent/src/Tasks/WafStatus.php
 /usr/local/alphacp/agent/src/Tasks/ZoneSet.php
 /usr/local/alphacp/agent/systemd/paneld.service
 /usr/local/alphacp/agent/tests/FakeCommandExecutor.php
@@ -163,6 +170,7 @@
 /usr/local/alphacp/logs/login-fix-20261007124842.txt
 /usr/local/alphacp/logs/login-fix-20261007124915.txt
 /usr/local/alphacp/logs/login-fix-20261007130420.txt
+/usr/local/alphacp/logs/sec-fix-20261008022538.txt
 /usr/local/alphacp/logs/verify-report-20260928-142610.txt
 /usr/local/alphacp/logs/verify-step2-20260928-161141.txt
 /usr/local/alphacp/panel/.env
@@ -9567,6 +9575,10 @@
 /usr/local/alphacp/releases/panel-failed-20260928223644/tests/Unit/LicenseClientTest.php
 /usr/local/alphacp/releases/panel-failed-20260928223644/tests/Unit/PermissionCatalogTest.php
 /usr/local/alphacp/releases/panel-failed-20260928223644/tests/Unit/TotpTest.php
+/usr/local/alphacp/releases/secfix-20261008022538/agent/config/tasks.php
+/usr/local/alphacp/releases/secfix-20261008022538/agent/src/CommandRunner.php
+/usr/local/alphacp/releases/secfix-20261008022538/panel/app/Support/Firewall.php
+/usr/local/alphacp/releases/secfix-20261008022538/panel/app/Support/Waf.php
 /usr/local/alphacp/share/suspended/index.html
 /usr/local/alphacp/var/install.state
 /usr/local/alphacp/var/panel-admin.txt
