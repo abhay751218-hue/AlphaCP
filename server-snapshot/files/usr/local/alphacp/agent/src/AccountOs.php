@@ -90,6 +90,40 @@ final class AccountOs
     }
 
     /**
+     * WebDisk (B3) ka managed snippet vhost me include karta hai — privacy/mime/
+     * handlers wala hi pattern: `IncludeOptional <home>/etc/webdisk.conf`.
+     */
+    public function ensureWebDiskInclude(string $username): void
+    {
+        $home = $this->paths->home($username);
+        $needle = 'IncludeOptional ' . $home . '/etc/webdisk.conf';
+        $files = [$this->paths->vhost($username)];
+        foreach ($this->listExtraVhosts($username) as $extra) {
+            $files[] = $extra;
+        }
+        foreach ($files as $file) {
+            if (!$this->fs->isFile($file)) {
+                continue;
+            }
+            $body = $this->fs->read($file);   // symlink-safe read (root process)
+            if (str_contains($body, 'webdisk.conf')) {
+                continue;
+            }
+            if (!str_contains($body, '</VirtualHost>')) {
+                continue;
+            }
+            $body = str_replace('</VirtualHost>', "    {$needle}\n</VirtualHost>", $body);
+            $this->fs->write($file, $body, 0644);
+        }
+    }
+
+    /** Sirf apache reload (WebDisk conf/include changes ke liye). */
+    public function reloadApache(): void
+    {
+        $this->reload($this->paths->apacheService);
+    }
+
+    /**
      * @param  list<array{type: string, key: string, comment: string}> $keys
      * @return array{keys: list<array{type: string, key: string, comment: string}>, shell: string}
      */

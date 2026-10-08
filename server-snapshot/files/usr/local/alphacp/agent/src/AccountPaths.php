@@ -119,6 +119,16 @@ final class AccountPaths
         return $this->home($username) . '/etc/privacy';
     }
 
+    public function webdiskConf(string $username): string
+    {
+        return $this->home($username) . '/etc/webdisk.conf';
+    }
+
+    public function webdiskDigest(string $username): string
+    {
+        return $this->home($username) . '/etc/webdisk.digest';
+    }
+
     public function sslDir(string $username, string $domain): string
     {
         return $this->home($username) . '/ssl/' . $this->vhostSlug($domain);

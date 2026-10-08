@@ -126,6 +126,7 @@ agent-backup-20261006082529
 agentfix-20261007143111
 b1fix-20261007194011
 b2fix-20261008023847
+b3fix-20261008030104
 ftpfix-20261007190843
 loginfix-20261007121757
 loginfix-20261007124842
@@ -516,7 +517,7 @@ GET|HEAD           /users/{user}/edit                            users.edit
 POST               /users/{user}/password                        users.password
 GET|HEAD           /webdisk                                      webdisk.index
 POST               /webdisk                                      webdisk.store
-DELETE             /webdisk/{webDiskAccount}                     webdisk.destroy
+DELETE             /webdisk/{login}                              webdisk.destroy
 GET|HEAD           /webmail                                      webmail.index
 POST               /webmail                                      webmail.store
 GET|HEAD           /zone-editor                                  zone-editor.index

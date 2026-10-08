@@ -445,6 +445,58 @@ return [
         ],
     ],
 
+    'webdisk.list' => [
+        'handler'     => Tasks\WebDiskList::class,
+        'safety'      => 'readonly',
+        'timeout'     => 15,
+        'description' => 'List provisioned Web Disk (WebDAV) accounts of an account.',
+        'paths'       => ['/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account'],
+            'properties'           => [
+                'account' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+            ],
+        ],
+    ],
+
+    'webdisk.create' => [
+        'handler'     => Tasks\WebDiskCreate::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Create/reset a Web Disk (WebDAV) login: digest credential + managed Apache DAV conf.',
+        'paths'       => ['/home', '/etc/apache2'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account', 'login', 'permissions', 'password'],
+            'properties'           => [
+                'account'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'login'       => ['type' => 'string', 'pattern' => '^[a-zA-Z0-9._-]{1,60}$', 'maxLength' => 60],
+                'permissions' => ['type' => 'string', 'enum' => ['ro', 'rw']],
+                'password'    => ['type' => 'string', 'minLength' => 8, 'maxLength' => 128],
+            ],
+        ],
+    ],
+
+    'webdisk.delete' => [
+        'handler'     => Tasks\WebDiskDelete::class,
+        'safety'      => 'mutating',
+        'timeout'     => 30,
+        'description' => 'Remove a Web Disk (WebDAV) login; last account par conf+digest clean.',
+        'paths'       => ['/home', '/etc/apache2'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account', 'login'],
+            'properties'           => [
+                'account' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'login'   => ['type' => 'string', 'pattern' => '^[a-zA-Z0-9._-]{1,60}$', 'maxLength' => 60],
+            ],
+        ],
+    ],
+
     'php.setVersion' => [
         'handler'     => Tasks\PhpSetVersion::class,
         'safety'      => 'mutating',
