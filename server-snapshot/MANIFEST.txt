@@ -189,6 +189,7 @@
 /usr/local/alphacp/logs/tests-sync-20261008140438.txt
 /usr/local/alphacp/logs/ui1-fix-20261008033039.txt
 /usr/local/alphacp/logs/ui2-fix-20261008150600.txt
+/usr/local/alphacp/logs/ui3-fix-20261008151545.txt
 /usr/local/alphacp/logs/verify-report-20260928-142610.txt
 /usr/local/alphacp/logs/verify-step2-20260928-161141.txt
 /usr/local/alphacp/panel/.env
@@ -9624,6 +9625,8 @@
 /usr/local/alphacp/releases/ui2fix-20261008150600/panel/app/Support/ModuleCatalog.php
 /usr/local/alphacp/releases/ui2fix-20261008150600/panel/public/assets/panel.css
 /usr/local/alphacp/releases/ui2fix-20261008150600/panel/resources/views/layouts/panel.blade.php
+/usr/local/alphacp/releases/ui3fix-20261008151545/panel/public/assets/panel.css
+/usr/local/alphacp/releases/ui3fix-20261008151545/panel/resources/views/partials/whm-sidebar.blade.php
 /usr/local/alphacp/share/suspended/index.html
 /usr/local/alphacp/var/install.state
 /usr/local/alphacp/var/panel-admin.txt
