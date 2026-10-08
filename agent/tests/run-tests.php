@@ -6411,4 +6411,3 @@ function acp_create_payload(): array
         'php_version' => '8.4',
     ];
 }
-
