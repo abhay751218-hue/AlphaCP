@@ -75,7 +75,7 @@ Persona → panel: **Owner/Admin = WHM-like (2086/87)** · **Reseller = scoped W
 | B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | ✅ FTP **live**; ✅ Git/Terminal/Apps **live**; ✅ Firewall/Waf **live** (`935a3e3`) — **B1 POORA khatam** |
 | B2 | Metrics `open_basedir` se blocked | ✅ **LIVE APPLIED 8 Oct 08:09 IST** (`2e9bc49`) — Metrics ab root-agent se |
 | B3 | WebDisk sirf DB rows (WebDAV provisioning nahi) | ✅ **LIVE APPLIED 8 Oct 08:32 IST** (`830f68c`) — WebDAV provisioning + mods enabled |
-| B4 | 6 panel test-debt failures | 🔜 Phase 4 (suite 100% green) |
+| B4 | 6 panel test-debt failures | ✅ **repo-fixed** `58fb3cb` (static-aligned); suite-run CI/dev env me (pdo_sqlite + dev vendor) |
 | B5 | 6 wasm-skip tests (server par record karna) | 🔜 |
 **Ship channel:** chhote agent-only fix = `installer/agent-fix.sh` pattern; **agent+panel dono** =
 `installer/ftp-fix.sh` pattern (multi-token builder `tools/build-<x>-fix.py` + `tools/sim/<x>-fix-sim.sh`).
@@ -186,7 +186,7 @@ Apply ke baad user panel → **Metrics** kholo (pehle khali/error — open_based
 1. **B1 baaki:** Git · Terminal · Apps (same `Process` → agent-task pattern; `git.*`, `terminal.run`,
    `apps.install`) — FTP wala hi blueprint.
 2. **B2 Metrics** → ✅ shipped (`b2-fix v1.0`, COMMANDS.md 🔴 section) — apply confirm hote hi B3.
-3. **B4 test-debt** (6 failures) + **B5 wasm-skips** record.
+3. **B4 test-debt** ✅ repo-fixed `58fb3cb` + **B5 wasm-skips** ✅ record (FEATURE-AUDIT env-skip matrix).
 4. **P-UI-1…6 cPanel parity:** alag WHM / cPanel / Webmail experiences, AlphaCP branding,
    cPanel-jaise sections (Files/Databases/Domains/Email/Metrics/Security/Software/Advanced/
    Preferences + General Information/Statistics + top search) — §4 ke design tokens ke saath.

@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **B4 test-debt fixed (repo, `58fb3cb`):** 6 panel-test failures → tests trademark-free UI
+  strings se align (`Server Manager Dashboard`, `Account Panel`, `customer account panel`,
+  `Transfer or Restore a Hosting Account`, `Import a hosting account archive/from an archive`);
+  WHM dashboard me cPanel-style **Quick links** card; MysqlUsersTest create-order fix.
+  B5: env-skip matrix documented (wasm sandbox vs live pdo_sqlite/posix).
 - `installer/b3-fix.sh` **v1.0** (+ `.in`, `tools/build-b3-fix.py`, `tools/sim/b3-fix-sim.sh`) —
   B3 deploy: agent 7 + panel 3 files byte-for-byte; gates b2-fix jaise + apache WebDAV
   modules (dav/dav_fs/auth_digest, warn-only) + panel asserts (Paneld::run, password field,
