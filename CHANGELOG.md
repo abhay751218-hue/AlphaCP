@@ -25,6 +25,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 - `installer/webmail-fix.sh` **v1.5** — panel `/internal/` loc deterministic canonical
   replace (stale v1.1 block guard-skip ho kar 404 deta raha); strict assert + sim
   stale-loc self-heal: 50/50.
+- `installer/webmail-fix.sh` **v1.6** — SSO secret FPM-user aware: panel pool
+  user=alphacp vs webmail www-data → shared group `acpsso` + live read-gate
+  (su test -r, fail→rollback); sim pool-conf detect asserts: 52/52.
 ### Added
 - `installer/ui3-fix.sh` **v1.0** (+ `.in`, `tools/build-ui3-fix.py`,
   `tools/sim/ui3-fix-sim.sh` **26/26**) — P-UI-3: WHM sidebar Favorites (star
