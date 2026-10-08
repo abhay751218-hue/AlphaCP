@@ -14,7 +14,7 @@ use Illuminate\View\View;
 /**
  * cPanel Metrics — Visitors / Errors / Bandwidth / top pages.
  *
- * B2: pehle `Support\Metrics::parse()` web-FPM se `/var/log/apache2/…` padhta
+ * B2: pehle panel ka log-parser web-FPM se `/var/log/apache2/…` padhta
  * tha jo open_basedir me nahi hai → page live par khali/error. Ab log ROOT AGENT
  * padhta hai (`metrics.access`) aur panel synchronous result dikhata hai.
  */
