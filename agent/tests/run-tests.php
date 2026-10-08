@@ -4714,6 +4714,7 @@ test('dns.bind status — installed aur checkconf ki sachchi report', function (
     foreach (['ACP_BIND_CHECKCONF', 'ACP_BIND_CHECKZONE'] as $k) {
         putenv($k);
     }
+    $h['cmd']->binsAbsent = true;   // live par bind9 asli me laga ho to bhi hermetic
     $none = (new BindSetup())->handle(['action' => 'status'], $h['ctx']);
     assert_true($none['installed'] === false, 'bina bind9 ke installed false hona chahiye');
     assert_true(isset($none['error']));
@@ -5125,6 +5126,7 @@ test('mail.server status/list — sachchi report (installed na ho to bhi)', func
     foreach (['ACP_MAIL_EXIM', 'ACP_MAIL_DOVECOT', 'ACP_MAIL_DOVEADM'] as $k) {
         putenv($k);
     }
+    $h['cmd']->binsAbsent = true;   // live par exim/dovecot asli me lage hain
     $none = (new MailServerSetup())->handle(['action' => 'status'], $h['ctx']);
     assert_true($none['installed'] === false, 'bina binaries ke installed false hona chahiye');
     assert_true(isset($none['error']));

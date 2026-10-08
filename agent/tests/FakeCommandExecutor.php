@@ -51,6 +51,11 @@ final class FakeCommandExecutor implements CommandExecutor
 
     public ?string $failWhenContains = null;
 
+    /** Saare binaries absent simulate karo — installed() probes ko 127 milta hai
+     *  (live jaisa host jahan exim/dovecot/bind9 asli me lage hon, wahan bhi
+     *  "installed nahi" branch hermetically test karne ke liye). */
+    public bool $binsAbsent = false;
+
     // ---- S6 FTP (ftp.add/ftp.passwd/ftp.del) ----
     /** @var array<string, array{home: string, uid: int, gid: int}> pure-ftpd virtual users */
     public array $purePwUsers = [];
@@ -210,6 +215,9 @@ final class FakeCommandExecutor implements CommandExecutor
         }
         $this->calls[] = $argv;
         $line = implode(' ', $argv);
+        if ($this->binsAbsent) {
+            return new CommandResult($argv, 127, '', 'fake: binary not installed', 1);
+        }
         if ($this->failWhenContains !== null && str_contains($line, $this->failWhenContains)) {
             return new CommandResult($argv, 1, '', 'injected failure: ' . $this->failWhenContains, 1);
         }

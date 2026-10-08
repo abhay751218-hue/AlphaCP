@@ -635,9 +635,31 @@ final class MailServer
 
     public function installed(): bool
     {
-        return self::have('ACP_MAIL_EXIM', self::EXIM_PATHS)
-            && self::have('ACP_MAIL_DOVECOT', self::DOVECOT_PATHS)
-            && self::have('ACP_MAIL_DOVEADM', self::DOVEADM_PATHS);
+        if (trim((string) (getenv('ACP_MAIL_EXIM') ?: '')) !== ''
+            || trim((string) (getenv('ACP_MAIL_DOVECOT') ?: '')) !== ''
+            || trim((string) (getenv('ACP_MAIL_DOVEADM') ?: '')) !== '') {
+            return true; // explicit env override = authoritative (sim/tests)
+        }
+
+        // Warna INJECTED executor probe kare: FakeCommandExecutor = hermetic
+        // (binsAbsent flag), real CommandRunner = asli sach. is_executable() se
+        // asli FS dekhna galat tha: live par exim/dovecot HAMARE installer se
+        // lage hain, isliye "installed nahi" branch wahan kabhi sach nahi hota.
+        foreach ([
+            [self::bin('ACP_MAIL_EXIM', self::EXIM, self::EXIM_PATHS), '-bV'],
+            [self::bin('ACP_MAIL_DOVECOT', self::DOVECOT, self::DOVECOT_PATHS), '--version'],
+            [self::bin('ACP_MAIL_DOVEADM', self::DOVEADM, self::DOVEADM_PATHS), '--version'],
+        ] as $probe) {
+            try {
+                if (!$this->cmd->run($probe, self::CMD_TIMEOUT)->ok()) {
+                    return false;
+                }
+            } catch (Throwable $e) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     // --------------------------------------------------------------- setup ----
@@ -1505,9 +1527,13 @@ final class MailServer
             $maildir = $parts[1];
             $uid = (int) $parts[2];
             $gid = (int) $parts[3];
-            if ($maildir === '' || $uid <= 0 || $gid <= 0 || str_contains($maildir, '..')) {
+            if ($maildir === '' || str_contains($maildir, '..')) {
                 continue;
             }
+            // uid/gid 0 = root-owned mailbox (live wala asli case): chown skip
+            // (kisiko dena hai ye policy hai), lekin world-writable Maildir ka
+            // mode tighten hona SECURITY ke liye zaroori hai — isliye alag flag.
+            $canChown = $uid > 0 && $gid > 0;
             // mailbox + uske parents (niche se upar) + Maildir ke leaves
             $dirs = [
                 $maildir . '/cur',
@@ -1523,7 +1549,7 @@ final class MailServer
                 }
                 $owner = @fileowner($dir);
                 $group = @filegroup($dir);
-                if ($owner !== $uid || $group !== $gid) {
+                if ($canChown && ($owner !== $uid || $group !== $gid)) {
                     if (@chown($dir, $uid)) {
                         @chgrp($dir, $gid);
                         $fixed++;
