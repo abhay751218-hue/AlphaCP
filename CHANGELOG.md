@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/webmail-fix.sh` **v1.0** (+ `.in`, `tools/build-webmail-fix.py`,
+  `tools/sim/webmail-fix-sim.sh` **44/44**, plugin source `webmail/roundcube/`) —
+  P-UI-4: Roundcube Webmail port 2096 (cPanel-style) + one-time-token SSO
+  (panel → internal verify → Dovecot master-user), /internal loopback-only,
+  migration 0003_webmail_sso.sql. Pin `0ff1da8a…` / `068895dd…`.
+  **OWNER-CTRL slice queued:** ports/panels ka control sirf company-owner
+  (superadmin) ke paas — user-approved requirement, agla build.
+### Added
 - `installer/ui3-fix.sh` **v1.0** (+ `.in`, `tools/build-ui3-fix.py`,
   `tools/sim/ui3-fix-sim.sh` **26/26**) — P-UI-3: WHM sidebar Favorites (star
   toggle + Favorites group, localStorage `acp_whm_favs`; cPanel ka server-side

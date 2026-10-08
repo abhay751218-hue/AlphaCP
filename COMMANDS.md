@@ -14,6 +14,23 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### 🔴 webmail-fix v1.0 — ABHI CHALAO (Roundcube Webmail port 2096 + SSO, cPanel-style)
+```bash
+sudo alphacp-sync get 0ff1da8afe17ba420ad0a86a96ddec05fb14e6a6 installer/webmail-fix.sh /tmp/webmail-fix-v1.0.sh 068895dd6e28336ece05644d4bb8a92cbd2a2e596b55454917fcda99219e7e82 && sudo bash /tmp/webmail-fix-v1.0.sh
+```
+- **Kya karta hai:** Roundcube install (apt) → port **2096 ssl** par alag vhost
+  (cPanel-style webmail port) → panel se "Open Webmail" par ONE-TIME token SSO
+  (Dovecot master-user se seamless login) → /internal endpoint loopback-only →
+  DB migration webmail_sso_tokens → dovecot master passdb → 9 payloads + suite gate.
+- **⚠️ AWS console me port 2096/tcp kholna hoga** (server se nahi khulta; ufw khud kholega).
+- **Expected:** `roundcube + roundcube-sqlite3 installed` → `secret + master pw files ready` →
+  `9 payloads likhi + lint clean` → `structural asserts pass` → `nginx -t + reload` →
+  `roundcube 2096 HTTP 200` → `internal endpoint secret-gated (HTTP 403/422)` →
+  `suite: passed: 223 failed: 0` → `FINAL VERDICT … APPLY ho gaya`.
+- **Fail par:** auto-rollback. **Wapas:** `--rollback`. **Check:** panel → Email → Webmail →
+  "Open Webmail" → Roundcube me bina password ke logged-in.
+- Test: `bash tools/sim/webmail-fix-sim.sh` → **44/44**.
+
 ### ✅ ui3-fix v1.0 — APPLIED 8 Oct 20:46 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 53d09f8d1565ba75fa2927e1c6c45ed72cc2495c installer/ui3-fix.sh /tmp/ui3-fix-v1.0.sh 9e3b41ad723b636522de9ea8413bcaba71b688cf5939120c1c65a6fd24342557 && sudo bash /tmp/ui3-fix-v1.0.sh

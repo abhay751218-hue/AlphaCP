@@ -182,3 +182,15 @@ era `8ee6f85`) → diagnose post → rollback → re-apply.
 ```bash
 bash tools/sim/ui3-fix-sim.sh              # -> 26/26
 ```
+
+## webmail-fix-sim.sh — `installer/webmail-fix.sh` v1.0 (Roundcube 2096 + SSO)
+
+ACP_SIM=1 (apt/systemctl/nginx -t/curl/mysql skip; system paths env se fake).
+PRE = `2dcfd2f`: reproduce (plugin/vhost/secrets/master-passdb = 0) → diagnose →
+apply (9 payloads byte-for-byte era `fdaf253` + suite 223/0 + vhost/config/
+dovecot/internal-lock asserts) → diagnose post → rollback (sys files samet) →
+re-apply.
+
+```bash
+bash tools/sim/webmail-fix-sim.sh          # -> 44/44
+```
