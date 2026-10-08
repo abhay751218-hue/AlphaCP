@@ -1,0 +1,191 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  AlphaCP — UI1 FIX  v1.0  (cPanel Paper-Lantern style theme + customer dash)
+# -----------------------------------------------------------------------------
+#  P-UI-1: panel ka visual experience cPanel Paper-Lantern jaisa (paper-white
+#  cards, navy top bar, orange accent — AlphaCP branding ke saath), customer
+#  dashboard par cPanel-jaisa layout: tool-grid + right sidebar (General
+#  Information / Statistics) + top search jo tiles filter karti hai.
+#  Ye script 4 panel files byte-for-byte deploy karti hai (koi agent change
+#  nahi, koi DB change nahi):
+#    PANEL : public/assets/panel.css,
+#            resources/views/layouts/panel.blade.php,
+#            resources/views/dashboard.blade.php,
+#            resources/views/partials/dash-sections.blade.php
+#
+#  Safety: backup → 4 structural asserts (theme token / search box / dash-cols /
+#  sections partial) → optimize:clear + php-fpm restart (opcache) → HTTP smoke →
+#  alphacp-sync. Kahin fail = auto-rollback.
+#
+#  Usage: sudo bash ui1-fix-v1.0.sh | --diagnose | --rollback | --help
+# =============================================================================
+set -Eeuo pipefail
+
+VERSION="1.0"
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+PANEL="${ACP_HOME}/panel"
+STAMP="$(date -u +%Y%m%d%H%M%S)"
+BACKUP="${ACP_HOME}/releases/ui1fix-${STAMP}"
+LOG_FILE="${ACP_HOME}/logs/ui1-fix-${STAMP}.txt"
+
+C_R=$'\033[0;31m'; C_G=$'\033[0;32m'; C_Y=$'\033[0;33m'; C_B=$'\033[0;36m'; C_D=$'\033[0;2m'; C_0=$'\033[0m'
+say(){ printf '%s\n' "$*" | tee -a "${LOG_FILE:-/dev/null}"; }
+hdr(){ say ""; say "${C_B}== $* ==${C_0}"; }
+ok(){ say "  ${C_G}✔${C_0} $*"; }
+warn(){ say "  ${C_Y}⚠${C_0} $*"; }
+info(){ say "  ${C_D}·${C_0} $*"; }
+die(){ say "  ${C_R}✖ $*${C_0}"; exit 1; }
+have_systemd(){ [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; }
+cnt(){ grep -c "$@" 2>/dev/null || true; }
+
+unset PHP 2>/dev/null || true
+
+detect_php(){
+  local p
+  if [[ -f /etc/systemd/system/paneld.service ]]; then
+    p="$(sed -nE 's#^ExecStart=([^ ]+).*#\1#p' /etc/systemd/system/paneld.service 2>/dev/null | head -1)"
+    [[ -n "$p" && -x "$p" ]] && { printf '%s' "$p"; return; }
+  fi
+  for c in php8.4 php8.3 php8.2 php; do command -v "$c" >/dev/null 2>&1 && { command -v "$c"; return; }; done
+  printf ''
+}
+PHP_BIN="$(detect_php)"
+
+detect_panel_user(){
+  local u
+  u="$(grep -hoE '^[[:space:]]*user[[:space:]]*=[[:space:]]*[a-z_][a-z0-9_-]*' /etc/php/*/fpm/pool.d/*.conf 2>/dev/null | head -1 | awk -F'=' '{gsub(/[ \t]/,"",$2); print $2}')"
+  [[ -n "$u" ]] && { printf '%s' "$u"; return; }
+  printf 'alphacp'
+}
+PANEL_USER="$(detect_panel_user)"
+
+detect_fpm_unit(){
+  local v u
+  v="$([[ -n "$PHP_BIN" ]] && "$PHP_BIN" -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || true)"
+  for u in "php${v}-fpm" "php${v%%.*}-fpm" php-fpm; do
+    [[ -n "$u" ]] || continue
+    if have_systemd && { [[ -f "/etc/systemd/system/${u}.service" ]] || [[ -f "/lib/systemd/system/${u}.service" ]]; }; then
+      printf '%s' "$u"; return
+    fi
+  done
+  printf ''
+}
+FPM_UNIT="$(detect_fpm_unit)"
+
+PANEL_FILES=(public/assets/panel.css resources/views/layouts/panel.blade.php resources/views/dashboard.blade.php resources/views/partials/dash-sections.blade.php)
+
+rollback(){
+  hdr "ROLLBACK — ui1-fix v${VERSION}"
+  local latest rel
+  latest="$(ls -1dt "${ACP_HOME}"/releases/ui1fix-* 2>/dev/null | head -1 || true)"
+  [[ -n "$latest" ]] || die "koi ui1fix backup nahi mila"
+  info "backup: $latest"
+  for rel in "${PANEL_FILES[@]}"; do
+    if [[ -f "${latest}/panel/${rel}" ]]; then cp -p "${latest}/panel/${rel}" "${PANEL}/${rel}"; else rm -f "${PANEL}/${rel}"; fi
+  done
+  [[ -n "$FPM_UNIT" ]] && have_systemd && { systemctl restart "$FPM_UNIT" >/dev/null 2>&1 || true; }
+  ok "rollback complete (purani files wapas)"
+}
+
+diagnose(){
+  hdr "DIAGNOSE (read-only) — ui1-fix v${VERSION}"
+  info "ACP_HOME=${ACP_HOME} php=${PHP_BIN:-none} panel_user=${PANEL_USER} fpm=${FPM_UNIT:-none}"
+  info "css paper theme            : $(cnt -- '--navy: #1c2733' "${PANEL}/public/assets/panel.css")  (1=theek)"
+  info "layout search box          : $(cnt 'id="acp-search"' "${PANEL}/resources/views/layouts/panel.blade.php")  (1=theek)"
+  info "dashboard dash-cols        : $(cnt 'dash-cols' "${PANEL}/resources/views/dashboard.blade.php")  (>=1=theek)"
+  info "sections partial PRESENT   : $( [[ -f "${PANEL}/resources/views/partials/dash-sections.blade.php" ]] && echo PRESENT || echo MISSING )"
+  say ""; ok "diagnose complete (kuch badla nahi)"
+}
+
+apply(){
+  hdr "APPLY — ui1-fix v${VERSION} (Paper-Lantern theme + customer dashboard parity)"
+  mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+  [[ -d "$PANEL" ]] || die "panel dir nahi: ${PANEL}"
+
+  # ---- backup ----
+  mkdir -p "${BACKUP}/panel"
+  local rel
+  for rel in "${PANEL_FILES[@]}"; do
+    mkdir -p "${BACKUP}/panel/$(dirname "$rel")"
+    [[ -f "${PANEL}/${rel}" ]] && cp -p "${PANEL}/${rel}" "${BACKUP}/panel/${rel}" || true
+  done
+  ok "backup: ${BACKUP}"
+
+  # ---- panel files ----
+  hdr "panel files likhna"
+  cat > "${PANEL}/public/assets/panel.css" <<'CSSEOF'
+@@PANEL_CSS@@
+CSSEOF
+  cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PHPEOF'
+@@LAYOUT_BLADE@@
+PHPEOF
+  cat > "${PANEL}/resources/views/dashboard.blade.php" <<'PHPEOF'
+@@DASHBOARD_BLADE@@
+PHPEOF
+  mkdir -p "${PANEL}/resources/views/partials"
+  cat > "${PANEL}/resources/views/partials/dash-sections.blade.php" <<'PHPEOF'
+@@DASHSECTIONS_BLADE@@
+PHPEOF
+
+  [[ "$(cnt -- '--navy: #1c2733' "${PANEL}/public/assets/panel.css")" -ge 1 ]] \
+    || { rollback; die "css me paper-theme navy token nahi"; }
+  [[ "$(cnt 'id="acp-search"' "${PANEL}/resources/views/layouts/panel.blade.php")" -ge 1 ]] \
+    || { rollback; die "layout me search box nahi"; }
+  [[ "$(cnt 'dash-cols' "${PANEL}/resources/views/dashboard.blade.php")" -ge 1 ]] \
+    || { rollback; die "dashboard me dash-cols layout nahi"; }
+  [[ "$(cnt 'General Information' "${PANEL}/resources/views/dashboard.blade.php")" -ge 1 ]] \
+    || { rollback; die "dashboard me General Information sidebar nahi"; }
+  [[ -f "${PANEL}/resources/views/partials/dash-sections.blade.php" ]] \
+    || { rollback; die "sections partial nahi likhi gayi"; }
+  ok "panel files likhi (4) — theme + layout asserts pass"
+
+  # ---- caches + fpm restart (opcache) ----
+  hdr "panel cache + php-fpm restart"
+  if command -v runuser >/dev/null 2>&1 && [[ -f "${PANEL}/artisan" ]]; then
+    runuser -u "$PANEL_USER" -- env ACP_HOME="$ACP_HOME" "$PHP_BIN" "${PANEL}/artisan" optimize:clear >>"$LOG_FILE" 2>&1 \
+      && ok "artisan optimize:clear" || warn "optimize:clear fail (ignore — fpm restart opcache clear karega)"
+  else
+    warn "runuser/artisan nahi — optimize:clear skip"
+  fi
+  if have_systemd && [[ -n "$FPM_UNIT" ]]; then
+    systemctl restart "$FPM_UNIT" >/dev/null 2>&1 || warn "fpm restart fail"
+    sleep 1
+    systemctl is-active --quiet "$FPM_UNIT" || { rollback; die "php-fpm active nahi restart ke baad"; }
+    ok "${FPM_UNIT} active (opcache clear)"
+  else
+    warn "php-fpm unit nahi mila — restart skip (manual: systemctl restart php8.4-fpm)"
+  fi
+
+  # ---- HTTP smoke ----
+  hdr "HTTP smoke"
+  local code
+  code="$(curl -k -s -o /dev/null -w '%{http_code}' -m 10 "https://127.0.0.1:8090/login" 2>/dev/null || echo 000)"
+  if [[ "$code" == "200" || "$code" == "302" ]]; then ok "panel /login HTTP ${code}"; else warn "panel /login HTTP ${code} — browser me check karo"; fi
+
+  # ---- sync ----
+  hdr "alphacp-sync"
+  if command -v alphacp-sync >/dev/null 2>&1; then
+    alphacp-sync >>"$LOG_FILE" 2>&1 && ok "sync complete (repo snapshot update)" || warn "sync fail (baad me: sudo alphacp-sync)"
+  else
+    warn "alphacp-sync nahi mila"
+  fi
+
+  hdr "FINAL VERDICT"
+  ok "Panel ab cPanel Paper-Lantern style: paper-white cards, navy top bar, orange accent"
+  ok "Customer dashboard: tool-grid + General Information/Statistics sidebar + top search"
+  info "backup : ${BACKUP}"
+  info "log    : ${LOG_FILE}"
+  info "rollback: sudo bash $0 --rollback"
+  say ""
+  say "  ${C_G}ui1-fix v${VERSION} APPLY ho gaya.${C_0} Browser me hard-refresh (Ctrl+Shift+R) karo — naya theme + dashboard layout."
+}
+
+usage(){ sed -nE 's/^#( |=)(.*)$/\2/p' "$0" | sed -n '1,30p'; }
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+case "${1:-apply}" in
+  --diagnose|-d) diagnose ;;
+  --rollback|-r) rollback ;;
+  --help|-h) usage ;;
+  apply|"") apply ;;
+  *) die "unknown option: $1 (--diagnose | --rollback | --help)" ;;
+esac
