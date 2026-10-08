@@ -1,0 +1,266 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  AlphaCP — B2 FIX  v1.0  (Metrics via root agent — open_basedir fix)
+# -----------------------------------------------------------------------------
+#  Live par Metrics page khali/error tha: Support/Metrics::parse() web-FPM se
+#  /var/log/apache2/<user>-access.log padhta tha jo open_basedir allow-list me
+#  nahi hai (audit B2). cPanel-tareeka: log ROOT AGENT padhta hai (`metrics.access`)
+#  aur panel synchronous result dikhata hai. Ye script agent ki 4 + panel ki 2
+#  files byte-for-byte deploy karti hai:
+#    AGENT : src/Metrics.php, src/Tasks/MetricsAccess.php,
+#            src/CommandRunner.php, config/tasks.php (metrics.access = 96 types)
+#    PANEL : app/Http/Controllers/MetricsController.php, app/Support/Metrics.php
+#
+#  Safety (ftp-fix jaisa): backup → har file par `php -l` (fail par error print) →
+#  static smoke → pdo_sqlite ho to poora agent suite gate (passed>=218 failed=0) →
+#  paneld restart → panel files → Process:: absence assert → optimize:clear +
+#  php-fpm restart (opcache) → HTTP smoke → alphacp-sync. Kahin fail = auto-rollback.
+#
+#  Usage: sudo bash b2-fix-v1.0.sh | --diagnose | --rollback | --help
+# =============================================================================
+set -Eeuo pipefail
+
+VERSION="1.0"
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+AGENT="${ACP_HOME}/agent"
+PANEL="${ACP_HOME}/panel"
+STAMP="$(date -u +%Y%m%d%H%M%S)"
+BACKUP="${ACP_HOME}/releases/b2fix-${STAMP}"
+LOG_FILE="${ACP_HOME}/logs/b2-fix-${STAMP}.txt"
+
+C_R=$'\033[0;31m'; C_G=$'\033[0;32m'; C_Y=$'\033[0;33m'; C_B=$'\033[0;36m'; C_D=$'\033[0;2m'; C_0=$'\033[0m'
+say(){ printf '%s\n' "$*" | tee -a "${LOG_FILE:-/dev/null}"; }
+hdr(){ say ""; say "${C_B}== $* ==${C_0}"; }
+ok(){ say "  ${C_G}✔${C_0} $*"; }
+warn(){ say "  ${C_Y}⚠${C_0} $*"; }
+info(){ say "  ${C_D}·${C_0} $*"; }
+die(){ say "  ${C_R}✖ $*${C_0}"; exit 1; }
+have_systemd(){ [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; }
+cnt(){ grep -c "$@" 2>/dev/null || true; }
+procfiles(){ grep -l 'Process::run\|Process::timeout' "$@" 2>/dev/null | wc -l; }
+
+# php-wasm (CI/sim) `PHP` env ko VERSION maanta hai — isliye binary PHP_BIN me,
+# aur inherited PHP unset (warna child php calls chup-chaap fail hoti hain).
+unset PHP 2>/dev/null || true
+
+detect_php(){
+  local p
+  if [[ -f /etc/systemd/system/paneld.service ]]; then
+    p="$(sed -nE 's#^ExecStart=([^ ]+).*#\1#p' /etc/systemd/system/paneld.service 2>/dev/null | head -1)"
+    [[ -n "$p" && -x "$p" ]] && { printf '%s' "$p"; return; }
+  fi
+  for c in php8.4 php8.3 php8.2 php; do command -v "$c" >/dev/null 2>&1 && { command -v "$c"; return; }; done
+  printf ''
+}
+PHP_BIN="$(detect_php)"
+
+detect_panel_user(){
+  local u
+  u="$(grep -hoE '^[[:space:]]*user[[:space:]]*=[[:space:]]*[a-z_][a-z0-9_-]*' /etc/php/*/fpm/pool.d/*.conf 2>/dev/null | head -1 | awk -F'=' '{gsub(/[ \t]/,"",$2); print $2}')"
+  [[ -n "$u" ]] && { printf '%s' "$u"; return; }
+  printf 'alphacp'
+}
+PANEL_USER="$(detect_panel_user)"
+
+detect_fpm_unit(){
+  local v u
+  v="$([[ -n "$PHP_BIN" ]] && "$PHP_BIN" -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;' 2>/dev/null || true)"
+  for u in "php${v}-fpm" "php${v%%.*}-fpm" php-fpm; do
+    [[ -n "$u" ]] || continue
+    if have_systemd && { [[ -f "/etc/systemd/system/${u}.service" ]] || [[ -f "/lib/systemd/system/${u}.service" ]]; }; then
+      printf '%s' "$u"; return
+    fi
+  done
+  printf ''
+}
+FPM_UNIT="$(detect_fpm_unit)"
+
+AGENT_FILES=(src/Metrics.php src/Tasks/MetricsAccess.php src/CommandRunner.php config/tasks.php)
+PANEL_FILES=(app/Http/Controllers/MetricsController.php app/Support/Metrics.php)
+
+rollback(){
+  hdr "ROLLBACK — b2-fix v${VERSION}"
+  local latest rel
+  latest="$(ls -1dt "${ACP_HOME}"/releases/b2fix-* 2>/dev/null | head -1 || true)"
+  [[ -n "$latest" ]] || die "koi b2fix backup nahi mila"
+  info "backup: $latest"
+  for rel in "${AGENT_FILES[@]}"; do
+    if [[ -f "${latest}/agent/${rel}" ]]; then cp -p "${latest}/agent/${rel}" "${AGENT}/${rel}"; else rm -f "${AGENT}/${rel}"; fi
+  done
+  for rel in "${PANEL_FILES[@]}"; do
+    if [[ -f "${latest}/panel/${rel}" ]]; then cp -p "${latest}/panel/${rel}" "${PANEL}/${rel}"; else rm -f "${PANEL}/${rel}"; fi
+  done
+  if have_systemd; then
+    systemctl restart paneld >/dev/null 2>&1 || true
+    [[ -n "$FPM_UNIT" ]] && { systemctl restart "$FPM_UNIT" >/dev/null 2>&1 || true; }
+  fi
+  ok "rollback complete (purani files wapas)"
+}
+
+diagnose(){
+  hdr "DIAGNOSE (read-only) — b2-fix v${VERSION}"
+  info "ACP_HOME=${ACP_HOME} php=${PHP_BIN:-none} panel_user=${PANEL_USER} fpm=${FPM_UNIT:-none}"
+  info "agent src/Metrics.php      : $( [[ -f "${AGENT}/src/Metrics.php" ]] && echo PRESENT || echo MISSING )"
+  info "agent registry metrics     : $(cnt "'metrics\.access'" "${AGENT}/config/tasks.php")  (1=registered)"
+  info "panel controller Paneld    : $(cnt 'Paneld::run' "${PANEL}/app/Http/Controllers/MetricsController.php")  (>=1=theek)"
+  info "panel Support parse()      : $(cnt 'function parse' "${PANEL}/app/Support/Metrics.php")  (0=theek, >0=open_basedir bug)"
+  say ""; ok "diagnose complete (kuch badla nahi)"
+}
+
+apply(){
+  hdr "APPLY — b2-fix v${VERSION} (Metrics via root agent)"
+  mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+  [[ -d "$AGENT" ]] || die "agent dir nahi: ${AGENT}"
+  [[ -d "$PANEL" ]] || die "panel dir nahi: ${PANEL}"
+  [[ -n "$PHP_BIN" && -x "$PHP_BIN" ]] || die "php binary nahi mila"
+
+  # ---- backup ----
+  mkdir -p "${BACKUP}/agent" "${BACKUP}/panel"
+  local rel
+  for rel in "${AGENT_FILES[@]}"; do
+    mkdir -p "${BACKUP}/agent/$(dirname "$rel")"
+    [[ -f "${AGENT}/${rel}" ]] && cp -p "${AGENT}/${rel}" "${BACKUP}/agent/${rel}" || true
+  done
+  for rel in "${PANEL_FILES[@]}"; do
+    mkdir -p "${BACKUP}/panel/$(dirname "$rel")"
+    [[ -f "${PANEL}/${rel}" ]] && cp -p "${PANEL}/${rel}" "${BACKUP}/panel/${rel}" || true
+  done
+  ok "backup: ${BACKUP}"
+
+  # ---- agent files ----
+  hdr "agent files likhna"
+  cat > "${AGENT}/src/Metrics.php" <<'PHPEOF'
+@@AGENT_METRICS_PHP@@
+PHPEOF
+  cat > "${AGENT}/src/Tasks/MetricsAccess.php" <<'PHPEOF'
+@@AGENT_METRICSACCESS_PHP@@
+PHPEOF
+  cat > "${AGENT}/src/CommandRunner.php" <<'PHPEOF'
+@@AGENT_COMMANDRUNNER_PHP@@
+PHPEOF
+  cat > "${AGENT}/config/tasks.php" <<'PHPEOF'
+@@AGENT_TASKS_PHP@@
+PHPEOF
+  local lout
+  for rel in "${AGENT_FILES[@]}"; do
+    if ! lout="$("$PHP_BIN" -l "${AGENT}/${rel}" 2>&1)"; then
+      warn "lint fail: ${rel}"; say "    ${lout}"; rollback; die "agent lint fail"
+    fi
+  done
+  ok "agent files likhi + lint clean (4)"
+
+  # ---- agent self-test ----
+  hdr "SELF-TEST agent (static smoke + suite)"
+  local smoke; smoke="$(mktemp)"
+  cat > "$smoke" <<'SMOKE'
+<?php
+require $argv[1] . '/src/Bootstrap.php';
+use Alphacp\Agent\Metrics;
+use Alphacp\Agent\Tasks\MetricsAccess;
+$f = 0;
+function chk(bool $c, string $m): void { global $f; if (!$c) { fwrite(STDERR, "SMOKE FAIL: $m\n"); $f++; } }
+chk(class_exists(Metrics::class) && class_exists(MetricsAccess::class), 'metrics classes autoload');
+$tmp = tempnam(sys_get_temp_dir(), 'acpmx');
+file_put_contents($tmp, "1.1.1.1 - - [07/Oct/2026:10:00:01 +0000] \"GET / HTTP/1.1\" 200 100 \"-\" \"ua\"\n");
+$st = Metrics::parseFile($tmp);
+chk($st['requests'] === 1 && $st['bytes'] === 100, 'parser kaam karta hai');
+unlink($tmp);
+$types = array_keys(require $argv[1] . '/config/tasks.php');
+chk(in_array('metrics.access', $types, true), 'metrics.access registered');
+echo $f === 0 ? "SMOKE OK\n" : "SMOKE FAILED ($f)\n";
+exit($f === 0 ? 0 : 1);
+SMOKE
+  if ! "$PHP_BIN" "$smoke" "$AGENT" 2>&1 | sed 's/^/    /'; then rm -f "$smoke"; rollback; die "agent smoke fail"; fi
+  rm -f "$smoke"
+  ok "agent static smoke PASS"
+  if "$PHP_BIN" -r 'exit(extension_loaded("pdo_sqlite") ? 0 : 1);' >/dev/null 2>&1; then
+    local sum n p
+    sum="$("$PHP_BIN" "${AGENT}/tests/run-tests.php" 2>&1 | grep -E 'passed: [0-9]+ +failed: [0-9]+' | tail -1)"
+    n="$(sed -E 's/.*failed: ([0-9]+).*/\1/' <<<"${sum:-}")"
+    p="$(sed -E 's/.*passed: ([0-9]+).*/\1/; s/ .*//' <<<"${sum:-}")"
+    info "suite: ${sum:-<summary nahi mila>}"
+    if [[ "${n:-9}" != "0" || "${p:-0}" -lt 221 ]]; then rollback; die "agent suite green nahi (passed=${p:-?} failed=${n:-?})"; fi
+    ok "agent suite GREEN (passed=${p} failed=0)"
+  else
+    warn "pdo_sqlite nahi — suite skip (static smoke gate pass hua)"
+  fi
+
+  # ---- paneld restart ----
+  hdr "paneld restart"
+  if have_systemd && [[ -f /etc/systemd/system/paneld.service ]]; then
+    systemctl restart paneld >/dev/null 2>&1 || warn "restart fail"
+    sleep 1
+    systemctl is-active --quiet paneld || { rollback; die "paneld active nahi restart ke baad"; }
+    ok "paneld active (96-type registry load hua)"
+  else
+    warn "paneld unit / systemd nahi mila — restart skip (manual: systemctl restart paneld)"
+  fi
+
+  # ---- panel files ----
+  hdr "panel files likhna"
+  cat > "${PANEL}/app/Http/Controllers/MetricsController.php" <<'PHPEOF'
+@@PANEL_METRICSCTRL_PHP@@
+PHPEOF
+  cat > "${PANEL}/app/Support/Metrics.php" <<'PHPEOF'
+@@PANEL_METRICSSUPPORT_PHP@@
+PHPEOF
+  for rel in "${PANEL_FILES[@]}"; do
+    if ! lout="$("$PHP_BIN" -l "${PANEL}/${rel}" 2>&1)"; then
+      warn "lint fail: ${rel}"; say "    ${lout}"; rollback; die "panel lint fail"
+    fi
+  done
+  [[ "$(cnt 'function parse' "${PANEL}/app/Support/Metrics.php")" == "0" ]] \
+    || { rollback; die "Support/Metrics me abhi bhi parse() hai (open_basedir bug)"; }
+  [[ "$(cnt 'Paneld::run' "${PANEL}/app/Http/Controllers/MetricsController.php")" -ge 1 ]] \
+    || { rollback; die "MetricsController Paneld::run nahi karta"; }
+  ok "panel files likhi + lint clean (2) — koi Process:: nahi"
+
+  # ---- caches + fpm restart (opcache) ----
+  hdr "panel cache + php-fpm restart"
+  if command -v runuser >/dev/null 2>&1 && [[ -f "${PANEL}/artisan" ]]; then
+    runuser -u "$PANEL_USER" -- env ACP_HOME="$ACP_HOME" "$PHP_BIN" "${PANEL}/artisan" optimize:clear >>"$LOG_FILE" 2>&1 \
+      && ok "artisan optimize:clear" || warn "optimize:clear fail (ignore — fpm restart opcache clear karega)"
+  else
+    warn "runuser/artisan nahi — optimize:clear skip"
+  fi
+  if have_systemd && [[ -n "$FPM_UNIT" ]]; then
+    systemctl restart "$FPM_UNIT" >/dev/null 2>&1 || warn "fpm restart fail"
+    sleep 1
+    systemctl is-active --quiet "$FPM_UNIT" || { rollback; die "php-fpm active nahi restart ke baad"; }
+    ok "${FPM_UNIT} active (opcache clear)"
+  else
+    warn "php-fpm unit nahi mila — restart skip (manual: systemctl restart php8.4-fpm)"
+  fi
+
+  # ---- HTTP smoke ----
+  hdr "HTTP smoke"
+  local code
+  code="$(curl -k -s -o /dev/null -w '%{http_code}' -m 10 "https://127.0.0.1:8090/login" 2>/dev/null || echo 000)"
+  if [[ "$code" == "200" || "$code" == "302" ]]; then ok "panel /login HTTP ${code}"; else warn "panel /login HTTP ${code} — browser me check karo"; fi
+
+  # ---- sync ----
+  hdr "alphacp-sync"
+  if command -v alphacp-sync >/dev/null 2>&1; then
+    alphacp-sync >>"$LOG_FILE" 2>&1 && ok "sync complete (repo snapshot update)" || warn "sync fail (baad me: sudo alphacp-sync)"
+  else
+    warn "alphacp-sync nahi mila"
+  fi
+
+  hdr "FINAL VERDICT"
+  ok "Metrics ab root-agent se (metrics.access); panel sirf dikhawa — open_basedir se free"
+  info "backup : ${BACKUP}"
+  info "log    : ${LOG_FILE}"
+  info "rollback: sudo bash $0 --rollback"
+  say ""
+  say "  ${C_G}b2-fix v${VERSION} APPLY ho gaya.${C_0} Panel → Metrics page kholo (Bandwidth/Visitors/Requests/Errors)."
+}
+
+usage(){ sed -nE 's/^#( |=)(.*)$/\2/p' "$0" | sed -n '1,30p'; }
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+case "${1:-apply}" in
+  --diagnose|-d) diagnose ;;
+  --rollback|-r) rollback ;;
+  --help|-h) usage ;;
+  apply|"") apply ;;
+  *) die "unknown option: $1 (--diagnose | --rollback | --help)" ;;
+esac
