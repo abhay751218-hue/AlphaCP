@@ -179,6 +179,7 @@
 /usr/local/alphacp/logs/login-fix-20261007124915.txt
 /usr/local/alphacp/logs/login-fix-20261007130420.txt
 /usr/local/alphacp/logs/sec-fix-20261008022538.txt
+/usr/local/alphacp/logs/suite-enable-20261008031816.txt
 /usr/local/alphacp/logs/verify-report-20260928-142610.txt
 /usr/local/alphacp/logs/verify-step2-20260928-161141.txt
 /usr/local/alphacp/panel/.env
