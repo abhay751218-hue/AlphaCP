@@ -1253,6 +1253,23 @@ CREATE TABLE `webmail_settings` (
   UNIQUE KEY `webmail_settings_account_id_unique` (`account_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+DROP TABLE IF EXISTS `webmail_sso_tokens`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `webmail_sso_tokens` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `token` char(64) NOT NULL,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `mailbox` varchar(255) NOT NULL,
+  `used` tinyint(1) NOT NULL DEFAULT 0,
+  `expires_at` datetime NOT NULL,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_webmail_sso_token` (`token`),
+  KEY `idx_webmail_sso_user` (`user_id`,`used`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='One-time Webmail (Roundcube) SSO tokens';
+/*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `zone_ttls`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8mb4 */;

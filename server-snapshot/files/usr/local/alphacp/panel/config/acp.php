@@ -16,6 +16,10 @@ return [
     // AlphaCP install root (agent, etc/, logs/, panel/)
     'home'          => rtrim((string) env('ACP_HOME', '/usr/local/alphacp'), '/'),
 
+    // Webmail (Roundcube) entry — cPanel-style alag port (default 2096).
+    // OWNER-CTRL slice me ye superadmin-controlled ho jayega.
+    'webmail_port'  => (int) env('ACP_WEBMAIL_PORT', 2096),
+
     // This server's row in `servers`.
     //
     // Source of truth = etc/panel.env (written by the installer, readable by

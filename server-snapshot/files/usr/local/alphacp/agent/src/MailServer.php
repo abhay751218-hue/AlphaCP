@@ -2751,10 +2751,31 @@ final class MailServer
 
     // ------------------------------------------------------------ rendering ----
 
+    /** Webmail SSO master password file (installer-owned, root:www-data 0640). */
+    public function masterPassdbFile(): string
+    {
+        return self::pathEnv('ACP_MAIL_MASTER_PASSDB', '/usr/local/alphacp/etc/webmail-master.pw');
+    }
+
     private function renderDovecotConf(): string
     {
         $users = $this->dovecotUsersFile();
         $opts = $this->dovecotOptions();
+        // Webmail SSO (cPanel-jaisa seamless login): master passdb sirf tab
+        // include hota hai jab master password file maujood ho (installer
+        // banata hai, root:www-data 0640) — warna conf bilkul pehle jaisa.
+        $master = $this->masterPassdbFile();
+        $extra = [];
+        if (is_file($master)) {
+            $extra = [
+                '# AlphaCP S7 — Webmail SSO master passdb (Roundcube token flow)',
+                'passdb {',
+                '  driver = passwd-file',
+                '  args = scheme=BLF-CRYPT ' . $master,
+                '  master = yes',
+                '}',
+            ];
+        }
         $lines = [
             self::MANAGED_BEGIN,
             '# AlphaCP S7 — virtual mailboxes jo panel banata hai',
@@ -2770,6 +2791,7 @@ final class MailServer
             '  driver = passwd-file',
             '  args = ' . $users,
             '}',
+            ...$extra,
             '# mailbox khud Maildir hai (home field usi ko point karta hai)',
             'mail_location = maildir:~/',
             'mail_home = %h',

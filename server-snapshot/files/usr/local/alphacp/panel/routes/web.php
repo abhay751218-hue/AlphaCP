@@ -89,6 +89,10 @@ use Illuminate\Support\Facades\Route;
 // ---------------------------------------------------------------------------
 // Guest
 // ---------------------------------------------------------------------------
+// Panel-internal (server-to-server, shared secret): Roundcube SSO verify.
+Route::get('/internal/webmail-sso', [App\Http\Controllers\WebmailSsoController::class, 'verify'])
+    ->middleware('throttle:60,1')->name('internal.webmail-sso');
+
 Route::middleware('guest')->group(function (): void {
     Route::get('/', [LoginController::class, 'show'])->name('login');
     // /login bhi wahi login page — bookmark/WHMCS/cPanel aadat. Pehle 404 deta tha.
@@ -294,6 +298,8 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.view')->name('webmail.index');
     Route::post('/webmail', [WebmailController::class, 'store'])
         ->middleware('perm:email.manage')->name('webmail.store');
+    Route::post('/webmail/open', [WebmailController::class, 'open'])
+        ->middleware('perm:email.view')->name('webmail.open');
 
     Route::get('/mysql', [MysqlDatabasesController::class, 'index'])
         ->middleware('perm:databases.view')->name('mysql.index');
