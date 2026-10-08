@@ -52,12 +52,12 @@ rollback(){
   hdr "ROLLBACK — mail-fix v${VERSION}"
   local latest rel
   latest="$(ls -1dt "${ACP_HOME}"/releases/mailfix-* 2>/dev/null | head -1 || true)"
-  [[ -n "$latest" ]] || die "koi testsync backup nahi mila"
+  [[ -n "$latest" ]] || die "koi mailfix backup nahi mila"
   info "backup: $latest"
   for rel in "${AGENT_FILES[@]}"; do
     if [[ -f "${latest}/agent/${rel}" ]]; then cp -p "${latest}/agent/${rel}" "${AGENT}/${rel}"; else rm -f "${AGENT}/${rel}"; fi
   done
-  ok "rollback complete (purani test files wapas)"
+  ok "rollback complete (purani agent files wapas)"
 }
 
 diagnose(){
@@ -74,7 +74,7 @@ apply(){
   [[ -d "$AGENT" ]] || die "agent dir nahi: ${AGENT}"
   [[ -n "$PHP_BIN" && -x "$PHP_BIN" ]] || die "php binary nahi mila"
 
-  mkdir -p "${BACKUP}/agent/tests"
+  mkdir -p "${BACKUP}/agent/tests" "${BACKUP}/agent/src"
   local rel
   for rel in "${AGENT_FILES[@]}"; do
     [[ -f "${AGENT}/${rel}" ]] && cp -p "${AGENT}/${rel}" "${BACKUP}/agent/${rel}" || true
