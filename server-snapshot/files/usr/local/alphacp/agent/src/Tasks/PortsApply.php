@@ -22,7 +22,13 @@ final class PortsApply implements TaskInterface
     public function handle(array $payload, TaskContext $ctx): array
     {
         $action = strtolower(trim((string) ($payload['action'] ?? 'apply')));
-        $ports  = new PortsNginx($ctx->cmd, $ctx->log);
+        $ports  = new PortsNginx(
+            $ctx->cmd,
+            $ctx->log,
+            (string) (getenv('ACP_HOME') ?: '/usr/local/alphacp'),
+            (string) (getenv('ACP_NGX_ROOT') ?: '/etc/nginx'),
+            (string) (getenv('ACP_RC_PLUGINS') ?: '/usr/share/roundcube/plugins'),
+        );
 
         return match ($action) {
             'apply'  => $ports->apply(),

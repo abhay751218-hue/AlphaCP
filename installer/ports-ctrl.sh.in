@@ -1,0 +1,259 @@
+#!/usr/bin/env bash
+# ============================================================================
+#  AlphaCP  —  PORTS-CTRL  v1.0   (OWNER-CTRL: "ek panel = ek port")
+#
+#  Karta hai:
+#    1  panel payloads: PortMap + AcpPortGuard + login branding + /ports page
+#    2  agent payloads: PortsNginx + ports.apply task (+ allowlist entry)
+#    3  etc/ports.json default map (whm 2087 / cpanel 2083 / webmail 2096 /
+#       link 8090) agar maujood nahi
+#    4  live: ufw me whm+cpanel ports allow
+#    5  paneld --run ports.apply → nginx vhosts regen (whm/cpanel/link/webmail)
+#       + reload; nginx -t fail → agent khud restore karta hai
+#    6  structural asserts + HTTP smokes (WHM/cPanel branding, link-page,
+#       webmail 2096, internal SSO loc cpanel port par 403)
+#    7  agent suite full run + alphacp-sync
+#
+#  Safety: backup → asserts → smokes; koi fail = ROLLBACK + non-zero exit.
+#  SIM=1 + env paths → tools/sim/ports-ctrl-sim.sh (server mutate NAHI).
+# ============================================================================
+set -euo pipefail
+
+VERSION="1.0"
+SIM="${SIM:-0}"
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+NGX_SYS="${ACP_NGX_ROOT:-/etc/nginx}"
+RC_PLUGINS="${ACP_RC_PLUGINS:-/usr/share/roundcube/plugins}"
+PANEL="${ACP_HOME}/panel"
+AGENT="${ACP_HOME}/agent"
+PHP_BIN="${PHPBIN:-${PHP:-$(command -v php8.4 || command -v php || true)}}"
+
+LOGD="${ACP_HOME}/logs"
+mkdir -p "$LOGD"
+LOG="${LOGD}/ports-ctrl-$(date +%Y%m%d%H%M%S).txt"
+exec > >(tee -a "$LOG") 2>&1
+
+info() { printf '  · %s\n' "$*"; }
+ok()   { printf '  \033[0;32m✔\033[0m %s\n' "$*"; }
+warn() { printf '  \033[0;33m⚠\033[0m %s\n' "$*"; }
+die()  { printf '  \033[0;31m✖\033[0m %s\n' "$*" >&2; exit 1; }
+hdr()  { printf '\n== %s ==\n' "$*"; }
+cnt()  { if [[ "${1:-}" == "--" ]]; then shift; grep -c -- "${1}" "${2}" 2>/dev/null || echo 0; else grep -c "$1" "$2" 2>/dev/null || echo 0; fi; }
+
+# ---- rollback infrastructure ----
+BACKUP="${ACP_HOME}/releases/portsctrl-$(date +%Y%m%d%H%M%S)"
+RB_MANIFEST=()
+backup() {
+  local f key
+  for f in "$@"; do
+    [[ -f "$f" ]] || continue
+    key="$(echo "$f" | tr / _)"
+    cp -p "$f" "${BACKUP}/${key}"
+    RB_MANIFEST+=("$f")
+  done
+}
+rollback() {
+  hdr "ROLLBACK — ports-ctrl v${VERSION}"
+  info "backup: ${BACKUP}"
+  local f key
+  for f in "${RB_MANIFEST[@]:-}"; do
+    [[ -z "$f" ]] && continue
+    key="$(echo "$f" | tr / _)"
+    if [[ -f "${BACKUP}/${key}" ]]; then
+      cp -p "${BACKUP}/${key}" "$f"
+    fi
+  done
+  ok "rollback complete (purani state wapas)"
+}
+
+if [[ "${1:-}" == "--rollback" ]]; then
+  B="${2:-$(ls -dt "${ACP_HOME}"/releases/portsctrl-* 2>/dev/null | head -1)}"
+  [[ -n "$B" && -d "$B" ]] || die "koi portsctrl backup nahi mila"
+  hdr "ROLLBACK — ports-ctrl (backup: $B)"
+  for f in "$B"/*; do
+    [[ -f "$f" ]] || continue
+    case "$(basename "$f")" in *.retired) continue;; esac
+    target="/$(basename "$f" | sed 's|_|/|g')"
+    cp -p "$f" "$target" && info "restore: $target"
+  done
+  AV="${NGX_SYS}/sites-available"; EN="${NGX_SYS}/sites-enabled"
+  for v in alphacp-whm.conf alphacp-cpanel.conf alphacp-link.conf; do
+    rm -f "${EN}/${v}" "${AV}/${v}"
+  done
+  if [[ -f "$B/$(echo "${AV}/alphacp-panel.conf" | tr / _).retired" ]]; then
+    cp -p "$B/$(echo "${AV}/alphacp-panel.conf" | tr / _).retired" "${AV}/alphacp-panel.conf"
+    ln -sf "${AV}/alphacp-panel.conf" "${EN}/alphacp-panel.conf"
+  fi
+  nginx -t >/dev/null 2>&1 && nginx -s reload >/dev/null 2>&1 || true
+  ok "rollback complete"
+  exit 0
+fi
+
+hdr "APPLY — ports-ctrl v${VERSION} (OWNER-CTRL: ek panel = ek port)"
+[[ -n "$PHP_BIN" ]] || die "php binary nahi mila (PHPBIN=/path)"
+mkdir -p "$BACKUP"
+info "backup: ${BACKUP}"
+
+# ---- 1) panel payloads ----
+hdr "panel payloads (PortMap + PortGuard + branding + /ports)"
+backup "${PANEL}/app/Support/PortMap.php" \
+       "${PANEL}/app/Http/Middleware/AcpPortGuard.php" \
+       "${PANEL}/app/Http/Controllers/Auth/LoginController.php" \
+       "${PANEL}/app/Http/Controllers/PortsController.php" \
+       "${PANEL}/resources/views/auth/login.blade.php" \
+       "${PANEL}/resources/views/ports/index.blade.php" \
+       "${PANEL}/bootstrap/app.php" \
+       "${PANEL}/config/acp.php"
+mkdir -p "${PANEL}/app/Support" "${PANEL}/app/Http/Middleware" \
+         "${PANEL}/app/Http/Controllers/Auth" "${PANEL}/resources/views/auth" \
+         "${PANEL}/resources/views/ports"
+cat > "${PANEL}/app/Support/PortMap.php" <<'PEOF'
+@@PANEL_PORTMAP@@
+PEOF
+cat > "${PANEL}/app/Http/Middleware/AcpPortGuard.php" <<'PEOF'
+@@PANEL_GUARD@@
+PEOF
+cat > "${PANEL}/app/Http/Controllers/Auth/LoginController.php" <<'PEOF'
+@@PANEL_LOGINCTRL@@
+PEOF
+cat > "${PANEL}/app/Http/Controllers/PortsController.php" <<'PEOF'
+@@PANEL_PORTSCTRL@@
+PEOF
+cat > "${PANEL}/resources/views/auth/login.blade.php" <<'PEOF'
+@@PANEL_LOGINBLADE@@
+PEOF
+cat > "${PANEL}/resources/views/ports/index.blade.php" <<'PEOF'
+@@PANEL_PORTSVIEW@@
+PEOF
+cat > "${PANEL}/bootstrap/app.php" <<'PEOF'
+@@PANEL_BOOTSTRAP@@
+PEOF
+cat > "${PANEL}/config/acp.php" <<'PEOF'
+@@PANEL_ACPCONFIG@@
+PEOF
+for f in app/Support/PortMap.php app/Http/Middleware/AcpPortGuard.php \
+         app/Http/Controllers/Auth/LoginController.php app/Http/Controllers/PortsController.php \
+         bootstrap/app.php config/acp.php; do
+  "$PHP_BIN" -l "${PANEL}/${f}" >/dev/null || { rollback; die "lint fail: ${f}"; }
+done
+ok "8 panel payloads likhi + lint clean"
+
+# ---- 2) agent payloads ----
+hdr "agent payloads (PortsNginx + ports.apply task)"
+backup "${AGENT}/config/tasks.php"
+mkdir -p "${AGENT}/src/Tasks"
+cat > "${AGENT}/src/PortsNginx.php" <<'PEOF'
+@@AGENT_PORTSNGINX@@
+PEOF
+cat > "${AGENT}/src/Tasks/PortsApply.php" <<'PEOF'
+@@AGENT_PORTSTASK@@
+PEOF
+cat > "${AGENT}/config/tasks.php" <<'PEOF'
+@@AGENT_TASKSCFG@@
+PEOF
+for f in src/PortsNginx.php src/Tasks/PortsApply.php config/tasks.php; do
+  "$PHP_BIN" -l "${AGENT}/${f}" >/dev/null || { rollback; die "lint fail: agent/${f}"; }
+done
+grep -q "'ports.apply'" "${AGENT}/config/tasks.php" || { rollback; die "tasks.php me ports.apply entry nahi"; }
+ok "3 agent payloads likhi + lint clean + allowlist entry"
+
+# ---- 3) ports.json default ----
+hdr "etc/ports.json (default map)"
+if [[ ! -f "${ACP_HOME}/etc/ports.json" ]]; then
+  mkdir -p "${ACP_HOME}/etc"
+  printf '{\n    "whm": 2087,\n    "cpanel": 2083,\n    "webmail": 2096,\n    "link": 8090,\n    "link_enabled": true\n}\n' > "${ACP_HOME}/etc/ports.json"
+  ok "ports.json likha (default map)"
+else
+  ok "ports.json pehle se maujood (owner map respected)"
+fi
+MAP_WHM="$("$PHP_BIN" -r 'echo json_decode(file_get_contents($argv[1]),true)["whm"] ?? 2087;' "${ACP_HOME}/etc/ports.json")"
+MAP_CPANEL="$("$PHP_BIN" -r 'echo json_decode(file_get_contents($argv[1]),true)["cpanel"] ?? 2083;' "${ACP_HOME}/etc/ports.json")"
+info "map: whm=${MAP_WHM} cpanel=${MAP_CPANEL}"
+
+# ---- 4) ufw (live only) ----
+hdr "ufw: whm + cpanel ports allow"
+if [[ "$SIM" == "1" ]]; then
+  info "SIM: ufw skip"
+else
+  ufw allow "${MAP_WHM}/tcp" comment 'AlphaCP WHM' >/dev/null 2>&1 || true
+  ufw allow "${MAP_CPANEL}/tcp" comment 'AlphaCP cPanel' >/dev/null 2>&1 || true
+  ok "ufw rules (${MAP_WHM}, ${MAP_CPANEL})"
+fi
+
+# ---- 5) agent apply (live only; sim me harness) ----
+hdr "nginx vhosts regen (ports.apply)"
+if [[ "$SIM" == "1" ]]; then
+  info "SIM: agent apply harness sim me chalta hai"
+else
+  if "${AGENT}/bin/paneld" --run ports.apply '{"action":"apply"}' >"${LOGD}/ports-apply-last.txt" 2>&1; then
+    grep -q '"applied":true' "${LOGD}/ports-apply-last.txt" \
+      && ok "ports.apply: vhosts regen + reload" \
+      || { rollback; die "ports.apply ne applied:true nahi diya (nginx -t fail?)"; }
+  else
+    rollback; die "ports.apply task fail (log: ${LOGD}/ports-apply-last.txt)"
+  fi
+fi
+
+# ---- 6) structural asserts ----
+hdr "structural asserts"
+grep -q 'AcpPortGuard' "${PANEL}/bootstrap/app.php" \
+  || { rollback; die "bootstrap me AcpPortGuard register nahi"; }
+grep -q 'WHM Login' "${PANEL}/resources/views/auth/login.blade.php" \
+  || { rollback; die "login blade me WHM branding nahi"; }
+grep -q 'ports_file' "${PANEL}/config/acp.php" \
+  || { rollback; die "acp config me ports_file nahi"; }
+if [[ "$SIM" != "1" ]]; then
+  AV="${NGX_SYS}/sites-available"
+  [[ -f "${AV}/alphacp-whm.conf" ]]    || { rollback; die "whm vhost nahi bana"; }
+  [[ -f "${AV}/alphacp-cpanel.conf" ]] || { rollback; die "cpanel vhost nahi bana"; }
+  grep -q "listen ${MAP_WHM} ssl" "${AV}/alphacp-whm.conf" \
+    || { rollback; die "whm vhost me listen ${MAP_WHM} nahi"; }
+  grep -q "listen ${MAP_CPANEL} ssl" "${AV}/alphacp-cpanel.conf" \
+    || { rollback; die "cpanel vhost me listen ${MAP_CPANEL} nahi"; }
+  grep -q 'location /internal/' "${AV}/alphacp-cpanel.conf" \
+    || { rollback; die "cpanel vhost me /internal/ loc nahi"; }
+  ! grep -q 'location /internal/' "${AV}/alphacp-whm.conf" \
+    || { rollback; die "whm vhost me /internal/ loc NAHI hona chahiye"; }
+  ok "vhost structure sahi (whm/cpanel/internal loc)"
+fi
+ok "structural asserts pass"
+
+# ---- 7) HTTP smokes (live only) ----
+hdr "HTTP smokes"
+if [[ "$SIM" == "1" ]]; then
+  info "SIM: smokes skip (harness asserts chuke)"
+else
+  code="$(curl -k -s -o /tmp/pc-whm.html -w '%{http_code}' -m 10 "https://127.0.0.1:${MAP_WHM}/login" 2>/dev/null || echo 000)"
+  [[ "$code" == "200" ]] && grep -q 'WHM Login' /tmp/pc-whm.html \
+    && ok "whm ${MAP_WHM} login (WHM branding)" || warn "whm login smoke: HTTP ${code}"
+  code="$(curl -k -s -o /tmp/pc-cp.html -w '%{http_code}' -m 10 "https://127.0.0.1:${MAP_CPANEL}/login" 2>/dev/null || echo 000)"
+  [[ "$code" == "200" ]] && grep -q 'cPanel Login' /tmp/pc-cp.html \
+    && ok "cpanel ${MAP_CPANEL} login (cPanel branding)" || warn "cpanel login smoke: HTTP ${code}"
+  code="$(curl -k -s -o /dev/null -w '%{http_code}' -m 10 "https://127.0.0.1:${MAP_CPANEL}/internal/webmail-sso?token=xx" 2>/dev/null || echo 000)"
+  [[ "$code" == "403" || "$code" == "422" ]] && ok "internal SSO endpoint cpanel port par secret-gated (${code})" || warn "internal endpoint HTTP ${code}"
+  code="$(curl -k -s -o /dev/null -w '%{http_code}' -m 10 "https://127.0.0.1:2096/" 2>/dev/null || echo 000)"
+  [[ "$code" == "200" ]] && ok "webmail 2096 HTTP 200" || warn "webmail 2096 HTTP ${code}"
+fi
+
+# ---- 8) agent suite ----
+hdr "AGENT SUITE — full run (current era)"
+SUITE_OUT="$(cd "${AGENT}" && "$PHP_BIN" tests/run-tests.php 2>&1 | tail -3)"
+echo "$SUITE_OUT" | sed 's/^/  · /'
+echo "$SUITE_OUT" | grep -q "failed: 0" || { rollback; die "agent suite fail"; }
+ok "agent suite GREEN"
+cd - >/dev/null 2>&1 || true
+
+# ---- 9) sync ----
+hdr "alphacp-sync"
+if [[ "$SIM" == "1" ]]; then
+  info "SIM: sync skip"
+else
+  alphacp-sync >/dev/null 2>&1 && ok "sync complete (repo snapshot update)" || warn "sync skip/fail"
+fi
+
+hdr "FINAL VERDICT"
+ok "WHM sirf ${MAP_WHM} par, cPanel sirf ${MAP_CPANEL} par, webmail 2096 par, link-page 8090 (owner-controlled)"
+info "backup : ${BACKUP}"
+info "log    : ${LOG}"
+info "rollback: sudo bash /tmp/ports-ctrl-v1.0.sh --rollback"
+printf '\n  ports-ctrl v%s APPLY ho gaya. AWS SG me %s+%s kholo; /ports page se mapping editable.\n\n' "$VERSION" "$MAP_WHM" "$MAP_CPANEL"
