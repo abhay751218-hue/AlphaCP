@@ -5,6 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/suite-enable.sh` **v1.1** (`bc7b95f08316bbcae96754a755ca5b522c35a15b` / `02517c05bb694c5cb7b6a508cd7c3d794e243f1eac9059a9319c8dcc11487d75`) — v1.0 ka pipefail
+  silent-death fix: suite output log file me, fatal par tail-25 + alag suite-tail log +
+  clear die; summary grep `|| true`. Sim 10/10.
 - `installer/ui1-fix.sh` **v1.0** (+ `.in`, `tools/build-ui1-fix.py`, `tools/sim/ui1-fix-sim.sh`
   **29/29**) — P-UI-1: cPanel Paper-Lantern style light theme (paper-white cards, navy
   `#1c2733` top bar, orange `#FF6C2C` accent — AlphaCP branding), customer dashboard par
