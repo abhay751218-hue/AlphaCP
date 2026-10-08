@@ -56,7 +56,7 @@ open_basedir allow-list (`panel/:etc/:agent/config/:tmp/:backups/:incoming`) me 
 nahi → page production me khali/error. Fix: agent task `metrics.access` (parse agent-side)
 ya agent-pushed metrics table.
 
-> **✅ SHIPPED (apply pending):** agent task `metrics.access` (code `715a9e2`, suite 221/0,
+> **✅ LIVE APPLIED 8 Oct 08:09 IST:** agent task `metrics.access` (code `715a9e2`, suite 221/0,
 > registry 96) + `installer/b2-fix.sh` v1.0 (`2e9bc49`) — COMMANDS.md 🔴 section se apply karo.
 
 ### B3 · WebDisk — sirf DB rows, asli WebDAV provisioning nahi mila
