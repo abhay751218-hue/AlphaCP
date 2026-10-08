@@ -14,7 +14,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 b3-fix v1.0 — ABHI CHALAO (WebDisk = asli WebDAV provisioning)
+### ✅ b3-fix v1.0 — APPLIED 8 Oct 08:32 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 830f68c7fe1e1bb4cc30507fdc459cc9c98b5106 installer/b3-fix.sh /tmp/b3-fix-v1.0.sh 7794106c241ecb90d6ad0b10ca3eecb618fe32d5912e51c6b099da0dd0208aed && sudo bash /tmp/b3-fix-v1.0.sh
 ```

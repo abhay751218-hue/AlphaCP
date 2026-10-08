@@ -74,7 +74,7 @@ Persona → panel: **Owner/Admin = WHM-like (2086/87)** · **Reseller = scoped W
 | B6 | `MysqlServer.php` missing → db.*/db.restore fatal | ✅ repo `fd9aca9` + **live `agent-fix v1.0`** |
 | B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | ✅ FTP **live**; ✅ Git/Terminal/Apps **live**; ✅ Firewall/Waf **live** (`935a3e3`) — **B1 POORA khatam** |
 | B2 | Metrics `open_basedir` se blocked | ✅ **LIVE APPLIED 8 Oct 08:09 IST** (`2e9bc49`) — Metrics ab root-agent se |
-| B3 | WebDisk sirf DB rows (WebDAV provisioning nahi) | ✅ **shipped** — code `ee6b659` (99 types), installer `830f68c`; **live apply ka wait** (implement, hide nahi) |
+| B3 | WebDisk sirf DB rows (WebDAV provisioning nahi) | ✅ **LIVE APPLIED 8 Oct 08:32 IST** (`830f68c`) — WebDAV provisioning + mods enabled |
 | B4 | 6 panel test-debt failures | 🔜 Phase 4 (suite 100% green) |
 | B5 | 6 wasm-skip tests (server par record karna) | 🔜 |
 **Ship channel:** chhote agent-only fix = `installer/agent-fix.sh` pattern; **agent+panel dono** =
@@ -169,7 +169,7 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | `b1-fix.sh` v1.0 | **APPLIED 8 Oct 01:10 IST** | `ec50182305cdd324a93db159e738ec3881e74ebc` / `046bfbbce36f92c1d5af59431e95b187b14097bf749f2446c6d725f0fd21bfca` |
 | `sec-fix.sh` v1.0 | **APPLIED 8 Oct 07:56 IST** | `935a3e392436ed2c04b393219cd50208666f23eb` / `f9f85ccd456dcfc96f542e432dd15e293bb4b898594d7ecfaadb2a82b564bee6` |
 | `b2-fix.sh` v1.0 | **APPLIED 8 Oct 08:09 IST** | `2e9bc49363893665c4d1b45be380904306317e1a` / `11a24ab51244cc43ce8f342dbd9625a6f580edca0fca219086b4d191171df594` |
-| `b3-fix.sh` v1.0 | SHIPPED — apply pending | `830f68c7fe1e1bb4cc30507fdc459cc9c98b5106` / `7794106c241ecb90d6ad0b10ca3eecb618fe32d5912e51c6b099da0dd0208aed` |
+| `b3-fix.sh` v1.0 | **APPLIED 8 Oct 08:32 IST** | `830f68c7fe1e1bb4cc30507fdc459cc9c98b5106` / `7794106c241ecb90d6ad0b10ca3eecb618fe32d5912e51c6b099da0dd0208aed` |
 | sync tool v1.2 (bootstrap) | — | `4b4573f96f55927ee1fbf526037785dcdb82aea1` / `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852` |
 | doctor v1.7 | — | `da3539029d1010f33fd550e7b4d016785c932103` / `e2915e0204df79ec41540d0ee68ef8a1c3cb3f261a39dc38651471a5115f5e88` |
 
