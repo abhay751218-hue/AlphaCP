@@ -1115,6 +1115,22 @@ return [
         ],
     ],
 
+    // OWNER-CTRL: port↔panel map → nginx vhosts ("ek panel = ek port").
+    'ports.apply' => [
+        'handler'     => Tasks\PortsApply::class,
+        'safety'      => 'mutating',
+        'timeout'     => 120,
+        'description' => 'Owner port control: WHM/cPanel/link/webmail vhosts regen + reload (backup/restore safe).',
+        'paths'       => ['/usr/local/alphacp', '/etc/nginx', '/usr/share/roundcube'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'properties'           => [
+                'action' => ['type' => 'string', 'enum' => ['apply', 'status']],
+            ],
+        ],
+    ],
+
     // S7: Exim4 + Dovecot — asli mail. Panel/agent mailboxes (bcrypt + Maildir)
     // pehle se likhte hain; yahi task unhe daemons tak pahunchata hai.
     'mail.server' => [

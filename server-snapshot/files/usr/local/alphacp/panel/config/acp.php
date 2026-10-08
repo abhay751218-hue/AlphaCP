@@ -20,6 +20,9 @@ return [
     // OWNER-CTRL slice me ye superadmin-controlled ho jayega.
     'webmail_port'  => (int) env('ACP_WEBMAIL_PORT', 2096),
 
+    // OWNER-CTRL port↔panel map file (panel + agent + installer shared truth).
+    'ports_file'    => (string) env('ACP_PORTS_FILE', '/usr/local/alphacp/etc/ports.json'),
+
     // This server's row in `servers`.
     //
     // Source of truth = etc/panel.env (written by the installer, readable by

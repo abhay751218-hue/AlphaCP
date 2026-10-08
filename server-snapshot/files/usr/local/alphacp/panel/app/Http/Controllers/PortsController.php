@@ -5,51 +5,57 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\PortConfig;
+use App\Support\Paneld;
+use App\Support\PortMap;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
 /**
- * Owner Ports Config — owner yahan se panel ports choose karta hai.
- * Save par DB + var/ports.json likhta hai; apply-step (installer/agent) ise nginx par lagata hai.
- * 8090 hamesha primary (brand) port hai.
+ * Owner Ports Control — OWNER-CTRL slice ("ek panel = ek port").
+ *
+ * Char mappings: WHM (2087), cPanel (2083), Webmail (2096), link-page (8090,
+ * band ki ja sakti hai). Save par: DB (port_configs single row) +
+ * etc/ports.json + agent task `ports.apply` (nginx vhosts regen + reload).
+ *
+ * Purana multi-port ssl-list shape abandon ho gaya: ek panel kai ports par
+ * khulna product rule ke khilaaf tha.
  */
 final class PortsController extends Controller
 {
-    public const PRIMARY = 8090;
-    private const CPANEL_SSL  = [2083, 2087, 2096];
-    private const CPANEL_HTTP = [2082, 2086, 2095];
-
     public function index(): View
     {
-        return view('ports.index', ['cfg' => $this->current()]);
+        return view('ports.index', [
+            'cfg'   => PortMap::all(),
+            'applied' => $this->agentStatus(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'cpanel' => 'nullable|boolean',
-            'custom' => 'nullable|string',
+            'whm'          => ['required', 'integer', 'min:1024', 'max:65535'],
+            'cpanel'       => ['required', 'integer', 'min:1024', 'max:65535'],
+            'webmail'      => ['required', 'integer', 'min:1024', 'max:65535'],
+            'link'         => ['required', 'integer', 'min:1024', 'max:65535'],
+            'link_enabled' => ['nullable', 'boolean'],
+            'distinct'     => ['nullable'],
         ]);
 
-        $cpanel = $request->boolean('cpanel');
+        $cfg = [
+            'whm'          => (int) $data['whm'],
+            'cpanel'       => (int) $data['cpanel'],
+            'webmail'      => (int) $data['webmail'],
+            'link'         => (int) $data['link'],
+            'link_enabled' => $request->boolean('link_enabled'),
+        ];
 
-        $custom = [];
-        foreach (preg_split('/[\s,]+/', (string) ($data['custom'] ?? '')) ?: [] as $p) {
-            $n = (int) $p;
-            if ($n > 1023 && $n < 65536 && $n !== self::PRIMARY) {
-                $custom[] = $n;
-            }
+        // charon ports alag-alag hone chahiye (ek panel = ek port)
+        if (count(array_unique([$cfg['whm'], $cfg['cpanel'], $cfg['webmail'], $cfg['link']])) !== 4) {
+            return back()->withErrors(['whm' => 'Charon ports alag-alag hone chahiye.'])->withInput();
         }
-        $custom = array_values(array_unique($custom));
 
-        $ssl  = array_values(array_unique(array_merge([self::PRIMARY], $cpanel ? self::CPANEL_SSL : [], $custom)));
-        $http = $cpanel ? self::CPANEL_HTTP : [];
-
-        $cfg = ['ssl' => $ssl, 'http' => $http, 'cpanel' => $cpanel, 'custom' => $custom];
-
-        // single row upsert
         $rec = PortConfig::query()->first();
         if ($rec) {
             $rec->update(['data' => $cfg]);
@@ -60,23 +66,42 @@ final class PortsController extends Controller
         try {
             File::put($this->portsFile(), json_encode($cfg, JSON_PRETTY_PRINT));
         } catch (\Throwable) {
-            // DB source-of-truth hai; file copy agent/apply-step bhi sync karta hai.
+            // DB source-of-truth hai; agent/apply-step file sync bhi karta hai.
         }
 
-        return redirect('/ports')->with('success', 'Ports save ho gaye. Ab apply-step chalayen (ya agent auto-apply).');
+        PortMap::flush();
+
+        // agent se nginx vhosts turant regen karwao
+        $applied = true;
+        try {
+            $res     = Paneld::run('ports.apply', [], 60);
+            $applied = (bool) ($res['applied'] ?? false);
+        } catch (\Throwable) {
+            $applied = false;
+        }
+
+        return redirect('/ports')->with(
+            $applied ? 'success' : 'warning',
+            $applied
+                ? 'Ports save + nginx par apply ho gaye (vhosts regen + reload).'
+                : 'Ports save ho gaye magar agent apply fail hua — dobara try karein ya agent log dekhein.',
+        );
     }
 
-    /** @return array{ssl:list<int>,http:list<int>,cpanel:bool,custom:list<int>} */
-    private function current(): array
+    /** @return array<string,mixed>|null */
+    private function agentStatus(): ?array
     {
-        $rec = PortConfig::query()->first();
+        try {
+            $res = Paneld::run('ports.apply', ['action' => 'status'], 15);
 
-        return $rec?->data ?? ['ssl' => [self::PRIMARY], 'http' => [], 'cpanel' => false, 'custom' => []];
+            return is_array($res) ? $res : null;
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function portsFile(): string
     {
-        // etc/ open_basedir-allowed hai (web user read/write kar sakta hai).
         return (string) (config('acp.ports_file') ?: '/usr/local/alphacp/etc/ports.json');
     }
 }

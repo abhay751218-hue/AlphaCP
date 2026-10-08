@@ -33,6 +33,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Security headers on every panel response.
         $middleware->append(\App\Http\Middleware\PanelSecurityHeaders::class);
+
+        // Port↔panel lock ("ek panel = ek port"): 2087=WHM, 2083=cPanel.
+        $middleware->append(\App\Http\Middleware\AcpPortGuard::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
