@@ -110,3 +110,12 @@ era, byte-for-byte (tasks.php + controller + blade).
 ```bash
 bash tools/sim/b3-fix-sim.sh               # -> 41/41
 ```
+
+## suite-enable-sim.sh — `installer/suite-enable.sh` v1.0 (pdo_sqlite + live suite)
+
+Sandbox PHP me pdo_sqlite pehle se hai → idempotent skip-path + full suite gate
+(222/0) + diagnose + negative path (stub suite `failed: 3` → installer exit 1).
+
+```bash
+bash tools/sim/suite-enable-sim.sh         # -> 8/8
+```

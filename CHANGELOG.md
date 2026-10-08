@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/suite-enable.sh` **v1.0** (+ `tools/sim/suite-enable-sim.sh`, **8/8**) —
+  user-approved `php8.4-sqlite3` live install + poora agent suite LIVE gate
+  (passed>=222 failed=0); idempotent, --rollback/--diagnose.
+  Pin: commit `718da55298c32d61e67a3ea6ecfc123d6e5feec1`, sha256 `b16199cf683c3def57f376fce1a295bb9d4069c825dcb650c5a751eb214bf61a`.
 - **B4 test-debt fixed (repo, `58fb3cb`):** 6 panel-test failures → tests trademark-free UI
   strings se align (`Server Manager Dashboard`, `Account Panel`, `customer account panel`,
   `Transfer or Restore a Hosting Account`, `Import a hosting account archive/from an archive`);

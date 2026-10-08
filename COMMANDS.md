@@ -14,6 +14,23 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### 🔴 suite-enable v1.0 — ABHI CHALAO (live par poora test-suite)
+```bash
+sudo alphacp-sync get 718da55298c32d61e67a3ea6ecfc123d6e5feec1 installer/suite-enable.sh /tmp/suite-enable-v1.0.sh b16199cf683c3def57f376fce1a295bb9d4069c825dcb650c5a751eb214bf61a && sudo bash /tmp/suite-enable-v1.0.sh
+```
+- commit `718da55298c32d61e67a3ea6ecfc123d6e5feec1`, sha256 `b16199cf683c3def57f376fce1a295bb9d4069c825dcb650c5a751eb214bf61a`. User-approved dependency: `php8.4-sqlite3`.
+- **Kya karta hai:** live PHP me `pdo_sqlite` nahi tha → agent suite ke TaskLogger tests
+  live par nahi chal sakte the (installers skip-note dete the). Ab apt se
+  `php8.4-sqlite3` lagta hai, verify hota hai, phir **poora 222-test suite LIVE** chalta
+  hai (gate: passed>=222 failed=0). Koi panel/agent file nahi badalti. Idempotent
+  (pdo_sqlite pehle se ho to install skip).
+- **Expected output:** `pdo_sqlite pehle se loaded` YA `php8.4-sqlite3 install hua` →
+  `pdo_sqlite loaded (8.4.x)` → `suite: passed: 222   failed: 0` →
+  `agent suite GREEN live par` → sync → `FINAL VERDICT … suite-enable v1.0 APPLY ho gaya`.
+- **Fail par:** exit 1 (koi file change nahi hoti). **Wapas:** `--rollback` (apt remove).
+- **Iske baad:** agle installers suite-skip note nahi denge — suite gate live par enforce.
+- Test: `bash tools/sim/suite-enable-sim.sh` → **8/8**.
+
 ### ✅ b3-fix v1.0 — APPLIED 8 Oct 08:32 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 830f68c7fe1e1bb4cc30507fdc459cc9c98b5106 installer/b3-fix.sh /tmp/b3-fix-v1.0.sh 7794106c241ecb90d6ad0b10ca3eecb618fe32d5912e51c6b099da0dd0208aed && sudo bash /tmp/b3-fix-v1.0.sh
