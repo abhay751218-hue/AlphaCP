@@ -12,6 +12,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   migration 0003_webmail_sso.sql. Pin `0ff1da8a…` / `068895dd…`.
   **OWNER-CTRL slice queued:** ports/panels ka control sirf company-owner
   (superadmin) ke paas — user-approved requirement, agla build.
+- `installer/webmail-fix.sh` **v1.1** — v1.0 live par nginx -t (1.24.0 vs `http2 on;`)
+  par rollback hua; ab http2 nginx-version-aware (sim 46/46, NGX_VER=1.24 assert).
 ### Added
 - `installer/ui3-fix.sh` **v1.0** (+ `.in`, `tools/build-ui3-fix.py`,
   `tools/sim/ui3-fix-sim.sh` **26/26**) — P-UI-3: WHM sidebar Favorites (star

@@ -187,10 +187,10 @@ bash tools/sim/ui3-fix-sim.sh              # -> 26/26
 
 ACP_SIM=1 (apt/systemctl/nginx -t/curl/mysql skip; system paths env se fake).
 PRE = `2dcfd2f`: reproduce (plugin/vhost/secrets/master-passdb = 0) → diagnose →
-apply (9 payloads byte-for-byte era `fdaf253` + suite 223/0 + vhost/config/
+apply (NGX_VER=1.24 http2 asserts + 9 payloads byte-for-byte era `fdaf253` + suite 223/0 + vhost/config/
 dovecot/internal-lock asserts) → diagnose post → rollback (sys files samet) →
 re-apply.
 
 ```bash
-bash tools/sim/webmail-fix-sim.sh          # -> 44/44
+bash tools/sim/webmail-fix-sim.sh          # -> 46/46
 ```
