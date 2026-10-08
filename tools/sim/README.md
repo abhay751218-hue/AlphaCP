@@ -97,3 +97,16 @@ re-apply. Payload pins `715a9e2` era, byte-for-byte.
 ```bash
 bash tools/sim/b2-fix-sim.sh               # -> 40/40
 ```
+
+## b3-fix-sim.sh — `installer/b3-fix.sh` v1.0 (WebDisk/WebDAV via root agent)
+
+PRE state = `2e9bc49`-era (96 types, DB-only WebDiskController, bina password view)
+reproduce karke poora lifecycle: reproduce → diagnose PRESENT/MISSING → apply
+(lint 7+2, smoke, suite gate `passed>=222 failed=0`, registry 99, controller
+Paneld::run, view password field, routes `webdisk/{login}`) → diagnose post →
+rollback (96 types + DB-only controller wapas) → re-apply. Payload pins `ee6b659`
+era, byte-for-byte (tasks.php + controller + blade).
+
+```bash
+bash tools/sim/b3-fix-sim.sh               # -> 41/41
+```

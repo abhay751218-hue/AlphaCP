@@ -5,6 +5,20 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/b3-fix.sh` **v1.0** (+ `.in`, `tools/build-b3-fix.py`, `tools/sim/b3-fix-sim.sh`) —
+  B3 deploy: agent 7 + panel 3 files byte-for-byte; gates b2-fix jaise + apache WebDAV
+  modules (dav/dav_fs/auth_digest, warn-only) + panel asserts (Paneld::run, password field,
+  `webdisk/{login}` route). **Sim 41/41** (PRE=`2e9bc49` reproduce → apply → rollback →
+  idempotent; payload era `ee6b659`).
+  Pin: commit `830f68c7fe1e1bb4cc30507fdc459cc9c98b5106`, sha256 `7794106c241ecb90d6ad0b10ca3eecb618fe32d5912e51c6b099da0dd0208aed`.
+- **B3: WebDisk = asli WebDAV provisioning** · agent `src/WebDisk.php` engine: Digest
+  credential file (`login:realm:md5-A1`, plaintext kahin nahi — DB me bhi nahi), managed
+  Apache snippet (`Alias /webdisk <home>` + `DAV on` + Digest; write methods sirf rw logins,
+  ro par denied; khali rw-list = all denied), vhost `IncludeOptional` + reload; aakhri
+  account par conf+digest purge. Tasks `webdisk.list/create/delete` (registry 96 → **99**,
+  create = upsert/password-reset). Panel: controller agent-truth (`Paneld::run`), DB row
+  sirf ownership cache (koi schema change nahi), view me password + connect-info.
+  Commit `ee6b659`; suite 221 → **222/0**.
 - `installer/b2-fix.sh` **v1.0** (+ `.in`, `tools/build-b2-fix.py`, `tools/sim/b2-fix-sim.sh`) —
   B2 deploy: agent 4 + panel 2 files byte-for-byte; gates wahi pattern (suite `passed>=221
   failed=0` — live par pdo_sqlite absent = documented skip-note, registry 96 me `metrics.access`,

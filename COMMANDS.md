@@ -14,6 +14,32 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### 🔴 b3-fix v1.0 — ABHI CHALAO (WebDisk = asli WebDAV provisioning)
+```bash
+sudo alphacp-sync get 830f68c7fe1e1bb4cc30507fdc459cc9c98b5106 installer/b3-fix.sh /tmp/b3-fix-v1.0.sh 7794106c241ecb90d6ad0b10ca3eecb618fe32d5912e51c6b099da0dd0208aed && sudo bash /tmp/b3-fix-v1.0.sh
+```
+- commit `830f68c7fe1e1bb4cc30507fdc459cc9c98b5106`, sha256 `7794106c241ecb90d6ad0b10ca3eecb618fe32d5912e51c6b099da0dd0208aed`.
+- **Kya karta hai:** Web Disk page sirf DB row likhta tha — koi WebDAV exist hi nahi
+  karta tha (audit B3). Ab root agent provision karta hai: `<home>/etc/webdisk.digest`
+  (Apache Digest auth, `login:realm:md5-A1`; plaintext kahin nahi), `<home>/etc/webdisk.conf`
+  (managed snippet: `Alias /webdisk <home>` + `DAV on` + Digest; write methods sirf
+  `rw` logins ke liye — `ro` accounts par denied), vhost me `IncludeOptional` + apache
+  reload. Registry 96 → **99 types** (`webdisk.list/create/delete`). Panel controller ab
+  agent-truth (`Paneld::run`); DB row sirf ownership cache; view me password field +
+  connect-info card. Installer apache modules `dav/dav_fs/auth_digest` enable karta hai
+  (missing hone par a2enmod; warn-only).
+- **Expected output:** `backup: …/releases/b3fix-<ts>` → `agent files likhi + lint clean (7)` →
+  `SMOKE OK` → suite gate (live par `pdo_sqlite nahi — suite skip` note) → `paneld active
+  (99-type registry)` → `a2enmod dav dav_fs auth_digest` (ya "pehle se enabled") →
+  `panel files likhi + lint clean (2)` → fpm active → `/login 200` → sync →
+  `FINAL VERDICT … b3-fix v1.0 APPLY ho gaya`.
+- **Fail par:** auto-rollback. **Dekhna ho:** `--diagnose` · **wapas:** `--rollback`.
+- **Verify:** panel → **Web Disk** → account banao (login+password+rw/ro) → WebDAV client
+  (ya `curl --digest -u login:pass https://<host>/webdisk/`) se files dikhen.
+  `sudo php8.4 /usr/local/alphacp/agent/tests/run-tests.php | tail -1` → `passed: 222   failed: 0`
+  (agar pdo_sqlite ho).
+- Test: `bash tools/sim/b3-fix-sim.sh` → **41/41**.
+
 ### ✅ b2-fix v1.0 — APPLIED 8 Oct 08:09 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 2e9bc49363893665c4d1b45be380904306317e1a installer/b2-fix.sh /tmp/b2-fix-v1.0.sh 11a24ab51244cc43ce8f342dbd9625a6f580edca0fca219086b4d191171df594 && sudo bash /tmp/b2-fix-v1.0.sh

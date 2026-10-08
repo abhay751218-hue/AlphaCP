@@ -63,6 +63,10 @@ ya agent-pushed metrics table.
 `WebDiskController::store()` `WebDiskAccount` row likhta hai; koi agent task/config-step nahi.
 Decision chahiye: agent se dav-config implement karo, ya module ko UI se hide karo.
 
+> **✅ SHIPPED (apply pending):** implement kiya (hide nahi) — agent `WebDisk.php` engine
+> + `webdisk.*` tasks (code `ee6b659`, suite 222/0, registry 99) + `installer/b3-fix.sh`
+> v1.0 (`830f68c`) — COMMANDS.md 🔴 section se apply karo.
+
 ### B4 · 6 failing tests = test-debt (production bug nahi, par license-grade quality gate ke liye fix)
 - `DashboardShellTest` ×2 — `assertSee('WHM Dashboard')`, UI ab `Server Manager Dashboard`
 - `DomainsTest` ×1 — `assertSee('customer cPanel')`
