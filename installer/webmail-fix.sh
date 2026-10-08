@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — WEBMAIL FIX  v1.0  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+#  AlphaCP — WEBMAIL FIX  v1.1  (Roundcube Webmail, cPanel-style port 2096 + SSO)
 # -----------------------------------------------------------------------------
 #  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
 #  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
@@ -28,7 +28,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.0"
+VERSION="1.1"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 PANEL="${ACP_HOME}/panel"
@@ -71,6 +71,17 @@ detect_php(){
 }
 PHP_BIN="$(detect_php)"
 
+# nginx <1.25.1 par "http2 on;" directive NAHI hoti (Ubuntu 24.04 = 1.24) —
+# wahan http2 listen line ke parameter se enable hota hai.
+detect_ngx_ver(){
+  nginx -v 2>&1 | sed -nE 's#.*nginx/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' | head -1
+}
+NGX_VER="${NGX_VER:-$(detect_ngx_ver)}"
+HTTP2_SUFFIX=" http2"; H2_LINE=""
+if [[ -n "$NGX_VER" ]] && [[ "$(printf '%s\n1.25.1\n' "$NGX_VER" | sort -V | head -1)" == "1.25.1" ]]; then
+  HTTP2_SUFFIX=""; H2_LINE="    http2 on;"
+fi
+
 AGENT_FILES=(src/MailServer.php tests/run-tests.php)
 PANEL_FILES=(app/Http/Controllers/WebmailController.php app/Http/Controllers/WebmailSsoController.php routes/web.php config/acp.php resources/views/webmail/index.blade.php)
 
@@ -108,6 +119,7 @@ diagnose(){
   info "ACP_HOME=${ACP_HOME} php=${PHP_BIN:-none} sim=${SIM}"
   info "roundcube plugin PRESENT   : $( [[ -f "${RC_PLUGINS}/acp_sso/acp_sso.php" ]] && echo PRESENT || echo MISSING )"
   info "nginx webmail vhost 2096   : $(cnt 'listen 2096 ssl' "${NGX_AVAIL}/alphacp-webmail.conf")  (>=1=theek)"
+  info "nginx version / http2 mode : ${NGX_VER:-?} / suffix='${HTTP2_SUFFIX}'"
   info "panel vhost internal lock  : $(cnt 'ACP_INTERNAL_START' "${PANEL_VHOST}")  (>=1=theek)"
   info "sso secret file            : $( [[ -f "${ACP_HOME}/etc/webmail-sso.secret" ]] && echo PRESENT || echo MISSING )"
   info "dovecot master passdb file : $( [[ -f "${ACP_HOME}/etc/webmail-master.pw" ]] && echo PRESENT || echo MISSING )"
@@ -295,9 +307,9 @@ PHPEOF
   cat > "${NGX_AVAIL}/alphacp-webmail.conf" <<NGXEOF
 # AlphaCP Webmail (Roundcube) — cPanel-style port 2096 (webmail-fix v${VERSION})
 server {
-    listen 2096 ssl;
-    listen [::]:2096 ssl;
-    http2 on;
+    listen 2096 ssl${HTTP2_SUFFIX};
+    listen [::]:2096 ssl${HTTP2_SUFFIX};
+${H2_LINE}
     server_name _;
 
     ssl_certificate     ${SSL_CRT};

@@ -47,7 +47,7 @@ printf '# managed dovecot conf\npassdb {\n  driver = passwd-file\n  args = schem
 cp "$FAKE/ngx/avail/alphacp-panel.conf" "$FAKE/.pre-panelvhost"
 cp "$FAKE/dovecot/99-alphacp.conf" "$FAKE/.pre-dovecot"
 
-export ACP_HOME="$FAKE" ACP_SIM=1 \
+export ACP_HOME="$FAKE" ACP_SIM=1 NGX_VER="1.24.0" \
        RC_ETC="$FAKE/rc/etc" RC_PLUGINS="$FAKE/rc/plugins" \
        NGX_AVAIL="$FAKE/ngx/avail" NGX_EN="$FAKE/ngx/en" \
        PANEL_VHOST="$FAKE/ngx/avail/alphacp-panel.conf" \
@@ -83,6 +83,8 @@ t "asserts pass"                  has "$A1" "structural asserts pass"
 t "suite GREEN 223"               has "$A1" "passed=223 failed=0"
 t "backup bana"                   bash -c "ls -1d '$FAKE'/releases/webmailfix-* >/dev/null 2>&1"
 t "vhost 2096 likha"              test "$(grepc 'listen 2096 ssl' "$VHOST")" -ge 1
+t "1.24 par 'http2 on;' NAHI"     test "$(grepc 'http2 on;' "$VHOST")" -eq 0
+t "1.24 par listen http2 suffix"  test "$(grepc 'listen 2096 ssl http2;' "$VHOST")" -ge 1
 t "rc config me plugin"           test "$(grepc 'acp_sso' "$RCCONF")" -ge 1
 t "rc config imap 143"            test "$(grepc "imap_host'] = 'localhost:143'" "$RCCONF")" -ge 1
 t "dovecot master passdb"         test "$(grepc 'master = yes' "$DCONF")" -ge 1
