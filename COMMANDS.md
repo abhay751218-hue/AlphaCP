@@ -14,9 +14,9 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 webmail-fix v1.7 — ABHI CHALAO (Roundcube Webmail port 2096 + SSO, cPanel-style)
+### 🔴 webmail-fix v1.9 — ABHI CHALAO (Roundcube Webmail port 2096 + SSO, cPanel-style)
 ```bash
-sudo alphacp-sync get c1f63436784172e3408a3c81aadda219419ac832 installer/webmail-fix.sh /tmp/webmail-fix-v1.7.sh f19fd32853fa3ed5bed3833f577c8c3aacf427fdeef410e190ccfc74d9e0419d && sudo bash /tmp/webmail-fix-v1.7.sh
+sudo alphacp-sync get 228ebeaad08412badca44fe2534ff24dff765bb9 installer/webmail-fix.sh /tmp/webmail-fix-v1.9.sh 6755bbcc77536d221d2d8861f84e2e1b5d049c491cf095de59e67386a0149782 && sudo bash /tmp/webmail-fix-v1.9.sh
 ```
 - **Kya karta hai:** Roundcube install (apt) → port **2096 ssl** par alag vhost
   (cPanel-style webmail port) → panel se "Open Webmail" par ONE-TIME token SSO
@@ -30,6 +30,16 @@ sudo alphacp-sync get c1f63436784172e3408a3c81aadda219419ac832 installer/webmail
 - **Fail par:** auto-rollback. **Wapas:** `--rollback`. **Check:** panel → Email → Webmail →
   "Open Webmail" → Roundcube me bina password ke logged-in.
 - Test: `bash tools/sim/webmail-fix-sim.sh` → **48/48**.
+
+### ⏸ webmail-fix v1.8 — built+sim 53/53 magar LIVE PAR NAHI CHALAYA (v1.7 diagnostic ke baad pata chala sock-owner heuristic galat actor padhti; v1.9 ne supersede kiya)
+```bash
+sudo alphacp-sync get f47d2628d3f6a03802f685330cda28c832e27adf installer/webmail-fix.sh /tmp/webmail-fix-v1.8.sh d04e69a31026c38fab3c9212ab9305b247a0ae311b201f51ff6d70bac3715a26 && sudo bash /tmp/webmail-fix-v1.8.sh
+```
+
+### ❌ webmail-fix v1.7 — RAN 8 Oct 22:33 IST, APPLIED magar panel=www-data hi raha (installer sites-available skeleton edit/detect karta raha; served file sites-enabled hai) → SUPERSEDED by v1.8
+```bash
+sudo alphacp-sync get c1f63436784172e3408a3c81aadda219419ac832 installer/webmail-fix.sh /tmp/webmail-fix-v1.7.sh f19fd32853fa3ed5bed3833f577c8c3aacf427fdeef410e190ccfc74d9e0419d && sudo bash /tmp/webmail-fix-v1.7.sh
+```
 
 ### ❌ webmail-fix v1.6 — RAN 8 Oct 22:26 IST, APPLIED magar detect galat (panel=www-data; alphacp.conf listen-line grep miss) → 500 jaari → SUPERSEDED by v1.7
 ```bash

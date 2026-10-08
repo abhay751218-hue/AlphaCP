@@ -31,6 +31,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 - `installer/webmail-fix.sh` **v1.7** — pool-user detect: sock owner (stat %U)
   primary + format-agnostic pool-conf fallback (v1.6 live par www-data detect
   kar gaya tha); sim 52/52.
+- `installer/webmail-fix.sh` **v1.8** — served panel vhost resolution: pehli
+  candidate jis me fastcgi_pass ho (sites-enabled→available→conf.d); skeleton
+  copy par detection/internal-lock jane ka live bug khatam; sim 53/53.
+- `installer/webmail-fix.sh` **v1.9** — pool user = pool-conf `user=` line
+  (sock owner = listen.owner = nginx user, worker nahi — v1.7 trap); sim pool
+  conf live-jaisi: 53/53. (v1.8 served-vhost resolution sim tak, live nahi chala.)
 ### Added
 - `installer/ui3-fix.sh` **v1.0** (+ `.in`, `tools/build-ui3-fix.py`,
   `tools/sim/ui3-fix-sim.sh` **26/26**) — P-UI-3: WHM sidebar Favorites (star
