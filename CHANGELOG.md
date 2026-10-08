@@ -9,6 +9,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   `tools/sim/ui3-fix-sim.sh` **26/26**) — P-UI-3: WHM sidebar Favorites (star
   toggle + Favorites group, localStorage `acp_whm_favs`; cPanel ka server-side
   store parity gap documented — DB schema change intentionally nahi).
+  **8 Oct 20:46 IST LIVE APPLIED, user-confirmed** (backup `ui3fix-20261008151545`).
+  Known cosmetic (ui2+ui3 dono): apply-header subtitle ui1 wala text dikhta hai —
+  sirf display string, koi functional impact nahi; agle ui-build me theek hoga.
 ### Added
 - `installer/ui2-fix.sh` **v1.0** (+ `.in`, `tools/build-ui2-fix.py`,
   `tools/sim/ui2-fix-sim.sh` **32/32**) — P-UI-2: WHM mode me cPanel WHM jaisa left

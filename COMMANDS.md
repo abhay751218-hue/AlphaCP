@@ -14,7 +14,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 ui3-fix v1.0 — ABHI CHALAO (WHM sidebar Favorites — cPanel WHM parity)
+### ✅ ui3-fix v1.0 — APPLIED 8 Oct 20:46 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 53d09f8d1565ba75fa2927e1c6c45ed72cc2495c installer/ui3-fix.sh /tmp/ui3-fix-v1.0.sh 9e3b41ad723b636522de9ea8413bcaba71b688cf5939120c1c65a6fd24342557 && sudo bash /tmp/ui3-fix-v1.0.sh
 ```

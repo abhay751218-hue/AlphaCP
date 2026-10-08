@@ -142,7 +142,7 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 |---|---|
 | P-UI-1 | Theme engine: 3 alag themes/layouts (WHM / cPanel / Webmail) + design tokens (colours, sidebar, cards, icons) |
 | P-UI-2 | **cPanel (customer)** icon-grid home + sections + right General-Info column + top search + footer |
-| P-UI-3 | **WHM (root/reseller)** sidebar nav-tree + Favorites + Statistics home — nav-tree P-UI-2 me, Favorites+stats-home ui3-fix v1.0 me (apply pending) |
+| P-UI-3 | **WHM (root/reseller)** sidebar nav-tree + Favorites + Statistics home — nav-tree P-UI-2 me, Favorites+stats-home ui3-fix v1.0 me ✅ APPLIED 8 Oct 20:46 IST (backup ui3fix-20261008151545) |
 | P-UI-4 | **Webmail** alag app (Roundcube SSO) + alag login (2095/96 opt-in) |
 | P-UI-5 | Responsive/mobile (hamburger + stacked) + icons set + white-label/branding hooks |
 | P-UI-6 | Har module-page ko cPanel ke page-layout se match (forms/tables/buttons consistency) |
