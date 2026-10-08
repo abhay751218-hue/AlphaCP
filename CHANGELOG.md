@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/ui3-fix.sh` **v1.0** (+ `.in`, `tools/build-ui3-fix.py`,
+  `tools/sim/ui3-fix-sim.sh` **26/26**) — P-UI-3: WHM sidebar Favorites (star
+  toggle + Favorites group, localStorage `acp_whm_favs`; cPanel ka server-side
+  store parity gap documented — DB schema change intentionally nahi).
+### Added
 - `installer/ui2-fix.sh` **v1.0** (+ `.in`, `tools/build-ui2-fix.py`,
   `tools/sim/ui2-fix-sim.sh` **32/32**) — P-UI-2: WHM mode me cPanel WHM jaisa left
   sidebar (search + 8 collapsible category groups, live routes + soon chips);

@@ -172,3 +172,13 @@ asserts + 4 files byte-for-byte era `0beb285`) → diagnose post → rollback
 ```bash
 bash tools/sim/ui2-fix-sim.sh              # -> 32/32
 ```
+
+## ui3-fix-sim.sh — `installer/ui3-fix.sh` v1.0 (WHM sidebar Favorites)
+
+PRE = `0beb285` (ui2-era live state: sidebar hai, Favorites nahi): reproduce
+(stars/key/css-fav = 0) → diagnose → apply (4 asserts + 2 files byte-for-byte
+era `8ee6f85`) → diagnose post → rollback → re-apply.
+
+```bash
+bash tools/sim/ui3-fix-sim.sh              # -> 26/26
+```

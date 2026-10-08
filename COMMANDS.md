@@ -14,6 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### 🔴 ui3-fix v1.0 — ABHI CHALAO (WHM sidebar Favorites — cPanel WHM parity)
+```bash
+sudo alphacp-sync get 53d09f8d1565ba75fa2927e1c6c45ed72cc2495c installer/ui3-fix.sh /tmp/ui3-fix-v1.0.sh 9e3b41ad723b636522de9ea8413bcaba71b688cf5939120c1c65a6fd24342557 && sudo bash /tmp/ui3-fix-v1.0.sh
+```
+- **Kya karta hai:** WHM sidebar ke har live item par ★ toggle; favorites sidebar
+  ke sabse upar "Favorites" group me (cPanel WHM jaisa). Store = localStorage
+  (per-browser; koi DB change nahi — server-side parity note CHANGELOG me).
+  2 panel files byte-for-byte; customer mode unchanged.
+- **Expected:** `backup: …/releases/ui3fix-<ts>` → `panel files likhi (2) — Favorites
+  asserts pass` → optimize:clear → fpm active → `/login HTTP 200` → sync →
+  `FINAL VERDICT … ui3-fix v1.0 APPLY ho gaya`.
+- **Check:** root login → Ctrl+Shift+R → kisi item par ★ dabao → Favorites group upar.
+- Test: `bash tools/sim/ui3-fix-sim.sh` → **26/26**.
+
 ### ✅ ui2-fix v1.0 — APPLIED 8 Oct 20:36 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get b25ad61d88c3410b9fca0a9e9891d448f037e95d installer/ui2-fix.sh /tmp/ui2-fix-v1.0.sh 900cc726295b80b2e9ad1741a339039820dc1990dbc1f92eb7e5b4fbc7cb8b1c && sudo bash /tmp/ui2-fix-v1.0.sh
