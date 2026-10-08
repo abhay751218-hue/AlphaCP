@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — WEBMAIL FIX  v1.6  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+#  AlphaCP — WEBMAIL FIX  v1.7  (Roundcube Webmail, cPanel-style port 2096 + SSO)
 # -----------------------------------------------------------------------------
 #  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
 #  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
@@ -28,7 +28,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.6"
+VERSION="1.7"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 PANEL="${ACP_HOME}/panel"
@@ -185,10 +185,16 @@ apply(){
     local sock pfile u
     sock="$(grep -o 'fastcgi_pass[[:space:]]*unix:[^;]*;' "$1" 2>/dev/null | head -1 | sed 's|.*unix:||; s|;||')"
     [[ -n "$sock" ]] || { echo www-data; return; }
-    pfile="$(grep -l "listen = $sock" "${POOL_DIR}"/*.conf 2>/dev/null | head -1)"
+    # 1) socket ka owner = pool user (sabse reliable, live par hamesha maujood)
+    if [[ -e "$sock" ]]; then
+      u="$(stat -c %U "$sock" 2>/dev/null)"
+      [[ -n "$u" && "$u" != "root" ]] && { echo "$u"; return; }
+    fi
+    # 2) pool conf me sock string (listen line indent/format jo bhi ho)
+    pfile="$(grep -lF "$sock" "${POOL_DIR}"/*.conf 2>/dev/null | head -1)"
     [[ -n "$pfile" ]] || { echo www-data; return; }
-    u="$(awk -F'=[[:space:]]*' '/^user[[:space:]]*=/{print $2; exit}' "$pfile")"
-    [[ -n "$u" ]] || u="$(awk -F'=[[:space:]]*' '/^group[[:space:]]*=/{print $2; exit}' "$pfile")"
+    u="$(awk -F'=[[:space:]]*' '/^[[:space:]]*user[[:space:]]*=/{print $2; exit}' "$pfile")"
+    [[ -n "$u" ]] || u="$(awk -F'=[[:space:]]*' '/^[[:space:]]*group[[:space:]]*=/{print $2; exit}' "$pfile")"
     echo "${u:-www-data}"
   }
   PANEL_FPM_USER="$(pool_user "${PANEL_VHOST}")"
