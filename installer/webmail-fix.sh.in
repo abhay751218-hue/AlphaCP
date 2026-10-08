@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — WEBMAIL FIX  v1.5  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+#  AlphaCP — WEBMAIL FIX  v1.6  (Roundcube Webmail, cPanel-style port 2096 + SSO)
 # -----------------------------------------------------------------------------
 #  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
 #  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
@@ -28,7 +28,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.5"
+VERSION="1.6"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 PANEL="${ACP_HOME}/panel"
@@ -73,6 +73,8 @@ PHP_BIN="$(detect_php)"
 
 # nginx <1.25.1 par "http2 on;" directive NAHI hoti (Ubuntu 24.04 = 1.24) —
 # wahan http2 listen line ke parameter se enable hota hai.
+POOL_DIR="${ACP_POOL_DIR:-/etc/php/8.4/fpm/pool.d}"
+
 detect_ngx_ver(){
   nginx -v 2>&1 | sed -nE 's#.*nginx/([0-9]+\.[0-9]+\.[0-9]+).*#\1#p' | head -1
 }
@@ -165,7 +167,7 @@ apply(){
   fi
 
   # ---- 2) secrets ----
-  hdr "SSO secrets (root:${WWW_GROUP} 0640)"
+  hdr "SSO secrets (shared group, FPM-user aware)"
   mkdir -p "${ACP_HOME}/etc"
   if [[ ! -f "${ACP_HOME}/etc/webmail-sso.secret" ]]; then
     openssl rand -hex 32 > "${ACP_HOME}/etc/webmail-sso.secret"
@@ -176,9 +178,47 @@ apply(){
     mhash="$("$PHP_BIN" -r 'echo password_hash(trim(file_get_contents($argv[1])), PASSWORD_BCRYPT);' "${ACP_HOME}/etc/webmail-master.plain")"
     printf 'acpmaster:{BLF-CRYPT}%s\n' "$mhash" > "${ACP_HOME}/etc/webmail-master.pw"
   fi
-  chown root:"${WWW_GROUP}" "${ACP_HOME}/etc/webmail-sso.secret" "${ACP_HOME}/etc/webmail-master.plain" "${ACP_HOME}/etc/webmail-master.pw" 2>/dev/null || true
+  # FPM pool user detect: vhost ka fastcgi_pass sock → pool conf → user/group.
+  # (Live: panel pool = alphacp, webmail pool = www-data — secret dono ko padhna
+  #  hai, isliye shared group acpsso; single-user ho to wahi group.)
+  pool_user() {
+    local sock pfile u
+    sock="$(grep -o 'fastcgi_pass[[:space:]]*unix:[^;]*;' "$1" 2>/dev/null | head -1 | sed 's|.*unix:||; s|;||')"
+    [[ -n "$sock" ]] || { echo www-data; return; }
+    pfile="$(grep -l "listen = $sock" "${POOL_DIR}"/*.conf 2>/dev/null | head -1)"
+    [[ -n "$pfile" ]] || { echo www-data; return; }
+    u="$(awk -F'=[[:space:]]*' '/^user[[:space:]]*=/{print $2; exit}' "$pfile")"
+    [[ -n "$u" ]] || u="$(awk -F'=[[:space:]]*' '/^group[[:space:]]*=/{print $2; exit}' "$pfile")"
+    echo "${u:-www-data}"
+  }
+  PANEL_FPM_USER="$(pool_user "${PANEL_VHOST}")"
+  RC_FPM_USER="$(pool_user "${NGX_AVAIL}/alphacp-webmail.conf")"
+  if [[ "$PANEL_FPM_USER" == "$RC_FPM_USER" ]]; then
+    SSO_GROUP="$PANEL_FPM_USER"
+  else
+    SSO_GROUP=acpsso
+    if [[ "$SIM" != "1" ]]; then
+      groupadd -f acpsso
+      id -nG "$PANEL_FPM_USER" 2>/dev/null | grep -qw acpsso || usermod -aG acpsso "$PANEL_FPM_USER"
+      id -nG "$RC_FPM_USER" 2>/dev/null | grep -qw acpsso || usermod -aG acpsso "$RC_FPM_USER"
+    fi
+  fi
+  chown root:"${SSO_GROUP}" "${ACP_HOME}/etc/webmail-sso.secret" 2>/dev/null || true
+  chown root:"${RC_FPM_USER}" "${ACP_HOME}/etc/webmail-master.plain" 2>/dev/null || true
+  chown root:root "${ACP_HOME}/etc/webmail-master.pw" 2>/dev/null || true
   chmod 0640 "${ACP_HOME}/etc/webmail-sso.secret" "${ACP_HOME}/etc/webmail-master.plain" "${ACP_HOME}/etc/webmail-master.pw" 2>/dev/null || true
-  ok "secret + master pw files ready"
+  info "secret perms: root:${SSO_GROUP} 0640 (panel=${PANEL_FPM_USER} rc=${RC_FPM_USER})"
+  if [[ "$SIM" != "1" && "$SSO_GROUP" == "acpsso" ]]; then
+    systemctl restart php8.4-fpm >/dev/null 2>&1 || service php8.4-fpm restart >/dev/null 2>&1 || true
+  fi
+  # gate: asli readers file padh sakte hain (live only) — v1.5 ka 500 yahi pakadta
+  if [[ "$SIM" != "1" ]]; then
+    su -s /bin/sh -c "test -r '${ACP_HOME}/etc/webmail-sso.secret'" "$PANEL_FPM_USER" \
+      || { rollback; die "panel FPM user ${PANEL_FPM_USER} secret nahi padh sakta"; }
+    su -s /bin/sh -c "test -r '${ACP_HOME}/etc/webmail-sso.secret' && test -r '${ACP_HOME}/etc/webmail-master.plain'" "$RC_FPM_USER" \
+      || { rollback; die "rc FPM user ${RC_FPM_USER} secret/plain nahi padh sakta"; }
+  fi
+  ok "secret + master pw files ready (panel=${PANEL_FPM_USER} rc=${RC_FPM_USER} group=${SSO_GROUP})"
 
   # ---- 3) roundcube config block ----
   hdr "roundcube config"

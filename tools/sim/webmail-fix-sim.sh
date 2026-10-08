@@ -42,7 +42,10 @@ for f in "${PA_REL[@]}"; do
   git -C "$REPO" show "${ERA}:${PANEL_REL}/${f}" > "$FAKE/.era-pa-${f//\//_}"
 done
 # fake system files
-printf 'server {\n    listen 8090 ssl;\n    server_name panel.local;\n    root /x;\n}\n' > "$FAKE/ngx/avail/alphacp-panel.conf"
+printf 'server {\n    listen 8090 ssl;\n    server_name panel.local;\n    root /x;\n    location ~ \\.php$ { fastcgi_pass unix:/run/php/alphacp-fpm.sock; }\n}\n' > "$FAKE/ngx/avail/alphacp-panel.conf"
+mkdir -p "$FAKE/php/pool.d"
+printf 'user = acpweb\ngroup = acpweb\nlisten = /run/php/alphacp-fpm.sock\n' > "$FAKE/php/pool.d/alphacp.conf"
+printf 'user = www-data\ngroup = www-data\nlisten = /run/php/php8.4-fpm.sock\n' > "$FAKE/php/pool.d/www.conf"
 printf '# managed dovecot conf\npassdb {\n  driver = passwd-file\n  args = scheme=BLF-CRYPT /x/users\n}\n' > "$FAKE/dovecot/99-alphacp.conf"
 cat > "$FAKE/rc/etc/config.inc.php" <<'RCEOF'
 <?php
@@ -62,7 +65,7 @@ export ACP_HOME="$FAKE" ACP_SIM=1 NGX_VER="1.24.0" \
        NGX_AVAIL="$FAKE/ngx/avail" NGX_EN="$FAKE/ngx/en" \
        PANEL_VHOST="$FAKE/ngx/avail/alphacp-panel.conf" \
        DOVECOT_CONF="$FAKE/dovecot/99-alphacp.conf" \
-       WWW_GROUP=root
+       WWW_GROUP=root ACP_POOL_DIR="$FAKE/php/pool.d"
 VHOST="$FAKE/ngx/avail/alphacp-webmail.conf"
 DCONF="$FAKE/dovecot/99-alphacp.conf"
 PLUGIN="$FAKE/rc/plugins/acp_sso/acp_sso.php"
@@ -86,6 +89,7 @@ t "diagnose pre: secret MISSING"  has "$D1" "sso secret file            : MISSIN
 
 echo "== APPLY (SIM) =="
 A1="$(bash "$FIX" 2>&1)"; A1_RC=$?
+printf '%s\n' "$A1" > "$FAKE/.a1"
 echo "$A1" | grep -E 'lint clean|asserts|backup:|suite:|GREEN|FINAL|✖' | sed 's/^/    /'
 t "apply exit 0"                  test "$A1_RC" -eq 0
 t "lint clean msg"                has "$A1" "9 payloads likhi + lint clean"
@@ -101,6 +105,8 @@ t "internal loc canonical (try_files)" grep -qF 'location /internal/ { allow 127
 t "rc config imap 143"            test "$(grepc "imap_host'] = 'localhost:143'" "$RCCONF")" -ge 1
 t "dovecot master passdb"         test "$(grepc 'master = yes' "$DCONF")" -ge 1
 t "panel vhost internal lock"     test "$(grepc 'ACP_INTERNAL_START' "$PVHOST")" -ge 1
+t "fpm detect panel=acpweb rc=www-data grp=acpsso" grep -q "panel=acpweb rc=www-data group=acpsso" "$FAKE/.a1"
+t "secret mode 640"               test "$(stat -c %a "$FAKE/etc/webmail-sso.secret")" = "640"
 t "secret file bana"              test -f "$FAKE/etc/webmail-sso.secret"
 t "master pw + plain baney"       bash -c "test -f '$FAKE/etc/webmail-master.pw' && test -f '$FAKE/etc/webmail-master.plain'"
 t "master pw BLF-CRYPT"           test "$(grepc '{BLF-CRYPT}' "$FAKE/etc/webmail-master.pw")" -ge 1
