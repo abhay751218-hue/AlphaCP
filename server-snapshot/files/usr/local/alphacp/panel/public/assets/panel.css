@@ -250,10 +250,22 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 .whm-groupbtn::after { content: "▾"; font-size: 10px; }
 .whm-groupbtn[aria-expanded="false"]::after { content: "▸"; }
 .whm-items { padding: 0 4px 4px; }
-.whm-items a, .whm-items .whm-soon {
+.whm-items .whm-soon {
   display: block; padding: 5px 10px; border-radius: 6px;
+  font-size: 13.5px; color: var(--muted);
+}
+.whm-item { display: flex; align-items: center; gap: 2px; }
+.whm-item > a {
+  flex: 1; display: block; padding: 5px 8px 5px 10px; border-radius: 6px;
   font-size: 13.5px; color: var(--text);
 }
+.whm-fav {
+  background: none; border: 0; cursor: pointer; font-size: 13px; line-height: 1;
+  color: var(--muted); padding: 4px 6px; border-radius: 6px;
+}
+.whm-fav:hover { background: var(--panel-2); color: var(--accent); }
+.whm-fav.on { color: var(--accent-2); }
+#whm-favs .whm-item > a { font-weight: 600; }
 .whm-items a:hover { background: var(--panel-2); text-decoration: none; color: var(--navy); }
 .whm-items .whm-soon { color: var(--muted); }
 .whm-items .whm-soon em {
