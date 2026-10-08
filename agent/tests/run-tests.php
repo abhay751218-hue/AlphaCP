@@ -64,6 +64,10 @@ use Alphacp\Agent\Tasks\WafDisable;
 use Alphacp\Agent\Tasks\VirusScan;
 use Alphacp\Agent\Metrics;
 use Alphacp\Agent\Tasks\MetricsAccess;
+use Alphacp\Agent\Tasks\WebDiskCreate;
+use Alphacp\Agent\Tasks\WebDiskDelete;
+use Alphacp\Agent\Tasks\WebDiskList;
+use Alphacp\Agent\WebDisk;
 use Alphacp\Agent\Tasks\MailSet;
 use Alphacp\Agent\Tasks\MailForward;
 use Alphacp\Agent\Tasks\MailAutorespond;
@@ -268,7 +272,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del', 'git.list', 'git.clone', 'git.pull', 'git.status', 'terminal.run', 'apps.install', 'security.ipBlock', 'security.ipUnblock', 'waf.status', 'waf.enable', 'waf.disable', 'security.scan', 'metrics.access'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del', 'git.list', 'git.clone', 'git.pull', 'git.status', 'terminal.run', 'apps.install', 'security.ipBlock', 'security.ipUnblock', 'waf.status', 'waf.enable', 'waf.disable', 'security.scan', 'metrics.access', 'webdisk.list', 'webdisk.create', 'webdisk.delete'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -6157,6 +6161,76 @@ test('email filter — khatarnak needle/pipe kabhi filter file me nahi jata', fu
     assert_true(!str_contains($filter, '../'), 'path traversal kabhi nahi');
     assert_true(!str_contains($filter, '${run'), 'exim expansion kabhi nahi');
     acp_mail_cleanup($h);
+});
+
+test('webdisk.list/create/delete: WebDAV digest+DAV conf provisioning, ro/rw write-limit, guards', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $list = (new WebDiskList())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true($list['accounts'] === [] && $list['realm'] === WebDisk::REALM, 'shuru me koi WebDisk account nahi');
+
+    (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => 'designer', 'permissions' => 'rw', 'password' => 'secret123'], $harness['ctx']);
+    (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => 'auditor', 'permissions' => 'ro', 'password' => 'auditpass9'], $harness['ctx']);
+
+    $list = (new WebDiskList())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true(count($list['accounts']) === 2, '2 WebDisk accounts list hue');
+
+    $conf = (string) file_get_contents($root . '/home/alicehost/etc/webdisk.conf');
+    assert_true(str_contains($conf, 'Alias /webdisk "' . $root . '/home/alicehost"'), 'Alias account home par');
+    assert_true(str_contains($conf, 'DAV on') && str_contains($conf, 'AuthType Digest'), 'DAV + Digest auth conf');
+    assert_true(str_contains($conf, 'Require user designer'), 'rw login write-methods list me');
+    assert_true(!str_contains($conf, 'Require user auditor'), 'ro login write list me nahi');
+
+    $digest = (string) file_get_contents($root . '/home/alicehost/etc/webdisk.digest');
+    $hash = md5('designer:' . WebDisk::REALM . ':secret123');
+    assert_true(str_contains($digest, 'designer:' . WebDisk::REALM . ':' . $hash), 'digest hash (md5 A1) sahi');
+    assert_true(!str_contains($digest, 'secret123'), 'plaintext password digest me nahi');
+
+    $vhosts = glob($root . '/apache/sites-available/*') ?: [];
+    $included = false;
+    foreach ($vhosts as $v) {
+        if (str_contains((string) file_get_contents($v), 'IncludeOptional ' . $root . '/home/alicehost/etc/webdisk.conf')) {
+            $included = true;
+        }
+    }
+    assert_true($included, 'vhost me webdisk.conf IncludeOptional hua');
+
+    (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => 'designer', 'permissions' => 'rw', 'password' => 'newpass456'], $harness['ctx']);
+    $digest2 = (string) file_get_contents($root . '/home/alicehost/etc/webdisk.digest');
+    assert_true(str_contains($digest2, md5('designer:' . WebDisk::REALM . ':newpass456')), 'reset ke baad naya hash');
+    assert_true(!str_contains($digest2, $hash), 'purana hash hat gaya');
+
+    foreach (['../evil', '', str_repeat('a', 61), 'bad login'] as $bad) {
+        $threw = false;
+        try {
+            (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => $bad, 'permissions' => 'rw', 'password' => 'secret123'], $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'invalid login reject: ' . $bad);
+    }
+    $threw = false;
+    try {
+        (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => 'x1', 'permissions' => 'rw', 'password' => 'short'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'chhota password reject');
+
+    (new WebDiskDelete())->handle(['account' => 'alicehost', 'login' => 'auditor'], $harness['ctx']);
+    $list = (new WebDiskList())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true(count($list['accounts']) === 1, 'delete ke baad 1 account');
+    $conf = (string) file_get_contents($root . '/home/alicehost/etc/webdisk.conf');
+    assert_true(str_contains($conf, 'login=designer') && !str_contains($conf, 'login=auditor'), 'conf me sirf bacha account');
+
+    (new WebDiskDelete())->handle(['account' => 'alicehost', 'login' => 'designer'], $harness['ctx']);
+    assert_true(!is_file($root . '/home/alicehost/etc/webdisk.conf'), 'aakhri delete par conf clean');
+    assert_true(!is_file($root . '/home/alicehost/etc/webdisk.digest'), 'aakhri delete par digest clean');
+    assert_true((new WebDiskList())->handle(['account' => 'alicehost'], $harness['ctx'])['accounts'] === [], 'list khali');
+
+    acp_account_cleanup($harness);
 });
 
 test('email filter — forward khud ko ho to loop nahi (rule chhod diya jaye)', function (): void {
