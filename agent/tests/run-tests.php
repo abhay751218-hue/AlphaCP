@@ -5961,6 +5961,26 @@ test('mail.server eximconf — galat value reject, config kharaab na ho (fail-cl
     acp_mail_cleanup($h);
 });
 
+test('mail.server dovecot conf — webmail SSO master passdb sirf file hone par', function (): void {
+    $h = acp_mail_harness();
+    acp_mail_seed_extras($h);
+    $master = $h['root'] . '/etc/webmail-master.pw';
+    putenv('ACP_MAIL_MASTER_PASSDB=' . $master);
+    try {
+        (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+        $conf = (string) file_get_contents((string) getenv('ACP_MAIL_DOVECOT_CONF'));
+        assert_true(!str_contains($conf, 'master = yes'), 'bina master file ke master passdb include NAHI hona chahiye');
+        file_put_contents($master, "acpmaster:\$2y\$10\$abcdefghijklmnopqrstuvABCDEFGHIJKLMNOPQRSTUVWXYZ01234\n");
+        (new MailServerSetup())->handle(['action' => 'setup'], $h['ctx']);
+        $conf2 = (string) file_get_contents((string) getenv('ACP_MAIL_DOVECOT_CONF'));
+        assert_true(str_contains($conf2, 'master = yes'), 'master file hone par master passdb include hona chahiye');
+        assert_true(str_contains($conf2, $master), 'master passdb args me asli file path hona chahiye');
+    } finally {
+        putenv('ACP_MAIL_MASTER_PASSDB');
+    }
+    acp_mail_cleanup($h);
+});
+
 test('mail.server dovecotconf — option set karne par 99-alphacp.conf me asli value', function (): void {
     $h = acp_mail_harness();
     acp_mail_seed_accounts($h['root']);

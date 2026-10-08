@@ -22,12 +22,46 @@ class WebmailController extends Controller
         $account = $this->accountFor($request);
         $row = $account?->webmailSetting;
 
+        $mailbox = null;
+        if ($account !== null && ($row?->enabled ?? false)) {
+            $mailbox = $account->mailboxes()->orderBy('id')->first()?->address();
+        }
+
         return view('webmail.index', [
             'account' => $account,
             'enabled' => (bool) ($row?->enabled ?? false),
             'client' => (string) ($row?->client ?? 'roundcube'),
             'panelMode' => ModuleCatalog::modeFor($request->user()),
+            'openMailbox' => $mailbox,
+            'webmailPort' => (int) config('acp.webmail_port', 2096),
         ]);
+    }
+
+    /**
+     * cPanel-style "Open Webmail": one-time SSO token banao (10 min) aur
+     * Roundcube (port webmail_port) par bhejo; plugin token verify kar ke
+     * Dovecot master-user se seamless login karta hai.
+     */
+    public function open(Request $request): RedirectResponse
+    {
+        $account = $this->requireAccount($request);
+        $mailbox = $account->mailboxes()->orderBy('id')->first()?->address();
+        if ($mailbox === null || $mailbox === '') {
+            return back()->withErrors(['webmail' => 'Koi mailbox nahi mila — pehle Email Accounts me ek account banayein.']);
+        }
+        $token = bin2hex(random_bytes(32));
+        \Illuminate\Support\Facades\DB::table('webmail_sso_tokens')->insert([
+            'token'      => $token,
+            'user_id'    => (int) $request->user()->id,
+            'mailbox'    => $mailbox,
+            'used'       => 0,
+            'expires_at' => now()->addMinutes(10),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $port = (int) config('acp.webmail_port', 2096);
+
+        return redirect()->away('https://' . $request->getHost() . ':' . $port . '/?_acp_token=' . $token);
     }
 
     public function store(Request $request): RedirectResponse

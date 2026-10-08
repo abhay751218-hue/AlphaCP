@@ -21,6 +21,14 @@
     <h3>Webmail — {{ $account->username }}</h3>
     <p class="help">JSON <span class="mono">~/etc/mail/webmail.json</span>. Roundcube/Horde app later. Pipe/shell fail closed.</p>
     <p>Status: <strong>{{ $enabled ? 'on' : 'off' }}</strong> · client: <span class="mono">{{ $client }}</span></p>
+    @if ($enabled && !empty($openMailbox))
+        <form method="post" action="{{ route('webmail.open') }}" class="mt">
+            @csrf
+            <button class="btn small" type="submit">📬 Open Webmail ({{ $openMailbox }}) — port {{ $webmailPort }}</button>
+        </form>
+    @elseif ($enabled)
+        <p class="help">Koi mailbox nahi mila — Email Accounts me pehle ek mailbox banayein.</p>
+    @endif
 </div>
 
 @can('email.manage')
