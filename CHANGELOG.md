@@ -14,6 +14,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   (superadmin) ke paas — user-approved requirement, agla build.
 - `installer/webmail-fix.sh` **v1.1** — v1.0 live par nginx -t (1.24.0 vs `http2 on;`)
   par rollback hua; ab http2 nginx-version-aware (sim 46/46, NGX_VER=1.24 assert).
+- `installer/webmail-fix.sh` **v1.2** — v1.1 ke 2 live warnings fix: roundcube 500
+  (config.inc.php me doosra `<?php` → parse error; ab block bina tag + self-heal +
+  assert) aur /internal 404 (location me try_files). Sim 48/48.
 ### Added
 - `installer/ui3-fix.sh` **v1.0** (+ `.in`, `tools/build-ui3-fix.py`,
   `tools/sim/ui3-fix-sim.sh` **26/26**) — P-UI-3: WHM sidebar Favorites (star

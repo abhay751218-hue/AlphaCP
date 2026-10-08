@@ -14,9 +14,9 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 webmail-fix v1.1 — ABHI CHALAO (Roundcube Webmail port 2096 + SSO, cPanel-style)
+### 🔴 webmail-fix v1.2 — ABHI CHALAO (Roundcube Webmail port 2096 + SSO, cPanel-style)
 ```bash
-sudo alphacp-sync get a2968df1e68a3ccfd7e56a09b420c9baf51a18b2 installer/webmail-fix.sh /tmp/webmail-fix-v1.1.sh d99989ebfe85581087a8125dc823fe258daee5d36c83710d0471f84f5295abf5 && sudo bash /tmp/webmail-fix-v1.1.sh
+sudo alphacp-sync get d480f7d2588092ec01883204db4831c3ca268b9c installer/webmail-fix.sh /tmp/webmail-fix-v1.2.sh 214fe606b14e8019f40da43c7610d8dc0ca4b2e58d261f623a189268b09b5250 && sudo bash /tmp/webmail-fix-v1.2.sh
 ```
 - **Kya karta hai:** Roundcube install (apt) → port **2096 ssl** par alag vhost
   (cPanel-style webmail port) → panel se "Open Webmail" par ONE-TIME token SSO
@@ -29,7 +29,12 @@ sudo alphacp-sync get a2968df1e68a3ccfd7e56a09b420c9baf51a18b2 installer/webmail
   `suite: passed: 223 failed: 0` → `FINAL VERDICT … APPLY ho gaya`.
 - **Fail par:** auto-rollback. **Wapas:** `--rollback`. **Check:** panel → Email → Webmail →
   "Open Webmail" → Roundcube me bina password ke logged-in.
-- Test: `bash tools/sim/webmail-fix-sim.sh` → **46/46**.
+- Test: `bash tools/sim/webmail-fix-sim.sh` → **48/48**.
+
+### ❌ webmail-fix v1.1 — RAN 8 Oct 21:36 IST, apply hua magar 2 warnings (roundcube 500 = double `<?php`; internal 404) → SUPERSEDED by v1.2
+```bash
+sudo alphacp-sync get a2968df1e68a3ccfd7e56a09b420c9baf51a18b2 installer/webmail-fix.sh /tmp/webmail-fix-v1.1.sh d99989ebfe85581087a8125dc823fe258daee5d36c83710d0471f84f5295abf5 && sudo bash /tmp/webmail-fix-v1.1.sh
+```
 
 ### ❌ webmail-fix v1.0 — RAN 8 Oct 21:27 IST, nginx -t fail (nginx 1.24 vs `http2 on;`) → auto-rollback, SUPERSEDED by v1.1
 ```bash
