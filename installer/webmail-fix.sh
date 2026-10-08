@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — WEBMAIL FIX  v1.2  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+#  AlphaCP — WEBMAIL FIX  v1.3  (Roundcube Webmail, cPanel-style port 2096 + SSO)
 # -----------------------------------------------------------------------------
 #  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
 #  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
@@ -28,7 +28,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.2"
+VERSION="1.3"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 PANEL="${ACP_HOME}/panel"
@@ -197,7 +197,7 @@ $config['plugins'] = array_merge($config['plugins'] ?? [], ['acp_sso']);
 $config['support_url'] = '';
 /* ACP_WEBMAIL_END */
 """ % secrets.token_urlsafe(18)
-src = re.sub(r"/\* ACP_WEBMAIL_START \*/.*?/\* ACP_WEBMAIL_END \*/\n?", "", src, flags=re.S)
+src = re.sub(r"(?:\n?<\?php[ \t]*\n)?/\* ACP_WEBMAIL_START \*/.*?/\* ACP_WEBMAIL_END \*/\n?", "", src, flags=re.S)
 open(path, "w").write(src + block)
 print("  block likha")
 PY
