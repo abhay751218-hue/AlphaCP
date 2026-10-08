@@ -40,7 +40,7 @@ class DashboardShellTest extends TestCase
         $root = $this->userWithRole('root');
         $this->asPanelUser($root)->get('/dashboard')
             ->assertOk()
-            ->assertSee('WHM Dashboard')
+            ->assertSee('Server Manager Dashboard')
             ->assertSee('Create Account')
             ->assertSee('List Accounts')
             ->assertSee('Packages')
@@ -52,7 +52,7 @@ class DashboardShellTest extends TestCase
         $customer = $this->userWithRole('user');
         $this->asPanelUser($customer)->get('/dashboard')
             ->assertOk()
-            ->assertSee('cPanel')
+            ->assertSee('Account Panel')
             ->assertSee('Domains')
             ->assertDontSee('Create Account')
             ->assertDontSee('List Accounts')

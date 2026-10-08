@@ -25,6 +25,15 @@
 @section('content')
 
 @if ($panelMode === 'whm')
+<div class="card">
+    <h3>Quick links</h3>
+    <p>
+        @can('accounts.create')<a class="btn small" href="{{ route('accounts.create') }}">Create Account</a>@endcan
+        @can('accounts.view')<a class="btn small secondary" href="{{ route('accounts.index') }}">List Accounts</a>@endcan
+        @can('packages.view')<a class="btn small secondary" href="{{ route('packages.index') }}">Packages</a>@endcan
+        @can('accounts.view')<a class="btn small secondary" href="{{ route('transfer-restore.index') }}">Transfer or Restore a Hosting Account</a>@endcan
+    </p>
+</div>
 <div class="grid cols-4">
     <div class="card">
         <h3>🧠 Memory</h3>

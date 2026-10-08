@@ -60,7 +60,7 @@ class TransferRestoreTest extends TestCase
         $this->account();
         $this->asPanelUser($root)->get('/transfer-restore')
             ->assertOk()
-            ->assertSee('Import a cPanel account archive')
+            ->assertSee('Import a hosting account archive')
             ->assertSee('/home/cpmove-alicehost.tar.gz');
 
         $this->asPanelUser($root)->post('/transfer-restore', [
@@ -258,7 +258,7 @@ class TransferRestoreTest extends TestCase
         $root = $this->userWithRole('root');
         $this->asPanelUser($root)->get('/dashboard')
             ->assertOk()
-            ->assertSee('Transfer or Restore a cPanel Account')
+            ->assertSee('Transfer or Restore a Hosting Account')
             ->assertSee('Create Account');
     }
 
@@ -268,7 +268,7 @@ class TransferRestoreTest extends TestCase
         $this->asPanelUser($customer)->get('/dashboard')
             ->assertOk()
             ->assertSee('File Restoration')
-            ->assertDontSee('Transfer or Restore a cPanel Account')
+            ->assertDontSee('Transfer or Restore a Hosting Account')
             ->assertDontSee('Create Account');
     }
 

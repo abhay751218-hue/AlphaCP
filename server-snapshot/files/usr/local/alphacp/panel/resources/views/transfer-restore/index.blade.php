@@ -1,6 +1,6 @@
 @extends('layouts.panel')
 
-@section('title', 'Transfer or Restore a Account Panel Account')
+@section('title', 'Transfer or Restore a Hosting Account')
 @section('subtitle', 'Server Manager Account Panel archive import — real home swap, pre-restore copy kept')
 
 @section('actions')
@@ -21,7 +21,7 @@
 
 @can('accounts.view')
 <div class="card mt">
-    <h3>Import a Account Panel account archive</h3>
+    <h3>Import a hosting account archive</h3>
     <p class="help">
         <span class="mono">cpmove-&lt;user&gt;.tar.gz</span> ya legacy
         <span class="mono">backup-*.tar.gz</span> ko pehle server par rakho (SFTP/root), phir yahan poora path do —

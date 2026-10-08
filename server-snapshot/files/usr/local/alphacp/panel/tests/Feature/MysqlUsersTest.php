@@ -265,12 +265,14 @@ class MysqlUsersTest extends TestCase
     public function test_customer_and_mail_cannot_open_the_users_page(): void
     {
         [, $account] = $this->customerWithAccount();
+        // dono users actor set karne SE PEHLE banao — User::creating guard (ResellerScopeProvider)
+        // mail-actor se root create karne par 403 deta hai (guard sahi, purana order galat tha).
+        $whm  = $this->userWithRole('root');
         $mail = $this->userWithRole('mail');
         $this->asPanelUser($mail)->get('/mysql-users')->assertForbidden();
 
-        $whm = $this->userWithRole('root');
         $this->asPanelUser($whm)->get('/mysql-users')
             ->assertOk()
-            ->assertSee('customer cPanel');
+            ->assertSee('customer account panel');
     }
 }

@@ -67,14 +67,33 @@ Decision chahiye: agent se dav-config implement karo, ya module ko UI se hide ka
 > + `webdisk.*` tasks (code `ee6b659`, suite 222/0, registry 99) + `installer/b3-fix.sh`
 > v1.0 (`830f68c`) — COMMANDS.md 🔴 section se apply karo.
 
-### B4 · 6 failing tests = test-debt (production bug nahi, par license-grade quality gate ke liye fix)
+### B4 · 6 failing tests = test-debt (production bug nahi, par license-grade quality gate ke liye fix) (✅ **repo-fixed** — niche dekhein)
 - `DashboardShellTest` ×2 — `assertSee('WHM Dashboard')`, UI ab `Server Manager Dashboard`
 - `DomainsTest` ×1 — `assertSee('customer cPanel')`
 - `MysqlUsersTest` ×1 — test `mail` se logged-in hokar `root` user banata hai → provider ka
   `User::creating` guard 403 deta hai (**guard sahi hai**, test ka order galat)
 - `TransferToolTest` / `TransferRestoreTest` ×1 each — page-content `assertSee` purana
 
-### B5 · 6 wasm-skip tests — sandbox limit; server par ek baar `artisan test` chala kar record karo
+> **✅ FIXED (repo, static-verified):** trademarks hata kar UI strings jo hone chahiye the
+> (`Server Manager Dashboard`, `Account Panel`, `customer account panel`,
+> `Transfer or Restore a Hosting Account`, `Import a hosting account archive/from an archive`)
+> tests ab wahi assert karte hain; WHM dashboard me cPanel-jaise **Quick links**
+> (Create Account / List Accounts / Packages / Transfer or Restore) add — purana test
+> intent (WHM quick actions) ab sach hai. MysqlUsersTest ka order fix: users actor set
+> karne SE PEHLE create hote hain (User::creating guard sahi tha).
+> **Verify path:** panel suite ko pdo_sqlite + dev-vendor chahiye → niche B5 note.
+
+### B5 · Env-skip matrix (record) — suite kab/kahan kya skip karta hai
+
+| Env | pdo_sqlite | posix | Skip hota hai |
+|---|---|---|---|
+| wasm sandbox (ye repo, sims) | ✅ | ❌ | CommandRunner ×2 (`posix_getuid`/`hostname`,`id`), symlink file-probe fallback |
+| live server (php8.4) | ❌ | ✅ | **poora suite nahi chal sakta** (TaskLogger tests `PDO('sqlite::memory:')` use karte hain) → installer gate skip-note deta hai |
+
+Matlab: **agent suite 222/0 wasm sandbox me authoritative hai**; live par full-suite run ke
+liye `php8.4-sqlite3` package chahiye (nayi dependency — user se confirm). Panel phpunit
+ko bhi pdo_sqlite (RefreshDatabase) + dev vendor (phpunit) chahiye → live prod vendor
+`--no-dev` hai; isliye panel suite ka verification CI/dev-machine par hi hoga (B4 static-aligned).
 
 ### B6 · `MysqlServer.php` live agent me MISSING → real MySQL provisioning + backup-restore FATAL  ✅ FIXED (repo, deploy baaki)
 Agent ke `src/Tasks/Db*.php`, `DbTask`, `CpanelMysql` aur `BackupArchiveStore` sab

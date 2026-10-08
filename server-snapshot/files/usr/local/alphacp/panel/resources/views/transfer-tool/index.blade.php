@@ -21,7 +21,7 @@
 
 @can('accounts.view')
 <div class="card mt">
-    <h3>Import a Account Panel account from an archive</h3>
+    <h3>Import a hosting account from an archive</h3>
     <p class="help">
         Purane server se <span class="mono">cpmove-&lt;user&gt;.tar.gz</span> yahan le aao (SFTP/root), phir path do —
         e.g. <span class="mono">/home/cpmove-alicehost.tar.gz</span>. Home import hota hai; MySQL/mail/DNS import aage ke S10 steps hain.
