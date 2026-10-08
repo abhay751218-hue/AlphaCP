@@ -35,6 +35,8 @@
         @endif
     </nav>
 
+    <input type="search" id="acp-search" class="searchbox" placeholder="Search tools…" autocomplete="off" aria-label="Search tools">
+
     <span class="spacer"></span>
 
     <div class="meta">
@@ -76,5 +78,28 @@
     parity checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span>
 </footer>
 
+<script>
+/* cPanel-style top search: dashboard ke tool tiles live filter karta hai. */
+(function () {
+    var q = document.getElementById('acp-search');
+    if (!q) { return; }
+    q.addEventListener('input', function () {
+        var v = q.value.trim().toLowerCase();
+        document.querySelectorAll('.grid.tiles').forEach(function (grid) {
+            var visible = 0;
+            grid.querySelectorAll('.tile').forEach(function (tile) {
+                var name = tile.querySelector('.name');
+                var hit = v === '' || (name && name.textContent.toLowerCase().indexOf(v) !== -1);
+                tile.classList.toggle('hidden', !hit);
+                if (hit) { visible++; }
+            });
+            var head = grid.previousElementSibling;
+            if (head && head.classList.contains('section-title')) {
+                head.classList.toggle('hidden', visible === 0 && v !== '');
+            }
+        });
+    });
+})();
+</script>
 </body>
 </html>
