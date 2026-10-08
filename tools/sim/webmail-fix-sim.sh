@@ -42,7 +42,9 @@ for f in "${PA_REL[@]}"; do
   git -C "$REPO" show "${ERA}:${PANEL_REL}/${f}" > "$FAKE/.era-pa-${f//\//_}"
 done
 # fake system files
-printf 'server {\n    listen 8090 ssl;\n    server_name panel.local;\n    root /x;\n    location ~ \\.php$ { fastcgi_pass unix:/run/php/alphacp-fpm.sock; }\n}\n' > "$FAKE/ngx/avail/alphacp-panel.conf"
+mkdir -p "$FAKE/ngx/en" "$FAKE/ngxsys/sites-enabled" "$FAKE/ngxsys/sites-available"
+printf 'server {\n    listen 8090 ssl;\n    server_name panel.local;\n    root /x;\n}\n' > "$FAKE/ngxsys/sites-available/alphacp-panel.conf"
+printf 'server {\n    listen 8090 ssl;\n    server_name panel.local;\n    root /x;\n    location ~ \\.php$ { fastcgi_pass unix:/run/php/alphacp-fpm.sock; }\n}\n' > "$FAKE/ngxsys/sites-enabled/alphacp-panel.conf"
 mkdir -p "$FAKE/php/pool.d"
 printf 'user = acpweb\ngroup = acpweb\nlisten = /run/php/alphacp-fpm.sock\n' > "$FAKE/php/pool.d/alphacp.conf"
 printf 'user = www-data\ngroup = www-data\nlisten = /run/php/php8.4-fpm.sock\n' > "$FAKE/php/pool.d/www.conf"
@@ -57,20 +59,19 @@ $config['db_dsnw'] = 'sqlite:///@/var/lib/roundcube/db.sqlite3?mode=0640';
 $config['imap_host'] = 'localhost:143';
 /* ACP_WEBMAIL_END */
 RCEOF
-cp "$FAKE/ngx/avail/alphacp-panel.conf" "$FAKE/.pre-panelvhost"
+cp "$FAKE/ngxsys/sites-enabled/alphacp-panel.conf" "$FAKE/.pre-panelvhost"
 cp "$FAKE/dovecot/99-alphacp.conf" "$FAKE/.pre-dovecot"
 
 export ACP_HOME="$FAKE" ACP_SIM=1 NGX_VER="1.24.0" \
        RC_ETC="$FAKE/rc/etc" RC_PLUGINS="$FAKE/rc/plugins" \
        NGX_AVAIL="$FAKE/ngx/avail" NGX_EN="$FAKE/ngx/en" \
-       PANEL_VHOST="$FAKE/ngx/avail/alphacp-panel.conf" \
        DOVECOT_CONF="$FAKE/dovecot/99-alphacp.conf" \
-       WWW_GROUP=root ACP_POOL_DIR="$FAKE/php/pool.d"
+       WWW_GROUP=root ACP_POOL_DIR="$FAKE/php/pool.d" ACP_NGX_ROOT="$FAKE/ngxsys"
 VHOST="$FAKE/ngx/avail/alphacp-webmail.conf"
 DCONF="$FAKE/dovecot/99-alphacp.conf"
 PLUGIN="$FAKE/rc/plugins/acp_sso/acp_sso.php"
 RCCONF="$FAKE/rc/etc/config.inc.php"
-PVHOST="$FAKE/ngx/avail/alphacp-panel.conf"
+PVHOST="$FAKE/ngxsys/sites-enabled/alphacp-panel.conf"
 grepc(){ grep -c "$@" 2>/dev/null || true; }
 
 echo "== reproduce: PRE state (koi webmail SSO infra nahi) =="
@@ -101,11 +102,12 @@ t "1.24 par 'http2 on;' NAHI"     test "$(grepc 'http2 on;' "$VHOST")" -eq 0
 t "1.24 par listen http2 suffix"  test "$(grepc 'listen 2096 ssl http2;' "$VHOST")" -ge 1
 t "rc config me plugin"           test "$(grepc 'acp_sso' "$RCCONF")" -ge 1
 t "rc config me EK <?php (stray <?php self-heal)" test "$(grepc -- '<?php' "$RCCONF")" -eq 1
-t "internal loc canonical (try_files)" grep -qF 'location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files $uri /index.php?$args; }' "$FAKE/ngx/avail/alphacp-panel.conf"
+t "internal loc canonical (try_files)" grep -qF 'location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files $uri /index.php?$args; }' "$PVHOST"''' if False else '''t "internal loc canonical (try_files)" grep -qF 'location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files $uri /index.php?$args; }' "$PVHOST"
 t "rc config imap 143"            test "$(grepc "imap_host'] = 'localhost:143'" "$RCCONF")" -ge 1
 t "dovecot master passdb"         test "$(grepc 'master = yes' "$DCONF")" -ge 1
 t "panel vhost internal lock"     test "$(grepc 'ACP_INTERNAL_START' "$PVHOST")" -ge 1
 t "fpm detect panel=acpweb rc=www-data grp=acpsso" grep -q "panel=acpweb rc=www-data group=acpsso" "$FAKE/.a1"
+t "served vhost resolve (enabled, na ke skeleton)" bash -c "grep -q ACP_INTERNAL_START '$FAKE/ngxsys/sites-enabled/alphacp-panel.conf' && ! grep -q ACP_INTERNAL_START '$FAKE/ngxsys/sites-available/alphacp-panel.conf'"
 t "secret mode 640"               test "$(stat -c %a "$FAKE/etc/webmail-sso.secret")" = "640"
 t "secret file bana"              test -f "$FAKE/etc/webmail-sso.secret"
 t "master pw + plain baney"       bash -c "test -f '$FAKE/etc/webmail-master.pw' && test -f '$FAKE/etc/webmail-master.plain'"

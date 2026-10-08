@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — WEBMAIL FIX  v1.7  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+#  AlphaCP — WEBMAIL FIX  v1.8  (Roundcube Webmail, cPanel-style port 2096 + SSO)
 # -----------------------------------------------------------------------------
 #  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
 #  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
@@ -28,7 +28,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.7"
+VERSION="1.8"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 PANEL="${ACP_HOME}/panel"
@@ -42,6 +42,23 @@ RC_ETC="${RC_ETC:-/etc/roundcube}"
 RC_PLUGINS="${RC_PLUGINS:-/usr/share/roundcube/plugins}"
 NGX_AVAIL="${NGX_AVAIL:-/etc/nginx/sites-available}"
 NGX_EN="${NGX_EN:-/etc/nginx/sites-enabled}"
+# served panel vhost resolve: jis candidate me fastcgi_pass maujood ho wahi asli
+# vhost hai (live quirk: sites-available skeleton vs sites-enabled served file).
+NGX_SYS="${ACP_NGX_ROOT:-/etc/nginx}"
+if [[ -z "${PANEL_VHOST:-}" ]]; then
+  for c in "${NGX_SYS}/sites-enabled/alphacp-panel.conf" \
+           "${NGX_SYS}/sites-available/alphacp-panel.conf" \
+           "${NGX_SYS}/conf.d/alphacp-panel.conf"; do
+    if [[ -f "$c" ]] && grep -q 'fastcgi_pass' "$c"; then PANEL_VHOST="$c"; break; fi
+  done
+fi
+if [[ -z "${PANEL_VHOST:-}" ]]; then
+  for c in "${NGX_SYS}/sites-enabled/alphacp-panel.conf" \
+           "${NGX_AVAIL}/alphacp-panel.conf" \
+           "${NGX_SYS}/conf.d/alphacp-panel.conf"; do
+    if [[ -f "$c" ]]; then PANEL_VHOST="$c"; break; fi
+  done
+fi
 PANEL_VHOST="${PANEL_VHOST:-${NGX_AVAIL}/alphacp-panel.conf}"
 SSL_CRT="${SSL_CRT:-/etc/ssl/alphacp/panel.crt}"
 SSL_KEY="${SSL_KEY:-/etc/ssl/alphacp/panel.key}"
