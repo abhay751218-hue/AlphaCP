@@ -84,3 +84,16 @@ payloads) → diagnose post → rollback → re-apply.
 ```bash
 bash tools/sim/sec-fix-sim.sh              # -> 40/40
 ```
+
+## b2-fix-sim.sh — `installer/b2-fix.sh` v1.0 (Metrics via root agent)
+
+PRE state = `935a3e3`-era (95 types, panel parser `Support/Metrics::parse` web-FPM se)
+reproduce karke poora lifecycle: reproduce → diagnose PRESENT → dry-run (no mutation) →
+apply (lint 4+2, smoke, suite gate `passed>=221 failed=0` — pdo_sqlite absent par
+skip-note path bhi tested, registry 96, Support `function parse`=0, controller
+`Paneld::run`) → diagnose ABSENT/PRESENT post → rollback (b2fix-* backup se exact bytes) →
+re-apply. Payload pins `715a9e2` era, byte-for-byte.
+
+```bash
+bash tools/sim/b2-fix-sim.sh               # -> 40/40
+```

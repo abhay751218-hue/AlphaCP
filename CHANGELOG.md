@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/b2-fix.sh` **v1.0** (+ `.in`, `tools/build-b2-fix.py`, `tools/sim/b2-fix-sim.sh`) —
+  B2 deploy: agent 4 + panel 2 files byte-for-byte; gates wahi pattern (suite `passed>=221
+  failed=0` — live par pdo_sqlite absent = documented skip-note, registry 96 me `metrics.access`,
+  Support me `function parse` absent, controller me `Paneld::run`). **Sim 40/40** (PRE=`935a3e3`-era
+  reproduce → apply → rollback → idempotent; payload era `715a9e2`).
+  Pin: commit `2e9bc49363893665c4d1b45be380904306317e1a`, sha256 `11a24ab51244cc43ce8f342dbd9625a6f580edca0fca219086b4d191171df594`.
+- **B2: Metrics ab root-agent se** · agent par naya task `metrics.access` (registry 95 → **96**;
+  readonly, t60, paths /var/log + /home): `agent/src/Metrics.php` streamed combined-log parser
+  (bytes/visitors/requests/errors/top-10; >8MB par last-8MB tail; 2M-line cap) +
+  `Tasks/MetricsAccess.php` (account guard, PathGuard-validated optional `log_path` warna distro
+  candidates; missing log = zero-stats, error nahi). Panel `MetricsController` →
+  `Paneld::run('metrics.access',[account],20)` (taskTypes-gated); `Support/Metrics` slim →
+  sirf `human()`. Suite 213 → **221/0** (8 naye parser/task tests). Commits `6d72207`+`715a9e2`.
 - `installer/sec-fix.sh` **v1.0** (+ `.in`, `tools/build-sec-fix.py`, `tools/sim/sec-fix-sim.sh`) —
   B1-ext deploy: agent 9 + panel 2 files byte-for-byte; gates wahi (suite `passed>=220
   failed=0`, Support files me code-level Process absence). **Sim 40/40** (live-state

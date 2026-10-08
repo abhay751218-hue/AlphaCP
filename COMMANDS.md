@@ -14,6 +14,30 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### 🔴 b2-fix v1.0 — ABHI CHALAO (Metrics via root agent — open_basedir fix)
+```bash
+sudo alphacp-sync get 2e9bc49363893665c4d1b45be380904306317e1a installer/b2-fix.sh /tmp/b2-fix-v1.0.sh 11a24ab51244cc43ce8f342dbd9625a6f580edca0fca219086b4d191171df594 && sudo bash /tmp/b2-fix-v1.0.sh
+```
+- commit `2e9bc49363893665c4d1b45be380904306317e1a`, sha256 `11a24ab51244cc43ce8f342dbd9625a6f580edca0fca219086b4d191171df594`.
+- **Kya karta hai:** Metrics section live par khali/error dikhta tha — panel ka parser
+  web-FPM se `/var/log/apache2/{user}-access.log` padhta tha jo `open_basedir` me nahi
+  (audit B2). Ab parsing **root agent** par: naya task `metrics.access` (readonly, 60s;
+  account guard + PathGuard-validated optional `log_path`, warna distro candidates;
+  >8MB file par last-8MB tail; 2M-line cap) — bytes/visitors/requests/errors/top-10.
+  Registry 95 → **96 types**. Panel `MetricsController` ab `Paneld::run('metrics.access',…)`;
+  `Support/Metrics` sirf display helper (`human()`). Missing log = zero-stats, error nahi.
+- **Expected output:** `backup: …/releases/b2fix-<ts>` → `agent files likhi + lint clean (4)` →
+  `SMOKE OK` → suite gate (live par `pdo_sqlite` nahi → `suite skip` note, static smoke
+  enforced) → `registry me metrics.access PRESENT` → `panel files likhi + lint clean (2)` →
+  `php8.4-fpm active` → `panel /login HTTP 200` → `sync complete` →
+  `FINAL VERDICT … b2-fix v1.0 APPLY ho gaya`.
+- **Fail par:** auto-rollback. **Dekhna ho:** `--diagnose` · **wapas:** `--rollback`.
+- **Verify:** panel → **Metrics** (Bandwidth/Visitors cards) kholo — numbers aayen
+  (naya account = zeros bhi valid). `sudo /usr/local/alphacp/agent/bin/alphacpd --diagnose 2>/dev/null | head`
+  ya `sudo php8.4 /usr/local/alphacp/agent/tests/run-tests.php | tail -1` → `passed: 221   failed: 0`
+  (agar pdo_sqlite ho).
+- Test: `bash tools/sim/b2-fix-sim.sh` → **40/40**.
+
 ### ✅ sec-fix v1.0 — APPLIED 8 Oct 07:56 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 935a3e392436ed2c04b393219cd50208666f23eb installer/sec-fix.sh /tmp/sec-fix-v1.0.sh f9f85ccd456dcfc96f542e432dd15e293bb4b898594d7ecfaadb2a82b564bee6 && sudo bash /tmp/sec-fix-v1.0.sh

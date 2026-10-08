@@ -59,7 +59,7 @@ Persona → panel: **Owner/Admin = WHM-like (2086/87)** · **Reseller = scoped W
 | S8 | Databases + users + privileges + phpMyAdmin | ✅ **ab** (B6 MysqlServer fix deployed) |
 | S9 | DNS zone/templates/ns/cluster + BIND9 | ✅ |
 | S10 | Backup/restore + remote dest + cPanel import | ✅ (mysql path B6 se theek) |
-| S11 | Monitoring/bandwidth/stats | ⚠️ **B2** (Metrics open_basedir) |
+| S11 | Monitoring/bandwidth/stats | ✅ **b2-fix v1.0 shipped** (agent-side `metrics.access`, pin `2e9bc49`) |
 | S12 | Billing API (WHM API 1 + REST + webhooks) | ⚠️ partial — audit karna hai |
 | S13 | Security suite (WAF/malware/brute-force/IP-blocker/2FA) | ⚠️ partial (2FA✅, WAF/malware audit) |
 | S14 | One-click apps + WordPress Toolkit | ⚠️ **B1** (AppInstaller proc_open) |
@@ -72,8 +72,8 @@ Persona → panel: **Owner/Admin = WHM-like (2086/87)** · **Reseller = scoped W
 |---|---|---|
 | B0 | Agent source-of-truth drift (3-task stale → downgrade risk) | ✅ `606ac97` |
 | B6 | `MysqlServer.php` missing → db.*/db.restore fatal | ✅ repo `fd9aca9` + **live `agent-fix v1.0`** |
-| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | ✅ FTP **live**; ✅ Git/Terminal/Apps **live**; ✅ Firewall/Waf **live** (`935a3e3`) — **B1 POORA khatam**; 🟡 **B2 Metrics abhi** 🔜 |
-| B2 | Metrics `open_basedir` se blocked | 🔜 Phase 3 (`metrics.access` agent task) |
+| B1 | FTP/Git/Terminal/Apps web-FPM se `Process` (proc_open disabled) → 500 | ✅ FTP **live**; ✅ Git/Terminal/Apps **live**; ✅ Firewall/Waf **live** (`935a3e3`) — **B1 POORA khatam** |
+| B2 | Metrics `open_basedir` se blocked | ✅ **shipped** — code `715a9e2` (suite 221/0, registry 96), installer `2e9bc49`; **live apply ka wait** |
 | B3 | WebDisk sirf DB rows (WebDAV provisioning nahi) | 🔜 Phase 5 (implement ya hide — decision) |
 | B4 | 6 panel test-debt failures | 🔜 Phase 4 (suite 100% green) |
 | B5 | 6 wasm-skip tests (server par record karna) | 🔜 |
@@ -168,24 +168,23 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | `ftp-fix.sh` v1.0 | **APPLIED 8 Oct 00:39 IST** | `047d974540aceff0fa686a8b3e3fc65a104f0f21` / `8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809` |
 | `b1-fix.sh` v1.0 | **APPLIED 8 Oct 01:10 IST** | `ec50182305cdd324a93db159e738ec3881e74ebc` / `046bfbbce36f92c1d5af59431e95b187b14097bf749f2446c6d725f0fd21bfca` |
 | `sec-fix.sh` v1.0 | **APPLIED 8 Oct 07:56 IST** | `935a3e392436ed2c04b393219cd50208666f23eb` / `f9f85ccd456dcfc96f542e432dd15e293bb4b898594d7ecfaadb2a82b564bee6` |
+| `b2-fix.sh` v1.0 | SHIPPED — apply pending | `2e9bc49363893665c4d1b45be380904306317e1a` / `11a24ab51244cc43ce8f342dbd9625a6f580edca0fca219086b4d191171df594` |
 | sync tool v1.2 (bootstrap) | — | `4b4573f96f55927ee1fbf526037785dcdb82aea1` / `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852` |
 | doctor v1.7 | — | `da3539029d1010f33fd550e7b4d016785c932103` / `e2915e0204df79ec41540d0ee68ef8a1c3cb3f261a39dc38651471a5115f5e88` |
 
 ## 7. Next immediate step
-**Phase 1 = B1 FTP → ✅ LIVE APPLIED (8 Oct 00:39 IST, user-confirmed).** Pinned command chal chuka:
-backup → lint 7 → SMOKE OK → paneld active → panel lint 2 (Process:: 0) → optimize:clear →
-php8.4-fpm active → /login HTTP 200 → sync complete → APPLY. (Live par `pdo_sqlite` nahi isliye
-suite skip, smoke gate pass — expected.) Aage:
+**B1 cluster POORA LIVE (FTP `047d974` · Git/Term/Apps `ec50182` · Security `935a3e3`, teeno
+user-confirmed).** Ab **B2 Metrics shipped** — apply karne wali pinned command (COMMANDS.md 🔴 section):
 
 ```bash
-sudo alphacp-sync get 047d974540aceff0fa686a8b3e3fc65a104f0f21 installer/ftp-fix.sh /tmp/ftp-fix-v1.0.sh 8f2cdafec0f2fea7a9065109364ca60438ee77bfa72a428189ffcff4cb780809 && sudo bash /tmp/ftp-fix-v1.0.sh
+sudo alphacp-sync get 2e9bc49363893665c4d1b45be380904306317e1a installer/b2-fix.sh /tmp/b2-fix-v1.0.sh 11a24ab51244cc43ce8f342dbd9625a6f580edca0fca219086b4d191171df594 && sudo bash /tmp/b2-fix-v1.0.sh
 ```
 
-Apply ke baad user panel → **FTP Accounts** me ek account banaye (pehle HTTP 500 aata tha) aur
-`pure-pw list` me user dikhe. Uske baad queue:
+Apply ke baad user panel → **Metrics** kholo (pehle khali/error — open_basedir). Live par
+`pdo_sqlite` nahi → suite gate `skip` note dega, baaki gates enforced (expected). Uske baad queue:
 1. **B1 baaki:** Git · Terminal · Apps (same `Process` → agent-task pattern; `git.*`, `terminal.run`,
    `apps.install`) — FTP wala hi blueprint.
-2. **B2 Metrics** (`open_basedir` se blocked) → agent-side `metrics.*` tasks.
+2. **B2 Metrics** → ✅ shipped (`b2-fix v1.0`, COMMANDS.md 🔴 section) — apply confirm hote hi B3.
 3. **B4 test-debt** (6 failures) + **B5 wasm-skips** record.
 4. **P-UI-1…6 cPanel parity:** alag WHM / cPanel / Webmail experiences, AlphaCP branding,
    cPanel-jaise sections (Files/Databases/Domains/Email/Metrics/Security/Software/Advanced/
