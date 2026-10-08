@@ -97,7 +97,7 @@ t "1.24 par 'http2 on;' NAHI"     test "$(grepc 'http2 on;' "$VHOST")" -eq 0
 t "1.24 par listen http2 suffix"  test "$(grepc 'listen 2096 ssl http2;' "$VHOST")" -ge 1
 t "rc config me plugin"           test "$(grepc 'acp_sso' "$RCCONF")" -ge 1
 t "rc config me EK <?php (stray <?php self-heal)" test "$(grepc -- '<?php' "$RCCONF")" -eq 1
-t "internal loc try_files"        bash -c "grep -q 'location /internal/' '$FAKE/ngx/avail/alphacp-panel.conf' && grep -q 'try_files' '$FAKE/ngx/avail/alphacp-panel.conf'"
+t "internal loc canonical (try_files)" grep -qF 'location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files $uri /index.php?$args; }' "$FAKE/ngx/avail/alphacp-panel.conf"
 t "rc config imap 143"            test "$(grepc "imap_host'] = 'localhost:143'" "$RCCONF")" -ge 1
 t "dovecot master passdb"         test "$(grepc 'master = yes' "$DCONF")" -ge 1
 t "panel vhost internal lock"     test "$(grepc 'ACP_INTERNAL_START' "$PVHOST")" -ge 1
@@ -130,11 +130,21 @@ t "secrets gone"                  bash -c "test ! -f '$FAKE/etc/webmail-sso.secr
 t "dovecot PRE wapas"             bash -c "cmp -s '$DCONF' '$FAKE/.pre-dovecot'"
 t "panel vhost PRE wapas"         bash -c "cmp -s '$PVHOST' '$FAKE/.pre-panelvhost'"
 
+# v1.1-jaisa STALE internal loc (markers ke saath, bina try_files) — self-heal test
+python3 - "$PVHOST" <<'PY'
+import sys, re
+p = sys.argv[1]; src = open(p).read()
+src = re.sub(r"location /internal/ \{[^\n]*\}", "location /internal/ { allow 127.0.0.1; allow ::1; deny all; }", src)
+open(p, "w").write(src)
+PY
+t "stale loc seeded"               bash -c "! grep -qF 'deny all; try_files' '$PVHOST'"
+
 echo "== re-apply =="
 A2="$(bash "$FIX" 2>&1)"; A2_RC=$?
 t "re-apply exit 0"               test "$A2_RC" -eq 0
 t "re-apply vhost wapas"          test "$(grepc 'listen 2096 ssl' "$VHOST")" -ge 1
 t "re-apply plugin wapas"         test -f "$PLUGIN"
+t "stale internal loc self-heal"  grep -qF 'location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files $uri /index.php?$args; }' "$PVHOST"
 
 echo ""
 echo "----------------------------------------"

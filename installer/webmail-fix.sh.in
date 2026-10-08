@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — WEBMAIL FIX  v1.4  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+#  AlphaCP — WEBMAIL FIX  v1.5  (Roundcube Webmail, cPanel-style port 2096 + SSO)
 # -----------------------------------------------------------------------------
 #  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
 #  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
@@ -28,7 +28,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.4"
+VERSION="1.5"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 PANEL="${ACP_HOME}/panel"
@@ -257,25 +257,27 @@ ${H2_LINE}
 }
 NGXEOF
   ln -sf "${NGX_AVAIL}/alphacp-webmail.conf" "${NGX_EN}/alphacp-webmail.conf"
-  if ! grep -q 'ACP_INTERNAL_START' "${PANEL_VHOST}" 2>/dev/null; then
-    python3 - "${PANEL_VHOST}" <<'PY'
-import sys
+  python3 - "${PANEL_VHOST}" <<'PY'
+import sys, re
 path = sys.argv[1]
-lines = open(path).read().split("\n")
-out, done = [], False
-for ln in lines:
-    out.append(ln)
-    if not done and ln.strip().startswith("server_name"):
-        out.append("    # ACP_INTERNAL_START — SSO endpoint sirf loopback se")
-        out.append("    location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files $uri /index.php?$args; }")
-        out.append("    # ACP_INTERNAL_END")
-        done = True
-open(path, "w").write("\n".join(out))
-print("  panel vhost internal lock:", "ok" if done else "MARKER-NAHI")
+canon = ("    # ACP_INTERNAL_START \u2014 SSO endpoint sirf loopback se\n"
+         "    location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files $uri /index.php?$args; }\n"
+         "    # ACP_INTERNAL_END")
+src = open(path).read()
+# stale marker-block (bina try_files wala v1.1 jaisa) ho to CANONICAL se replace
+new, n = re.subn(r"[ \t]*# ACP_INTERNAL_START[^\n]*\n[ \t]*location /internal/ \{[^\n]*\}\n[ \t]*# ACP_INTERNAL_END[ \t]*\n?", canon + "\n", src)
+if n == 0:
+    lines = new.split("\n"); out = []; done = False
+    for ln in lines:
+        out.append(ln)
+        if not done and ln.strip().startswith("server_name"):
+            out.append(canon); done = True
+    new = "\n".join(out)
+    print("  panel vhost internal lock: insert", "ok" if done else "MARKER-NAHI")
+else:
+    print("  panel vhost internal lock: canonical replace x%d" % n)
+open(path, "w").write(new)
 PY
-  else
-    ok "panel vhost internal lock pehle se maujood"
-  fi
 
   # ---- 6) DB migration (sim skip) ----
   hdr "DB migration 0003_webmail_sso"
@@ -378,6 +380,8 @@ PHPEOF
     || { rollback; die "roundcube config me ek se zyada <?php tag (parse error)"; }
   [[ "$(cnt 'try_files' "${NGX_AVAIL}/alphacp-webmail.conf")" -ge 1 ]] \
     || { rollback; die "webmail vhost me try_files nahi"; }
+  grep -qF 'location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files $uri /index.php?$args; }' "${PANEL_VHOST}" \
+    || { rollback; die "panel vhost internal loc canonical (try_files) nahi"; }
   [[ "$(cnt 'master = yes' "${DOVECOT_CONF}")" -ge 1 ]] \
     || { rollback; die "dovecot conf me master passdb nahi"; }
   [[ "$(cnt 'webmail.open' "${PANEL}/routes/web.php")" -ge 1 ]] \
