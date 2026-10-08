@@ -145,6 +145,21 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | P-UI-3 | **WHM (root/reseller)** sidebar nav-tree + Favorites + Statistics home — nav-tree P-UI-2 me, Favorites+stats-home ui3-fix v1.0 me ✅ APPLIED 8 Oct 20:46 IST (backup ui3fix-20261008151545) |
 | P-UI-4 | **Webmail** alag app (Roundcube SSO) + alag login (2095/96 opt-in) — webmail-fix v1.9 **APPLIED LIVE 22:51 IST zero-warnings** (2096 + SSO; nginx-1.24 + RC-parse + /internal + stray-<?php self-heal), apply pending; sim 53/53 |
 | OWNER-CTRL | **Company-owner only:** kaun sa panel kis port par chale (2083/2087/2096 toggles) — user-approved; webmail-fix ke baad agla slice |
+
+### OWNER-CTRL / P-PORTS-CTRL design (approved 9 Oct: "Thik h kar do" + rule "ek panel multiple port se nahi khulna chahiye")
+- **Port↔panel map (EK panel = EK port):** WHM=2087 (sirf WHM view), cPanel=2083 (sirf
+  cPanel view), Webmail=2096 (Roundcube, done), link-page=8090 (static, PHP nahi;
+  owner-disableable). Galat role galat port par → PortGuard redirect/403.
+- **Schema choice:** existing `port_configs` single-row `data` JSON reuse:
+  {"whm":2087,"cpanel":2083,"webmail":2096,"link":8090,"link_enabled":true}
+  (purana multi-port ssl-list shape migrate; nayi table NAHI).
+- **Components:** nginx vhosts alphacp-whm.conf/alphacp-cpanel.conf (installer +
+  agent task apply_ports regen via etc/ports.json); PortGuard middleware;
+  /ports page rewrite (PortsController); /internal/ SSO loc 8090→2083 vhost,
+  plugin ko internal URL RC config se; ufw 2087+2083 installer; AWS SG manual.
+- **Sim:** tools/sim/ports-ctrl-sim.sh (vhost regen, guard, link-page, plugin URL).
+- Status: ⏳ build shuru (panel PortMap+guard → installer → sim → live).
+
 | P-UI-5 | Responsive/mobile (hamburger + stacked) + icons set + white-label/branding hooks |
 | P-UI-6 | Har module-page ko cPanel ke page-layout se match (forms/tables/buttons consistency) |
 
