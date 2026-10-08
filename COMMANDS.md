@@ -14,24 +14,35 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 mail-fix v1.0 — ABHI CHALAO (root-par mail filter sync fix + suite green)
+### 🔴 mail-fix v1.1 — ABHI CHALAO (live ke 3 asli suite failures ka fix)
+```bash
+sudo alphacp-sync get f2ce8cd163e9725e0d7dcac0247f9596a58c0b8f installer/mail-fix.sh /tmp/mail-fix-v1.1.sh c3bd9568377e7dc9cdc77c6909ea7eeff5f441d6e45c8fbd54780818de82e442 && sudo bash /tmp/mail-fix-v1.1.sh
+```
+- commit `f2ce8cd163e9725e0d7dcac0247f9596a58c0b8f`, sha256 `c3bd9568377e7dc9cdc77c6909ea7eeff5f441d6e45c8fbd54780818de82e442`.
+- **Kya karta hai:** v1.0 live par `passed: 219 failed: 3` par block hua. Teeno asli
+  failures: (1+2) `installed()` asli FS par `is_executable()` dekhta tha — live par
+  exim4/dovecot/bind9 hamare hi installers se lage hain, isliye "binaries absent"
+  branch kabhi sach nahi hota tha → ab env-override na ho to injected executor probe
+  (+ tests me `FakeCommandExecutor->binsAbsent`); (3) `repairMaildirs` uid<=0 par skip
+  karta tha → root-owned world-writable Maildir parents kabhi 0700 nahi hote → ab
+  chown sirf valid uid par, mode tighten HAMESHA. 4 agent files byte-for-byte
+  (MailServer, BindServer, 2 tests) + suite gate (passed>=222 failed=0).
+- **Expected output:** `backup: …/releases/mailfix-<ts>` → `lint clean (4)` →
+  `paneld active` → `suite: passed: 222   failed: 0` → `agent suite GREEN` → sync →
+  `FINAL VERDICT … mail-fix v1.1 APPLY ho gaya`.
+- **Fail par:** suite-fail par die + poora slog `${LOG%-suite-tail}` (root-only 600 —
+  `sudo grep -a -A1 "  FAIL " <file>`); gate-fail par auto-rollback. **Wapas:** `--rollback`.
+- **Iske baad:** live suite authoritative = 222/0 → P-UI-2 (WHM sidebar) shuru.
+- Test: `bash tools/sim/mail-fix-sim.sh` → **36/36** (PRE=v1.0-era, root-run proof).
+
+### ❌ mail-fix v1.0 — RAN 8 Oct 19:57 IST, gate blocked (219/3) → SUPERSEDED by v1.1
 ```bash
 sudo alphacp-sync get 3195ff6fdd69de57537c43b1b96554e3ba239aa9 installer/mail-fix.sh /tmp/mail-fix-v1.0.sh 487f0f163bfbac46e8e4dffc0dfd689e8b3c2a2359aeef8e138d42ed3e99e703 && sudo bash /tmp/mail-fix-v1.0.sh
 ```
-- commit `3195ff6fdd69de57537c43b1b96554e3ba239aa9`, sha256 `487f0f163bfbac46e8e4dffc0dfd689e8b3c2a2359aeef8e138d42ed3e99e703`.
-- **Kya karta hai:** tests-sync v1.0 live par `passed: 219 failed: 3` par block hua tha —
-  root agent par `MailServer::ensureFilterEtcSearchable` ka verify step stale stat / no-op
-  chgrp par `~/etc remains inaccessible` de kar mail filters skip karta tha. Ye installer
-  **3 files ek saath** deploy karta hai: fixed `src/MailServer.php` (self-healing:
-  clearstatcache + chown/world-bit fallbacks, commit `2969fd8`) + 2 test files current era
-  (222 tests). Suite gate (passed>=222 failed=0) dono ke saath hi green hota hai.
-- **Expected output:** `backup: …/releases/mailfix-<ts>` → `agent files likhi + lint clean (3)` →
-  `paneld active (fixed MailServer load hua)` → `suite: passed: 222   failed: 0` →
-  `agent suite GREEN` → sync → `FINAL VERDICT … mail-fix v1.0 APPLY ho gaya`.
-- **Fail par:** auto-rollback + fatal ho to tail-25 screen par; full slog
-  `/usr/local/alphacp/logs/mail-fix-<ts>-suite-tail.txt`. **Wapas:** `--rollback`.
-- **Iske baad:** live suite authoritative = 222/0; mail filters root par bhi sync honge.
-- Test: `bash tools/sim/mail-fix-sim.sh` → **23/23** (root-run suite proof ke saath).
+- Natija: sha ✅, backup `mailfix-20261008142436`, lint 3 ✅, paneld active ✅, suite
+  219/3 → gate block (suite-fail path par rollback nahi hota — live par v1.0 files
+  lagi rahin). 3 FAIL names slog se nikale: dns.bind status / mail.server status-list
+  (installed-detection) + root-owned Maildir repair → teeno fix v1.1 me. **Dobara mat chalao.**
 
 ### ❌ tests-sync v1.0 — RAN 8 Oct 19:36 IST, gate blocked (219/3) → SUPERSEDED by mail-fix v1.0
 ```bash

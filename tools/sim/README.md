@@ -149,14 +149,15 @@ post → rollback (stale wapas) → re-apply.
 bash tools/sim/tests-sync-sim.sh           # -> 17/17
 ```
 
-## mail-fix-sim.sh — `installer/mail-fix.sh` v1.0 (MailServer root-fix + tests current era)
+## mail-fix-sim.sh — `installer/mail-fix.sh` v1.1 (live-parity fixes)
 
-PRE = `935a3e3`-era stale tests + pre-fix MailServer (live jaisi): reproduce →
-diagnose → apply (lint 3, suite 222/0, byte-for-byte era `2969fd8` MailServer +
-tests) → **ROOT-RUN suite green ka direct assert (sudo — live failure-mode ka
-sandbox proof)** → diagnose post → rollback (pre-fix MailServer + stale tests
-wapas) → re-apply.
+PRE = `3195ff6`-era (mail-fix v1.0 applied = live state: self-healing MailServer
+lekin is_executable()-based installed() + uid<=0 Maildir skip + binsAbsent-less
+tests). Marker-based reproduce (canChown/binsAbsent/probeBin = 0) → diagnose →
+apply (lint 4, suite 222/0, 4 files byte-for-byte era `380ce91`) → **ROOT-RUN
+suite green ka direct assert (sudo — live failure-mode ka sandbox proof)** →
+diagnose post → rollback (v1.0-era wapas) → re-apply.
 
 ```bash
-bash tools/sim/mail-fix-sim.sh             # -> 23/23
+bash tools/sim/mail-fix-sim.sh             # -> 36/36
 ```

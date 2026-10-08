@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Fixed
+- **Live-root suite ke 3 asli failures (`380ce91`)** — (1+2) `MailServer::installed()`
+  / `BindServer::installed()` asli FS par `is_executable()` dekhte the; live par
+  exim4/dovecot/bind9 hamare installers se lage hain isliye "absent" branch kabhi
+  sach nahi hota tha → ab env-override ke bagair injected executor probe (Fake me
+  `binsAbsent` flag = hermetic). (3) `repairMaildirs` uid<=0 par skip karta tha →
+  root-owned world-writable Maildir parents kabhi 0700 nahi hote → chown sirf valid
+  uid par, mode tighten hamesha. Suite root+non-root 222/0.
 - **MailServer root-fix (`2969fd8`)** — `ensureFilterEtcSearchable` root agent par
   `~/etc remains inaccessible` de kar saare mail filters skip karta tha (live suite
   219/3 isi se block hui). Ab self-healing: chgrp/chmod ke baad `clearstatcache` +
@@ -12,6 +19,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   bit), last resort world search bit (+x only; read/list nahi). Suite ab ROOT aur
   non-root dono par **222/0** (sandbox sudo repro se verified).
 ### Added
+- `installer/mail-fix.sh` **v1.1** (`f2ce8cd163e9725e0d7dcac0247f9596a58c0b8f` /
+  `c3bd9568377e7dc9cdc77c6909ea7eeff5f441d6e45c8fbd54780818de82e442`, sim **36/36**) —
+  v1.0 live par 219/3 par block hua; 3 live-parity fixes (installed probes + root-owned
+  Maildir repair) + BindServer.php payload (4 files). v1.0 (`3195ff6…`/`487f0f16…`)
+  8 Oct 19:57 IST RAN, gate blocked → SUPERSEDED.
 - `installer/mail-fix.sh` **v1.0** (+ `.in`, `tools/build-mail-fix.py`,
   `tools/sim/mail-fix-sim.sh` **23/23** — root-run suite proof ke saath) —
   MailServer fix + 2 test files current era EK installer me (suite gate dono ke
