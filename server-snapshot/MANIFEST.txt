@@ -203,6 +203,7 @@
 /usr/local/alphacp/logs/webmail-fix-20261008163654.txt
 /usr/local/alphacp/logs/webmail-fix-20261008165413.txt
 /usr/local/alphacp/logs/webmail-fix-20261008170024.txt
+/usr/local/alphacp/logs/webmail-fix-20261008171717.txt
 /usr/local/alphacp/panel/.env
 /usr/local/alphacp/panel/MANIFEST.json
 /usr/local/alphacp/panel/README.md
@@ -9723,6 +9724,17 @@
 /usr/local/alphacp/releases/webmailfix-20261008170024/sys/_etc_nginx_sites-available_alphacp-panel.conf
 /usr/local/alphacp/releases/webmailfix-20261008170024/sys/_etc_nginx_sites-available_alphacp-webmail.conf
 /usr/local/alphacp/releases/webmailfix-20261008170024/sys/_etc_roundcube_config.inc.php
+/usr/local/alphacp/releases/webmailfix-20261008171717/agent/src/MailServer.php
+/usr/local/alphacp/releases/webmailfix-20261008171717/agent/tests/run-tests.php
+/usr/local/alphacp/releases/webmailfix-20261008171717/panel/app/Http/Controllers/WebmailController.php
+/usr/local/alphacp/releases/webmailfix-20261008171717/panel/app/Http/Controllers/WebmailSsoController.php
+/usr/local/alphacp/releases/webmailfix-20261008171717/panel/config/acp.php
+/usr/local/alphacp/releases/webmailfix-20261008171717/panel/resources/views/webmail/index.blade.php
+/usr/local/alphacp/releases/webmailfix-20261008171717/panel/routes/web.php
+/usr/local/alphacp/releases/webmailfix-20261008171717/sys/_etc_dovecot_conf.d_99-alphacp.conf
+/usr/local/alphacp/releases/webmailfix-20261008171717/sys/_etc_nginx_sites-available_alphacp-webmail.conf
+/usr/local/alphacp/releases/webmailfix-20261008171717/sys/_etc_nginx_sites-enabled_alphacp-panel.conf
+/usr/local/alphacp/releases/webmailfix-20261008171717/sys/_etc_roundcube_config.inc.php
 /usr/local/alphacp/share/suspended/index.html
 /usr/local/alphacp/var/install.state
 /usr/local/alphacp/var/panel-admin.txt
