@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-installer/mail-fix.sh.in + 3 payload files  ->  installer/mail-fix.sh
+installer/mail-fix.sh.in + 4 payload files  ->  installer/mail-fix.sh
 
 build-ftp-fix.py ka 2-file version (mail-fix). Server par sirf
 EK self-contained script download hoti hai; readable source repo me rehta hai.
@@ -21,6 +21,7 @@ P = REPO / "server-snapshot" / "files" / "usr" / "local" / "alphacp" / "panel"
 
 PAYLOADS: dict[str, pathlib.Path] = {
     "@@AGENT_MAILSERVER_PHP@@": A / "src" / "MailServer.php",
+    "@@AGENT_BINDSERVER_PHP@@": A / "src" / "BindServer.php",
     "@@TESTS_RUN_PHP@@": A / "tests" / "run-tests.php",
     "@@TESTS_FAKE_PHP@@": A / "tests" / "FakeCommandExecutor.php",
 }
