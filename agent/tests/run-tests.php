@@ -62,6 +62,8 @@ use Alphacp\Agent\Tasks\WafStatus;
 use Alphacp\Agent\Tasks\WafEnable;
 use Alphacp\Agent\Tasks\WafDisable;
 use Alphacp\Agent\Tasks\VirusScan;
+use Alphacp\Agent\Metrics;
+use Alphacp\Agent\Tasks\MetricsAccess;
 use Alphacp\Agent\Tasks\MailSet;
 use Alphacp\Agent\Tasks\MailForward;
 use Alphacp\Agent\Tasks\MailAutorespond;
@@ -266,7 +268,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del', 'git.list', 'git.clone', 'git.pull', 'git.status', 'terminal.run', 'apps.install', 'security.ipBlock', 'security.ipUnblock', 'waf.status', 'waf.enable', 'waf.disable', 'security.scan'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del', 'git.list', 'git.clone', 'git.pull', 'git.status', 'terminal.run', 'apps.install', 'security.ipBlock', 'security.ipUnblock', 'waf.status', 'waf.enable', 'waf.disable', 'security.scan', 'metrics.access'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1778,6 +1780,55 @@ test('waf.status/enable/disable + security.scan: agent-side, clam exit-1 = infec
         $threw = true;
     }
     assert_true($threw, 'PathGuard ke bahar scan reject');
+    acp_account_cleanup($harness);
+});
+
+test('metrics.access: access-log parse (bytes/visitors/requests/errors/top), tail-window + guards', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $log = $root . '/home/alicehost/access.log';
+    file_put_contents($log, implode("\n", [
+        '1.1.1.1 - - [07/Oct/2026:10:00:01 +0000] "GET / HTTP/1.1" 200 1000 "-" "ua"',
+        '1.1.1.1 - - [07/Oct/2026:10:00:02 +0000] "GET /about HTTP/1.1" 200 500 "-" "ua"',
+        '2.2.2.2 - - [07/Oct/2026:10:00:03 +0000] "GET / HTTP/1.1" 404 100 "-" "ua"',
+        '3.3.3.3 - - [07/Oct/2026:10:00:04 +0000] "POST /wp-login.php HTTP/1.1" 500 - "-" "ua"',
+        'garbage line jo parse nahi hoti',
+    ]) . "\n");
+
+    $out = (new MetricsAccess())->handle(['account' => 'alicehost', 'log_path' => $log], $harness['ctx']);
+    $st = $out['stats'];
+    assert_true($out['status'] === 'ok', 'metrics.access ok');
+    assert_true($st['requests'] === 4, '4 valid requests (garbage skip)');
+    assert_true($st['visitors'] === 3, '3 unique IPs');
+    assert_true($st['bytes'] === 1600, 'bytes sum (- = 0)');
+    assert_true($st['errors'] === 2, '404+500 = 2 errors');
+    assert_true(($st['top']['/'] ?? 0) === 2, 'top pages count');
+
+    // log na ho to zero-stats (error nahi)
+    $zero = (new MetricsAccess())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true($zero['log'] === null && $zero['stats']['requests'] === 0, 'missing log = zero stats');
+
+    // guards
+    $threw = false;
+    try {
+        (new MetricsAccess())->handle(['account' => 'bobhost'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'foreign account reject');
+    $threw = false;
+    try {
+        (new MetricsAccess())->handle(['account' => 'alicehost', 'log_path' => '/etc/shadow'], $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'PathGuard ke bahar log_path reject');
+
+    // parser unit: tail flag sirf badi file par
+    $small = Metrics::parseFile($log);
+    assert_true($small['tail'] === false, 'choti file par tail=false');
     acp_account_cleanup($harness);
 });
 

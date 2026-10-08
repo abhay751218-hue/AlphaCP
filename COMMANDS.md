@@ -14,7 +14,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 sec-fix v1.0 — IP Blocker / ModSecurity / virus scan live par HTTP 500 (B1-ext). **Yahi chalao.**
+### ✅ sec-fix v1.0 — APPLIED 8 Oct 07:56 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 935a3e392436ed2c04b393219cd50208666f23eb installer/sec-fix.sh /tmp/sec-fix-v1.0.sh f9f85ccd456dcfc96f542e432dd15e293bb4b898594d7ecfaadb2a82b564bee6 && sudo bash /tmp/sec-fix-v1.0.sh
 ```
