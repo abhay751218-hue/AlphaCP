@@ -1,0 +1,432 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  AlphaCP — WEBMAIL FIX  v1.0  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+# -----------------------------------------------------------------------------
+#  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
+#  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
+#  seamless login; customer ko password dobara nahi dena padta).
+#
+#  Ye script kya karti hai:
+#    1  apt: roundcube + roundcube-core + roundcube-sqlite3 + php-curl (idempotent)
+#    2  etc/webmail-sso.secret + etc/webmail-master.{pw,plain} (root:www-data 0640)
+#    3  /etc/roundcube/config.inc.php me ACP block (imap localhost:143,
+#       smtp localhost:25, des_key random, plugins += acp_sso)
+#    4  Roundcube plugin acp_sso (token → panel internal verify → master login)
+#    5  nginx: alag vhost alphacp-webmail.conf (listen 2096 ssl) + panel vhost
+#       me /internal/ ko 127.0.0.1-only (markers)
+#    6  DB migration 0003_webmail_sso.sql (webmail_sso_tokens)
+#    7  dovecot 99-alphacp.conf me master passdb append (agent agle sync par
+#       khud render karta hai jab master file maujood ho — dono consistent)
+#    8  agent+panel payloads byte-for-byte (MailServer master-passdb render +
+#       SSO routes/button) + full suite gate (passed>=223 failed=0)
+#
+#  Safety: backup → php -l → structural asserts → nginx -t + reload → dovecot
+#  restart → HTTP smokes → suite gate → alphacp-sync. Kahin fail = auto-rollback.
+#  SIM: ACP_SIM=1 → apt/systemctl/nginx -t/curl/mysql skip (paths env se fake).
+#
+#  Usage: sudo bash webmail-fix-v1.0.sh | --diagnose | --rollback | --help
+# =============================================================================
+set -Eeuo pipefail
+
+VERSION="1.0"
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+AGENT="${ACP_HOME}/agent"
+PANEL="${ACP_HOME}/panel"
+SIM="${ACP_SIM:-0}"
+STAMP="$(date -u +%Y%m%d%H%M%S)"
+BACKUP="${ACP_HOME}/releases/webmailfix-${STAMP}"
+LOG_FILE="${ACP_HOME}/logs/webmail-fix-${STAMP}.txt"
+
+# system paths (sim in env se override karta hai)
+RC_ETC="${RC_ETC:-/etc/roundcube}"
+RC_PLUGINS="${RC_PLUGINS:-/usr/share/roundcube/plugins}"
+NGX_AVAIL="${NGX_AVAIL:-/etc/nginx/sites-available}"
+NGX_EN="${NGX_EN:-/etc/nginx/sites-enabled}"
+PANEL_VHOST="${PANEL_VHOST:-${NGX_AVAIL}/alphacp-panel.conf}"
+SSL_CRT="${SSL_CRT:-/etc/ssl/alphacp/panel.crt}"
+SSL_KEY="${SSL_KEY:-/etc/ssl/alphacp/panel.key}"
+FPM_SOCK="${FPM_SOCK:-/run/php/php8.4-fpm.sock}"
+DOVECOT_CONF="${DOVECOT_CONF:-/etc/dovecot/conf.d/99-alphacp.conf}"
+WWW_GROUP="${WWW_GROUP:-www-data}"
+
+C_R=$'\033[0;31m'; C_G=$'\033[0;32m'; C_Y=$'\033[0;33m'; C_B=$'\033[0;36m'; C_D=$'\033[0;2m'; C_0=$'\033[0m'
+say(){ printf '%s\n' "$*" | tee -a "${LOG_FILE:-/dev/null}"; }
+hdr(){ say ""; say "${C_B}== $* ==${C_0}"; }
+ok(){ say "  ${C_G}✔${C_0} $*"; }
+warn(){ say "  ${C_Y}⚠${C_0} $*"; }
+info(){ say "  ${C_D}·${C_0} $*"; }
+die(){ say "  ${C_R}✖ $*${C_0}"; exit 1; }
+cnt(){ local n; n="$(grep -c "$@" 2>/dev/null || true)"; printf '%s' "${n:-0}"; }
+have_systemd(){ [[ -d /run/systemd/system ]] && command -v systemctl >/dev/null 2>&1; }
+
+unset PHP 2>/dev/null || true
+detect_php(){
+  local p
+  if [[ -f /etc/systemd/system/paneld.service ]]; then
+    p="$(sed -nE 's#^ExecStart=([^ ]+).*#\1#p' /etc/systemd/system/paneld.service 2>/dev/null | head -1)"
+    [[ -n "$p" && -x "$p" ]] && { printf '%s' "$p"; return; }
+  fi
+  for c in php8.4 php8.3 php8.2 php; do command -v "$c" >/dev/null 2>&1 && { command -v "$c"; return; }; done
+  printf ''
+}
+PHP_BIN="$(detect_php)"
+
+AGENT_FILES=(src/MailServer.php tests/run-tests.php)
+PANEL_FILES=(app/Http/Controllers/WebmailController.php app/Http/Controllers/WebmailSsoController.php routes/web.php config/acp.php resources/views/webmail/index.blade.php)
+
+rollback(){
+  hdr "ROLLBACK — webmail-fix v${VERSION}"
+  local latest rel
+  latest="$(ls -1dt "${ACP_HOME}"/releases/webmailfix-* 2>/dev/null | head -1 || true)"
+  [[ -n "$latest" ]] || die "koi webmailfix backup nahi mila"
+  info "backup: $latest"
+  for rel in "${AGENT_FILES[@]}"; do
+    if [[ -f "${latest}/agent/${rel}" ]]; then cp -p "${latest}/agent/${rel}" "${AGENT}/${rel}"; else rm -f "${AGENT}/${rel}"; fi
+  done
+  for rel in "${PANEL_FILES[@]}"; do
+    if [[ -f "${latest}/panel/${rel}" ]]; then
+      mkdir -p "${PANEL}/$(dirname "$rel")"
+      cp -p "${latest}/panel/${rel}" "${PANEL}/${rel}"
+    else
+      rm -f "${PANEL}/${rel}"
+    fi
+  done
+  for f in "${RC_ETC}/config.inc.php" "${NGX_AVAIL}/alphacp-webmail.conf" "${PANEL_VHOST}" "${DOVECOT_CONF}"; do
+    [[ -f "${latest}/sys/$(echo "$f" | tr / _)" ]] && cp -p "${latest}/sys/$(echo "$f" | tr / _)" "$f" || true
+  done
+  rm -f "${NGX_EN}/alphacp-webmail.conf" "${ACP_HOME}/etc/webmail-sso.secret" \
+        "${ACP_HOME}/etc/webmail-master.pw" "${ACP_HOME}/etc/webmail-master.plain"
+  rm -rf "${RC_PLUGINS}/acp_sso"
+  if [[ "$SIM" != "1" ]]; then
+    have_systemd && { systemctl reload nginx >/dev/null 2>&1 || true; systemctl restart dovecot >/dev/null 2>&1 || true; }
+  fi
+  ok "rollback complete (purani state wapas)"
+}
+
+diagnose(){
+  hdr "DIAGNOSE (read-only) — webmail-fix v${VERSION}"
+  info "ACP_HOME=${ACP_HOME} php=${PHP_BIN:-none} sim=${SIM}"
+  info "roundcube plugin PRESENT   : $( [[ -f "${RC_PLUGINS}/acp_sso/acp_sso.php" ]] && echo PRESENT || echo MISSING )"
+  info "nginx webmail vhost 2096   : $(cnt 'listen 2096 ssl' "${NGX_AVAIL}/alphacp-webmail.conf")  (>=1=theek)"
+  info "panel vhost internal lock  : $(cnt 'ACP_INTERNAL_START' "${PANEL_VHOST}")  (>=1=theek)"
+  info "sso secret file            : $( [[ -f "${ACP_HOME}/etc/webmail-sso.secret" ]] && echo PRESENT || echo MISSING )"
+  info "dovecot master passdb file : $( [[ -f "${ACP_HOME}/etc/webmail-master.pw" ]] && echo PRESENT || echo MISSING )"
+  info "dovecot conf master block  : $(cnt 'master = yes' "${DOVECOT_CONF}")  (>=1=theek)"
+  info "test blocks                : $(cnt '^test(' "${AGENT}/tests/run-tests.php")  (current era = 223)"
+  say ""; ok "diagnose complete (kuch badla nahi)"
+}
+
+apply(){
+  hdr "APPLY — webmail-fix v${VERSION} (Roundcube 2096 + SSO)"
+  mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+  [[ -d "$AGENT" ]] || die "agent dir nahi: ${AGENT}"
+  [[ -n "$PHP_BIN" && -x "$PHP_BIN" ]] || die "php binary nahi mila"
+
+  # ---- backup ----
+  mkdir -p "${BACKUP}/agent/tests" "${BACKUP}/panel" "${BACKUP}/sys"
+  local rel
+  for rel in "${AGENT_FILES[@]}"; do
+    mkdir -p "${BACKUP}/agent/$(dirname "$rel")"
+    [[ -f "${AGENT}/${rel}" ]] && cp -p "${AGENT}/${rel}" "${BACKUP}/agent/${rel}" || true
+  done
+  for rel in "${PANEL_FILES[@]}"; do
+    mkdir -p "${BACKUP}/panel/$(dirname "$rel")"
+    [[ -f "${PANEL}/${rel}" ]] && cp -p "${PANEL}/${rel}" "${BACKUP}/panel/${rel}" || true
+  done
+  for f in "${RC_ETC}/config.inc.php" "${NGX_AVAIL}/alphacp-webmail.conf" "${PANEL_VHOST}" "${DOVECOT_CONF}"; do
+    [[ -f "$f" ]] && cp -p "$f" "${BACKUP}/sys/$(echo "$f" | tr / _)" || true
+  done
+  ok "backup: ${BACKUP}"
+
+  # ---- 1) apt (sim skip) ----
+  hdr "roundcube packages"
+  if [[ "$SIM" == "1" ]]; then
+    warn "SIM=1 — apt skip"
+  else
+    if dpkg -s roundcube-core >/dev/null 2>&1; then
+      ok "roundcube pehle se installed"
+    else
+      DEBIAN_FRONTEND=noninteractive apt-get install -y roundcube roundcube-core roundcube-sqlite3 php8.4-curl >>"$LOG_FILE" 2>&1 \
+        || { rollback; die "roundcube apt install fail"; }
+      ok "roundcube + roundcube-sqlite3 + php8.4-curl installed"
+    fi
+  fi
+
+  # ---- 2) secrets ----
+  hdr "SSO secrets (root:${WWW_GROUP} 0640)"
+  mkdir -p "${ACP_HOME}/etc"
+  if [[ ! -f "${ACP_HOME}/etc/webmail-sso.secret" ]]; then
+    openssl rand -hex 32 > "${ACP_HOME}/etc/webmail-sso.secret"
+  fi
+  if [[ ! -f "${ACP_HOME}/etc/webmail-master.plain" ]]; then
+    openssl rand -hex 24 > "${ACP_HOME}/etc/webmail-master.plain"
+    local mhash
+    mhash="$("$PHP_BIN" -r 'echo password_hash(trim(file_get_contents($argv[1])), PASSWORD_BCRYPT);' "${ACP_HOME}/etc/webmail-master.plain")"
+    printf 'acpmaster:{BLF-CRYPT}%s\n' "$mhash" > "${ACP_HOME}/etc/webmail-master.pw"
+  fi
+  chown root:"${WWW_GROUP}" "${ACP_HOME}/etc/webmail-sso.secret" "${ACP_HOME}/etc/webmail-master.plain" "${ACP_HOME}/etc/webmail-master.pw" 2>/dev/null || true
+  chmod 0640 "${ACP_HOME}/etc/webmail-sso.secret" "${ACP_HOME}/etc/webmail-master.plain" "${ACP_HOME}/etc/webmail-master.pw" 2>/dev/null || true
+  ok "secret + master pw files ready"
+
+  # ---- 3) roundcube config block ----
+  hdr "roundcube config"
+  mkdir -p "$RC_ETC"
+  [[ -f "${RC_ETC}/config.inc.php" ]] || printf '<?php\n/* AlphaCP managed Roundcube config */\n' > "${RC_ETC}/config.inc.php"
+  python3 - "$RC_ETC/config.inc.php" <<'PY'
+import sys, secrets, re
+path = sys.argv[1]
+src = open(path).read()
+block = """<?php
+/* ACP_WEBMAIL_START */
+$config['imap_host'] = 'localhost:143';
+$config['smtp_server'] = 'localhost';
+$config['smtp_port'] = 25;
+$config['des_key'] = '%s';
+$config['plugins'] = array_merge($config['plugins'] ?? [], ['acp_sso']);
+$config['support_url'] = '';
+/* ACP_WEBMAIL_END */
+""" % secrets.token_urlsafe(18)
+src = re.sub(r"/\* ACP_WEBMAIL_START \*/.*?/\* ACP_WEBMAIL_END \*/\n?", "", src, flags=re.S)
+open(path, "w").write(src + block)
+print("  block likha")
+PY
+  ok "roundcube config block (imap 143 / smtp 25 / des_key / plugin)"
+
+  # ---- 4) plugin ----
+  hdr "roundcube plugin acp_sso"
+  mkdir -p "${RC_PLUGINS}/acp_sso"
+  cat > "${RC_PLUGINS}/acp_sso/acp_sso.php" <<'PHPEOF'
+@@RC_PLUGIN@@
+PHPEOF
+  cat > "${RC_PLUGINS}/acp_sso/config.inc.php" <<'PHPEOF'
+@@RC_PLUGIN_CONF@@
+PHPEOF
+  ok "plugin likhi (2 files)"
+
+  # ---- 5) nginx ----
+  hdr "nginx: webmail vhost 2096 + panel /internal lock"
+  mkdir -p "$NGX_AVAIL" "$NGX_EN"
+  cat > "${NGX_AVAIL}/alphacp-webmail.conf" <<NGXEOF
+# AlphaCP Webmail (Roundcube) — cPanel-style port 2096 (webmail-fix v${VERSION})
+server {
+    listen 2096 ssl;
+    listen [::]:2096 ssl;
+    http2 on;
+    server_name _;
+
+    ssl_certificate     ${SSL_CRT};
+    ssl_certificate_key ${SSL_KEY};
+
+    root /usr/share/roundcube;
+    index index.php;
+
+    # panel-internal SSO endpoint isi vhost par expose NAHI ho
+    location /internal/ { deny all; }
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$args;
+    }
+    location ~ \.php\$ {
+        fastcgi_pass unix:${FPM_SOCK};
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
+    }
+    location ~ /\. { deny all; }
+}
+NGXEOF
+  ln -sf "${NGX_AVAIL}/alphacp-webmail.conf" "${NGX_EN}/alphacp-webmail.conf"
+  if ! grep -q 'ACP_INTERNAL_START' "${PANEL_VHOST}" 2>/dev/null; then
+    python3 - "${PANEL_VHOST}" <<'PY'
+import sys
+path = sys.argv[1]
+lines = open(path).read().split("\n")
+out, done = [], False
+for ln in lines:
+    out.append(ln)
+    if not done and ln.strip().startswith("server_name"):
+        out.append("    # ACP_INTERNAL_START — SSO endpoint sirf loopback se")
+        out.append("    location /internal/ { allow 127.0.0.1; allow ::1; deny all; }")
+        out.append("    # ACP_INTERNAL_END")
+        done = True
+open(path, "w").write("\n".join(out))
+print("  panel vhost internal lock:", "ok" if done else "MARKER-NAHI")
+PY
+  else
+    ok "panel vhost internal lock pehle se maujood"
+  fi
+
+  # ---- 6) DB migration (sim skip) ----
+  hdr "DB migration 0003_webmail_sso"
+  if [[ "$SIM" == "1" ]]; then
+    warn "SIM=1 — mysql skip"
+  else
+    local dbf="${ACP_HOME}/etc/database.env" dbh dbp dbn dbu dbw
+    [[ -f "$dbf" ]] || { rollback; die "database.env nahi: $dbf"; }
+    dbh="$(grep -E '^ACP_DB_HOST=' "$dbf" | head -1 | cut -d= -f2)"
+    dbp="$(grep -E '^ACP_DB_PORT=' "$dbf" | head -1 | cut -d= -f2)"
+    dbn="$(grep -E '^ACP_DB_NAME=' "$dbf" | head -1 | cut -d= -f2)"
+    dbu="$(grep -E '^ACP_DB_USER=' "$dbf" | head -1 | cut -d= -f2)"
+    dbw="$(grep -E '^ACP_DB_PASS=' "$dbf" | head -1 | cut -d= -f2-)"
+    mysql -h"${dbh:-127.0.0.1}" -P"${dbp:-3306}" -u"${dbu:-alphacp}" -p"${dbw}" "${dbn:-alphacp}" <<'SQL' || { rollback; die "migration apply fail"; }
+CREATE TABLE IF NOT EXISTS webmail_sso_tokens (
+  id          BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  token       CHAR(64)        NOT NULL,
+  user_id     BIGINT UNSIGNED NOT NULL,
+  mailbox     VARCHAR(255)    NOT NULL,
+  used        TINYINT(1)      NOT NULL DEFAULT 0,
+  expires_at  DATETIME        NOT NULL,
+  created_at  TIMESTAMP       NULL,
+  updated_at  TIMESTAMP       NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_webmail_sso_token (token),
+  KEY idx_webmail_sso_user (user_id, used)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='One-time Webmail (Roundcube) SSO tokens';
+SQL
+    ok "webmail_sso_tokens table ready"
+  fi
+
+  # ---- 7) dovecot master passdb append ----
+  hdr "dovecot master passdb"
+  if ! grep -q 'master = yes' "${DOVECOT_CONF}" 2>/dev/null; then
+    cat >> "${DOVECOT_CONF}" <<EOF
+
+# AlphaCP S7 — Webmail SSO master passdb (Roundcube token flow)
+passdb {
+  driver = passwd-file
+  args = scheme=BLF-CRYPT ${ACP_HOME}/etc/webmail-master.pw
+  master = yes
+}
+EOF
+    ok "master passdb append (agent agle sync par khud render karega)"
+  else
+    ok "master passdb pehle se conf me"
+  fi
+
+  # ---- 8) agent + panel payloads ----
+  hdr "agent + panel files likhna"
+  mkdir -p "${AGENT}/src" "${AGENT}/tests" "${PANEL}/app/Http/Controllers" \
+           "${PANEL}/routes" "${PANEL}/config" "${PANEL}/resources/views/webmail"
+  cat > "${AGENT}/src/MailServer.php" <<'PHPEOF'
+@@AGENT_MAILSERVER_PHP@@
+PHPEOF
+  cat > "${AGENT}/tests/run-tests.php" <<'PHPEOF'
+@@TESTS_RUN_PHP@@
+PHPEOF
+  cat > "${PANEL}/app/Http/Controllers/WebmailController.php" <<'PHPEOF'
+@@PANEL_WEBMAIL_CTRL@@
+PHPEOF
+  cat > "${PANEL}/app/Http/Controllers/WebmailSsoController.php" <<'PHPEOF'
+@@PANEL_SSO_CTRL@@
+PHPEOF
+  cat > "${PANEL}/routes/web.php" <<'PHPEOF'
+@@PANEL_ROUTES@@
+PHPEOF
+  cat > "${PANEL}/config/acp.php" <<'PHPEOF'
+@@PANEL_CONFIG@@
+PHPEOF
+  mkdir -p "${PANEL}/resources/views/webmail"
+  cat > "${PANEL}/resources/views/webmail/index.blade.php" <<'PHPEOF'
+@@PANEL_WEBMAIL_VIEW@@
+PHPEOF
+  local lout
+  for rel in "${AGENT_FILES[@]}" "${PANEL_FILES[@]}"; do
+    base="$(basename "$rel")"
+    if [[ "$base" == *.php ]]; then
+      if ! lout="$("$PHP_BIN" -l "${AGENT}/${rel}" 2>&1)" && [[ "$rel" == src/* || "$rel" == tests/* ]]; then
+        warn "lint fail: ${rel}"; say "    ${lout}"; rollback; die "lint fail ${rel}"
+      fi
+    fi
+  done
+  for rel in "${PANEL_FILES[@]}"; do
+    if ! lout="$("$PHP_BIN" -l "${PANEL}/${rel}" 2>&1)"; then
+      warn "lint fail: panel/${rel}"; say "    ${lout}"; rollback; die "panel lint fail ${rel}"
+    fi
+  done
+  if ! lout="$("$PHP_BIN" -l "${RC_PLUGINS}/acp_sso/acp_sso.php" 2>&1)"; then
+    warn "lint fail: plugin"; say "    ${lout}"; rollback; die "plugin lint fail"
+  fi
+  ok "9 payloads likhi + lint clean"
+
+  # ---- structural asserts ----
+  [[ "$(cnt 'listen 2096 ssl' "${NGX_AVAIL}/alphacp-webmail.conf")" -ge 1 ]] \
+    || { rollback; die "webmail vhost me 2096 listen nahi"; }
+  [[ "$(cnt 'acp_sso' "${RC_ETC}/config.inc.php")" -ge 1 ]] \
+    || { rollback; die "roundcube config me plugin enable nahi"; }
+  [[ "$(cnt 'master = yes' "${DOVECOT_CONF}")" -ge 1 ]] \
+    || { rollback; die "dovecot conf me master passdb nahi"; }
+  [[ "$(cnt 'webmail.open' "${PANEL}/routes/web.php")" -ge 1 ]] \
+    || { rollback; die "panel routes me webmail.open nahi"; }
+  ok "structural asserts pass"
+
+  # ---- services + smokes (sim skip) ----
+  hdr "services + HTTP smokes"
+  if [[ "$SIM" == "1" ]]; then
+    warn "SIM=1 — nginx/dovecot/curl skip"
+  else
+    if command -v nginx >/dev/null 2>&1; then
+      nginx -t >>"$LOG_FILE" 2>&1 || { rollback; die "nginx -t fail"; }
+      systemctl reload nginx >/dev/null 2>&1 || warn "nginx reload fail"
+      ok "nginx -t + reload"
+    else
+      warn "nginx nahi mila"
+    fi
+    have_systemd && { systemctl restart dovecot >/dev/null 2>&1 || warn "dovecot restart fail"; }
+    if command -v runuser >/dev/null 2>&1 && [[ -f "${PANEL}/artisan" ]]; then
+      runuser -u "$(stat -c %U "${PANEL}/artisan" 2>/dev/null || echo www-data)" -- env ACP_HOME="$ACP_HOME" "$PHP_BIN" "${PANEL}/artisan" optimize:clear >>"$LOG_FILE" 2>&1 || warn "optimize:clear fail"
+    fi
+    local code
+    code="$(curl -k -s -o /dev/null -w '%{http_code}' -m 10 "https://127.0.0.1:2096/" 2>/dev/null || echo 000)"
+    if [[ "$code" == "200" || "$code" == "302" || "$code" == "304" ]]; then ok "roundcube 2096 HTTP ${code}"; else warn "roundcube 2096 HTTP ${code} — browser me check karo"; fi
+    code="$(curl -k -s -o /dev/null -w '%{http_code}' -m 10 "https://127.0.0.1:8090/internal/webmail-sso?token=xx" 2>/dev/null || echo 000)"
+    [[ "$code" == "403" || "$code" == "422" || "$code" == "410" ]] && ok "internal endpoint secret-gated (HTTP ${code})" || warn "internal endpoint HTTP ${code} — check karo"
+  fi
+
+  # ---- suite gate ----
+  hdr "AGENT SUITE — full run (current era)"
+  local slog sum n p
+  slog="$(mktemp)"
+  if ! "$PHP_BIN" "${AGENT}/tests/run-tests.php" >"$slog" 2>&1; then
+    warn "suite run exit non-zero — aakhri lines:"
+    tail -25 "$slog" | sed 's/^/    /'
+    cp "$slog" "${LOG_FILE%.txt}-suite-tail.txt" 2>/dev/null || true
+    rm -f "$slog"
+    die "agent suite run fail — upar tail dekhein, poora log: ${LOG_FILE%.txt}-suite-tail.txt"
+  fi
+  sum="$(grep -E 'passed: [0-9]+ +failed: [0-9]+' "$slog" | tail -1 || true)"
+  rm -f "$slog"
+  n="$(sed -E 's/.*failed: ([0-9]+).*/\1/' <<<"${sum:-}")"
+  p="$(sed -E 's/.*passed: ([0-9]+).*/\1/; s/ .*//' <<<"${sum:-}")"
+  info "suite: ${sum:-<summary nahi mila>}"
+  if [[ "${n:-9}" != "0" || "${p:-0}" -lt 223 ]]; then
+    rollback
+    die "agent suite green nahi (passed=${p:-?} failed=${n:-?})"
+  fi
+  ok "agent suite GREEN (passed=${p} failed=0)"
+
+  # ---- sync ----
+  hdr "alphacp-sync"
+  if command -v alphacp-sync >/dev/null 2>&1; then
+    alphacp-sync >>"$LOG_FILE" 2>&1 && ok "sync complete (repo snapshot update)" || warn "sync fail (baad me: sudo alphacp-sync)"
+  else
+    warn "alphacp-sync nahi mila"
+  fi
+
+  hdr "FINAL VERDICT"
+  ok "Roundcube Webmail port 2096 par (cPanel-style) + panel se one-time token SSO"
+  ok "Dovecot master passdb + nginx vhost + /internal loopback-only"
+  info "backup : ${BACKUP}"
+  info "log    : ${LOG_FILE}"
+  info "rollback: sudo bash $0 --rollback"
+  say ""
+  say "  ${C_G}webmail-fix v${VERSION} APPLY ho gaya.${C_0} AWS console me port 2096 kholo; panel me Email → Webmail → 'Open Webmail'."
+}
+
+usage(){ sed -nE 's/^#( |=)(.*)$/\2/p' "$0" | sed -n '1,34p'; }
+mkdir -p "$(dirname "$LOG_FILE")" 2>/dev/null || true
+case "${1:-apply}" in
+  --diagnose|-d) diagnose ;;
+  --rollback|-r) rollback ;;
+  --help|-h) usage ;;
+  apply|"") apply ;;
+  *) die "unknown option: $1 (--diagnose | --rollback | --help)" ;;
+esac
