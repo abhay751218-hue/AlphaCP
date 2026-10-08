@@ -114,7 +114,7 @@ t "whm vhost me internal NAHI"     bash -c "! grep -q 'location /internal/' '$AV
 t "cpanel vhost listen 2083"       grep -q 'listen 2083 ssl' "$AV/alphacp-cpanel.conf"
 t "cpanel vhost internal loc"      grep -q 'location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files' "$AV/alphacp-cpanel.conf"
 t "link page listen 8090"          grep -q 'listen 8090 ssl' "$AV/alphacp-link.conf"
-t "link page $host links"          bash -c "grep -q 'https://\$host:2087/' '$AV/alphacp-link.conf'"
+t 'link page $host links'          bash -c "grep -q 'https://\$host:2087/' '$AV/alphacp-link.conf'"
 t "webmail listen sync"            grep -q 'listen 2096 ssl' "$AV/alphacp-webmail.conf"
 t "plugin url sync 2083"           grep -q "127.0.0.1:2083/internal/webmail-sso" "$FAKE/rcplugins/acp_sso/config.inc.php"
 t "purana panel vhost retired"     bash -c "test ! -f '$AV/alphacp-panel.conf'"

@@ -96,7 +96,11 @@ info "backup: ${BACKUP}"
 
 # ---- 1) panel payloads ----
 hdr "panel payloads (PortMap + PortGuard + branding + /ports)"
-backup "${PANEL}/app/Support/PortMap.php" \
+backup "${PANEL}/resources/views/dashboard.blade.php" \
+       "${PANEL}/resources/views/dashboard-whm.blade.php" \
+       "${PANEL}/resources/views/dashboard-cpanel.blade.php" \
+       "${PANEL}/app/Http/Controllers/DashboardController.php" \
+       "${PANEL}/app/Support/PortMap.php" \
        "${PANEL}/app/Http/Middleware/AcpPortGuard.php" \
        "${PANEL}/app/Http/Controllers/Auth/LoginController.php" \
        "${PANEL}/app/Http/Controllers/PortsController.php" \
@@ -106,7 +110,7 @@ backup "${PANEL}/app/Support/PortMap.php" \
        "${PANEL}/config/acp.php"
 mkdir -p "${PANEL}/app/Support" "${PANEL}/app/Http/Middleware" \
          "${PANEL}/app/Http/Controllers/Auth" "${PANEL}/resources/views/auth" \
-         "${PANEL}/resources/views/ports"
+         "${PANEL}/resources/views/ports" "${PANEL}/bootstrap" "${PANEL}/config"
 cat > "${PANEL}/app/Support/PortMap.php" <<'PEOF'
 @@PANEL_PORTMAP@@
 PEOF
@@ -125,6 +129,15 @@ PEOF
 cat > "${PANEL}/resources/views/ports/index.blade.php" <<'PEOF'
 @@PANEL_PORTSVIEW@@
 PEOF
+cat > "${PANEL}/resources/views/dashboard-whm.blade.php" <<'PEOF'
+@@PANEL_DASHWHM@@
+PEOF
+cat > "${PANEL}/resources/views/dashboard-cpanel.blade.php" <<'PEOF'
+@@PANEL_DASHCPANEL@@
+PEOF
+cat > "${PANEL}/app/Http/Controllers/DashboardController.php" <<'PEOF'
+@@PANEL_DASHCTRL@@
+PEOF
 cat > "${PANEL}/bootstrap/app.php" <<'PEOF'
 @@PANEL_BOOTSTRAP@@
 PEOF
@@ -136,12 +149,12 @@ for f in app/Support/PortMap.php app/Http/Middleware/AcpPortGuard.php \
          bootstrap/app.php config/acp.php; do
   "$PHP_BIN" -l "${PANEL}/${f}" >/dev/null || { rollback; die "lint fail: ${f}"; }
 done
-ok "8 panel payloads likhi + lint clean"
+ok "11 panel payloads likhi + lint clean"
 
 # ---- 2) agent payloads ----
 hdr "agent payloads (PortsNginx + ports.apply task)"
 backup "${AGENT}/config/tasks.php"
-mkdir -p "${AGENT}/src/Tasks"
+mkdir -p "${AGENT}/src/Tasks" "${AGENT}/config"
 cat > "${AGENT}/src/PortsNginx.php" <<'PEOF'
 @@AGENT_PORTSNGINX@@
 PEOF
@@ -200,6 +213,12 @@ grep -q 'AcpPortGuard' "${PANEL}/bootstrap/app.php" \
   || { rollback; die "bootstrap me AcpPortGuard register nahi"; }
 grep -q 'WHM Login' "${PANEL}/resources/views/auth/login.blade.php" \
   || { rollback; die "login blade me WHM branding nahi"; }
+grep -q 'WHM — Server Manager Dashboard' "${PANEL}/resources/views/dashboard-whm.blade.php" \
+  || { rollback; die "dashboard-whm blade nahi"; }
+grep -q 'cPanel — Account Panel' "${PANEL}/resources/views/dashboard-cpanel.blade.php" \
+  || { rollback; die "dashboard-cpanel blade nahi"; }
+grep -q "dashboard-whm" "${PANEL}/app/Http/Controllers/DashboardController.php" \
+  || { rollback; die "DashboardController mode-view select nahi"; }
 grep -q 'ports_file' "${PANEL}/config/acp.php" \
   || { rollback; die "acp config me ports_file nahi"; }
 if [[ "$SIM" != "1" ]]; then
