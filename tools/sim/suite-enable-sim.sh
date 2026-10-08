@@ -48,6 +48,16 @@ A2="$(ACP_HOME="$FAKE" bash "$FIX" 2>&1)"; A2_RC=$?
 t "fail-suite par exit non-zero"       test "$A2_RC" -ne 0
 t "fail-suite par gate message"        has "$A2" "suite green nahi"
 
+echo "== negative 2: suite fatal (exit non-zero) ho to tail + clear message =="
+cat > "$FAKE/agent/tests/run-tests.php" <<'STUB'
+<?php
+fwrite(STDERR, "PHP Fatal error:  Uncaught Error: Class \"DOMDocument\" not found\n");
+exit(255);
+STUB
+A3="$(ACP_HOME="$FAKE" bash "$FIX" 2>&1)"; A3_RC=$?
+t "fatal-suite par exit non-zero"      test "$A3_RC" -ne 0
+t "fatal-suite par gate message (silent death nahi)" has "$A3" "suite green nahi"
+
 echo ""
 echo "----------------------------------------"
 echo "suite-enable-sim: passed=${pass} failed=${fail}"

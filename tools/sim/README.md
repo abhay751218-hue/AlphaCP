@@ -120,6 +120,14 @@ Sandbox PHP me pdo_sqlite pehle se hai → idempotent skip-path + full suite gat
 bash tools/sim/suite-enable-sim.sh         # -> 8/8
 ```
 
+## Installer suite-gate pattern (pipefall silent-death se bacho)
+
+`set -Eeuo pipefail` me `sum="$(php suite | grep … | tail -1)"` jaisa assignment
+suite fatal/no-summary par **bina message ke** script maar deta hai (live par
+suite-enable v1.0 ke saath hua). Sahi pattern (suite-enable v1.1 se): output
+pehle file me lo, `if ! php … >file; then tail dikhao + die`, phir
+`sum="$(grep … file | tail -1 || true)"`. Naye installers me yahi use karo.
+
 ## ui1-fix-sim.sh — `installer/ui1-fix.sh` v1.0 (Paper-Lantern theme + customer dash)
 
 PRE = `e2e2d6a`-era panel (dark theme, koi search/sidebar nahi) reproduce karke:

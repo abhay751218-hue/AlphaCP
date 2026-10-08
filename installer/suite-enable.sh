@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — SUITE-ENABLE  v1.0  (live par poora agent test-suite chalane layak)
+#  AlphaCP — SUITE-ENABLE  v1.1  (live par poora agent test-suite chalane layak)
 # -----------------------------------------------------------------------------
 #  Live PHP me `pdo_sqlite` nahi hai → agent suite ke TaskLogger tests
 #  (`PDO('sqlite::memory:')`) live par nahi chal sakte; installers isliye suite
@@ -20,7 +20,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.0"
+VERSION="1.1"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 STAMP="$(date -u +%Y%m%d%H%M%S)"
@@ -102,8 +102,19 @@ apply(){
   ok "pdo_sqlite loaded ($( "$PHP_BIN" -r 'echo PHP_VERSION;' ))"
 
   hdr "AGENT SUITE — live full run (ab gate enforce hota hai)"
-  local sum n p
-  sum="$("$PHP_BIN" "${AGENT}/tests/run-tests.php" 2>&1 | grep -E 'passed: [0-9]+ +failed: [0-9]+' | tail -1)"
+  local slog sum n p
+  slog="$(mktemp)"
+  # pipefail + set -e me failing pipeline command-substitution ko SILENT maar deti
+  # thi (v1.0 bug) — ab poora output log file me, fail par tail dikhao.
+  if ! "$PHP_BIN" "${AGENT}/tests/run-tests.php" >"$slog" 2>&1; then
+    warn "suite run exit non-zero — aakhri lines:"
+    tail -25 "$slog" | sed 's/^/    /'
+    cp "$slog" "${LOG_FILE%.txt}-suite-tail.txt" 2>/dev/null || true
+    rm -f "$slog"
+    die "agent suite run fail (fatal error?) — upar tail dekhein, poora log: ${LOG_FILE%.txt}-suite-tail.txt"
+  fi
+  sum="$(grep -E 'passed: [0-9]+ +failed: [0-9]+' "$slog" | tail -1 || true)"
+  rm -f "$slog"
   n="$(sed -E 's/.*failed: ([0-9]+).*/\1/' <<<"${sum:-}")"
   p="$(sed -E 's/.*passed: ([0-9]+).*/\1/; s/ .*//' <<<"${sum:-}")"
   info "suite: ${sum:-<summary nahi mila>}"
