@@ -46,7 +46,7 @@ mkdir -p "$FAKE/ngx/en" "$FAKE/ngxsys/sites-enabled" "$FAKE/ngxsys/sites-availab
 printf 'server {\n    listen 8090 ssl;\n    server_name panel.local;\n    root /x;\n}\n' > "$FAKE/ngxsys/sites-available/alphacp-panel.conf"
 printf 'server {\n    listen 8090 ssl;\n    server_name panel.local;\n    root /x;\n    location ~ \\.php$ { fastcgi_pass unix:/run/php/alphacp-fpm.sock; }\n}\n' > "$FAKE/ngxsys/sites-enabled/alphacp-panel.conf"
 mkdir -p "$FAKE/php/pool.d"
-printf 'user = acpweb\ngroup = acpweb\nlisten = /run/php/alphacp-fpm.sock\n' > "$FAKE/php/pool.d/alphacp.conf"
+printf 'user = acpweb\ngroup = acpweb\nlisten        = /run/php/alphacp-fpm.sock\nlisten.owner = www-data\nlisten.group = www-data\n' > "$FAKE/php/pool.d/alphacp.conf"
 printf 'user = www-data\ngroup = www-data\nlisten = /run/php/php8.4-fpm.sock\n' > "$FAKE/php/pool.d/www.conf"
 printf '# managed dovecot conf\npassdb {\n  driver = passwd-file\n  args = scheme=BLF-CRYPT /x/users\n}\n' > "$FAKE/dovecot/99-alphacp.conf"
 cat > "$FAKE/rc/etc/config.inc.php" <<'RCEOF'

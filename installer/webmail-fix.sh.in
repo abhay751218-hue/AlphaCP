@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — WEBMAIL FIX  v1.8  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+#  AlphaCP — WEBMAIL FIX  v1.9  (Roundcube Webmail, cPanel-style port 2096 + SSO)
 # -----------------------------------------------------------------------------
 #  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
 #  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
@@ -28,7 +28,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.8"
+VERSION="1.9"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 PANEL="${ACP_HOME}/panel"
@@ -202,16 +202,12 @@ apply(){
     local sock pfile u
     sock="$(grep -o 'fastcgi_pass[[:space:]]*unix:[^;]*;' "$1" 2>/dev/null | head -1 | sed 's|.*unix:||; s|;||')"
     [[ -n "$sock" ]] || { echo www-data; return; }
-    # 1) socket ka owner = pool user (sabse reliable, live par hamesha maujood)
-    if [[ -e "$sock" ]]; then
-      u="$(stat -c %U "$sock" 2>/dev/null)"
-      [[ -n "$u" && "$u" != "root" ]] && { echo "$u"; return; }
-    fi
-    # 2) pool conf me sock string (listen line indent/format jo bhi ho)
+    # pool conf: sock string format-agnostic (listen line ki spacing jo bhi ho)
     pfile="$(grep -lF "$sock" "${POOL_DIR}"/*.conf 2>/dev/null | head -1)"
     [[ -n "$pfile" ]] || { echo www-data; return; }
-    u="$(awk -F'=[[:space:]]*' '/^[[:space:]]*user[[:space:]]*=/{print $2; exit}' "$pfile")"
-    [[ -n "$u" ]] || u="$(awk -F'=[[:space:]]*' '/^[[:space:]]*group[[:space:]]*=/{print $2; exit}' "$pfile")"
+    # PHP WORKER user = pool ki user= line. (Socket ka owner listen.owner hota
+    # hai = nginx connect user — worker user NAHI; v1.7 isi se chooka tha.)
+    u="$(awk -F'=' '/^[[:space:]]*user[[:space:]]*=/{gsub(/[[:space:]]/,"",$2); print $2; exit}' "$pfile")"
     echo "${u:-www-data}"
   }
   PANEL_FPM_USER="$(pool_user "${PANEL_VHOST}")"
