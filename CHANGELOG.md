@@ -5,6 +5,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/tests-sync.sh` **v1.0** (+ `.in`, `tools/build-tests-sync.py`,
+  `tools/sim/tests-sync-sim.sh` **17/17**) — live agent suite current era par:
+  2 test files byte-for-byte (`6c00f97`, 222 tests) + suite gate (passed>=222 failed=0).
+  Pin: commit `3d649d8f8f225db2bd7ac46b45b302e0ad8bc3b7`, sha256 `f9b298f580d87a8ad5f662059cda1e2ecfe7baedb929d84e07911a3c56706478`.
 - `installer/suite-enable.sh` **v1.1** (`bc7b95f08316bbcae96754a755ca5b522c35a15b` / `02517c05bb694c5cb7b6a508cd7c3d794e243f1eac9059a9319c8dcc11487d75`) — v1.0 ka pipefail
   silent-death fix: suite output log file me, fatal par tail-25 + alag suite-tail log +
   clear die; summary grep `|| true`. Sim 10/10.

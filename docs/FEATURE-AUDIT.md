@@ -88,7 +88,7 @@ Decision chahiye: agent se dav-config implement karo, ya module ko UI se hide ka
 | Env | pdo_sqlite | posix | Skip hota hai |
 |---|---|---|---|
 | wasm sandbox (ye repo, sims) | ✅ | ❌ | CommandRunner ×2 (`posix_getuid`/`hostname`,`id`), symlink file-probe fallback |
-| live server (php8.4) | ❌ | ✅ | **poora suite nahi chal sakta** (TaskLogger tests `PDO('sqlite::memory:')` use karte hain) → installer gate skip-note deta hai |
+| live server (php8.4) | ✅ (suite-enable v1.1 se) | ✅ | suite chalta hai; **root uid** hone se unix-permission-simulation tests alag chahiye (zone.json ab EISDIR-injection se root-aware, `31d0301`); test files live par stale thi → `tests-sync v1.0` se current era |
 
 Matlab: **agent suite 222/0 wasm sandbox me authoritative hai**; live par full-suite run ke
 liye `php8.4-sqlite3` package chahiye (nayi dependency — user se confirm). Panel phpunit

@@ -14,6 +14,22 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### 🔴 tests-sync v1.0 — ABHI CHALAO (live suite ko current era par)
+```bash
+sudo alphacp-sync get 3d649d8f8f225db2bd7ac46b45b302e0ad8bc3b7 installer/tests-sync.sh /tmp/tests-sync-v1.0.sh f9b298f580d87a8ad5f662059cda1e2ecfe7baedb929d84e07911a3c56706478 && sudo bash /tmp/tests-sync-v1.0.sh
+```
+- commit `3d649d8f8f225db2bd7ac46b45b302e0ad8bc3b7`, sha256 `f9b298f580d87a8ad5f662059cda1e2ecfe7baedb929d84e07911a3c56706478`.
+- **Kya karta hai:** live par agent ka `run-tests.php` purana tha (212-test era) — isi liye
+  suite-enable v1.1 ke live run me `passed: 208 failed: 4` aaya (purane tests + ek
+  root-vs-non-root assert). Ab 2 test files byte-for-byte current era (`6c00f97`,
+  222 tests, root-aware fixes) par sync hoti hain aur poora suite gate chalta hai.
+- **Expected output:** `backup: …/releases/testsync-<ts>` → `test files likhi + lint clean (2)` →
+  `suite: passed: 222   failed: 0` → `agent suite GREEN` → sync →
+  `FINAL VERDICT … tests-sync v1.0 APPLY ho gaya`.
+- **Fail par:** auto-rollback + fatal ho to tail-25 screen par. **Wapas:** `--rollback`.
+- **Iske baad:** live suite authoritative = 222/0; agle installers ka suite gate live par green.
+- Test: `bash tools/sim/tests-sync-sim.sh` → **17/17**.
+
 ### ✅ ui1-fix v1.0 — APPLIED 8 Oct 09:01 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash
 sudo alphacp-sync get 4cd18899a942ef7b92e1d9256938ad530bc101fb installer/ui1-fix.sh /tmp/ui1-fix-v1.0.sh 0085da7ea7e0675c48b32c316ec222ea90573160c09c0a28a01ea552da5a9b0e && sudo bash /tmp/ui1-fix-v1.0.sh
@@ -33,7 +49,7 @@ sudo alphacp-sync get 4cd18899a942ef7b92e1d9256938ad530bc101fb installer/ui1-fix
   sidebar + search box (type karo "ftp" → sirf FTP tiles bachein).
 - Test: `bash tools/sim/ui1-fix-sim.sh` → **29/29**.
 
-### 🔴 suite-enable v1.1 — DOBARA CHALAO (v1.0 silent-exit bug fix ke saath)
+### ✅ suite-enable v1.1 — RAN 8 Oct 11:24 IST (pdo_sqlite ✅ 8.4.26; gate ne stale tests pakde — mission done)
 ```bash
 sudo alphacp-sync get bc7b95f08316bbcae96754a755ca5b522c35a15b installer/suite-enable.sh /tmp/suite-enable-v1.1.sh 02517c05bb694c5cb7b6a508cd7c3d794e243f1eac9059a9319c8dcc11487d75 && sudo bash /tmp/suite-enable-v1.1.sh
 ```
