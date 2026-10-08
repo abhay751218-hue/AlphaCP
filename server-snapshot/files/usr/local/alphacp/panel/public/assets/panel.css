@@ -215,3 +215,52 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .kv { grid-template-columns: 1fr; gap: 2px; }
   .brand small { display: none; }
 }
+
+/* ==========================================================================
+   WHM (Server Manager) — left sidebar tree, cPanel WHM jaisa.
+   ========================================================================== */
+.whm-shell {
+  display: grid; grid-template-columns: 268px minmax(0, 1fr);
+  gap: 18px; align-items: start; padding: 18px 22px;
+}
+.whm-shell .whm-main { padding: 0; }
+.whm-side {
+  position: sticky; top: 66px; max-height: calc(100vh - 84px); overflow: auto;
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 10px; box-shadow: var(--shadow);
+}
+.whm-search {
+  width: 100%; padding: 8px 10px; font: inherit; font-size: 13.5px;
+  border: 1px solid var(--line); border-radius: 6px; background: var(--panel-2);
+  color: var(--text); margin-bottom: 8px;
+}
+.whm-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; background: var(--panel); }
+.whm-home {
+  display: block; padding: 7px 10px; margin-bottom: 6px; border-radius: 6px;
+  font-weight: 700; color: var(--navy); background: var(--panel-2);
+}
+.whm-home:hover { background: #e8edf1; text-decoration: none; }
+.whm-group { margin-bottom: 4px; }
+.whm-groupbtn {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  background: none; border: 0; cursor: pointer; font: inherit;
+  font-size: 12px; font-weight: 800; letter-spacing: .4px; text-transform: uppercase;
+  color: var(--muted); padding: 8px 10px 4px;
+}
+.whm-groupbtn::after { content: "▾"; font-size: 10px; }
+.whm-groupbtn[aria-expanded="false"]::after { content: "▸"; }
+.whm-items { padding: 0 4px 4px; }
+.whm-items a, .whm-items .whm-soon {
+  display: block; padding: 5px 10px; border-radius: 6px;
+  font-size: 13.5px; color: var(--text);
+}
+.whm-items a:hover { background: var(--panel-2); text-decoration: none; color: var(--navy); }
+.whm-items .whm-soon { color: var(--muted); }
+.whm-items .whm-soon em {
+  font-style: normal; font-size: 10.5px; background: var(--panel-2);
+  border: 1px solid var(--line); border-radius: 99px; padding: 1px 7px; margin-left: 6px;
+}
+@media (max-width: 940px) {
+  .whm-shell { grid-template-columns: 1fr; }
+  .whm-side { position: static; max-height: none; }
+}
