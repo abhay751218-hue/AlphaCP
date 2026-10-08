@@ -14,7 +14,11 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 mail-fix v1.1 — ABHI CHALAO (live ke 3 asli suite failures ka fix)
+_(koi live command pending nahi — agla kaam P-UI-2 (WHM sidebar parity) build hai;
+jab uska installer banega tab nayi pin yahan aayegi.)_
+
+
+### ✅ mail-fix v1.1 — APPLIED 8 Oct 20:15 IST, user-confirmed (suite LIVE par 222/0 GREEN; ab MAT chalao)
 ```bash
 sudo alphacp-sync get f2ce8cd163e9725e0d7dcac0247f9596a58c0b8f installer/mail-fix.sh /tmp/mail-fix-v1.1.sh c3bd9568377e7dc9cdc77c6909ea7eeff5f441d6e45c8fbd54780818de82e442 && sudo bash /tmp/mail-fix-v1.1.sh
 ```

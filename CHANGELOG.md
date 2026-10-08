@@ -24,6 +24,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   v1.0 live par 219/3 par block hua; 3 live-parity fixes (installed probes + root-owned
   Maildir repair) + BindServer.php payload (4 files). v1.0 (`3195ff6…`/`487f0f16…`)
   8 Oct 19:57 IST RAN, gate blocked → SUPERSEDED.
+  **v1.1 8 Oct 20:15 IST LIVE APPLIED, user-confirmed: suite `passed: 222 failed: 0`
+  (live ab authoritative), sync complete, backup `mailfix-20261008144240`.**
 - `installer/mail-fix.sh` **v1.0** (+ `.in`, `tools/build-mail-fix.py`,
   `tools/sim/mail-fix-sim.sh` **23/23** — root-run suite proof ke saath) —
   MailServer fix + 2 test files current era EK installer me (suite gate dono ke
