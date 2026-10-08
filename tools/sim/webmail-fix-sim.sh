@@ -44,6 +44,11 @@ done
 # fake system files
 printf 'server {\n    listen 8090 ssl;\n    server_name panel.local;\n    root /x;\n}\n' > "$FAKE/ngx/avail/alphacp-panel.conf"
 printf '# managed dovecot conf\npassdb {\n  driver = passwd-file\n  args = scheme=BLF-CRYPT /x/users\n}\n' > "$FAKE/dovecot/99-alphacp.conf"
+cat > "$FAKE/rc/etc/config.inc.php" <<'RCEOF'
+<?php
+/* Debian-style roundcube config (PRE) */
+$config['db_dsnw'] = 'sqlite:///@/var/lib/roundcube/db.sqlite3?mode=0640';
+RCEOF
 cp "$FAKE/ngx/avail/alphacp-panel.conf" "$FAKE/.pre-panelvhost"
 cp "$FAKE/dovecot/99-alphacp.conf" "$FAKE/.pre-dovecot"
 
@@ -86,6 +91,8 @@ t "vhost 2096 likha"              test "$(grepc 'listen 2096 ssl' "$VHOST")" -ge
 t "1.24 par 'http2 on;' NAHI"     test "$(grepc 'http2 on;' "$VHOST")" -eq 0
 t "1.24 par listen http2 suffix"  test "$(grepc 'listen 2096 ssl http2;' "$VHOST")" -ge 1
 t "rc config me plugin"           test "$(grepc 'acp_sso' "$RCCONF")" -ge 1
+t "rc config me EK <?php"         test "$(grepc -- '<?php' "$RCCONF")" -eq 1
+t "internal loc try_files"        bash -c "grep -q 'location /internal/' '$FAKE/ngx/avail/alphacp-panel.conf' && grep -q 'try_files' '$FAKE/ngx/avail/alphacp-panel.conf'"
 t "rc config imap 143"            test "$(grepc "imap_host'] = 'localhost:143'" "$RCCONF")" -ge 1
 t "dovecot master passdb"         test "$(grepc 'master = yes' "$DCONF")" -ge 1
 t "panel vhost internal lock"     test "$(grepc 'ACP_INTERNAL_START' "$PVHOST")" -ge 1

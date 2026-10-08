@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — WEBMAIL FIX  v1.1  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+#  AlphaCP — WEBMAIL FIX  v1.2  (Roundcube Webmail, cPanel-style port 2096 + SSO)
 # -----------------------------------------------------------------------------
 #  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
 #  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
@@ -28,7 +28,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.1"
+VERSION="1.2"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 PANEL="${ACP_HOME}/panel"
@@ -188,8 +188,7 @@ apply(){
 import sys, secrets, re
 path = sys.argv[1]
 src = open(path).read()
-block = """<?php
-/* ACP_WEBMAIL_START */
+block = """/* ACP_WEBMAIL_START */
 $config['imap_host'] = 'localhost:143';
 $config['smtp_server'] = 'localhost';
 $config['smtp_port'] = 25;
@@ -257,7 +256,7 @@ for ln in lines:
     out.append(ln)
     if not done and ln.strip().startswith("server_name"):
         out.append("    # ACP_INTERNAL_START — SSO endpoint sirf loopback se")
-        out.append("    location /internal/ { allow 127.0.0.1; allow ::1; deny all; }")
+        out.append("    location /internal/ { allow 127.0.0.1; allow ::1; deny all; try_files $uri /index.php?$args; }")
         out.append("    # ACP_INTERNAL_END")
         done = True
 open(path, "w").write("\n".join(out))
@@ -364,6 +363,10 @@ PHPEOF
     || { rollback; die "webmail vhost me 2096 listen nahi"; }
   [[ "$(cnt 'acp_sso' "${RC_ETC}/config.inc.php")" -ge 1 ]] \
     || { rollback; die "roundcube config me plugin enable nahi"; }
+  [[ "$(cnt -- '<?php' "${RC_ETC}/config.inc.php")" -eq 1 ]] \
+    || { rollback; die "roundcube config me ek se zyada <?php tag (parse error)"; }
+  [[ "$(cnt 'try_files' "${NGX_AVAIL}/alphacp-webmail.conf")" -ge 1 ]] \
+    || { rollback; die "webmail vhost me try_files nahi"; }
   [[ "$(cnt 'master = yes' "${DOVECOT_CONF}")" -ge 1 ]] \
     || { rollback; die "dovecot conf me master passdb nahi"; }
   [[ "$(cnt 'webmail.open' "${PANEL}/routes/web.php")" -ge 1 ]] \
