@@ -103,8 +103,44 @@ final class BindServer
 
     public function installed(): bool
     {
-        return self::have('ACP_BIND_CHECKCONF', self::CHECKCONF, self::CHECKCONF_PATHS)
-            && self::have('ACP_BIND_CHECKZONE', self::CHECKZONE, self::CHECKZONE_PATHS);
+        if (trim((string) (getenv('ACP_BIND_CHECKCONF') ?: '')) !== ''
+            || trim((string) (getenv('ACP_BIND_CHECKZONE') ?: '')) !== '') {
+            return true; // explicit env override = authoritative (sim/tests)
+        }
+
+        // injected executor probe (Fake = hermetic binsAbsent, real = sach) —
+        // is_executable() asli FS dekhta hai; live par bind9 hamare installer
+        // se ho to "installed nahi" branch kabhi sach nahi hota tha.
+        foreach ([
+            [$this->probeBin('ACP_BIND_CHECKCONF', self::CHECKCONF, self::CHECKCONF_PATHS), '-v'],
+            [$this->probeBin('ACP_BIND_CHECKZONE', self::CHECKZONE, self::CHECKZONE_PATHS), '-v'],
+        ] as $probe) {
+            try {
+                if (!$this->cmd->run($probe, 30)->ok()) {
+                    return false;
+                }
+            } catch (Throwable $e) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /** env override (absolute) warna pehla executable candidate, warna default. */
+    private function probeBin(string $env, string $default, array $paths): string
+    {
+        $override = trim((string) (getenv($env) ?: ''));
+        if ($override !== '' && $override[0] === '/' && !str_contains($override, "\0")) {
+            return $override;
+        }
+        foreach ($paths as $path) {
+            if (is_executable($path)) {
+                return $path;
+            }
+        }
+
+        return $default;
     }
 
     // ----------------------------------------------------------------- setup --

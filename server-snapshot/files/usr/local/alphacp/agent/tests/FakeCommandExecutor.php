@@ -51,6 +51,49 @@ final class FakeCommandExecutor implements CommandExecutor
 
     public ?string $failWhenContains = null;
 
+    /** Saare binaries absent simulate karo — installed() probes ko 127 milta hai
+     *  (live jaisa host jahan exim/dovecot/bind9 asli me lage hon, wahan bhi
+     *  "installed nahi" branch hermetically test karne ke liye). */
+    public bool $binsAbsent = false;
+
+    // ---- S6 FTP (ftp.add/ftp.passwd/ftp.del) ----
+    /** @var array<string, array{home: string, uid: int, gid: int}> pure-ftpd virtual users */
+    public array $purePwUsers = [];
+    /** @var list<list<string>> every pure-pw argv (password must NEVER be here) */
+    public array $purePwArgvs = [];
+    /** @var list<string> every pure-pw stdin (the password lives here, not argv) */
+    public array $purePwStdins = [];
+
+    /** @var list<list<string>> git argvs (clone/pull/status) */
+    public array $gitArgvs = [];
+
+    /** @var list<list<string>> curl argvs (downloads) */
+    public array $curlArgvs = [];
+
+    /** @var list<list<string>> chown argvs (ownership fixes) */
+    public array $chownArgvs = [];
+
+    /** @var list<list<string>> terminal whitelist argvs (ls/cat/pwd/…) */
+    public array $termArgvs = [];
+
+    /** @var list<list<string>> ufw argvs */
+    public array $ufwArgvs = [];
+
+    /** @var list<list<string>> a2enmod/a2dismod/a2query argvs */
+    public array $apacheModArgvs = [];
+
+    /** @var list<list<string>> clamscan argvs */
+    public array $clamArgvs = [];
+
+    /** ModSecurity enabled state (a2query/a2enmod/a2dismod se badalti hai) */
+    public bool $modsecEnabled = true;
+
+    /** clamscan infected simulate kare? */
+    public bool $clamInfected = false;
+
+    /** git status ka canned porcelain output */
+    public string $gitStatusOut = "M changed.php\n?? new-dir/\n";
+
     // ---- S10 remote pull (backup.pull) ----
     /** host key pubkey line returned by the fake `ssh-keyscan` */
     public string $hostKeyPubkey = 'old.example.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl';
@@ -172,6 +215,9 @@ final class FakeCommandExecutor implements CommandExecutor
         }
         $this->calls[] = $argv;
         $line = implode(' ', $argv);
+        if ($this->binsAbsent) {
+            return new CommandResult($argv, 127, '', 'fake: binary not installed', 1);
+        }
         if ($this->failWhenContains !== null && str_contains($line, $this->failWhenContains)) {
             return new CommandResult($argv, 1, '', 'injected failure: ' . $this->failWhenContains, 1);
         }
@@ -188,6 +234,7 @@ final class FakeCommandExecutor implements CommandExecutor
             'certbot' => $this->handleCertbot($argv),
             'tar' => $this->handleTar($argv),
             'mariadb', 'mysql' => $this->handleMysql($argv, $stdin),
+            'pure-pw' => $this->handlePurePw($argv, $stdin),
             'ssh-keyscan' => $this->handleKeyscan($argv),
             'ssh-keygen' => $this->handleKeygen($argv),
             'scp' => $this->handleScp($argv),
@@ -210,6 +257,18 @@ final class FakeCommandExecutor implements CommandExecutor
             'update-exim4.conf' => $this->mailEximGenerateFails
                 ? new CommandResult($argv, 1, '', 'update-exim4.conf: failed to generate', 1)
                 : new CommandResult($argv, 0, '', '', 1),
+            'git' => $this->handleGit($argv),
+            'curl' => $this->handleCurl($argv),
+            'chown' => $this->handleChown($argv),
+            'cat' => $this->handleCat($argv),
+            'ufw' => $this->handleUfw($argv),
+            'a2query' => $this->modsecEnabled
+                ? new CommandResult($argv, 0, "security2 (enabled)\n", '', 1)
+                : new CommandResult($argv, 1, '', "Module security2 disabled\n", 1),
+            'a2enmod' => $this->handleModToggle($argv, true),
+            'a2dismod' => $this->handleModToggle($argv, false),
+            'clamscan' => $this->handleClam($argv),
+            'ls', 'pwd', 'whoami', 'date', 'uname' => $this->handleTerm($argv),
             default => new CommandResult($argv, 0, '', '', 1),
         };
     }
@@ -469,6 +528,110 @@ final class FakeCommandExecutor implements CommandExecutor
             return implode("\n", $lines) . "\n";
         }
         return '';
+    }
+
+    /** @param list<string> $argv */
+    private function handleUfw(array $argv): CommandResult
+    {
+        $this->ufwArgvs[] = $argv;
+        return new CommandResult($argv, 0, "Rule updated\n", '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleModToggle(array $argv, bool $enable): CommandResult
+    {
+        $this->apacheModArgvs[] = $argv;
+        $this->modsecEnabled = $enable;
+        return new CommandResult($argv, 0, $enable ? "Enabling module security2.\n" : "Disabling module security2.\n", '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleClam(array $argv): CommandResult
+    {
+        $this->clamArgvs[] = $argv;
+        if ($this->clamInfected) {
+            return new CommandResult($argv, 1, "Scanned dirs: 1\nInfected files: 1\n/home/x/public_html/eicar.txt: Eicar-Signature FOUND\n", '', 1);
+        }
+        return new CommandResult($argv, 0, "Scanned dirs: 1\nInfected files: 0\n", '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleGit(array $argv): CommandResult
+    {
+        $this->gitArgvs[] = $argv;
+        if (in_array('status', $argv, true)) {
+            return new CommandResult($argv, 0, $this->gitStatusOut, '', 1);
+        }
+        return new CommandResult($argv, 0, "fake git ok\n", '', 1);
+    }
+
+    /** curl -o <file> ko sach me likhta hai taaki download-flow aage badhe. @param list<string> $argv */
+    private function handleCurl(array $argv): CommandResult
+    {
+        $this->curlArgvs[] = $argv;
+        $i = array_search('-o', $argv, true);
+        if ($i !== false && isset($argv[$i + 1])) {
+            @file_put_contents($argv[$i + 1], "fake-tarball-bytes\n");
+        }
+        return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleChown(array $argv): CommandResult
+    {
+        $this->chownArgvs[] = $argv;
+        return new CommandResult($argv, 0, '', '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleCat(array $argv): CommandResult
+    {
+        $this->termArgvs[] = $argv;
+        $f = $argv[1] ?? '';
+        if ($f !== '' && is_file($f)) {
+            return new CommandResult($argv, 0, (string) file_get_contents($f), '', 1);
+        }
+        return new CommandResult($argv, 1, '', "cat: {$f}: No such file or directory\n", 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handleTerm(array $argv): CommandResult
+    {
+        $this->termArgvs[] = $argv;
+        return new CommandResult($argv, 0, 'fake-' . basename((string) $argv[0]) . "-output\n", '', 1);
+    }
+
+    /** @param list<string> $argv */
+    private function handlePurePw(array $argv, ?string $stdin): CommandResult
+    {
+        $this->purePwArgvs[] = $argv;
+        $this->purePwStdins[] = (string) $stdin;
+        $sub = (string) ($argv[1] ?? '');
+        $login = (string) ($argv[2] ?? '');
+        if ($this->failWhenContains !== null && str_contains(implode(' ', $argv), $this->failWhenContains)) {
+            return new CommandResult($argv, 1, '', 'injected failure: ' . $this->failWhenContains, 1);
+        }
+        if ($sub === 'useradd') {
+            $home = ''; $uid = 0; $gid = 0;
+            for ($i = 3; $i < count($argv) - 1; $i++) {
+                if ($argv[$i] === '-d') { $home = (string) $argv[$i + 1]; }
+                if ($argv[$i] === '-u') { $uid = (int) $argv[$i + 1]; }
+                if ($argv[$i] === '-g') { $gid = (int) $argv[$i + 1]; }
+            }
+            $this->purePwUsers[$login] = ['home' => $home, 'uid' => $uid, 'gid' => $gid];
+            return new CommandResult($argv, 0, '', '', 1);
+        }
+        if ($sub === 'passwd') {
+            if (!isset($this->purePwUsers[$login])) {
+                return new CommandResult($argv, 1, '', "pure-pw: unknown user {$login}", 1);
+            }
+            return new CommandResult($argv, 0, '', '', 1);
+        }
+        if ($sub === 'userdel') {
+            unset($this->purePwUsers[$login]);
+            return new CommandResult($argv, 0, '', '', 1);
+        }
+        return new CommandResult($argv, 0, '', '', 1);
     }
 
     /** @param list<string> $argv */

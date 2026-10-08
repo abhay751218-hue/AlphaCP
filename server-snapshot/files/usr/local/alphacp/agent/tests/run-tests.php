@@ -47,6 +47,27 @@ use Alphacp\Agent\Tasks\FilesUsage;
 use Alphacp\Agent\Tasks\HandlersSet;
 use Alphacp\Agent\Tasks\PrivacySet;
 use Alphacp\Agent\Tasks\SshSet;
+use Alphacp\Agent\Tasks\FtpAdd;
+use Alphacp\Agent\Tasks\FtpPasswd;
+use Alphacp\Agent\Tasks\FtpDel;
+use Alphacp\Agent\Tasks\GitClone;
+use Alphacp\Agent\Tasks\GitList;
+use Alphacp\Agent\Tasks\GitPull;
+use Alphacp\Agent\Tasks\GitStatus;
+use Alphacp\Agent\Tasks\TerminalRun;
+use Alphacp\Agent\Tasks\AppsInstall;
+use Alphacp\Agent\Tasks\IpBlock;
+use Alphacp\Agent\Tasks\IpUnblock;
+use Alphacp\Agent\Tasks\WafStatus;
+use Alphacp\Agent\Tasks\WafEnable;
+use Alphacp\Agent\Tasks\WafDisable;
+use Alphacp\Agent\Tasks\VirusScan;
+use Alphacp\Agent\Metrics;
+use Alphacp\Agent\Tasks\MetricsAccess;
+use Alphacp\Agent\Tasks\WebDiskCreate;
+use Alphacp\Agent\Tasks\WebDiskDelete;
+use Alphacp\Agent\Tasks\WebDiskList;
+use Alphacp\Agent\WebDisk;
 use Alphacp\Agent\Tasks\MailSet;
 use Alphacp\Agent\Tasks\MailForward;
 use Alphacp\Agent\Tasks\MailAutorespond;
@@ -251,7 +272,7 @@ test('service.status only allowlists known services', function (): void {
 });
 test('account tasks are registered with tight schemas and paths', function (): void {
     $reg = acp_task_registry();
-    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove'] as $type) {
+    foreach (['account.create', 'account.suspend', 'account.unsuspend', 'account.terminate', 'account.setQuota', 'domain.add', 'domain.remove', 'php.setVersion', 'php.setIni', 'errorpages.set', 'indexes.set', 'mime.set', 'handlers.set', 'files.list', 'files.usage', 'files.set', 'privacy.set', 'ssh.set', 'mail.set', 'mail.forward', 'mail.autorespond', 'mail.catchall', 'mail.filter', 'mail.deliverability', 'mail.spam', 'mail.list', 'mail.routing', 'mail.track', 'mail.gfilter', 'mail.encrypt', 'mail.boxtrapper', 'mail.calendar', 'mail.usage', 'mail.webmail', 'mail.server', 'db.set', 'db.phpmyadmin', 'db.remote', 'dns.zone', 'dns.dynamic', 'dns.track', 'dns.hostname', 'dns.templates', 'mail.globalrouting', 'dns.nsreport', 'dns.park', 'dns.cleanup', 'dns.ttl', 'dns.forward', 'dns.sync', 'dns.nameserver', 'dns.bind', 'backup.create', 'backup.archive', 'backup.extract', 'backup.wizard', 'backup.restore', 'backup.config', 'backup.restoration', 'backup.users', 'backup.filedir', 'backup.transfer', 'backup.cpanel', 'backup.review', 'cron.set', 'ssl.issue', 'ssl.remove', 'ftp.add', 'ftp.passwd', 'ftp.del', 'git.list', 'git.clone', 'git.pull', 'git.status', 'terminal.run', 'apps.install', 'security.ipBlock', 'security.ipUnblock', 'waf.status', 'waf.enable', 'waf.disable', 'security.scan', 'metrics.access', 'webdisk.list', 'webdisk.create', 'webdisk.delete'] as $type) {
         assert_true(isset($reg[$type]), "missing {$type}");
         assert_true(!empty($reg[$type]['paths']), "{$type} needs PathGuard roots");
         assert_true(($reg[$type]['schema']['additionalProperties'] ?? true) === false, "{$type} must fail closed");
@@ -1518,6 +1539,301 @@ test('a finished task does not leave its password in the queue', function (): vo
     assert_true(TaskRunner::scrubSecrets(['username' => 'alicehost'])['username'] === 'alicehost', 'payloads without a secret pass through');
     assert_true(TaskRunner::scrubSecrets(['password' => '***'])['password'] === '***', 'already scrubbed stays scrubbed');
     assert_true(TaskRunner::scrubSecrets(['password' => ''])['password'] === '', 'an empty value is not a secret');
+});
+
+fwrite(STDOUT, "\nS6 FTP (Pure-FTPd virtual users, root-side)\n");
+test('ftp.add creates a chrooted virtual user; password on stdin, never in argv', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost/ftp/deploys';
+
+    $out = (new FtpAdd())->handle([
+        'account'  => 'alicehost',
+        'login'    => 'alicehost_deploys',
+        'password' => 'Ftp-Pass-123',
+        'home'     => $home,
+    ], $harness['ctx']);
+
+    assert_true($out['status'] === 'ok' && $out['login'] === 'alicehost_deploys', 'ftp.add reports ok');
+    assert_true(isset($harness['cmd']->purePwUsers['alicehost_deploys']), 'virtual user booked in PureDB');
+    assert_true($harness['cmd']->purePwUsers['alicehost_deploys']['home'] === $home, 'chroot home recorded');
+    assert_true(is_dir($home), 'chroot dir created under the account home');
+    foreach ($harness['cmd']->purePwArgvs as $argv) {
+        assert_true(!str_contains(implode(' ', $argv), 'Ftp-Pass'), 'the password is never in argv');
+    }
+    assert_true(str_contains($harness['cmd']->purePwStdins[0] ?? '', 'Ftp-Pass-123'), 'the password travels on stdin');
+    acp_account_cleanup($harness);
+});
+test('ftp.passwd resets and ftp.del removes the virtual user', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    (new FtpAdd())->handle([
+        'account' => 'alicehost', 'login' => 'alicehost_ci', 'password' => 'First-Pass-1',
+        'home' => $harness['root'] . '/home/alicehost/ftp/ci',
+    ], $harness['ctx']);
+
+    (new FtpPasswd())->handle([
+        'account' => 'alicehost', 'login' => 'alicehost_ci', 'password' => 'Second-Pass-2',
+    ], $harness['ctx']);
+    $stdins = $harness['cmd']->purePwStdins;
+    assert_true(str_contains((string) end($stdins), 'Second-Pass-2'), 'the new password goes on stdin');
+
+    (new FtpDel())->handle(['account' => 'alicehost', 'login' => 'alicehost_ci'], $harness['ctx']);
+    assert_true($harness['cmd']->purePwUsers === [], 'the virtual user is removed from PureDB');
+    acp_account_cleanup($harness);
+});
+test('ftp tasks refuse foreign accounts, foreign logins, weak passwords and outside homes', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $home = $harness['root'] . '/home/alicehost/ftp/x';
+
+    $threw = false;
+    try {
+        (new FtpAdd())->handle(['account' => 'bobhost', 'login' => 'bobhost_x', 'password' => 'Some-Pass-1', 'home' => $home], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = str_contains($e->getMessage(), 'not an AlphaCP account');
+    }
+    assert_true($threw, 'a non-account cannot add FTP users');
+
+    $threw = false;
+    try {
+        (new FtpAdd())->handle(['account' => 'alicehost', 'login' => 'otherhost_x', 'password' => 'Some-Pass-1', 'home' => $home], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'a foreign-prefixed login is refused');
+
+    $threw = false;
+    try {
+        (new FtpAdd())->handle(['account' => 'alicehost', 'login' => 'alicehost_x', 'password' => 'short', 'home' => $home], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'a weak password is refused');
+
+    $threw = false;
+    try {
+        (new FtpAdd())->handle(['account' => 'alicehost', 'login' => 'alicehost_x', 'password' => 'Good-Pass-1', 'home' => '/etc'], $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'a chroot home outside the account is refused');
+
+    assert_true($harness['cmd']->purePwUsers === [], 'nothing was created by hostile payloads');
+    acp_account_cleanup($harness);
+});
+
+fwrite(STDOUT, "\nB1-baaki: Git Version Control + Terminal + Site Software (root-side)\n");
+test('git.clone/list/status/pull: repo <home>/git/<dir> me, guards ke saath', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $out = (new GitClone())->handle([
+        'account' => 'alicehost',
+        'url'     => 'https://github.com/example/site.git',
+        'dir'     => 'site',
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'ok', 'git.clone reports ok');
+    assert_true($out['path'] === $root . '/home/alicehost/git/site', 'repo account home ke andar hai');
+    $clone = end($harness['cmd']->gitArgvs);
+    assert_true(in_array('clone', $clone, true) && in_array('--', $clone, true), 'git clone -- (option-injection band)');
+
+    // fake git dir nahi banata; asli repo jaisa .git bana dete hain
+    mkdir($root . '/home/alicehost/git/site/.git', 0755, true);
+
+    $list = (new GitList())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true($list['repos'] === ['site'], 'git.list sirf asli repos dikhata hai');
+
+    $st = (new GitStatus())->handle(['account' => 'alicehost', 'dir' => 'site'], $harness['ctx']);
+    assert_true($st['clean'] === false && $st['lines'][0] === 'M changed.php', 'git.status porcelain lines');
+
+    $pull = (new GitPull())->handle(['account' => 'alicehost', 'dir' => 'site'], $harness['ctx']);
+    $p = end($harness['cmd']->gitArgvs);
+    assert_true($pull['status'] === 'ok' && in_array('--ff-only', $p, true), 'git.pull --ff-only');
+
+    // guards
+    foreach ([
+        ['account' => 'bobhost', 'url' => 'https://github.com/x/y.git', 'dir' => 'z'],
+        ['account' => 'alicehost', 'url' => 'ftp://nope/x.git', 'dir' => 'z'],
+        ['account' => 'alicehost', 'url' => 'https://github.com/x/y.git', 'dir' => '../evil'],
+        ['account' => 'alicehost', 'url' => 'https://github.com/x/y.git', 'dir' => 'site'],
+    ] as $bad) {
+        $threw = false;
+        try {
+            (new GitClone())->handle($bad, $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'git.clone refuses: ' . json_encode($bad));
+    }
+    acp_account_cleanup($harness);
+});
+test('terminal.run: read-only whitelist, chaining banned, cat PathGuard ke andar', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $out = (new TerminalRun())->handle(['command' => 'ls -la'], $harness['ctx']);
+    assert_true($out['status'] === 'ok' && str_contains($out['output'], 'fake-ls-output'), 'ls chalta hai');
+    assert_true(str_ends_with($harness['cmd']->termArgvs[0][0], '/ls'), 'allowlisted /bin|/usr/bin ls use hua');
+
+    assert_true((new TerminalRun())->handle(['command' => 'uptime'], $harness['ctx'])['status'] === 'ok', 'uptime ok');
+
+    $file = $root . '/home/alicehost/note.txt';
+    file_put_contents($file, "hello terminal\n");
+    $cat = (new TerminalRun())->handle(['command' => 'cat ' . $file], $harness['ctx']);
+    assert_true($cat['status'] === 'ok' && str_contains($cat['output'], 'hello terminal'), 'cat account file padhta hai');
+
+    foreach (['rm -rf /', 'ls; rm -rf /', 'ls | cat /etc/passwd', 'cat /etc/shadow', 'df && curl evil', 'ls $(id)'] as $bad) {
+        $threw = false;
+        try {
+            (new TerminalRun())->handle(['command' => $bad], $harness['ctx']);
+        } catch (Throwable $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'terminal refuses: ' . $bad);
+    }
+    acp_account_cleanup($harness);
+});
+test('apps.install: WordPress = public_html + <acct>_wp DB + extract + wp-config + chown', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $out = (new AppsInstall())->handle([
+        'username'    => 'alicehost',
+        'app'         => 'wordpress',
+        'db_password' => 'Wp-Secret-9',
+    ], $harness['ctx']);
+    assert_true($out['status'] === 'ok' && $out['db'] === 'alicehost_wp', 'wordpress install ok + db naam');
+    assert_true(in_array('alicehost_wp', $harness['cmd']->mysqlDatabases, true), 'MariaDB me db bana');
+    $curl = end($harness['cmd']->curlArgvs);
+    assert_true(in_array('https://wordpress.org/latest.tar.gz', $curl, true), 'tarball wordpress.org se aaya');
+    $wp = $root . '/home/alicehost/public_html/wp-config.php';
+    assert_true(is_file($wp) && str_contains((string) file_get_contents($wp), "DB_NAME', 'alicehost_wp'"), 'wp-config likha gaya');
+    $chown = end($harness['cmd']->chownArgvs);
+    assert_true(in_array('-R', $chown, true) && in_array('alicehost:alicehost', $chown, true), 'public_html chown -R account');
+    $leftover = glob($root . '/home/alicehost/.alphacp-wp-*.tar.gz') ?: [];
+    assert_true($leftover === [], 'tarball cleanup hua');
+
+    foreach ([
+        ['username' => 'alicehost', 'app' => 'joomla', 'db_password' => 'Wp-Secret-9'],
+        ['username' => 'alicehost', 'app' => 'wordpress', 'db_password' => 'short'],
+        ['username' => 'bobhost', 'app' => 'wordpress', 'db_password' => 'Wp-Secret-9'],
+    ] as $bad) {
+        $threw = false;
+        try {
+            (new AppsInstall())->handle($bad, $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'apps.install refuses: ' . json_encode($bad));
+    }
+    acp_account_cleanup($harness);
+});
+
+test('security.ipBlock/ipUnblock: ufw argv-only, invalid IP reject', function (): void {
+    $harness = acp_account_harness();
+
+    $out = (new IpBlock())->handle(['ip' => '203.0.113.9'], $harness['ctx']);
+    assert_true($out['status'] === 'ok' && $out['action'] === 'block', 'ipBlock ok');
+    assert_true(end($harness['cmd']->ufwArgvs) === [end($harness['cmd']->ufwArgvs)[0], 'deny', 'from', '203.0.113.9'], 'ufw deny from <ip> argv');
+
+    (new IpUnblock())->handle(['ip' => '2001:db8::1'], $harness['ctx']);
+    $u = end($harness['cmd']->ufwArgvs);
+    assert_true($u[1] === 'delete' && $u[4] === '2001:db8::1', 'ufw delete deny from <ipv6>');
+
+    foreach (['999.1.1.1', 'not-an-ip', '1.2.3.4; rm -rf /'] as $bad) {
+        $threw = false;
+        try {
+            (new IpBlock())->handle(['ip' => $bad], $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'invalid IP reject: ' . $bad);
+    }
+    assert_true(count($harness['cmd']->ufwArgvs) === 2, 'sirf 2 valid ufw calls hue');
+    acp_account_cleanup($harness);
+});
+test('waf.status/enable/disable + security.scan: agent-side, clam exit-1 = infected result', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    assert_true((new WafStatus())->handle([], $harness['ctx'])['enabled'] === true, 'modsec enabled (fake default)');
+    (new WafDisable())->handle([], $harness['ctx']);
+    $dis = end($harness['cmd']->apacheModArgvs);
+    assert_true(basename((string) $dis[0]) === 'a2dismod' && in_array('security2', $dis, true), 'a2dismod security2 chala');
+    $restarts = array_filter($harness['cmd']->calls, static fn (array $c): bool => ($c[0] ?? '') === '/bin/systemctl' || ($c[0] ?? '') === '/usr/bin/systemctl');
+    assert_true(count($restarts) >= 1, 'apache2 restart hua');
+    assert_true((new WafStatus())->handle([], $harness['ctx'])['enabled'] === false, 'ab disabled');
+    (new WafEnable())->handle([], $harness['ctx']);
+    assert_true((new WafStatus())->handle([], $harness['ctx'])['enabled'] === true, 'enable ke baad wapas enabled');
+
+    $scan = (new VirusScan())->handle(['path' => $root . '/home/alicehost'], $harness['ctx']);
+    assert_true($scan['infected'] === false && str_contains($scan['output'], 'Infected files: 0'), 'clean scan');
+    $harness['cmd']->clamInfected = true;
+    $scan2 = (new VirusScan())->handle(['path' => $root . '/home/alicehost'], $harness['ctx']);
+    assert_true($scan2['infected'] === true, 'exit 1 = infected result (failure nahi)');
+
+    $threw = false;
+    try {
+        (new VirusScan())->handle(['path' => '/etc'], $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'PathGuard ke bahar scan reject');
+    acp_account_cleanup($harness);
+});
+
+test('metrics.access: access-log parse (bytes/visitors/requests/errors/top), tail-window + guards', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $log = $root . '/home/alicehost/access.log';
+    file_put_contents($log, implode("\n", [
+        '1.1.1.1 - - [07/Oct/2026:10:00:01 +0000] "GET / HTTP/1.1" 200 1000 "-" "ua"',
+        '1.1.1.1 - - [07/Oct/2026:10:00:02 +0000] "GET /about HTTP/1.1" 200 500 "-" "ua"',
+        '2.2.2.2 - - [07/Oct/2026:10:00:03 +0000] "GET / HTTP/1.1" 404 100 "-" "ua"',
+        '3.3.3.3 - - [07/Oct/2026:10:00:04 +0000] "POST /wp-login.php HTTP/1.1" 500 - "-" "ua"',
+        'garbage line jo parse nahi hoti',
+    ]) . "\n");
+
+    $out = (new MetricsAccess())->handle(['account' => 'alicehost', 'log_path' => $log], $harness['ctx']);
+    $st = $out['stats'];
+    assert_true($out['status'] === 'ok', 'metrics.access ok');
+    assert_true($st['requests'] === 4, '4 valid requests (garbage skip)');
+    assert_true($st['visitors'] === 3, '3 unique IPs');
+    assert_true($st['bytes'] === 1600, 'bytes sum (- = 0)');
+    assert_true($st['errors'] === 2, '404+500 = 2 errors');
+    assert_true(($st['top']['/'] ?? 0) === 2, 'top pages count');
+
+    // log na ho to zero-stats (error nahi)
+    $zero = (new MetricsAccess())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true($zero['log'] === null && $zero['stats']['requests'] === 0, 'missing log = zero stats');
+
+    // guards
+    $threw = false;
+    try {
+        (new MetricsAccess())->handle(['account' => 'bobhost'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'foreign account reject');
+    $threw = false;
+    try {
+        (new MetricsAccess())->handle(['account' => 'alicehost', 'log_path' => '/etc/shadow'], $harness['ctx']);
+    } catch (Throwable $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'PathGuard ke bahar log_path reject');
+
+    // parser unit: tail flag sirf badi file par
+    $small = Metrics::parseFile($log);
+    assert_true($small['tail'] === false, 'choti file par tail=false');
+    acp_account_cleanup($harness);
 });
 
 test('db.create/db.drop create and drop the real MariaDB database', function (): void {
@@ -4398,6 +4714,7 @@ test('dns.bind status — installed aur checkconf ki sachchi report', function (
     foreach (['ACP_BIND_CHECKCONF', 'ACP_BIND_CHECKZONE'] as $k) {
         putenv($k);
     }
+    $h['cmd']->binsAbsent = true;   // live par bind9 asli me laga ho to bhi hermetic
     $none = (new BindSetup())->handle(['action' => 'status'], $h['ctx']);
     assert_true($none['installed'] === false, 'bina bind9 ke installed false hona chahiye');
     assert_true(isset($none['error']));
@@ -4809,6 +5126,7 @@ test('mail.server status/list — sachchi report (installed na ho to bhi)', func
     foreach (['ACP_MAIL_EXIM', 'ACP_MAIL_DOVECOT', 'ACP_MAIL_DOVEADM'] as $k) {
         putenv($k);
     }
+    $h['cmd']->binsAbsent = true;   // live par exim/dovecot asli me lage hain
     $none = (new MailServerSetup())->handle(['action' => 'status'], $h['ctx']);
     assert_true($none['installed'] === false, 'bina binaries ke installed false hona chahiye');
     assert_true(isset($none['error']));
@@ -5408,9 +5726,13 @@ test('#145 sync — DNS/zone likhna fail ho to bhi sync ki baaki cheezein zinda 
     $h = acp_mail_harness();
     acp_mail_seed_extras($h);
     $home = $h['root'] . '/home/alicehost';
-    // zone.json likhna hi na ho: uske parent ko read-only kar do (jaise disk full/EACCES)
+    // zone.json likhna hi na ho: write fail hona chahiye. chmod-read-only trick ROOT
+    // par kaam nahi karti (root unix permissions bypass karta hai — live par suite
+    // root chalta hai), isliye zone.json ko DIRECTORY bana do: file_put_contents
+    // har uid par EISDIR se fail hota hai (fail-closed path wahi demonstrate hota hai).
     @unlink($home . '/etc/dns/zone.json');
-    @chmod($home . '/etc/dns', 0555);
+    @rmdir($home . '/etc/dns/zone.json');
+    @mkdir($home . '/etc/dns/zone.json', 0755);
 
     $out = (new MailServerSetup())->handle(['action' => 'sync'], $h['ctx']);
     assert_true(($out['mailboxes'] ?? -1) >= 0, 'sync khud fail nahi hona chahiye (mailboxes key maujood)');
@@ -5419,7 +5741,7 @@ test('#145 sync — DNS/zone likhna fail ho to bhi sync ki baaki cheezein zinda 
     assert_true(!empty($deliv['failed']), 'failure ki wajah report ho');
     assert_true(($deliv['failed'][0]['domain'] ?? '') === 'alice.test', 'kaunsa domain fail hua wo bhi batao');
     assert_true(str_contains((string) ($deliv['failed'][0]['error'] ?? ''), 'zone.json'), 'error message me zone.json ho');
-    @chmod($home . '/etc/dns', 0755);
+    @rmdir($home . '/etc/dns/zone.json');
     acp_mail_cleanup($h);
 });
 
@@ -5847,6 +6169,76 @@ test('email filter — khatarnak needle/pipe kabhi filter file me nahi jata', fu
     acp_mail_cleanup($h);
 });
 
+test('webdisk.list/create/delete: WebDAV digest+DAV conf provisioning, ro/rw write-limit, guards', function (): void {
+    $harness = acp_account_harness();
+    (new AccountCreate())->handle(acp_create_payload(), $harness['ctx']);
+    $root = $harness['root'];
+
+    $list = (new WebDiskList())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true($list['accounts'] === [] && $list['realm'] === WebDisk::REALM, 'shuru me koi WebDisk account nahi');
+
+    (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => 'designer', 'permissions' => 'rw', 'password' => 'secret123'], $harness['ctx']);
+    (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => 'auditor', 'permissions' => 'ro', 'password' => 'auditpass9'], $harness['ctx']);
+
+    $list = (new WebDiskList())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true(count($list['accounts']) === 2, '2 WebDisk accounts list hue');
+
+    $conf = (string) file_get_contents($root . '/home/alicehost/etc/webdisk.conf');
+    assert_true(str_contains($conf, 'Alias /webdisk "' . $root . '/home/alicehost"'), 'Alias account home par');
+    assert_true(str_contains($conf, 'DAV on') && str_contains($conf, 'AuthType Digest'), 'DAV + Digest auth conf');
+    assert_true(str_contains($conf, 'Require user designer'), 'rw login write-methods list me');
+    assert_true(!str_contains($conf, 'Require user auditor'), 'ro login write list me nahi');
+
+    $digest = (string) file_get_contents($root . '/home/alicehost/etc/webdisk.digest');
+    $hash = md5('designer:' . WebDisk::REALM . ':secret123');
+    assert_true(str_contains($digest, 'designer:' . WebDisk::REALM . ':' . $hash), 'digest hash (md5 A1) sahi');
+    assert_true(!str_contains($digest, 'secret123'), 'plaintext password digest me nahi');
+
+    $vhosts = glob($root . '/apache/sites-available/*') ?: [];
+    $included = false;
+    foreach ($vhosts as $v) {
+        if (str_contains((string) file_get_contents($v), 'IncludeOptional ' . $root . '/home/alicehost/etc/webdisk.conf')) {
+            $included = true;
+        }
+    }
+    assert_true($included, 'vhost me webdisk.conf IncludeOptional hua');
+
+    (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => 'designer', 'permissions' => 'rw', 'password' => 'newpass456'], $harness['ctx']);
+    $digest2 = (string) file_get_contents($root . '/home/alicehost/etc/webdisk.digest');
+    assert_true(str_contains($digest2, md5('designer:' . WebDisk::REALM . ':newpass456')), 'reset ke baad naya hash');
+    assert_true(!str_contains($digest2, $hash), 'purana hash hat gaya');
+
+    foreach (['../evil', '', str_repeat('a', 61), 'bad login'] as $bad) {
+        $threw = false;
+        try {
+            (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => $bad, 'permissions' => 'rw', 'password' => 'secret123'], $harness['ctx']);
+        } catch (TaskRejectedException $e) {
+            $threw = true;
+        }
+        assert_true($threw, 'invalid login reject: ' . $bad);
+    }
+    $threw = false;
+    try {
+        (new WebDiskCreate())->handle(['account' => 'alicehost', 'login' => 'x1', 'permissions' => 'rw', 'password' => 'short'], $harness['ctx']);
+    } catch (TaskRejectedException $e) {
+        $threw = true;
+    }
+    assert_true($threw, 'chhota password reject');
+
+    (new WebDiskDelete())->handle(['account' => 'alicehost', 'login' => 'auditor'], $harness['ctx']);
+    $list = (new WebDiskList())->handle(['account' => 'alicehost'], $harness['ctx']);
+    assert_true(count($list['accounts']) === 1, 'delete ke baad 1 account');
+    $conf = (string) file_get_contents($root . '/home/alicehost/etc/webdisk.conf');
+    assert_true(str_contains($conf, 'login=designer') && !str_contains($conf, 'login=auditor'), 'conf me sirf bacha account');
+
+    (new WebDiskDelete())->handle(['account' => 'alicehost', 'login' => 'designer'], $harness['ctx']);
+    assert_true(!is_file($root . '/home/alicehost/etc/webdisk.conf'), 'aakhri delete par conf clean');
+    assert_true(!is_file($root . '/home/alicehost/etc/webdisk.digest'), 'aakhri delete par digest clean');
+    assert_true((new WebDiskList())->handle(['account' => 'alicehost'], $harness['ctx'])['accounts'] === [], 'list khali');
+
+    acp_account_cleanup($harness);
+});
+
 test('email filter — forward khud ko ho to loop nahi (rule chhod diya jaye)', function (): void {
     $h = acp_mail_harness();
     $home = acp_mail_seed_filter_account($h);
@@ -6021,4 +6413,3 @@ function acp_create_payload(): array
         'php_version' => '8.4',
     ];
 }
-
