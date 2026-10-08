@@ -49,6 +49,7 @@ cat > "$FAKE/rc/etc/config.inc.php" <<'RCEOF'
 /* Debian-style roundcube config (PRE) */
 $config['db_dsnw'] = 'sqlite:///@/var/lib/roundcube/db.sqlite3?mode=0640';
 <?php
+<?php
 /* ACP_WEBMAIL_START */
 $config['imap_host'] = 'localhost:143';
 /* ACP_WEBMAIL_END */

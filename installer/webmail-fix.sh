@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-#  AlphaCP — WEBMAIL FIX  v1.3  (Roundcube Webmail, cPanel-style port 2096 + SSO)
+#  AlphaCP — WEBMAIL FIX  v1.4  (Roundcube Webmail, cPanel-style port 2096 + SSO)
 # -----------------------------------------------------------------------------
 #  P-UI-4: cPanel jaisa alag Webmail app — Roundcube port 2096 (SSL) par, aur
 #  panel se "Open Webmail" par ONE-TIME token SSO (Dovecot master-user se
@@ -28,7 +28,7 @@
 # =============================================================================
 set -Eeuo pipefail
 
-VERSION="1.3"
+VERSION="1.4"
 ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
 AGENT="${ACP_HOME}/agent"
 PANEL="${ACP_HOME}/panel"
@@ -185,10 +185,22 @@ apply(){
   mkdir -p "$RC_ETC"
   [[ -f "${RC_ETC}/config.inc.php" ]] || printf '<?php\n/* AlphaCP managed Roundcube config */\n' > "${RC_ETC}/config.inc.php"
   python3 - "$RC_ETC/config.inc.php" <<'PY'
-import sys, secrets, re
+import sys, secrets
 path = sys.argv[1]
 src = open(path).read()
-block = """/* ACP_WEBMAIL_START */
+# Deterministic self-heal: debian base = pehli stray '<?php' line ya
+# ACP_WEBMAIL_START marker se PEHLE tak (kitne bhi stray/block jama ho gaye
+# hon — sab kachra discard). Line 1 ka asli <?php barkarar rehta hai.
+lines = src.split("\n")
+cut = len(lines)
+for i in range(1, len(lines)):
+    t = lines[i].strip()
+    if t == "<?php" or t.startswith("/* ACP_WEBMAIL_START"):
+        cut = i
+        break
+base = "\n".join(lines[:cut]).rstrip("\n")
+block = """
+/* ACP_WEBMAIL_START */
 $config['imap_host'] = 'localhost:143';
 $config['smtp_server'] = 'localhost';
 $config['smtp_port'] = 25;
@@ -197,9 +209,8 @@ $config['plugins'] = array_merge($config['plugins'] ?? [], ['acp_sso']);
 $config['support_url'] = '';
 /* ACP_WEBMAIL_END */
 """ % secrets.token_urlsafe(18)
-src = re.sub(r"(?:\n?<\?php[ \t]*\n)?/\* ACP_WEBMAIL_START \*/.*?/\* ACP_WEBMAIL_END \*/\n?", "", src, flags=re.S)
-open(path, "w").write(src + block)
-print("  block likha")
+open(path, "w").write(base + "\n" + block)
+print("  block likha (deterministic rebuild, base lines: %d)" % cut)
 PY
   ok "roundcube config block (imap 143 / smtp 25 / des_key / plugin)"
 
