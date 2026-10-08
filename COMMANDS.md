@@ -14,21 +14,36 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 tests-sync v1.0 — ABHI CHALAO (live suite ko current era par)
+### 🔴 mail-fix v1.0 — ABHI CHALAO (root-par mail filter sync fix + suite green)
+```bash
+sudo alphacp-sync get 3195ff6fdd69de57537c43b1b96554e3ba239aa9 installer/mail-fix.sh /tmp/mail-fix-v1.0.sh 487f0f163bfbac46e8e4dffc0dfd689e8b3c2a2359aeef8e138d42ed3e99e703 && sudo bash /tmp/mail-fix-v1.0.sh
+```
+- commit `3195ff6fdd69de57537c43b1b96554e3ba239aa9`, sha256 `487f0f163bfbac46e8e4dffc0dfd689e8b3c2a2359aeef8e138d42ed3e99e703`.
+- **Kya karta hai:** tests-sync v1.0 live par `passed: 219 failed: 3` par block hua tha —
+  root agent par `MailServer::ensureFilterEtcSearchable` ka verify step stale stat / no-op
+  chgrp par `~/etc remains inaccessible` de kar mail filters skip karta tha. Ye installer
+  **3 files ek saath** deploy karta hai: fixed `src/MailServer.php` (self-healing:
+  clearstatcache + chown/world-bit fallbacks, commit `2969fd8`) + 2 test files current era
+  (222 tests). Suite gate (passed>=222 failed=0) dono ke saath hi green hota hai.
+- **Expected output:** `backup: …/releases/mailfix-<ts>` → `agent files likhi + lint clean (3)` →
+  `paneld active (fixed MailServer load hua)` → `suite: passed: 222   failed: 0` →
+  `agent suite GREEN` → sync → `FINAL VERDICT … mail-fix v1.0 APPLY ho gaya`.
+- **Fail par:** auto-rollback + fatal ho to tail-25 screen par; full slog
+  `/usr/local/alphacp/logs/mail-fix-<ts>-suite-tail.txt`. **Wapas:** `--rollback`.
+- **Iske baad:** live suite authoritative = 222/0; mail filters root par bhi sync honge.
+- Test: `bash tools/sim/mail-fix-sim.sh` → **23/23** (root-run suite proof ke saath).
+
+### ❌ tests-sync v1.0 — RAN 8 Oct 19:36 IST, gate blocked (219/3) → SUPERSEDED by mail-fix v1.0
 ```bash
 sudo alphacp-sync get 3d649d8f8f225db2bd7ac46b45b302e0ad8bc3b7 installer/tests-sync.sh /tmp/tests-sync-v1.0.sh f9b298f580d87a8ad5f662059cda1e2ecfe7baedb929d84e07911a3c56706478 && sudo bash /tmp/tests-sync-v1.0.sh
 ```
-- commit `3d649d8f8f225db2bd7ac46b45b302e0ad8bc3b7`, sha256 `f9b298f580d87a8ad5f662059cda1e2ecfe7baedb929d84e07911a3c56706478`.
-- **Kya karta hai:** live par agent ka `run-tests.php` purana tha (212-test era) — isi liye
-  suite-enable v1.1 ke live run me `passed: 208 failed: 4` aaya (purane tests + ek
-  root-vs-non-root assert). Ab 2 test files byte-for-byte current era (`6c00f97`,
-  222 tests, root-aware fixes) par sync hoti hain aur poora suite gate chalta hai.
-- **Expected output:** `backup: …/releases/testsync-<ts>` → `test files likhi + lint clean (2)` →
-  `suite: passed: 222   failed: 0` → `agent suite GREEN` → sync →
-  `FINAL VERDICT … tests-sync v1.0 APPLY ho gaya`.
-- **Fail par:** auto-rollback + fatal ho to tail-25 screen par. **Wapas:** `--rollback`.
-- **Iske baad:** live suite authoritative = 222/0; agle installers ka suite gate live par green.
-- Test: `bash tools/sim/tests-sync-sim.sh` → **17/17**.
+
+- **Natija:** sha verified, backup `releases/testsync-20261008140438`, lint clean (2),
+  suite `passed: 219 failed: 3` → gate ne sahi block kiya, auto-rollback ho gaya
+  (live tests wapas stale era). Slog: `/usr/local/alphacp/logs/tests-sync-20261008140438-suite-tail.txt`.
+- **Seekh:** 3 failures me se 2 mail-filter tests thi (root par `ensureFilterEtcSearchable`
+  bug — agent CODE fix chahiye tha, sirf tests sync kaafi nahi). **mail-fix v1.0 me test
+  files + MailServer fix dono hain — tests-sync ko dobara MAT chalao.**
 
 ### ✅ ui1-fix v1.0 — APPLIED 8 Oct 09:01 IST, user-confirmed (ab MAT chalao; history/rollback ke liye)
 ```bash

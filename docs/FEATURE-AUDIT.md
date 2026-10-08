@@ -88,7 +88,7 @@ Decision chahiye: agent se dav-config implement karo, ya module ko UI se hide ka
 | Env | pdo_sqlite | posix | Skip hota hai |
 |---|---|---|---|
 | wasm sandbox (ye repo, sims) | ✅ | ❌ | CommandRunner ×2 (`posix_getuid`/`hostname`,`id`), symlink file-probe fallback |
-| live server (php8.4) | ✅ (suite-enable v1.1 se) | ✅ | suite chalta hai; **root uid** hone se unix-permission-simulation tests alag chahiye (zone.json ab EISDIR-injection se root-aware, `31d0301`); test files live par stale thi → `tests-sync v1.0` se current era |
+| live server (php8.4) | ✅ (suite-enable v1.1 se) | ✅ | suite chalta hai; **root uid** hone se unix-permission-simulation tests alag chahiye (zone.json ab EISDIR-injection se root-aware, `31d0301`); tests-sync v1.0 gate blocked (219/3) → root-cause MailServer `ensureFilterEtcSearchable` (fix `2969fd8`, self-healing perms; root+non-root 222/0) → `mail-fix v1.0` se code+tests dono live par |
 
 Matlab: **agent suite 222/0 wasm sandbox me authoritative hai**; live par full-suite run ke
 liye `php8.4-sqlite3` package chahiye (nayi dependency — user se confirm). Panel phpunit

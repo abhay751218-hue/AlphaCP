@@ -139,7 +139,7 @@ diagnose post → rollback (purana theme wapas) → re-apply.
 bash tools/sim/ui1-fix-sim.sh              # -> 29/29
 ```
 
-## tests-sync-sim.sh — `installer/tests-sync.sh` v1.0 (live suite current era)
+## tests-sync-sim.sh — `installer/tests-sync.sh` v1.0 (SUPERSEDED by mail-fix; history)
 
 PRE = `935a3e3`-era stale test files (live jaisi): count != 222 reproduce →
 diagnose → apply (lint 2, suite 222/0, byte-for-byte era `6c00f97`) → diagnose
@@ -147,4 +147,16 @@ post → rollback (stale wapas) → re-apply.
 
 ```bash
 bash tools/sim/tests-sync-sim.sh           # -> 17/17
+```
+
+## mail-fix-sim.sh — `installer/mail-fix.sh` v1.0 (MailServer root-fix + tests current era)
+
+PRE = `935a3e3`-era stale tests + pre-fix MailServer (live jaisi): reproduce →
+diagnose → apply (lint 3, suite 222/0, byte-for-byte era `2969fd8` MailServer +
+tests) → **ROOT-RUN suite green ka direct assert (sudo — live failure-mode ka
+sandbox proof)** → diagnose post → rollback (pre-fix MailServer + stale tests
+wapas) → re-apply.
+
+```bash
+bash tools/sim/mail-fix-sim.sh             # -> 23/23
 ```

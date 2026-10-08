@@ -4,11 +4,24 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+### Fixed
+- **MailServer root-fix (`2969fd8`)** — `ensureFilterEtcSearchable` root agent par
+  `~/etc remains inaccessible` de kar saare mail filters skip karta tha (live suite
+  219/3 isi se block hui). Ab self-healing: chgrp/chmod ke baad `clearstatcache` +
+  fresh `lstat` verify, fail par fallbacks — chown owner=mailbox uid (+owner search
+  bit), last resort world search bit (+x only; read/list nahi). Suite ab ROOT aur
+  non-root dono par **222/0** (sandbox sudo repro se verified).
 ### Added
+- `installer/mail-fix.sh` **v1.0** (+ `.in`, `tools/build-mail-fix.py`,
+  `tools/sim/mail-fix-sim.sh` **23/23** — root-run suite proof ke saath) —
+  MailServer fix + 2 test files current era EK installer me (suite gate dono ke
+  saath hi green hota hai). Pin: commit `3195ff6fdd69de57537c43b1b96554e3ba239aa9`,
+  sha256 `487f0f163bfbac46e8e4dffc0dfd689e8b3c2a2359aeef8e138d42ed3e99e703`.
 - `installer/tests-sync.sh` **v1.0** (+ `.in`, `tools/build-tests-sync.py`,
   `tools/sim/tests-sync-sim.sh` **17/17**) — live agent suite current era par:
   2 test files byte-for-byte (`6c00f97`, 222 tests) + suite gate (passed>=222 failed=0).
   Pin: commit `3d649d8f8f225db2bd7ac46b45b302e0ad8bc3b7`, sha256 `f9b298f580d87a8ad5f662059cda1e2ecfe7baedb929d84e07911a3c56706478`.
+  **8 Oct 19:36 IST RAN, gate blocked (219/3) → SUPERSEDED by mail-fix v1.0 (dobara mat chalao).**
 - `installer/suite-enable.sh` **v1.1** (`bc7b95f08316bbcae96754a755ca5b522c35a15b` / `02517c05bb694c5cb7b6a508cd7c3d794e243f1eac9059a9319c8dcc11487d75`) — v1.0 ka pipefail
   silent-death fix: suite output log file me, fatal par tail-25 + alag suite-tail log +
   clear die; summary grep `|| true`. Sim 10/10.
