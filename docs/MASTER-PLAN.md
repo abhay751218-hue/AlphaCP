@@ -143,7 +143,7 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | P-UI-1 | Theme engine: 3 alag themes/layouts (WHM / cPanel / Webmail) + design tokens (colours, sidebar, cards, icons) |
 | P-UI-2 | **cPanel (customer)** icon-grid home + sections + right General-Info column + top search + footer |
 | P-UI-3 | **WHM (root/reseller)** sidebar nav-tree + Favorites + Statistics home — nav-tree P-UI-2 me, Favorites+stats-home ui3-fix v1.0 me ✅ APPLIED 8 Oct 20:46 IST (backup ui3fix-20261008151545) |
-| P-UI-4 | **Webmail** alag app (Roundcube SSO) + alag login (2095/96 opt-in) — webmail-fix v1.4 SHIPPED (2096 + SSO; nginx-1.24 + RC-parse + /internal + stray-<?php self-heal), apply pending; sim 48/48 |
+| P-UI-4 | **Webmail** alag app (Roundcube SSO) + alag login (2095/96 opt-in) — webmail-fix v1.5 SHIPPED (2096 + SSO; nginx-1.24 + RC-parse + /internal + stray-<?php self-heal), apply pending; sim 50/50 |
 | OWNER-CTRL | **Company-owner only:** kaun sa panel kis port par chale (2083/2087/2096 toggles) — user-approved; webmail-fix ke baad agla slice |
 | P-UI-5 | Responsive/mobile (hamburger + stacked) + icons set + white-label/branding hooks |
 | P-UI-6 | Har module-page ko cPanel ke page-layout se match (forms/tables/buttons consistency) |

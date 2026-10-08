@@ -192,5 +192,5 @@ dovecot/internal-lock asserts) → diagnose post → rollback (sys files samet) 
 re-apply.
 
 ```bash
-bash tools/sim/webmail-fix-sim.sh          # -> 48/48
+bash tools/sim/webmail-fix-sim.sh          # -> 50/50
 ```

@@ -22,6 +22,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
   sim PRE stray-block case 48/48.
 - `installer/webmail-fix.sh` **v1.4** — RC config ab deterministic rebuild (regex
   surgery nahi): live me 2 stray <?php jama the; sim PRE live-jaisi 2-stray state 48/48.
+- `installer/webmail-fix.sh` **v1.5** — panel `/internal/` loc deterministic canonical
+  replace (stale v1.1 block guard-skip ho kar 404 deta raha); strict assert + sim
+  stale-loc self-heal: 50/50.
 ### Added
 - `installer/ui3-fix.sh` **v1.0** (+ `.in`, `tools/build-ui3-fix.py`,
   `tools/sim/ui3-fix-sim.sh` **26/26**) — P-UI-3: WHM sidebar Favorites (star
