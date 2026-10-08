@@ -14,7 +14,26 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### 🔴 suite-enable v1.0 — ABHI CHALAO (live par poora test-suite)
+### 🔴 ui1-fix v1.0 — ABHI CHALAO (suite-enable ke FINAL VERDICT ke baad): cPanel-style theme + dashboard
+```bash
+sudo alphacp-sync get 4cd18899a942ef7b92e1d9256938ad530bc101fb installer/ui1-fix.sh /tmp/ui1-fix-v1.0.sh 0085da7ea7e0675c48b32c316ec222ea90573160c09c0a28a01ea552da5a9b0e && sudo bash /tmp/ui1-fix-v1.0.sh
+```
+- commit `4cd18899a942ef7b92e1d9256938ad530bc101fb`, sha256 `0085da7ea7e0675c48b32c316ec222ea90573160c09c0a28a01ea552da5a9b0e`.
+- **Kya karta hai (P-UI-1):** panel ka look cPanel Paper-Lantern jaisa — paper-white cards,
+  navy top bar `#1c2733` + orange accent `#FF6C2C` (AlphaCP branding, koi cPanel mark nahi);
+  customer dashboard par cPanel-jaisa layout: left tool-grid + right sidebar
+  (**General Information**: user/domain/home/PHP/package/status/theme/version ·
+  **Statistics**: disk meter, bandwidth, domains) + top bar me **search** jo tool tiles
+  live filter karti hai. 4 panel files byte-for-byte; koi agent/DB change nahi.
+- **Expected output:** `backup: …/releases/ui1fix-<ts>` → `panel files likhi (4) — theme +
+  layout asserts pass` → optimize:clear → fpm active → `/login 200` → sync →
+  `FINAL VERDICT … ui1-fix v1.0 APPLY ho gaya`.
+- **Fail par:** auto-rollback. **Dekhna ho:** `--diagnose` · **wapas:** `--rollback`.
+- **Verify:** browser me **hard-refresh (Ctrl+Shift+R)** → naya light theme + dashboard
+  sidebar + search box (type karo "ftp" → sirf FTP tiles bachein).
+- Test: `bash tools/sim/ui1-fix-sim.sh` → **29/29**.
+
+### 🟡 suite-enable v1.0 — 8 Oct 08:50 IST par run hua (install+verify green dekha); FINAL VERDICT confirmation baaki
 ```bash
 sudo alphacp-sync get 718da55298c32d61e67a3ea6ecfc123d6e5feec1 installer/suite-enable.sh /tmp/suite-enable-v1.0.sh b16199cf683c3def57f376fce1a295bb9d4069c825dcb650c5a751eb214bf61a && sudo bash /tmp/suite-enable-v1.0.sh
 ```

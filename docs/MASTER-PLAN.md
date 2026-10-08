@@ -170,6 +170,8 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | `sec-fix.sh` v1.0 | **APPLIED 8 Oct 07:56 IST** | `935a3e392436ed2c04b393219cd50208666f23eb` / `f9f85ccd456dcfc96f542e432dd15e293bb4b898594d7ecfaadb2a82b564bee6` |
 | `b2-fix.sh` v1.0 | **APPLIED 8 Oct 08:09 IST** | `2e9bc49363893665c4d1b45be380904306317e1a` / `11a24ab51244cc43ce8f342dbd9625a6f580edca0fca219086b4d191171df594` |
 | `b3-fix.sh` v1.0 | **APPLIED 8 Oct 08:32 IST** | `830f68c7fe1e1bb4cc30507fdc459cc9c98b5106` / `7794106c241ecb90d6ad0b10ca3eecb618fe32d5912e51c6b099da0dd0208aed` |
+| `suite-enable.sh` v1.0 | run 8 Oct 08:50 IST — verdict confirm baaki | `718da55298c32d61e67a3ea6ecfc123d6e5feec1` / `b16199cf683c3def57f376fce1a295bb9d4069c825dcb650c5a751eb214bf61a` |
+| `ui1-fix.sh` v1.0 | SHIPPED — apply pending | `4cd18899a942ef7b92e1d9256938ad530bc101fb` / `0085da7ea7e0675c48b32c316ec222ea90573160c09c0a28a01ea552da5a9b0e` |
 | sync tool v1.2 (bootstrap) | — | `4b4573f96f55927ee1fbf526037785dcdb82aea1` / `c1ac1b491bc8c8fd1c7d2b9ae71e0a6610937773475fc7fd8fe83f598b022852` |
 | doctor v1.7 | — | `da3539029d1010f33fd550e7b4d016785c932103` / `e2915e0204df79ec41540d0ee68ef8a1c3cb3f261a39dc38651471a5115f5e88` |
 

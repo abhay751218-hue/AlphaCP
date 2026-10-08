@@ -119,3 +119,14 @@ Sandbox PHP me pdo_sqlite pehle se hai → idempotent skip-path + full suite gat
 ```bash
 bash tools/sim/suite-enable-sim.sh         # -> 8/8
 ```
+
+## ui1-fix-sim.sh — `installer/ui1-fix.sh` v1.0 (Paper-Lantern theme + customer dash)
+
+PRE = `e2e2d6a`-era panel (dark theme, koi search/sidebar nahi) reproduce karke:
+diagnose → apply (structural asserts: navy token / search box / dash-cols /
+General Information / sections partial; payloads era `24baf55` byte-for-byte) →
+diagnose post → rollback (purana theme wapas) → re-apply.
+
+```bash
+bash tools/sim/ui1-fix-sim.sh              # -> 29/29
+```

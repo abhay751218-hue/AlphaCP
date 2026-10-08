@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- `installer/ui1-fix.sh` **v1.0** (+ `.in`, `tools/build-ui1-fix.py`, `tools/sim/ui1-fix-sim.sh`
+  **29/29**) — P-UI-1: cPanel Paper-Lantern style light theme (paper-white cards, navy
+  `#1c2733` top bar, orange `#FF6C2C` accent — AlphaCP branding), customer dashboard par
+  tool-grid + General Information/Statistics sidebar + top search (vanilla JS tile filter).
+  4 panel files byte-for-byte; koi agent/DB change nahi.
+  Pin: commit `4cd18899a942ef7b92e1d9256938ad530bc101fb`, sha256 `0085da7ea7e0675c48b32c316ec222ea90573160c09c0a28a01ea552da5a9b0e`.
 - `installer/suite-enable.sh` **v1.0** (+ `tools/sim/suite-enable-sim.sh`, **8/8**) —
   user-approved `php8.4-sqlite3` live install + poora agent suite LIVE gate
   (passed>=222 failed=0); idempotent, --rollback/--diagnose.
