@@ -27,6 +27,7 @@
 /usr/local/alphacp/agent/src/JsonSchema.php
 /usr/local/alphacp/agent/src/Mail.php
 /usr/local/alphacp/agent/src/MailServer.php
+/usr/local/alphacp/agent/src/Metrics.php
 /usr/local/alphacp/agent/src/MimeTypes.php
 /usr/local/alphacp/agent/src/Mysql.php
 /usr/local/alphacp/agent/src/MysqlServer.php
@@ -114,6 +115,7 @@
 /usr/local/alphacp/agent/src/Tasks/MailTrack.php
 /usr/local/alphacp/agent/src/Tasks/MailUsage.php
 /usr/local/alphacp/agent/src/Tasks/MailWebmail.php
+/usr/local/alphacp/agent/src/Tasks/MetricsAccess.php
 /usr/local/alphacp/agent/src/Tasks/MimeTypesSet.php
 /usr/local/alphacp/agent/src/Tasks/MysqlSet.php
 /usr/local/alphacp/agent/src/Tasks/NameserverSet.php
@@ -165,6 +167,7 @@
 /usr/local/alphacp/etc/panel.env
 /usr/local/alphacp/logs/agent-fix-20261007143111.txt
 /usr/local/alphacp/logs/b1-fix-20261007194011.txt
+/usr/local/alphacp/logs/b2-fix-20261008023847.txt
 /usr/local/alphacp/logs/ftp-fix-20261007190843.txt
 /usr/local/alphacp/logs/login-fix-20261007121757.txt
 /usr/local/alphacp/logs/login-fix-20261007124842.txt
@@ -8211,6 +8214,10 @@
 /usr/local/alphacp/releases/b1fix-20261007194011/panel/app/Http/Controllers/GitController.php
 /usr/local/alphacp/releases/b1fix-20261007194011/panel/app/Http/Controllers/TerminalController.php
 /usr/local/alphacp/releases/b1fix-20261007194011/panel/app/Support/AppInstaller.php
+/usr/local/alphacp/releases/b2fix-20261008023847/agent/config/tasks.php
+/usr/local/alphacp/releases/b2fix-20261008023847/agent/src/CommandRunner.php
+/usr/local/alphacp/releases/b2fix-20261008023847/panel/app/Http/Controllers/MetricsController.php
+/usr/local/alphacp/releases/b2fix-20261008023847/panel/app/Support/Metrics.php
 /usr/local/alphacp/releases/ftpfix-20261007190843/agent/config/tasks.php
 /usr/local/alphacp/releases/ftpfix-20261007190843/agent/src/CommandRunner.php
 /usr/local/alphacp/releases/ftpfix-20261007190843/panel/app/Http/Controllers/FtpController.php

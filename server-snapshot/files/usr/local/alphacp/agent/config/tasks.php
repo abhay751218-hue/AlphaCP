@@ -428,6 +428,23 @@ return [
         ],
     ],
 
+    'metrics.access' => [
+        'handler'     => Tasks\MetricsAccess::class,
+        'safety'      => 'readonly',
+        'timeout'     => 60,
+        'description' => 'Apache access-log se cPanel-style stats (bytes/visitors/requests/errors/top).',
+        'paths'       => ['/var/log', '/home'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['account'],
+            'properties'           => [
+                'account'  => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'log_path' => ['type' => 'string', 'maxLength' => 255],
+            ],
+        ],
+    ],
+
     'php.setVersion' => [
         'handler'     => Tasks\PhpSetVersion::class,
         'safety'      => 'mutating',
