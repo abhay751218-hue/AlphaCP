@@ -166,7 +166,7 @@
 | 86 | Getting Started Wizard | Pehli setup guidance |S2B|🟡 2B-1|
 | 87 | Video Tutorials | Help videos | S2B | 🟡 2B |
 | 88 | Change Language | Multi-language | S2B | 🟡 2B |
-| 89 | Change Style | Theme/colors, dark mode | S2B | 🟡 2B |
+| 89 | Change Style | Theme/colors, dark mode | S2B | 🟡 2B · Paper Lantern theme shipped 09 Oct; style-switcher UI pending |
 | 90 | Change Password | Password update | S2B | ✅ |
 | 91 | Contact Information | Email + alerts |S2B|🟡 2B-2|
 | 92 | User Manager | Sub-users + roles |S2B|🟡 2B-2|
