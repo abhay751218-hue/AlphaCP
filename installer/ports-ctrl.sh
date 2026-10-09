@@ -1366,7 +1366,7 @@ final class PortsApply implements TaskInterface
 PEOF
 # tasks.php MERGE-mode: live ki doosri entries (ftp.add etc.) preserve;
 # ports.apply entry marker-block me insert/replace (idempotent).
-cat > "${RB}/ports-apply.entry.php" <<'PEOF'
+cat > "${BACKUP}/ports-apply.entry.php" <<'PEOF'
     'ports.apply' => [
         'handler'     => Tasks\PortsApply::class,
         'safety'      => 'mutating',
@@ -1399,7 +1399,7 @@ if (strpos($src, $bs) !== false) {
     $src = substr($src, 0, $pos) . $block . "\n" . substr($src, $pos);
 }
 file_put_contents($f, $src);
-' "${AGENT}/config/tasks.php" "${RB}/ports-apply.entry.php" \
+' "${AGENT}/config/tasks.php" "${BACKUP}/ports-apply.entry.php" \
   || { rollback; die "tasks.php merge fail"; }
 for f in src/PortsNginx.php src/Tasks/PortsApply.php config/tasks.php; do
   "$PHP_BIN" -l "${AGENT}/${f}" >/dev/null || { rollback; die "lint fail: agent/${f}"; }
