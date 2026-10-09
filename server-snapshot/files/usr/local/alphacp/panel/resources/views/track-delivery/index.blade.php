@@ -1,35 +1,46 @@
 @extends('layouts.panel')
 
 @section('title', 'Track Delivery')
-@section('subtitle', 'Search delivery events by recipient — no Exim log, no pipe')
+@section('subtitle', 'Mail logs me kisi address ki delivery trace karo')
 
 @section('actions')
-    <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
+    <a class="btn small secondary" href="{{ route('email.index') }}">Email Accounts</a>
+    <a class="btn small secondary" href="{{ route('deliverability.index') }}">Email Deliverability</a>
 @endsection
 
 @section('content')
 @if ($panelMode === 'whm')
-<div class="card">
-    <p>This tool is part of the <strong>customer account panel</strong>. Customers search delivery traces here.</p>
-</div>
+<div class="card"><p>This tool is part of the <strong>customer account panel</strong>.</p></div>
 @elseif (! $account)
-<div class="card">
-    <p class="empty">No hosting account is linked to this login.</p>
-</div>
+<div class="card"><p class="empty">No hosting account is linked to this login.</p></div>
 @else
-<div class="card">
-    <h3>Track Delivery — {{ $account->username }}</h3>
-    <p class="help">JSON <span class="mono">~/etc/mail/track.json</span>. Exim mainlog later. Query email only — pipe/shell fail closed.</p>
+
+<div class="grid cols-2">
+    <div class="card">
+        <h3>@include('partials.icons', ['icon' => 'target', 'cls' => 'hico']) Kya karta hai</h3>
+        <p class="help" style="margin:6px 0 0">Email address do — server mail logs me uski recent delivery attempts
+            (accepted / deferred / bounced) dhundh kar dikhata hai.</p>
+    </div>
+    <div class="card">
+        <h3>@include('partials.icons', ['icon' => 'send', 'cls' => 'hico']) Mail nahi pahunch rahi?</h3>
+        <p class="help" style="margin:6px 0 0">Pehle <a href="{{ route('deliverability.index') }}">Email Deliverability</a> me
+            SPF / DKIM / DMARC check karo — galat DNS records sabse common wajah hai.</p>
+    </div>
 </div>
 
 @can('email.manage')
 <div class="card mt">
-    <h3>Search</h3>
+    <h3>@include('partials.icons', ['icon' => 'target', 'cls' => 'hico']) Search Mail Logs — {{ $account->username }}</h3>
     <form method="post" action="{{ route('track-delivery.store') }}">
         @csrf
-        <label for="query">Recipient email</label>
-        <input id="query" name="query" required maxlength="190" placeholder="alice@example.net" value="{{ old('query') }}">
-        <button class="btn mt" type="submit">Track</button>
+        <div class="row" style="flex-wrap:wrap; align-items:flex-end">
+            <div style="flex:1; min-width:240px">
+                <label for="query">Email address (sender ya recipient)</label>
+                <input id="query" name="query" type="email" required maxlength="190" placeholder="bob@example.com" value="{{ old('query') }}">
+            </div>
+            <button class="btn" type="submit">@include('partials.icons', ['icon' => 'target', 'cls' => 'hico']) Run Trace</button>
+        </div>
+        <p class="help">Result isi page par flash message me aata hai — recent log entries is address ke liye.</p>
     </form>
 </div>
 @endcan

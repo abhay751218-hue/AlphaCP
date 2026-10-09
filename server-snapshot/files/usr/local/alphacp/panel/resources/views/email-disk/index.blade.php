@@ -1,58 +1,70 @@
 @extends('layouts.panel')
 
 @section('title', 'Email Disk Usage')
-@section('subtitle', 'Per-folder mail space — ~/mail only, no purge, no symlink')
+@section('subtitle', 'Maildir folders ka size — kya jagah kha raha hai')
 
 @section('actions')
-    <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
+    <a class="btn small secondary" href="{{ route('email.index') }}">Email Accounts</a>
+    <a class="btn small secondary" href="{{ route('disk.index') }}">Disk Usage</a>
 @endsection
 
 @section('content')
 @if ($panelMode === 'whm')
-<div class="card">
-    <p>This tool is part of the <strong>customer account panel</strong>. Customers view email disk usage here.</p>
-</div>
+<div class="card"><p>This tool is part of the <strong>customer account panel</strong>.</p></div>
 @elseif (! $account)
-<div class="card">
-    <p class="empty">No hosting account is linked to this login.</p>
-</div>
+<div class="card"><p class="empty">No hosting account is linked to this login.</p></div>
 @else
-<div class="card">
-    <h3>Email Disk Usage — {{ $account->username }}</h3>
-    <p class="help">Path: <span class="mono">~/mail/{{ $path }}</span>
+
+<div class="grid cols-2">
+    <div class="card">
+        <h3>@include('partials.icons', ['icon' => 'disk', 'cls' => 'hico']) Current folder</h3>
+        <div class="stat"><span class="num">{{ number_format($bytes / 1048576, 2) }}</span><span class="unit">MB in <span class="mono">/{{ $path }}</span></span></div>
         @if ($truncated)
-            · walk cap (2000 nodes) — kuch folders skip
+            <p class="help"><span class="badge amber">truncated</span> Listing badi thi — pehle entries hi dikh rahi hain.</p>
         @endif
-        · Purge later. Pipe/.. fail closed.
-    </p>
-    <p class="mono">This folder: {{ number_format($bytes / 1024, 1) }} KiB</p>
-    @if ($path !== '')
-        <p><a href="{{ route('email-disk.index', ['path' => $parent]) }}">↑ parent</a></p>
-    @endif
-    <div class="table-wrap mt">
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Size</th>
-            </tr>
-            @forelse ($entries as $row)
+    </div>
+    <div class="card">
+        <h3>@include('partials.icons', ['icon' => 'folder', 'cls' => 'hico']) Navigation</h3>
+        <p class="mt mono" style="word-break:break-all">
+            <a href="{{ route('email-disk.index') }}">mail</a>@if ($path !== '')/{{ $path }}@endif
+        </p>
+        @if ($parent !== null)
+            <a class="btn small secondary mt" href="{{ route('email-disk.index', ['path' => $parent]) }}">&larr; Up one level</a>
+        @endif
+    </div>
+</div>
+
+<div class="card mt">
+    <div class="row mb">
+        <h3 style="margin:0">@include('partials.icons', ['icon' => 'disk', 'cls' => 'hico']) Contents — {{ $account->username }}</h3>
+        <span class="push"></span>
+        <input type="search" class="searchbox" style="width:min(280px,100%)" placeholder="Search…" data-filter-rows="#acp-emaildisk tbody tr" aria-label="Search entries">
+    </div>
+    <div class="table-wrap">
+        <table id="acp-emaildisk">
+            <thead><tr><th>Name</th><th>Type</th><th class="right">Size</th></tr></thead>
+            <tbody>
+            @forelse ($entries as $entry)
                 <tr>
                     <td class="mono">
-                        @if (($row['type'] ?? '') === 'dir')
-                            <a href="{{ route('email-disk.index', ['path' => trim($path.'/'.$row['name'], '/')]) }}">{{ $row['name'] }}/</a>
+                        @if ($entry['type'] === 'dir')
+                            @include('partials.icons', ['icon' => 'folder', 'cls' => 'hico'])
+                            <a href="{{ route('email-disk.index', ['path' => ($path === '' ? '' : $path . '/') . $entry['name']]) }}">{{ $entry['name'] }}</a>
                         @else
-                            {{ $row['name'] }}
+                            @include('partials.icons', ['icon' => 'file', 'cls' => 'hico'])
+                            {{ $entry['name'] }}
                         @endif
                     </td>
-                    <td>{{ $row['type'] ?? '' }}</td>
-                    <td class="mono">{{ number_format(((int) ($row['bytes'] ?? 0)) / 1024, 1) }} KiB</td>
+                    <td><span class="badge {{ $entry['type'] === 'dir' ? 'blue' : 'gray' }}">{{ $entry['type'] }}</span></td>
+                    <td class="right mono">{{ number_format($entry['bytes'] / 1024, 1) }} KB</td>
                 </tr>
             @empty
-                <tr><td colspan="3" class="empty">Usage comes from paneld. ~/mail folder sizes show here on a live server.</td></tr>
+                <tr><td colspan="3" class="empty">Folder khali hai.</td></tr>
             @endforelse
+            </tbody>
         </table>
     </div>
+    <p class="help">Purani mail delete karne ke liye Webmail ya IMAP client use karo — yahan sirf usage dikhta hai.</p>
 </div>
 @endif
 @endsection

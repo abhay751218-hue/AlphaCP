@@ -18,9 +18,15 @@
 
 @section('content')
 <div class="card">
+    <div class="row mb">
+        <h3 style="margin:0">@include('partials.icons', ['icon' => 'audit', 'cls' => 'hico']) Recent Events</h3>
+        <span class="push"></span>
+        <input type="search" class="searchbox" style="width:min(280px,100%)" placeholder="Quick search…" data-filter-rows="#acp-audit tbody tr" aria-label="Search events">
+    </div>
     <div class="table-wrap">
-        <table>
-            <tr><th>#</th><th>Action</th><th>Severity</th><th>Actor</th><th>Target</th><th>IP</th><th>When</th></tr>
+        <table id="acp-audit">
+            <thead><tr><th>#</th><th>Action</th><th>Severity</th><th>Actor</th><th>Target</th><th>IP</th><th>When</th></tr></thead>
+            <tbody>
             @forelse ($events as $event)
                 <tr>
                     <td class="mono">{{ $event->id }}</td>
@@ -37,6 +43,7 @@
             @empty
                 <tr><td colspan="7" class="empty">No audit events yet.</td></tr>
             @endforelse
+            </tbody>
         </table>
     </div>
 </div>

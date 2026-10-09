@@ -614,7 +614,7 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (43) — repo se panel dobara banane par ye pages tootenge:
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (71) — repo se panel dobara banane par ye pages tootenge:
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlDatabasesController.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php.bak-d3mysql-20261009092025
@@ -632,18 +632,40 @@ PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (43) — repo se panel dobara banane
 /usr/local/alphacp/panel/public/assets/panel.js.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/accounts/create.blade.php.bak-d4whm-20261009092933
 /usr/local/alphacp/panel/resources/views/accounts/index.blade.php.bak-d4whm-20261009092933
+/usr/local/alphacp/panel/resources/views/address-importer/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/api-tokens/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/audit/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/autoresponders/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/backup-wizard/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/boxtrapper/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/calendar/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/cron/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009073626
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009075354
+/usr/local/alphacp/panel/resources/views/default-address/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/deliverability/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/disk/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/domains/index.blade.php.bak-d2domains-20261009083733
+/usr/local/alphacp/panel/resources/views/email-disk/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/email-filters/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/email-routing/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d1email-20261009081330
+/usr/local/alphacp/panel/resources/views/encryption/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/file-restoration/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/forwarders/index.blade.php.bak-d1email-20261009081330
+/usr/local/alphacp/panel/resources/views/ftp/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/git/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/global-filters/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/images/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/indexes/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/ip-blocker/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009075354
+/usr/local/alphacp/panel/resources/views/mailing-lists/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/resources/views/mysql/index.blade.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/resources/views/packages/index.blade.php.bak-d4whm-20261009092933
@@ -653,7 +675,13 @@ PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (43) — repo se panel dobara banane
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d3mysql-20261009092025
+/usr/local/alphacp/panel/resources/views/privacy/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/spam-filters/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/ssh/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/ssl/index.blade.php.bak-d5tools-20261009094623
+/usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/trash/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/webdisk/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
