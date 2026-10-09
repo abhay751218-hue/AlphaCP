@@ -14,7 +14,24 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### d9-terminal-webmail v1.0 — Depth Wave D9: Terminal v2 + Webmail one-click SSO (09 Oct 2026)
+### d10-final-tiles v1.0 — Depth Wave D10 (FINAL): aakhri 3 greyed tiles → 103/103 = 100% (09 Oct 2026)
+Dashboard ke AAKHRI 3 grey tiles ab LIVE: **Node.js Selector** (server ka Node runtime live detect),
+**PHP Composer** (account ki asli composer.json padh kar dependencies ki table), **Updates** (panel/agent/
+PHP/Laravel/Node versions + ab tak lage sab update waves ki history — /var/log se). Counter **100 → 103,
+koi grey tile nahi bachega!** 8 files (3 controllers + 3 views + routes + catalog). Backup + auto-rollback.
+```bash
+sudo alphacp-sync get 65e45216cc08bf92f219ae0a6875a340501e1152 installer/d10-final-tiles.sh /tmp/d10-final-tiles-v1.0.sh a249b44c5734ea733a20fe874cfa1cac7ddad80b17ebc4e58505c0a4c93738a9 && sudo bash /tmp/d10-final-tiles-v1.0.sh
+```
+- sha256: `a249b44c5734ea733a20fe874cfa1cac7ddad80b17ebc4e58505c0a4c93738a9`
+- Expected: banner `v1.0` → pre-check 3×200 → 8× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D10 FINAL TILES COMPLETE — 103/103 TOOLS LIVE ✅`
+- Phir **2083 AUR 2087 dono hard-refresh** → Software section me Node.js Selector + PHP Composer,
+  WHM Server Configuration me Updates — **koi bhi tile grey nahi hona chahiye, counter 103/103**
+- Test: Updates kholo (sab waves ki history dikhegi), Composer kholo (composer.json wale account par packages)
+- Rollback: `*.bak-d10final-<stamp>` files `/usr/local/alphacp/panel` me
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✅ DONE 09 Oct — d9-terminal-webmail v1.0 — Depth Wave D9: Terminal v2 + Webmail one-click SSO (09 Oct 2026)
 **Terminal** ab asli console jaisa: quick-command buttons (uptime, df -h, free -m…), is session ki
 history (Run again button ke saath), dark output box, allowed-commands list. **Webmail** ab cPanel
 jaisa: har mailbox ki table me apna **📬 Open Webmail** button — jo mailbox chuno USI se Roundcube
@@ -28,8 +45,6 @@ sudo alphacp-sync get 3e8b067000db0390a11f1de00587e68a5e8ce70e installer/d9-term
 - Test: **2087** → Advanced → Terminal (quick buttons dabao, history dekho) · **2083** → Email → Webmail
   (mailbox table me Open Webmail dabao — Roundcube bina password khulega)
 - Rollback: `*.bak-d9termweb-<stamp>` files `/usr/local/alphacp/panel` me
-
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✅ DONE 09 Oct — d8-mailqueue-secpol v1.0 — Depth Wave D8: Mail Queue Manager + Security Policies (09 Oct 2026)
 WHM ke 2 naye tools LIVE: **Mail Queue Manager** (exim queue — har message deliver/freeze/thaw/remove,
