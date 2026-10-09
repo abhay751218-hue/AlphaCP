@@ -14,6 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### d1-email-fix v1.0 — Depth Wave D1: Email Accounts + Forwarders cPanel-depth (09 Oct 2026)
+Email Accounts ab option-by-option cPanel jaisa: quota/password EDIT (naya PUT route),
+per-box disk usage bars, Connect Devices (IMAP 993/POP3 995/SMTP 465 + copy chips),
+password generator + strength meter, search/filter, default-account card; Forwarders
+bhi cPanel-style. 6 files (controller + routes + 2 views + panel.js v1.1 + panel.css v3.2).
+Backup + auto-rollback + route:clear + php-fpm reload. PEHLE theme-fix v1.2 installed hona chahiye.
+```bash
+sudo alphacp-sync get feda332db80a84770aa436f04da5c22d4078d681 installer/d1-email-fix.sh /tmp/d1-email-fix-v1.0.sh f051f57f4aac47dbca8aebe7acefe81e4804c8bb58b646f81968c10cb0835652 && sudo bash /tmp/d1-email-fix-v1.0.sh
+```
+- sha256: `f051f57f4aac47dbca8aebe7acefe81e4804c8bb58b646f81968c10cb0835652`
+- Expected: banner `v1.0` → pre-check 3×200 → 6× `installed` → `view cache cleared` + `route cache cleared` + `php8.4-fpm reloaded` → health 3×200 → `==> D1 EMAIL DEPTH FIX COMPLETE ✅`
+- Phir 2083 → Email Accounts hard-refresh: naya UI + Manage/Connect Devices expanders chalenge
+- Rollback: `*.bak-d1email-<stamp>` files `/usr/local/alphacp/panel` me
+
 ### theme-fix v1.2 — ASLI ROOT CAUSE: CSP inline-JS block + product icons (09 Oct 2026)
 MILA: security header CSP `script-src 'self'` SAARA inline JavaScript block karta tha —
 isliye hamburger/menu/search KABHI nahi chalte the (v1.0/v1.1 me bhi). Fix: saara JS ab
