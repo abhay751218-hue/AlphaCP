@@ -61,7 +61,7 @@ Resource Usage (CPU/RAM per account) · Site Publisher templates · WordPress/1-
 (`apps.install` agent task ready hai!) · Two-Factor Authentication (2FA) · MultiPHP INI Editor
 **WHM side:** Tweak Settings · Basic Setup wizard · Feature Manager UI (DB me hai, UI nahi) ·
 **Customization/Branding (logo + colors — reseller apna brand lagaye)** · Service Manager
-(restart) · Mail Queue Manager · ModSecurity UI (`waf.*` tasks ready hain!) · Server Time ·
+(restart ✅ D11 BUILT) · Mail Queue Manager ✅ LIVE (D8) · ModSecurity UI ✅ LIVE · Server Time ·
 Update Preferences · Email All Users · cPHulk-style brute-force UI · PHP Configuration (EA4-style)
 
 ## 5) ⛔ Agent-change pending (pehle se note kiye)
