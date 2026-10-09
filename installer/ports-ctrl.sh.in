@@ -247,6 +247,8 @@ fi
 hdr "structural asserts"
 grep -q 'AcpPortGuard' "${PANEL}/bootstrap/app.php" \
   || { rollback; die "bootstrap me AcpPortGuard register nahi"; }
+grep -q 'web(append:' "${PANEL}/bootstrap/app.php" \
+  || { rollback; die "guard WEB group me nahi (global stack = user() null, bounce kabhi nahi)"; }
 grep -q 'WHM Login' "${PANEL}/resources/views/auth/login.blade.php" \
   || { rollback; die "login blade me WHM branding nahi"; }
 grep -q 'WHM — Server Manager Dashboard' "${PANEL}/resources/views/dashboard-whm.blade.php" \

@@ -925,7 +925,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\PanelSecurityHeaders::class);
 
         // Port↔panel lock ("ek panel = ek port"): 2087=WHM, 2083=cPanel.
-        $middleware->append(\App\Http\Middleware\AcpPortGuard::class);
+        // WEB group me (session ke BAAD) — global stack par $request->user()
+        // null hota hai (session abhi load nahi hui) isliye guard kabhi na bounce
+        // karta tha; customer cookie 2087 par chhip kar cPanel UI dikha sakti thi.
+        $middleware->web(append: [\App\Http\Middleware\AcpPortGuard::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
@@ -1481,6 +1484,8 @@ fi
 hdr "structural asserts"
 grep -q 'AcpPortGuard' "${PANEL}/bootstrap/app.php" \
   || { rollback; die "bootstrap me AcpPortGuard register nahi"; }
+grep -q 'web(append:' "${PANEL}/bootstrap/app.php" \
+  || { rollback; die "guard WEB group me nahi (global stack = user() null, bounce kabhi nahi)"; }
 grep -q 'WHM Login' "${PANEL}/resources/views/auth/login.blade.php" \
   || { rollback; die "login blade me WHM branding nahi"; }
 grep -q 'WHM — Server Manager Dashboard' "${PANEL}/resources/views/dashboard-whm.blade.php" \

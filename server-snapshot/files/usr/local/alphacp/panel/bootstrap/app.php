@@ -35,7 +35,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(\App\Http\Middleware\PanelSecurityHeaders::class);
 
         // Port↔panel lock ("ek panel = ek port"): 2087=WHM, 2083=cPanel.
-        $middleware->append(\App\Http\Middleware\AcpPortGuard::class);
+        // WEB group me (session ke BAAD) — global stack par $request->user()
+        // null hota hai (session abhi load nahi hui) isliye guard kabhi na bounce
+        // karta tha; customer cookie 2087 par chhip kar cPanel UI dikha sakti thi.
+        $middleware->web(append: [\App\Http\Middleware\AcpPortGuard::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
