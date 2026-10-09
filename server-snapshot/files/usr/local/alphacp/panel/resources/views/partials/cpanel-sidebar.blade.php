@@ -2,8 +2,8 @@
 @php
     $cats = \App\Support\ModuleCatalog::sectionsFor(auth()->user());
 @endphp
-<div class="side-card">
-    <div class="side-head">{{ config('acp.brand.name', 'AlphaCP') }} — Tools</div>
+<nav class="side-tree">
+    
     @foreach ($cats as $key => $section)
         @php
             $liveItems = collect($section['items'])->where('status', 'live');
@@ -15,4 +15,4 @@
             @endforeach
         @endif
     @endforeach
-</div>
+</nav>

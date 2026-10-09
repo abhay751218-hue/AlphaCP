@@ -184,6 +184,7 @@
 /usr/local/alphacp/logs/design-parity-20261009053647.txt
 /usr/local/alphacp/logs/design-parity-20261009054128.txt
 /usr/local/alphacp/logs/design-parity-20261009054920.txt
+/usr/local/alphacp/logs/design-parity-20261009055907.txt
 /usr/local/alphacp/logs/finalize-20261009051203.txt
 /usr/local/alphacp/logs/ftp-fix-20261007190843.txt
 /usr/local/alphacp/logs/login-fix-20261007121757.txt
@@ -8301,6 +8302,15 @@
 /usr/local/alphacp/releases/design-parity-20261009054920/usr/local/alphacp/panel/resources/views/partials/icons.blade.php
 /usr/local/alphacp/releases/design-parity-20261009054920/usr/local/alphacp/panel/resources/views/partials/tile.blade.php
 /usr/local/alphacp/releases/design-parity-20261009054920/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php
+/usr/local/alphacp/releases/design-parity-20261009055907/usr/local/alphacp/panel/public/assets/panel.css
+/usr/local/alphacp/releases/design-parity-20261009055907/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php
+/usr/local/alphacp/releases/design-parity-20261009055907/usr/local/alphacp/panel/resources/views/dashboard-whm.blade.php
+/usr/local/alphacp/releases/design-parity-20261009055907/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php
+/usr/local/alphacp/releases/design-parity-20261009055907/usr/local/alphacp/panel/resources/views/partials/cpanel-sidebar.blade.php
+/usr/local/alphacp/releases/design-parity-20261009055907/usr/local/alphacp/panel/resources/views/partials/dash-sections.blade.php
+/usr/local/alphacp/releases/design-parity-20261009055907/usr/local/alphacp/panel/resources/views/partials/icons.blade.php
+/usr/local/alphacp/releases/design-parity-20261009055907/usr/local/alphacp/panel/resources/views/partials/tile.blade.php
+/usr/local/alphacp/releases/design-parity-20261009055907/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php
 /usr/local/alphacp/releases/finalize-20261009051203/etc/roundcube/config.inc.php
 /usr/local/alphacp/releases/finalize-20261009051203/usr/local/alphacp/panel/config/acp.php
 /usr/local/alphacp/releases/finalize-20261009051203/usr/local/alphacp/panel/public/assets/panel.css

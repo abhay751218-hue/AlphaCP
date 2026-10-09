@@ -9,69 +9,40 @@
     <link rel="stylesheet" href="{{ asset('assets/panel.css') }}?v={{ @filemtime(public_path('assets/panel.css')) ?: config('acp.version') }}">
 </head>
 <body>
+<div class="nav-backdrop" aria-hidden="true"></div>
 
-<header class="topbar">
-    <div class="brand">
+<aside class="sidenav" id="acp-side">
+    <div class="side-brand">
         <span class="logo">A</span>
         <span>
-            {{ config('acp.brand.name', 'AlphaCP') }} {{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : '' }}
+            {{ config('acp.brand.name', 'AlphaCP') }} {{ ($panelMode ?? 'cpanel') === 'whm' ? 'WHM' : 'cPanel' }}
             <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : 'Account Panel' }} · {{ config('acp.version') }}</small>
         </span>
     </div>
+    @if (($panelMode ?? 'cpanel') === 'whm')
+        @include('partials.whm-sidebar', [])
+    @else
+        @include('partials.cpanel-sidebar', [])
+    @endif
+</aside>
 
+<div class="main-col">
+<header class="mainbar">
     <button class="nav-toggle" id="acp-nav-toggle" type="button" aria-label="Menu" aria-expanded="false">☰</button>
-    <nav class="topnav" id="acp-topnav" aria-label="Main">
-        <a href="{{ route('dashboard') }}">Dashboard</a>
-        @if (($panelMode ?? 'cpanel') === 'whm')
-            @can('accounts.view')<a href="{{ route('accounts.index') }}">Accounts</a>@endcan
-            @can('packages.view')<a href="{{ route('packages.index') }}">Packages</a>@endcan
-            @can('users.view')<a href="{{ route('users.index') }}">Users</a>@endcan
-            @can('system.view')<a href="{{ route('system.index') }}">System</a>@endcan
-        @else
-            @can('domains.view')<a href="{{ route('domains.index') }}">Domains</a>@endcan
-            @can('software.view')<a href="{{ route('php.index') }}">MultiPHP</a>@endcan
-            @can('cron.view')<a href="{{ route('cron.index') }}">Cron</a>@endcan
-            @can('ssl.view')<a href="{{ route('ssl.index') }}">SSL</a>@endcan
-            <a href="{{ route('security.index') }}">Security</a>
-        @endif
-    </nav>
-
-    <input type="search" id="acp-search" class="searchbox" placeholder="Search tools…" autocomplete="off" aria-label="Search tools">
-
+    <span class="crumb">@yield('title', 'Dashboard')</span>
     <span class="spacer"></span>
-
-    <div class="meta">
-        server: <strong>{{ $server['hostname'] ?? 'unknown' }}</strong><br>
-        panel {{ config('acp.version') }} · agent {{ config('acp.agent_version') }}
-    </div>
-
-    <div class="user">
+    <input type="search" id="acp-search" class="searchbox" placeholder="Search Tools (/)" autocomplete="off" aria-label="Search tools">
+    <span class="user">
         <span class="avatar">{{ strtoupper(substr(auth()->user()?->username ?? 'A', 0, 1)) }}</span>
-        <span class="meta">
-            {{ auth()->user()?->username ?? 'Guest' }}<br>
-            <span class="muted">{{ auth()->user()?->role?->label ?? 'user' }}</span>
-        </span>
+        <span class="uname">{{ auth()->user()?->username ?? 'Guest' }}<small>{{ auth()->user()?->role?->label ?? 'user' }}</small></span>
         <form method="post" action="{{ route('logout') }}">
             @csrf
             <button class="btn small secondary" type="submit">Logout</button>
         </form>
-    </div>
+    </span>
 </header>
 
-@if (($panelMode ?? 'cpanel') === 'whm')
-<div class="nav-backdrop" aria-hidden="true"></div>
-<div class="shell whm-shell">
-    <aside class="side">
-        @include('partials.whm-sidebar', [])
-    </aside>
-    <main class="wrap main-col">
-@else
-<div class="shell">
-    <aside class="side">
-        @include('partials.cpanel-sidebar', [])
-    </aside>
-    <main class="wrap main-col">
-@endif
+<main class="wrap main-main">
     @include('partials.flash', [])
 
     <div class="page-head">
@@ -86,12 +57,12 @@
 
     @yield('content')
 </main>
-</div>
 
 <footer class="wrap muted" style="padding-top:0; font-size:12.5px">
     {{ config('acp.brand.name', 'AlphaCP') }} {{ config('acp.version') }} — {{ config('acp.brand.tagline', 'Hosting control panel') }} ·
     parity checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span>
 </footer>
+</div>
 
 <script>
 /* cPanel-style top search: dashboard ke tool tiles live filter karta hai. */

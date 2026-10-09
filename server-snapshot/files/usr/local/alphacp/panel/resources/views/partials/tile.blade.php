@@ -12,7 +12,7 @@
     <div class="{{ $classes }}" title="{{ $addon ? 'Optional module' : 'Step ' . $item['step'] . ' me aayega' }}">
 @endif
 
-    @include('partials.icons', ['icon' => $item['icon'] ?? 'folder', 'cls' => 'tico'])
+    <span class="tchip">@include('partials.icons', ['icon' => $item['icon'] ?? 'folder', 'cls' => 'tico'])</span>
     <span>
         <span class="name">{{ $item['name'] }}</span>
         <span class="sub">
