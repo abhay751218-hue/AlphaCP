@@ -1,3 +1,21 @@
+## 2026-10-09 — ports-ctrl v1.0 (OWNER-CTRL) LIVE APPLIED ✅
+- **Ek panel = ek port**: WHM sirf **2087**, cPanel sirf **2083**, webmail **2096**,
+  **8090 = static link-page** (owner `/ports` se disable kar sakta hai).
+- Galat port par login → session invalidate + apne port par redirect + audit
+  `auth.login_wrong_port` (AcpPortGuard middleware).
+- Superadmin-only **/ports** page: port↔panel mapping edit (port_configs JSON
+  single-row reuse; koi naya table nahi), link-page on/off.
+- Agent: `PortsNginx` (template → whm/cpanel/link vhosts, webmail listen sync,
+  RC plugin URL sync, nginx -t fail → auto-restore) + `ports.apply` task
+  (argv-mode nginx calls; CommandRunner allowlist me nginx paths merge).
+- Dashboards alag files: `dashboard-whm.blade.php` + `dashboard-cpanel.blade.php`
+  (user request: "sabhi panel ka alag alag file dashboard"); purani
+  dashboard.blade.php sirf dispatcher.
+- Installer: backup → payloads+lint → ports.json default → ufw 2087/2083 →
+  paneld restart → ports.apply → structural asserts → HTTP smokes → suite gate
+  → sync; koi fail = auto-rollback (`--rollback <dir>` manual bhi).
+- Live apply: 2026-10-09 ~04:44Z, suite 223/0, smokes pass, zero warnings.
+  Pin `b0a4a90e…`, installer sha `ead041eb…`.
 # CHANGELOG
 
 All notable changes to AlphaCP are documented here.

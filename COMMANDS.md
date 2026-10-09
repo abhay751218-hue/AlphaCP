@@ -5,6 +5,8 @@
 > Har script shuru me apna **version banner** print karti hai — banner me wahi version dikhna chahiye
 > jo yahan likha hai. Purani (superseded) commands scrollback se **dobara mat chalao**.
 
+sudo alphacp-sync get b0a4a90ee3832bc699502da7fbe0d4bab261b25e installer/ports-ctrl.sh /tmp/ports-ctrl-v1.0.sh ead041eb766f80d8b4f011b44354769a3f9dfef369e7aeac22307c1527b55139 && sudo bash /tmp/ports-ctrl-v1.0.sh   # ✅ APPLIED 2026-10-09 (OWNER-CTRL: ek panel ek port)
+
 ## 🔐 Command format (repo PRIVATE ho ya public — dono me chalta hai)
 Server ki deploy key se file aati hai + sha256 check (alphacp-sync v1.2+ chahiye):
 ```bash

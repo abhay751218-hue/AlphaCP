@@ -146,7 +146,7 @@ DNS Functions (Zone Editor/Cluster/Nameservers) · SSL/TLS (Manage/Install/AutoS
 | P-UI-4 | **Webmail** alag app (Roundcube SSO) + alag login (2095/96 opt-in) — webmail-fix v1.9 **APPLIED LIVE 22:51 IST zero-warnings** (2096 + SSO; nginx-1.24 + RC-parse + /internal + stray-<?php self-heal), apply pending; sim 53/53 |
 | OWNER-CTRL | **Company-owner only:** kaun sa panel kis port par chale (2083/2087/2096 toggles) — user-approved; webmail-fix ke baad agla slice |
 
-### OWNER-CTRL / P-PORTS-CTRL design (approved 9 Oct: "Thik h kar do" + rule "ek panel multiple port se nahi khulna chahiye")
+### OWNER-CTRL / P-PORTS-CTRL ✅ LIVE APPLIED 2026-10-09 (pin b0a4a90e; sim 25/25 + suite 223/0 + smokes pass) design (approved 9 Oct: "Thik h kar do" + rule "ek panel multiple port se nahi khulna chahiye")
 - **Port↔panel map (EK panel = EK port):** WHM=2087 (sirf WHM view), cPanel=2083 (sirf
   cPanel view), Webmail=2096 (Roundcube, done), link-page=8090 (static, PHP nahi;
   owner-disableable). Galat role galat port par → PortGuard redirect/403.
