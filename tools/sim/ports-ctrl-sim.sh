@@ -69,6 +69,11 @@ echo "== apply #1 (SIM) =="
 A1="$(bash "$FIX" 2>&1)"; A1_RC=$?
 printf '%s\n' "$A1" > "$FAKE/.a1"
 if [[ "$A1_RC" -ne 0 ]]; then echo "----- A1 tail (debug) -----"; tail -30 "$FAKE/.a1"; echo "---------------------------"; fi
+if ! grep -q "failed: 0" "$FAKE/.a1" 2>/dev/null; then
+  echo "----- suite FAIL detail -----"
+  ( cd "$FAKE/agent" && php tests/run-tests.php 2>&1 | grep -a -A2 "^  FAIL" | head -30 ) || true
+  echo "-----------------------------"
+fi
 t "installer exit 0"               test "$A1_RC" -eq 0
 t "ports.json default bana"        bash -c "grep -q '\"whm\": 2087' '$FAKE/etc/ports.json'"
 t "PortMap payload likhi"          test -f "$FAKE/panel/app/Support/PortMap.php"
