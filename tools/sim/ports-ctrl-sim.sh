@@ -54,7 +54,7 @@ mkdir -p "$FAKE/agent/config" "$FAKE/agent/tests" "$FAKE/agent/bin"
 cp "$AGENT_TREE/config/tasks.php" "$FAKE/agent/config/tasks.php"
 cp "$AGENT_TREE/tests/run-tests.php" "$FAKE/agent/tests/run-tests.php"
 cp "$AGENT_TREE/tests/FakeCommandExecutor.php" "$FAKE/agent/tests/FakeCommandExecutor.php"
-printf '#!/bin/sh\nexit 0\n' > "$FAKE/agent/bin/paneld"; chmod +x "$FAKE/agent/bin/paneld"
+cp "$AGENT_TREE/bin/paneld" "$FAKE/agent/bin/paneld"; chmod +x "$FAKE/agent/bin/paneld"
 # fake panel tree (installer payloads likhega)
 mkdir -p "$FAKE/panel"
 

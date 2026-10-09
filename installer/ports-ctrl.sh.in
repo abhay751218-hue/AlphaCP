@@ -256,9 +256,12 @@ fi
 
 # ---- 8) agent suite ----
 hdr "AGENT SUITE — full run (current era)"
-SUITE_OUT="$(cd "${AGENT}" && "$PHP_BIN" tests/run-tests.php 2>&1 | tail -3)"
+set +e
+SUITE_OUT="$(cd "${AGENT}" && "$PHP_BIN" tests/run-tests.php 2>&1 | tail -6)"
+SUITE_RC=$?
+set -e
 echo "$SUITE_OUT" | sed 's/^/  · /'
-echo "$SUITE_OUT" | grep -q "failed: 0" || { rollback; die "agent suite fail"; }
+{ [[ "$SUITE_RC" -eq 0 ]] && echo "$SUITE_OUT" | grep -q "failed: 0"; } || { rollback; die "agent suite fail (rc=${SUITE_RC}, output upar)"; }
 ok "agent suite GREEN"
 cd - >/dev/null 2>&1 || true
 
