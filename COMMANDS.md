@@ -15,6 +15,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ## ✅ Abhi chalani hai (NEXT STEP)
 
 ### d6a-email-ui-fix v1.0 — Depth Wave D6a: Email group ke 14 pages cPanel-style (09 Oct 2026)
+> ⚠️ **NOTE:** 09 Oct ko chat me galat commit-id chali gayi thi ("GitHub se nahi mila" error). **Sirf neeche wali command chalao — ye verified hai.** Scrollback wali purani command mat chalao.
 Email section ke 14 tools ab company-jaisa look: **Default Address, Autoresponders, Email
 Routing, Email Filters, Global Filters, Mailing Lists, Spam Filters, BoxTrapper, Calendar,
 Encryption, Email Disk Usage, Track Delivery, Address Importer, Email Deliverability**.

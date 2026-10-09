@@ -86,3 +86,24 @@ File Manager upload/zip/chmod (`files.set` me ops add karne honge)
 **Rule wahi:** har wave = sim-tested installer + commit-pinned COMMANDS.md row + rollback.
 
 > Note (pehle se maana hua): "cPanel" naam/logo/trademark kabhi use nahi hoga — look & depth 100% same, branding AlphaCP.
+
+## Dashboard ke "Sx me aayega" tiles (live ModuleCatalog se — 09 Oct verified)
+
+Live server ka dashboard counter: **94 live · 8 planned · 1 optional · total 103.**
+Ye hi 9 tiles greyed-out dikhte hain — in sab ke liye backend (controller + route +
+kuch me agent task) chahiye, isliye ye UI-wave me nahi, apni feature-wave me aayenge:
+
+| Tile | Step | Kis wave me banega |
+|---|---|---|
+| Errors (error log viewer) | S11 | **D7** (metrics/logs wave) |
+| Raw Access (raw logs download) | S11 | **D7** |
+| Awstats (visitor graphs) | S11 | **D7** |
+| Network Tools (dig/trace) | S11 | **D7** |
+| Security Policies | S13 | **D8** (security wave) |
+| Node.js Selector | S14 | **D10** (software wave) |
+| PHP Composer | S14 | **D10** |
+| Updates (panel self-update UI) | S15 | **D10** |
+| PostgreSQL | post-v1 | optional addon — v1 ke baad |
+
+Baaki 94 tiles LIVE hain — unki kami "feature missing" nahi, "UI plain" thi,
+jo D6a/D6b/D6c UI-waves me cPanel-style ho rahi hai.
