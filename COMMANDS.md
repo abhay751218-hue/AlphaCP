@@ -14,6 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### d2-domains-fix v1.0 — Depth Wave D2: Domains + Zone Editor cPanel-depth (09 Oct 2026)
+Domains page: stats vs package limits, search, type badges + Visit link, Create a New
+Domain (type radio + live hints + redirect fields auto show/hide). Zone Editor: DNS
+record EDIT (naya PUT route), type-aware value placeholders, stats + search. 5 files
+(ZoneEditorController + routes + 2 views + panel.js v1.2). Backup + auto-rollback +
+route:clear. PEHLE theme-fix v1.2 AUR d1-email-fix install hone chahiye (routes file dono waves ki hai).
+```bash
+sudo alphacp-sync get 193ac131dd4f871326349350ee025751244359c9 installer/d2-domains-fix.sh /tmp/d2-domains-fix-v1.0.sh aca044f82587516d9ac6592bc76c6264753d3a94a07db2c009cf94707605e7f1 && sudo bash /tmp/d2-domains-fix-v1.0.sh
+```
+- sha256: `aca044f82587516d9ac6592bc76c6264753d3a94a07db2c009cf94707605e7f1`
+- Expected: banner `v1.0` → pre-check 3×200 → 5× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D2 DOMAINS+ZONE DEPTH FIX COMPLETE ✅`
+- Phir 2083 → Domains / Zone Editor hard-refresh: type hints, redirect toggle, record Edit expander
+- Rollback: `*.bak-d2domains-<stamp>` files `/usr/local/alphacp/panel` me
+
 ### d1-email-fix v1.0 — Depth Wave D1: Email Accounts + Forwarders cPanel-depth (09 Oct 2026)
 Email Accounts ab option-by-option cPanel jaisa: quota/password EDIT (naya PUT route),
 per-box disk usage bars, Connect Devices (IMAP 993/POP3 995/SMTP 465 + copy chips),
