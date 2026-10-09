@@ -138,7 +138,7 @@ final class PortsNginx
             file_put_contents($pc, $cs);
         }
 
-        $t = $this->cmd->run(['sh', '-c', 'nginx -t 2>&1'], 30);
+        $t = $this->cmd->run(['nginx', '-t'], 30);
         if (! $t->ok()) {
             foreach ($touched as $f) {
                 if (is_file("$bak/$f")) {
@@ -150,7 +150,10 @@ final class PortsNginx
 
             return ['applied' => false, 'ports' => $this->map, 'nginx' => $msg];
         }
-        $r = $this->cmd->run(['sh', '-c', 'nginx -s reload 2>&1 || systemctl reload nginx 2>&1'], 30);
+        $r = $this->cmd->run(['nginx', '-s', 'reload'], 30);
+        if (!$r->ok()) {
+            $r = $this->cmd->run(['systemctl', 'reload', 'nginx'], 30);
+        }
         $this->log->info('ports.apply: vhosts likhe + reload (whm=' . $this->map['whm']
             . ' cpanel=' . $this->map['cpanel']
             . ' link=' . ($this->map['link_enabled'] ? (string) $this->map['link'] : 'off') . ')');
@@ -161,7 +164,7 @@ final class PortsNginx
     /** @return array<string,mixed> */
     public function status(): array
     {
-        $v = $this->cmd->run(['sh', '-c', 'nginx -v 2>&1'], 10);
+        $v = $this->cmd->run(['nginx', '-v'], 10);
 
         return [
             'ports'    => $this->map,
@@ -265,7 +268,7 @@ final class PortsNginx
 
     private function http2Standalone(): bool
     {
-        $v = $this->cmd->run(['sh', '-c', 'nginx -v 2>&1'], 10);
+        $v = $this->cmd->run(['nginx', '-v'], 10);
         if (preg_match('/nginx\/([\d.]+)/', $v->stdout . $v->stderr, $m) !== 1) {
             return false;
         }
