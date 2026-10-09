@@ -14,7 +14,23 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### d6c-software-whm-fix v1.0 — Depth Wave D6c: Software/Advanced + WHM ke 15 pages cPanel-style (09 Oct 2026)
+### d7-metrics-tools v1.0 — Depth Wave D7: Errors + Raw Access + Awstats + Network Tools AB KAAM KARTE HAIN (09 Oct 2026)
+Metrics ke 4 naye tools LIVE: **Errors** (error log last 40 lines), **Raw Access** (access log
+last 50 + traffic summary), **Awstats** (visitors/bandwidth/requests stats + top pages bars),
+**Network Tools** (DNS lookup — A/AAAA/MX/NS/TXT/CNAME). Dashboard counter 94→98.
+10 files (4 controllers + 4 views + routes + catalog). Backup + auto-rollback.
+```bash
+sudo alphacp-sync get 25c29ca036df7daa039fa6e65fffca42db4e9207 installer/d7-metrics-tools.sh /tmp/d7-metrics-tools-v1.0.sh a07b946924b2bd706106e06cfcf24d1091bc3fc812b032aec9a4d3f8b2adae54 && sudo bash /tmp/d7-metrics-tools-v1.0.sh
+```
+- sha256: `a07b946924b2bd706106e06cfcf24d1091bc3fc812b032aec9a4d3f8b2adae54`
+- Expected: banner `v1.0` → pre-check 3×200 → 10× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D7 METRICS TOOLS COMPLETE ✅`
+- Phir 2083 hard-refresh (Ctrl+Shift+R) → Metrics section → Errors / Raw Access / Awstats / Network Tools kholo
+- Network Tools me koi bhi domain daal ke Lookup chalao (e.g. google.com, MX)
+- Rollback: `*.bak-d7metrics-<stamp>` files `/usr/local/alphacp/panel` me
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✅ DONE 09 Oct — d6c-software-whm-fix v1.0 — Depth Wave D6c: Software/Advanced + WHM ke 15 pages cPanel-style (09 Oct 2026)
 Software/Advanced + WHM ke 15 tools ab company-jaisa look: **Optimize Website, Site Software,
 Error Pages, MultiPHP Manager, Database Wizard, Remote MySQL, MIME Types, Apache Handlers,
 Domain Forwarding, Dynamic DNS, User Manager, Reseller Center, Security Tools (WAF+ClamAV),
@@ -27,8 +43,6 @@ sudo alphacp-sync get f148f46c655c843a0cd1a2a87daad0cd35053723 installer/d6c-sof
 - Expected: banner `v1.0` → pre-check 3×200 → 15× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D6c SOFTWARE+WHM UI FIX COMPLETE ✅`
 - Phir 2083 AUR 2087 dono hard-refresh (Ctrl+Shift+R) — User Manager/Resellers/Ports/License WHM side par hain
 - Rollback: `*.bak-d6csoft-<stamp>` files `/usr/local/alphacp/panel` me
-
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✅ DONE 09 Oct — d6b-files-security-fix v1.0 — Depth Wave D6b: Files+Security ke 14 pages cPanel-style (09 Oct 2026)
 Files + Security section ke 14 tools ab company-jaisa look: **Images, Directory Privacy,
