@@ -14,12 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-**🏆 KOI COMMAND PENDING NAHI — ROADMAP COMPLETE! (09 Oct 2026)**
-
-Dashboard **103/103 tools live (100%)** — theme v1.2 + D1 se D10 tak saare 10 depth waves
-deploy ho chuke hain, har ek user-confirmed. Jab agla update wave banega (phpMyAdmin app+SSO,
-service restart buttons, Node app manager — in sabke liye agent update chahiye), uski command
-yahan aayegi.
+### d11-restart-services v1.0 — Phase-2 Wave D11: WHM Restart Services (09 Oct 2026)
+**PEHLI agent-touching wave** — ab Service Status page par har service ke saath **↻ Restart button**:
+apache2, nginx, mariadb, redis, bind9, fail2ban, exim4, dovecot, clamav, opendkim, pure-ftpd (11 services,
+`paneld` jaan-bujh kar excluded). Agent me naya `service.restart` task + handler (double validation),
+har restart Audit Log me. **Extra safety:** paneld restart fail ho to FULL AUTO-ROLLBACK (agent files samet).
+```bash
+sudo alphacp-sync get 8242a1fc38fe01e407a450754391a87dd1ce950f installer/d11-restart-services.sh /tmp/d11-restart-services-v1.0.sh 2e0051fe2ee1c0bd3cdc1f5fd0261983c55f1e02688786fe4f001c5607f756ae && sudo bash /tmp/d11-restart-services-v1.0.sh
+```
+- sha256: `2e0051fe2ee1c0bd3cdc1f5fd0261983c55f1e02688786fe4f001c5607f756ae`
+- Expected: pre-check 3×200 + `paneld active hai (restart gate ON)` → 5× `installed` → caches + php-fpm →
+  **Step 3b: `paneld restarted — service.restart task ab live`** → health 3×200 → `==> D11 RESTART SERVICES COMPLETE ✅`
+- Test: **2087** hard-refresh → Server Status → Service Status → kisi service par **↻ Restart** dabao
+  (jaise `dovecot`) → success message + state wapas `active` → Audit Log me entry
+- Rollback: `*.bak-d11restart-<stamp>` files panel AUR agent dono me
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 
