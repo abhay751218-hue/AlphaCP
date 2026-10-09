@@ -103,6 +103,7 @@ cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
 </header>
 
 @if (($panelMode ?? 'cpanel') === 'whm')
+<div class="nav-backdrop" aria-hidden="true"></div>
 <div class="shell whm-shell">
     <aside class="side">
         @include('partials.whm-sidebar', [])
@@ -160,14 +161,21 @@ cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
 })();
 </script>
 <script>
-/* P-UI-5: mobile hamburger — topnav ko stack karta hai chhoti screens par. */
+/* P-UI-5.1: mobile hamburger — body.nav-open toggle karta hai; CSS chhoti
+   screens par sidebar ko off-canvas drawer + topnav ko stack banata hai
+   (real WHM/cPanel mobile-jaisa), desktop par kuch nahi badalta. */
 (function () {
     var b = document.getElementById('acp-nav-toggle');
-    var n = document.getElementById('acp-topnav');
-    if (!b || !n) { return; }
+    if (!b) { return; }
     b.addEventListener('click', function () {
-        var open = n.classList.toggle('open');
+        var open = document.body.classList.toggle('nav-open');
         b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', function (e) {
+        if (!document.body.classList.contains('nav-open')) { return; }
+        if (e.target.closest && e.target.closest('.side, .topbar')) { return; }
+        document.body.classList.remove('nav-open');
+        b.setAttribute('aria-expanded', 'false');
     });
 })();
 </script>
@@ -547,6 +555,39 @@ svg.hico { width: 15px; height: 15px; }
 .card h3 svg { width: 15px; height: 15px; }
 .tile svg { width: 18px; height: 18px; }
 .side svg, .side-card svg { width: 15px; height: 15px; }
+
+/* ============================================================================
+   DESIGN-PARITY v1.1 — mobile drawer (real WHM/cPanel-jaisa) + sidebar polish
+   ========================================================================== */
+.nav-backdrop { display: none; }
+@media (max-width: 980px) {
+  .side {
+    position: fixed; left: 0; top: 0; bottom: 0; width: min(300px, 84vw);
+    max-height: none; transform: translateX(-102%);
+    transition: transform .22s ease; z-index: 60;
+    background: #f7f8f9; padding: 74px 10px 18px; overflow: auto;
+    box-shadow: 0 0 0 rgba(0,0,0,0);
+  }
+  body.nav-open .side { transform: none; box-shadow: 0 10px 40px rgba(16,24,40,.25); }
+  .nav-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 55;
+    background: rgba(16,24,40,.45); opacity: 0; pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
+  .shell { padding-top: 12px; }
+}
+@media (max-width: 860px) {
+  .topnav { display: none; }
+  body.nav-open .topnav {
+    display: flex; flex-direction: column; width: 100%; order: 10; gap: 2px;
+  }
+  .topnav a { padding: 10px 12px; }
+}
+/* sidebar: real WHM-jaisa light block, group carets, active highlight */
+.side-card, .whm-sidebar { background: #f7f8f9; border: 1px solid var(--line); }
+.whm-sidebar h4::after, .side-card h4::after { content: '▾'; float: right; color: #9aa7b4; font-size: 10px; }
+.side-card a[aria-current="page"], .whm-sidebar a.active { background: #e8edf2; color: #101828; font-weight: 600; }
 PEOF
 cat > "${PANEL}/resources/views/dashboard-whm.blade.php" <<'PEOF'
 @extends('layouts.panel')

@@ -33,6 +33,9 @@ t "whm dashboard emoji-free" bash -c "! grep -q '🧠\\|💾\\|⚙' '$V/dashboar
 t "cpanel sidebar partial" grep -q 'ModuleCatalog::sectionsFor' "$V/partials/cpanel-sidebar.blade.php"
 t "icons blade double-brace" grep -qF 'class="{{ $cls' "$V/partials/icons.blade.php"
 t "brand light-visible"        grep -q '.brand { color: var(--ink); }' "$FAKE/home/panel/public/assets/panel.css"
+t "mobile drawer css"        grep -q 'body.nav-open .side' "$FAKE/home/panel/public/assets/panel.css"
+t "drawer js body toggle"    grep -q "classList.toggle('nav-open')" "$V/layouts/panel.blade.php"
+t "backdrop element"         grep -q 'nav-backdrop' "$V/layouts/panel.blade.php"
 
 B="$(ls -dt "$FAKE/home"/releases/design-parity-* | head -1)"
 sleep 1
