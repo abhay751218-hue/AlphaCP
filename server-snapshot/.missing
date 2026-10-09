@@ -4,6 +4,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneEditorController.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
+/usr/local/alphacp/panel/public/assets/panel.css.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009073626
 /usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009074336
 /usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009075354
@@ -11,15 +12,19 @@
 /usr/local/alphacp/panel/public/assets/panel.js.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/public/assets/panel.js.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/public/assets/panel.js.bak-d4whm-20261009092933
+/usr/local/alphacp/panel/public/assets/panel.js.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/accounts/create.blade.php.bak-d4whm-20261009092933
 /usr/local/alphacp/panel/resources/views/accounts/index.blade.php.bak-d4whm-20261009092933
+/usr/local/alphacp/panel/resources/views/cron/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009073626
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/domains/index.blade.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d1email-20261009081330
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/forwarders/index.blade.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
+/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php.bak-d3mysql-20261009092025
@@ -31,6 +36,7 @@
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d3mysql-20261009092025
+/usr/local/alphacp/panel/resources/views/ssl/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733

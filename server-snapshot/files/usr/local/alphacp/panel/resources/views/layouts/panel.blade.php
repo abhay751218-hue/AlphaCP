@@ -32,6 +32,7 @@
     <span class="crumb">@yield('title', 'Dashboard')</span>
     <span class="spacer"></span>
     <input type="search" id="acp-search" class="searchbox" placeholder="Search Tools (/)" autocomplete="off" aria-label="Search tools">
+    <button class="nav-toggle" id="acp-dark-toggle" type="button" aria-label="Toggle dark mode" title="Dark mode">🌙</button>
     <span class="user">
         <span class="avatar">{{ strtoupper(substr(auth()->user()?->username ?? 'A', 0, 1)) }}</span>
         <span class="uname">{{ auth()->user()?->username ?? 'Guest' }}<small>{{ auth()->user()?->role?->label ?? 'user' }}</small></span>
