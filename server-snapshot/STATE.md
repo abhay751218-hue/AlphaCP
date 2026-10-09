@@ -389,6 +389,7 @@ DELETE             /email-filters/{filter}                       email-filters.d
 GET|HEAD           /email-routing                                email-routing.index
 POST               /email-routing                                email-routing.store
 DELETE             /email/{mailbox}                              email.destroy
+PUT                /email/{mailbox}                              email.update
 GET|HEAD           /encryption                                   encryption.index
 POST               /encryption                                   encryption.store
 DELETE             /encryption/{encryption_key}                  encryption.destroy
@@ -612,8 +613,27 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (3) — repo se panel dobara banane par ye pages tootenge:
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (22) — repo se panel dobara banane par ye pages tootenge:
+/usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
+/usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
+/usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009073626
+/usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009074336
+/usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009075354
+/usr/local/alphacp/panel/public/assets/panel.js.bak-d1email-20261009081330
+/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009073626
+/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009074336
+/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009075354
+/usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d1email-20261009081330
+/usr/local/alphacp/panel/resources/views/forwarders/index.blade.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
+/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009074336
+/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009075354
+/usr/local/alphacp/panel/resources/views/partials/icons.blade.php.bak-themefix-20261009075354
+/usr/local/alphacp/panel/resources/views/partials/tile.blade.php.bak-themefix-20261009075354
+/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009073626
+/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009074336
+/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009075354
+/usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak.entry
 ```

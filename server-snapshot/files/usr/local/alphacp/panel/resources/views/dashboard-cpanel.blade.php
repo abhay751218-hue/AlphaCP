@@ -11,7 +11,6 @@
 @endsection
 
 @section('content')
-<div class="grid cols-4">
 <div class="dash-cols">
     <div>
         <div class="grid cols-4">

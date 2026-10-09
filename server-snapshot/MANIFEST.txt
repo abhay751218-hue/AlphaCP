@@ -283,6 +283,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseServerController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php
+/usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/app/Http/Controllers/MailingListsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MetricsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MimeTypesController.php
@@ -534,6 +535,12 @@
 /usr/local/alphacp/panel/deploy/php-fpm-alphacp.conf.in
 /usr/local/alphacp/panel/phpunit.xml
 /usr/local/alphacp/panel/public/assets/panel.css
+/usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
+/usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009073626
+/usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009074336
+/usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009075354
+/usr/local/alphacp/panel/public/assets/panel.js
+/usr/local/alphacp/panel/public/assets/panel.js.bak-d1email-20261009081330
 /usr/local/alphacp/panel/public/favicon.ico
 /usr/local/alphacp/panel/public/index.php
 /usr/local/alphacp/panel/public/robots.txt
@@ -557,6 +564,9 @@
 /usr/local/alphacp/panel/resources/views/calendar/index.blade.php
 /usr/local/alphacp/panel/resources/views/cron/index.blade.php
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php
+/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009073626
+/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009074336
+/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/dashboard-whm.blade.php
 /usr/local/alphacp/panel/resources/views/dashboard.blade.php
 /usr/local/alphacp/panel/resources/views/default-address/index.blade.php
@@ -573,6 +583,7 @@
 /usr/local/alphacp/panel/resources/views/email-filters/index.blade.php
 /usr/local/alphacp/panel/resources/views/email-routing/index.blade.php
 /usr/local/alphacp/panel/resources/views/email/index.blade.php
+/usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/resources/views/encryption/index.blade.php
 /usr/local/alphacp/panel/resources/views/errorpages/index.blade.php
 /usr/local/alphacp/panel/resources/views/errors/403.blade.php
@@ -586,6 +597,7 @@
 /usr/local/alphacp/panel/resources/views/file-restoration/index.blade.php
 /usr/local/alphacp/panel/resources/views/files/index.blade.php
 /usr/local/alphacp/panel/resources/views/forwarders/index.blade.php
+/usr/local/alphacp/panel/resources/views/forwarders/index.blade.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/resources/views/ftp/index.blade.php
 /usr/local/alphacp/panel/resources/views/git/index.blade.php
 /usr/local/alphacp/panel/resources/views/git/status.blade.php
@@ -599,6 +611,8 @@
 /usr/local/alphacp/panel/resources/views/layouts/guest.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
+/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009074336
+/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/license-server/index.blade.php
 /usr/local/alphacp/panel/resources/views/license/index.blade.php
 /usr/local/alphacp/panel/resources/views/mailing-lists/index.blade.php
@@ -618,8 +632,13 @@
 /usr/local/alphacp/panel/resources/views/partials/dash-sections.blade.php
 /usr/local/alphacp/panel/resources/views/partials/flash.blade.php
 /usr/local/alphacp/panel/resources/views/partials/icons.blade.php
+/usr/local/alphacp/panel/resources/views/partials/icons.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/partials/tile.blade.php
+/usr/local/alphacp/panel/resources/views/partials/tile.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php
+/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009073626
+/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009074336
+/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/php/index.blade.php
 /usr/local/alphacp/panel/resources/views/php/ini.blade.php
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php
@@ -656,6 +675,7 @@
 /usr/local/alphacp/panel/resources/views/zone-ttl/index.blade.php
 /usr/local/alphacp/panel/routes/console.php
 /usr/local/alphacp/panel/routes/web.php
+/usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak.entry
 /usr/local/alphacp/panel/tests/Feature/AccountsTest.php
 /usr/local/alphacp/panel/tests/Feature/AddressImporterTest.php

@@ -202,6 +202,8 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('email.store');
     Route::delete('/email/{mailbox}', [MailController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('email.destroy');
+    Route::put('/email/{mailbox}', [MailController::class, 'update'])
+        ->middleware('perm:email.manage')->name('email.update');
 
     Route::get('/forwarders', [ForwardersController::class, 'index'])
         ->middleware('perm:email.view')->name('forwarders.index');
