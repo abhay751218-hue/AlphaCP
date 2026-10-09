@@ -75,7 +75,7 @@ File Manager upload/zip/chmod (`files.set` me ops add karne honge)
 
 | Wave | Kya | Risk | Files |
 |---|---|---|---|
-| **D6a** | UI-uniformity pass 1: Email group ke 14 pages → D1-style pattern | views-only, zero | ~14 blades |
+| **D6a** | UI-uniformity pass 1: Email group ke 14 pages → D1-style pattern | views-only, zero | ✅ BUILT — installer ready |
 | **D6b** | UI pass 2: Files + Security groups (FTP, Backup, Git, SSH, IP Blocker, Privacy, Hotlink, Leech…) | views-only | ~14 blades |
 | **D6c** | UI pass 3: Software/Advanced + WHM pages | views-only | ~15 blades |
 | **D7** | Metrics real: graphs (CSS/JS charts), Raw Access viewer, Visitors | views+JS | medium |

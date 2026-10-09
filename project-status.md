@@ -37,6 +37,7 @@
 | D4-WHM | WHM Create Account + List Accounts + Packages depth parity (autofill, generator, stats, search, quick suspend) | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
 | D5-TOOLS | Cron presets + SSL expiry/stats + File Manager breadcrumbs + DARK MODE toggle | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
 | GAP-AUDIT-2 | Full code re-scan: 16 deep ✅, ~55 plain-UI 🟡, 7 stub 🔴, ~20 missing ❌ — docs/11-full-gap-audit.md, waves D6a–D10 planned | ✅ 09 Oct 2026 |
+| D6A-EMAIL-UI | Email group 14 pages → cPanel-style UI (stats+icons+badges+search), views-only | 🟡 INSTALLER READY — deploy pending (COMMANDS.md) |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |

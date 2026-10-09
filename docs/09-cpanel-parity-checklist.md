@@ -38,7 +38,7 @@
 
 | # | cPanel tool | Kya karta hai | Humara step | Status |
 |---|---|---|---|---|
-| 1 | File Manager | Breadcrumbs/icons/filter/editor (upload/zip/chmod = later) | S6 | 🟡 D5 (installer ready) |
+| 1 | File Manager | Breadcrumbs/icons/filter/editor (upload/zip/chmod = later) | S6 | ✅ D5 LIVE |
 | 2 | Images | Resize/convert images | S6 | ⏳ S6 |
 | 3 | Directory Privacy | Password-protected folders | S6 | ⏳ S6 |
 | 4 | Disk Usage | Folder-wise space | S6 | ⏳ S6 |
@@ -57,20 +57,20 @@
 |---|---|---|---|---|
 | 13 | Email Accounts | Mailboxes + quota + edit/password + usage + Connect Devices | S7 | ✅ D1 LIVE (09 Oct 2026) |
 | 14 | Forwarders | Email forward (cPanel-style list/search/create) | S7 | ✅ D1 LIVE (09 Oct 2026) |
-| 15 | Email Routing | MX/local routing per domain | S7 | ⏳ S7 |
-| 16 | Autoresponders | Vacation/auto reply | S7 | ⏳ S7 |
-| 17 | Default Address | Catch-all | S7 | ⏳ S7 |
-| 18 | Mailing Lists | Mailman lists | S7 | ⏳ S7 |
-| 19 | Track Delivery | Delivery trace | S7 | ⏳ S7 |
-| 20 | Global Email Filters | Server-side filters | S7 | ⏳ S7 |
-| 21 | Email Filters | Per-mailbox filters | S7 | ⏳ S7 |
-| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ⏳ S7 |
-| 23 | Address Importer | Bulk CSV import | S7 | ⏳ S7 |
-| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ⏳ S7 |
-| 25 | Encryption | PGP/GnuPG email keys | S7 | ⏳ S7 |
-| 26 | BoxTrapper | Challenge-response anti-spam | S7 | ⏳ S7 |
-| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ⏳ S7 |
-| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ⏳ S7 |
+| 15 | Email Routing | MX/local routing per domain | S7 | 🟡 D6a (installer ready) |
+| 16 | Autoresponders | Vacation/auto reply | S7 | 🟡 D6a (installer ready) |
+| 17 | Default Address | Catch-all | S7 | 🟡 D6a (installer ready) |
+| 18 | Mailing Lists | Mailman lists | S7 | 🟡 D6a (installer ready) |
+| 19 | Track Delivery | Delivery trace | S7 | 🟡 D6a (installer ready) |
+| 20 | Global Email Filters | Server-side filters | S7 | 🟡 D6a (installer ready) |
+| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 D6a (installer ready) |
+| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | 🟡 D6a (installer ready) |
+| 23 | Address Importer | Bulk CSV import | S7 | 🟡 D6a (installer ready) |
+| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | 🟡 D6a (installer ready) |
+| 25 | Encryption | PGP/GnuPG email keys | S7 | 🟡 D6a (installer ready) |
+| 26 | BoxTrapper | Challenge-response anti-spam | S7 | 🟡 D6a (installer ready) |
+| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | 🟡 D6a (installer ready) |
+| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | 🟡 D6a (installer ready) |
 | 29 | Webmail | Roundcube/Horde link | S7 | ⏳ S7 |
 
 ### 🌐 Domains
@@ -119,7 +119,7 @@
 | 54 | SSH Access | Keys + shell access control | S6 | ⏳ S6 |
 | 55 | IP Blocker | IP/range block | S13 | ⏳ S13 |
 | 56 | SSL/TLS | CSR, cert install, keys | S5 | ⏳ S5 |
-| 57 | SSL/TLS Status | Stats + expiry warnings + search + AutoSSL | S5 | 🟡 D5 (installer ready) |
+| 57 | SSL/TLS Status | Stats + expiry warnings + search + AutoSSL | S5 | ✅ D5 LIVE |
 | 58 | Two-Factor Authentication | TOTP 2FA |S2B-2|✅|
 | 59 | Password & Security | Password change + strength |S2B|✅|
 | 60 | Leech Protection | Password vs hotlink abusers | S13 | ⏳ S13 |
@@ -148,7 +148,7 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 76 | Cron Jobs | Common Settings presets + stats + search | S5 | 🟡 D5 (installer ready) |
+| 76 | Cron Jobs | Common Settings presets + stats + search | S5 | ✅ D5 LIVE |
 | 77 | Track DNS | DNS trace/debug | S9 | ⏳ S9 |
 | 78 | Indexes | Directory listing control | S5 | ⏳ S5 |
 | 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 |
