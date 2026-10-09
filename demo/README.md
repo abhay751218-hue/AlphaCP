@@ -30,8 +30,21 @@ python3 -m http.server 8000
 | **cPanel (client)** | Statistics cards + 9 sections / 82 tools icon grid + right rail (General information, Services, Recent activity) |
 | **WHM (admin)** | Dark sidebar + categorized menu (49 items, parity rows) + Server information + Accounts + Services |
 | **Reseller** | Reseller-scoped WHM shell (teal accent, 13-item menu) + My accounts + Usage overview |
+| **Image previews** | 3 design preview images (`demo/assets/`) — cPanel client, WHM admin, login |
 
 Top search box live hai — type karo ya `/` press karo (cPanel Jupiter jaisa).
+
+## Preview images
+
+`demo/assets/` me 3 images hain (design previews):
+
+| File | Kya hai |
+|---|---|
+| `alphacp-cpanel-client.png` | cPanel client dashboard — Paper Lantern theme |
+| `alphacp-whm-admin.png` | WHM admin panel — dark sidebar |
+| `alphacp-login.png` | Login page — orange accent |
+
+Ye images demo HTML me bhi embedded hain (`#previews` section).
 
 ## Regenerate
 

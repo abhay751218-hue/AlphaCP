@@ -154,6 +154,10 @@ if ok(demo_path.exists(), "demo file exists"):
     ok(not bad_uses, f"all {len(set(p.uses))} <use> icons resolve", f"bad: {bad_uses[:5]}")
     bad_anchors = sorted({h for h in p.hrefs if h and h not in p.ids and not h.startswith('i-')})
     ok(not bad_anchors, "sidebar/breadcrumb anchors resolve", f"bad: {bad_anchors[:5]}")
+    imgs = re.findall(r'<img src="([^"]+)"', demo)
+    missing_imgs = [i for i in imgs if not (demo_path.parent / i).exists()]
+    ok(bool(imgs) and not missing_imgs, f"demo preview images exist ({len(imgs)} referenced)",
+       f"missing: {missing_imgs}")
 
 # ---------------------------------------------------------------- 6. config sanity
 print("== config sanity ==")

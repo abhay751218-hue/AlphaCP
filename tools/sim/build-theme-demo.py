@@ -53,6 +53,16 @@ DEMO_CSS = """
 }
 .itile .ic { color: var(--cp-orange-dark); }
 .itile span { display: block; font-family: var(--mono); font-size: 10px; color: var(--muted); margin-top: 7px; word-break: break-all; }
+.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.shot { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); margin: 0; }
+.shot img { width: 100%; display: block; aspect-ratio: 16/10; object-fit: cover; background: var(--panel-2); }
+.shot figcaption { padding: 9px 13px; font-size: 12.5px; font-weight: 650; color: var(--muted); border-top: 1px solid var(--line); }
+.shot figcaption b { color: var(--ink); }
+.shots { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.shot { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); margin: 0; }
+.shot img { width: 100%; display: block; aspect-ratio: 16/10; object-fit: cover; background: var(--panel-2); }
+.shot figcaption { padding: 9px 13px; font-size: 12.5px; font-weight: 650; color: var(--muted); border-top: 1px solid var(--line); }
+.shot figcaption b { color: var(--ink); }
 .login-demo-wrap { background: var(--panel-2); border: 1px dashed var(--line-2); border-radius: 12px; padding: 26px; display: grid; place-items: center; }
 .login-demo-wrap .login-card { box-shadow: 0 2px 10px rgba(16,24,40,.06); }
 .mock-note { font-size: 11.5px; color: var(--faint); }
@@ -376,6 +386,7 @@ TEMPLATE = """<!DOCTYPE html>
   <a href="#dash-demo">cPanel (client)</a>
   <a href="#whm-demo">WHM (admin)</a>
   <a href="#reseller-demo">Reseller</a>
+  <a href="#previews">Previews</a>
 </div>
 
 <header class="topbar">
@@ -421,6 +432,26 @@ TEMPLATE = """<!DOCTYPE html>
     </div>
     <div class="igrid">
       __IGRID__
+    </div>
+
+    <div class="section" id="previews" style="--sec: #ff6c2c">
+      <span class="sec-ico">{icon_image}</span>
+      <h2>Image previews</h2><span class="rule"></span>
+      <span class="small muted">design previews · files: <code>demo/assets/</code></span>
+    </div>
+    <div class="shots">
+      <figure class="shot">
+        <img src="assets/alphacp-cpanel-client.png" alt="AlphaCP cPanel client dashboard — Paper Lantern theme" loading="lazy">
+        <figcaption><b>cPanel client dashboard</b> — Paper Lantern theme · orange #FF6C2C · icon grid + right rail</figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="assets/alphacp-whm-admin.png" alt="AlphaCP WHM admin panel — dark sidebar" loading="lazy">
+        <figcaption><b>WHM admin panel</b> — dark sidebar · categorized menu · server information · accounts</figcaption>
+      </figure>
+      <figure class="shot">
+        <img src="assets/alphacp-login.png" alt="AlphaCP login page" loading="lazy">
+        <figcaption><b>Login page</b> — light card · orange accent · audited logins</figcaption>
+      </figure>
     </div>
 
     <div class="section" id="logindemo" style="--sec: #6366f1">
@@ -614,6 +645,7 @@ def main() -> int:
             .replace("__WHM_MOCK__", build_whm_mock("admin", whm_menu["admin"]))
             .replace("__RESELLER_MOCK__", build_whm_mock("reseller", whm_menu["reseller"]))
             .replace("{icon_users}", icon("users", 15))
+            .replace("{icon_image}", icon("image", 15))
             .replace("{icon_search}", icon("search", 15))
             .replace("{icon_logout}", icon("logout", 15))
             .replace("{icon_star}", icon("star", 15))
