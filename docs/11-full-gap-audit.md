@@ -75,8 +75,8 @@ File Manager upload/zip/chmod (`files.set` me ops add karne honge)
 
 | Wave | Kya | Risk | Files |
 |---|---|---|---|
-| **D6a** | UI-uniformity pass 1: Email group ke 14 pages → D1-style pattern | views-only, zero | ✅ BUILT — installer ready |
-| **D6b** | UI pass 2: Files + Security groups (FTP, Backup, Git, SSH, IP Blocker, Privacy, Hotlink, Leech…) | views-only | ~14 blades |
+| **D6a** | UI-uniformity pass 1: Email group ke 14 pages → D1-style pattern | views-only, zero | ✅ DEPLOYED LIVE 09 Oct |
+| **D6b** | UI pass 2: Files + Security groups (Images, Privacy, Disk, FTP, WebDisk, BackupWiz, Git, FileRest, Trash, Indexes, SSH, IP Blocker, API Tokens, Audit) | views-only | ✅ BUILT — installer ready |
 | **D6c** | UI pass 3: Software/Advanced + WHM pages | views-only | ~15 blades |
 | **D7** | Metrics real: graphs (CSS/JS charts), Raw Access viewer, Visitors | views+JS | medium |
 | **D8** | Service Manager restart + Mail Queue + ModSecurity UI (waf tasks) | agent+panel | medium |
@@ -107,3 +107,5 @@ kuch me agent task) chahiye, isliye ye UI-wave me nahi, apni feature-wave me aay
 
 Baaki 94 tiles LIVE hain — unki kami "feature missing" nahi, "UI plain" thi,
 jo D6a/D6b/D6c UI-waves me cPanel-style ho rahi hai.
+
+> **Correction (09 Oct):** 2FA pehle "missing" list me tha — galat. Live `security` page par 2FA (TOTP enable/disable), password change aur active sessions already maujood hain.

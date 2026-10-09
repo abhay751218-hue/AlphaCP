@@ -39,17 +39,17 @@
 | # | cPanel tool | Kya karta hai | Humara step | Status |
 |---|---|---|---|---|
 | 1 | File Manager | Breadcrumbs/icons/filter/editor (upload/zip/chmod = later) | S6 | ✅ D5 LIVE |
-| 2 | Images | Resize/convert images | S6 | ⏳ S6 |
-| 3 | Directory Privacy | Password-protected folders | S6 | ⏳ S6 |
-| 4 | Disk Usage | Folder-wise space | S6 | ⏳ S6 |
-| 5 | Web Disk | WebDAV drive | S6 | ⏳ S6 |
-| 6 | FTP Accounts | FTP users | S6 | ⏳ S6 |
+| 2 | Images | Resize/convert images | S6 | 🟡 D6b (installer ready) |
+| 3 | Directory Privacy | Password-protected folders | S6 | 🟡 D6b (installer ready) |
+| 4 | Disk Usage | Folder-wise space | S6 | 🟡 D6b (installer ready) |
+| 5 | Web Disk | WebDAV drive | S6 | 🟡 D6b (installer ready) |
+| 6 | FTP Accounts | FTP users | S6 | 🟡 D6b (installer ready) |
 | 7 | FTP Connections | FTP session logs | S6 | ⏳ S6 |
 | 8 | Backup | Manual backup download | S10 | ⏳ S10 |
-| 9 | Backup Wizard | Step-by-step backup/restore | S10 | ⏳ S10 |
-| 10 | File & Directory Restoration | Deleted file wapas | S10 | ⏳ S10 |
-| 11 | Git™ Version Control | Git deploy/repo | S6 | ⏳ S6 |
-| 12 | Trash | File Manager trash bin | S6 | ⏳ S6 |
+| 9 | Backup Wizard | Step-by-step backup/restore | S10 | 🟡 D6b (installer ready) |
+| 10 | File & Directory Restoration | Deleted file wapas | S10 | 🟡 D6b (installer ready) |
+| 11 | Git™ Version Control | Git deploy/repo | S6 | 🟡 D6b (installer ready) |
+| 12 | Trash | File Manager trash bin | S6 | 🟡 D6b (installer ready) |
 
 ### 📧 Email
 
@@ -57,20 +57,20 @@
 |---|---|---|---|---|
 | 13 | Email Accounts | Mailboxes + quota + edit/password + usage + Connect Devices | S7 | ✅ D1 LIVE (09 Oct 2026) |
 | 14 | Forwarders | Email forward (cPanel-style list/search/create) | S7 | ✅ D1 LIVE (09 Oct 2026) |
-| 15 | Email Routing | MX/local routing per domain | S7 | 🟡 D6a (installer ready) |
-| 16 | Autoresponders | Vacation/auto reply | S7 | 🟡 D6a (installer ready) |
-| 17 | Default Address | Catch-all | S7 | 🟡 D6a (installer ready) |
-| 18 | Mailing Lists | Mailman lists | S7 | 🟡 D6a (installer ready) |
-| 19 | Track Delivery | Delivery trace | S7 | 🟡 D6a (installer ready) |
-| 20 | Global Email Filters | Server-side filters | S7 | 🟡 D6a (installer ready) |
-| 21 | Email Filters | Per-mailbox filters | S7 | 🟡 D6a (installer ready) |
-| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | 🟡 D6a (installer ready) |
-| 23 | Address Importer | Bulk CSV import | S7 | 🟡 D6a (installer ready) |
-| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | 🟡 D6a (installer ready) |
-| 25 | Encryption | PGP/GnuPG email keys | S7 | 🟡 D6a (installer ready) |
-| 26 | BoxTrapper | Challenge-response anti-spam | S7 | 🟡 D6a (installer ready) |
-| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | 🟡 D6a (installer ready) |
-| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | 🟡 D6a (installer ready) |
+| 15 | Email Routing | MX/local routing per domain | S7 | ✅ D6a LIVE |
+| 16 | Autoresponders | Vacation/auto reply | S7 | ✅ D6a LIVE |
+| 17 | Default Address | Catch-all | S7 | ✅ D6a LIVE |
+| 18 | Mailing Lists | Mailman lists | S7 | ✅ D6a LIVE |
+| 19 | Track Delivery | Delivery trace | S7 | ✅ D6a LIVE |
+| 20 | Global Email Filters | Server-side filters | S7 | ✅ D6a LIVE |
+| 21 | Email Filters | Per-mailbox filters | S7 | ✅ D6a LIVE |
+| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ D6a LIVE |
+| 23 | Address Importer | Bulk CSV import | S7 | ✅ D6a LIVE |
+| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ D6a LIVE |
+| 25 | Encryption | PGP/GnuPG email keys | S7 | ✅ D6a LIVE |
+| 26 | BoxTrapper | Challenge-response anti-spam | S7 | ✅ D6a LIVE |
+| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ✅ D6a LIVE |
+| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ✅ D6a LIVE |
 | 29 | Webmail | Roundcube/Horde link | S7 | ⏳ S7 |
 
 ### 🌐 Domains
@@ -116,8 +116,8 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 54 | SSH Access | Keys + shell access control | S6 | ⏳ S6 |
-| 55 | IP Blocker | IP/range block | S13 | ⏳ S13 |
+| 54 | SSH Access | Keys + shell access control | S6 | 🟡 D6b (installer ready) |
+| 55 | IP Blocker | IP/range block | S13 | 🟡 D6b (installer ready) |
 | 56 | SSL/TLS | CSR, cert install, keys | S5 | ⏳ S5 |
 | 57 | SSL/TLS Status | Stats + expiry warnings + search + AutoSSL | S5 | ✅ D5 LIVE |
 | 58 | Two-Factor Authentication | TOTP 2FA |S2B-2|✅|
@@ -150,7 +150,7 @@
 |---|---|---|---|---|
 | 76 | Cron Jobs | Common Settings presets + stats + search | S5 | ✅ D5 LIVE |
 | 77 | Track DNS | DNS trace/debug | S9 | ⏳ S9 |
-| 78 | Indexes | Directory listing control | S5 | ⏳ S5 |
+| 78 | Indexes | Directory listing control | S5 | 🟡 D6b (installer ready) |
 | 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 |
 | 80 | MIME Types | Custom MIME | S5 | ⏳ S5 |
 | 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 |
@@ -278,7 +278,7 @@
 | 167 | SSH Password Authorization Tweak | S13 | ⏳ S13 |
 | 168 | Traceroute Enable/Disable | S13 | ⏳ S13 |
 | 169 | Manage External Authentications | S13 | ⏳ S13 |
-| 170 | Manage API Tokens | S12 | ⏳ S12 |
+| 170 | Manage API Tokens | S12 | 🟡 D6b (installer ready) |
 
 ### Service Configuration / Restart Services
 | # | WHM tool | Step | Status |
