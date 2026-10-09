@@ -32,7 +32,8 @@
 | THEME-LIVE | **theme-fix v1.0→v1.2 live deploy** — CSP inline-JS block root-cause fix (external panel.js), cPanel LIGHT vs WHM DARK, product-wise 36 icons, hamburger/search/favorites ab chalte hain; 7 files, backup+auto-rollback, live verify 3×200 | ✅ **DONE (09 Oct)** |
 | DEPTH-AUDIT | **Feature-depth audit** — andar ke options ka cPanel-parity audit (`docs/10-feature-depth-audit.md`): breadth ~100 tools ✅, depth ~30-40% 🟡; Waves D1–D5 process defined | ✅ **DONE (09 Oct)** |
 | D1-EMAIL | Email Accounts + Forwarders depth parity (quota/password edit, disk usage, Connect Devices, pw generator/meter, search) | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
-| D2-DOMAINS | Domains + Zone Editor depth parity (record edit, stats vs limits, type-aware create, search) | ✅ installer ready, sims green — deploy row COMMANDS.md me |
+| D2-DOMAINS | Domains + Zone Editor depth parity (record edit, stats vs limits, type-aware create, search) | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
+| D3-MYSQL | MySQL Databases + Users + phpMyAdmin depth parity (custom password, Users column, grant card, show-once+copy) | ✅ installer ready, sims green — deploy row COMMANDS.md me |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |

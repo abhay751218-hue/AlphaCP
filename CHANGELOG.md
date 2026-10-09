@@ -5,6 +5,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 
+### Added — Depth Wave D3: MySQL Databases + Users + phpMyAdmin (09 Oct 2026)
+- `installer/d3-mysql-fix.sh` v1.0 (builder: `tools/build-d3-mysql-installer.py`) — 6 files, no routes/migrations; install & rollback sims green.
+- MysqlUsersController: optional USER-CHOSEN password (alnum 10–64, SQL-literal safe) on create + change-password; blank = strong random; shown once either way.
+- MysqlDatabasesController: index passes users map → "Privileged users" column.
+- MySQL Databases view: cPanel-style — stats vs MAXSQL, search, Users column, Create New Database, connection-settings card.
+- MySQL Users view: show-once password card + copy chips, per-user Change-password expander with alnum generator, Add New User (generator + db checkboxes), Add User To Database (grant) card.
+- phpMyAdmin view: status badge + client-connect card + preference form.
+- `panel.js` v1.3: alnum-only password generator (`data-pw-gen-alnum`).
+- Out of D3 scope: privilege revoke (no `db.user.revoke` agent task) + phpMyAdmin app/SSO — noted for D3.5.
+
 ### Added — Depth Wave D2: Domains + Zone Editor (09 Oct 2026)
 - `installer/d2-domains-fix.sh` v1.0 (builder: `tools/build-d2-domains-installer.py`) — 5 files, backup + auto-rollback + route:clear; install & rollback sims green.
 - ZoneEditorController: NEW `update()` — record name/value edit (type/zone fixed), dup check, declarative `dns.zone` + BIND zone enqueue.

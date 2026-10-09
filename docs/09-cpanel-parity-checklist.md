@@ -77,21 +77,21 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 30 | Domains | Overview + stats vs limits + search + type-aware create | S5 | 🟡 D2 (installer ready) |
+| 30 | Domains | Overview + stats vs limits + search + type-aware create | S5 | ✅ D2 LIVE (09 Oct 2026) |
 | 31 | Subdomains | sub.domain.com | S5 | ⏳ S5 |
 | 32 | Addon Domains | Extra domain, alag site | S5 | ⏳ S5 |
 | 33 | Aliases (Parked) | Domain aliases | S5 | ⏳ S5 |
 | 34 | Redirects | 301/302 redirect | S5 | ⏳ S5 |
-| 35 | Zone Editor | A/CNAME/MX/TXT + record EDIT + type-aware hints | S9 | 🟡 D2 (installer ready; TTL/priority = D2.5 agent change) |
+| 35 | Zone Editor | A/CNAME/MX/TXT + record EDIT + type-aware hints | S9 | ✅ D2 LIVE (09 Oct 2026; TTL/priority = D2.5) |
 | 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 |
 
 ### 🗄️ Databases
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 37 | MySQL® Databases | DB + users + privileges | S8 | ⏳ S8 |
+| 37 | MySQL® Databases | DB + users + privileges + Users column + custom password | S8 | 🟡 D3 (installer ready; revoke = D3.5 agent change) |
 | 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 |
-| 39 | phpMyAdmin | DB GUI (SSO login) | S8 | ⏳ S8 |
+| 39 | phpMyAdmin | Preference + client-connect card | S8 | 🟡 D3 (app/SSO = later wave) |
 | 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
 | 42 | PostgreSQL Wizard | 🔵 optional module | post-v1 | 🔵 |

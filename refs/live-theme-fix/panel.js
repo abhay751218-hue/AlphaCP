@@ -162,8 +162,10 @@
     if (/[^A-Za-z0-9]/.test(v)) s++;
     return Math.min(3, Math.floor(s * 3 / 5));
   }
-  function genPassword(len) {
-    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^*_-+=';
+  function genPassword(len, alnumOnly) {
+    var chars = alnumOnly
+      ? 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+      : 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^*_-+=';
     var out = '';
     var buf = new Uint32Array(len);
     (window.crypto || window.msCrypto).getRandomValues(buf);
@@ -176,7 +178,7 @@
     var meter = group.nextElementSibling && group.nextElementSibling.classList.contains('pw-meter')
       ? group.nextElementSibling : null;
     var showBtn = group.querySelector('[data-pw-show]');
-    var genBtn = group.querySelector('[data-pw-gen]');
+    var genBtn = group.querySelector('[data-pw-gen], [data-pw-gen-alnum]');
     function paint() {
       if (!meter) return;
       var score = input.value ? pwScore(input.value) : -1;
@@ -190,7 +192,7 @@
       showBtn.textContent = vis ? 'Show' : 'Hide';
     });
     if (genBtn) genBtn.addEventListener('click', function () {
-      input.value = genPassword(16);
+      input.value = genPassword(16, genBtn.hasAttribute('data-pw-gen-alnum'));
       if (input.type === 'password' && showBtn) { input.type = 'text'; showBtn.textContent = 'Hide'; }
       paint();
       input.dispatchEvent(new Event('input'));
