@@ -22,6 +22,11 @@ return [
 
     // OWNER-CTRL port↔panel map file (panel + agent + installer shared truth).
     'ports_file'    => (string) env('ACP_PORTS_FILE', '/usr/local/alphacp/etc/ports.json'),
+    // P-UI-5 white-label hooks: license-grade branding env se override ho sakta hai.
+    'brand'         => [
+        'name'    => (string) env('ACP_BRAND_NAME', 'AlphaCP'),
+        'tagline' => (string) env('ACP_BRAND_TAGLINE', 'Hosting control panel'),
+    ],
 
     // This server's row in `servers`.
     //

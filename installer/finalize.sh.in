@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# ============================================================================
+# AlphaCP finalize v1.0 — P-UI-5 (responsive/mobile + white-label hooks)
+#                          + Roundcube (webmail) branding
+#
+#  1  panel payloads: layouts/panel.blade.php (hamburger + brand hooks),
+#     public/assets/panel.css (mobile stacked topbar), config/acp.php (brand)
+#  2  Roundcube: skins/elastic/images/acp-logo.svg + /etc/roundcube/config.inc.php
+#     me ACP_BRAND block (product_name + skin_logo), idempotent
+#  3  structural asserts; koi fail = ROLLBACK + non-zero exit
+#  SIM=1 + env paths → tools/sim/finalize-sim.sh (server mutate NAHI)
+# ============================================================================
+set -euo pipefail
+
+VERSION="1.0"
+SIM="${SIM:-0}"
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+RC_ETC="${ACP_RC_ETC:-/etc/roundcube}"
+RC_SHARE="${ACP_RC_SHARE:-/usr/share/roundcube}"
+PANEL="${ACP_HOME}/panel"
+
+LOGD="${ACP_HOME}/logs"
+mkdir -p "$LOGD"
+LOG="${LOGD}/finalize-$(date +%Y%m%d%H%M%S).txt"
+exec > >(tee -a "$LOG") 2>&1
+
+C_G=$'\033[0;32m'; C_R=$'\033[0;31m'; C_Y=$'\033[0;33m'; C_0=$'\033[0m'
+ok()   { printf '  %s✔%s %s\n' "$C_G" "$C_0" "$*"; }
+warn() { printf '  %s!%s %s\n' "$C_Y" "$C_0" "$*"; }
+die()  { printf '  %s✖%s %s\n' "$C_R" "$C_0" "$*"; exit 1; }
+hdr()  { printf '\n== %s ==\n' "$*"; }
+info() { printf '  · %s\n' "$*"; }
+
+TS="$(date +%Y%m%d%H%M%S)"
+BACKUP="${ACP_HOME}/releases/finalize-${TS}"
+RB_MANIFEST=()
+backup() {
+  for f in "$@"; do
+    [[ -f "$f" ]] || continue
+    mkdir -p "${BACKUP}/$(dirname "$f")"
+    cp -a "$f" "${BACKUP}/$f" 2>/dev/null || cp -a "$f" "${BACKUP}/$(echo "$f" | tr / _)"
+    RB_MANIFEST+=("$f")
+  done
+}
+rollback() {
+  hdr "ROLLBACK — finalize v${VERSION}"
+  local B="${1:-$BACKUP}" f key
+  for f in "${RB_MANIFEST[@]:-}"; do
+    [[ -z "$f" ]] && continue
+    key="$f"
+    if [[ -f "${B}${key}" ]]; then cp -a "${B}${key}" "$f"; else cp -a "${B}/$(echo "$key" | tr / _)" "$f" 2>/dev/null || true; fi
+  done
+  ok "rollback complete (purani state wapas)"
+}
+
+if [[ "${1:-}" == "--rollback" ]]; then
+  B="${2:?usage: --rollback <backup-dir>}"
+  hdr "ROLLBACK — finalize v${VERSION}"
+  ( cd "$B" && find . -type f | sed 's|^\./||' | while read -r rel; do
+      mkdir -p "/$(dirname "$rel")" && cp -a "$B/$rel" "/$rel"
+    done )
+  ok "rollback complete (purani state wapas)"
+  exit 0
+fi
+
+printf '\n== FINALIZE v%s (P-UI-5 responsive + white-label + Roundcube branding) ==\n' "$VERSION"
+info "backup: ${BACKUP}"
+mkdir -p "$BACKUP"
+
+# ---- 1) panel payloads ----
+hdr "panel payloads (blade hamburger + brand hooks + mobile css)"
+backup "${PANEL}/resources/views/layouts/panel.blade.php" \
+       "${PANEL}/public/assets/panel.css" \
+       "${PANEL}/config/acp.php"
+mkdir -p "${PANEL}/resources/views/layouts" "${PANEL}/public/assets" "${PANEL}/config"
+
+cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
+@@PANEL_BLADE@@
+PEOF
+cat > "${PANEL}/public/assets/panel.css" <<'PEOF'
+@@PANEL_CSS@@
+PEOF
+cat > "${PANEL}/config/acp.php" <<'PEOF'
+@@PANEL_ACPCFG@@
+PEOF
+PHP_BIN="${PHPBIN:-${PHP:-$(command -v php8.4 || command -v php || true)}}"
+if [[ -n "$PHP_BIN" ]]; then
+  "$PHP_BIN" -l "${PANEL}/config/acp.php" >/dev/null || { rollback; die "acp.php lint fail"; }
+fi
+grep -q 'acp-nav-toggle' "${PANEL}/resources/views/layouts/panel.blade.php" \
+  || { rollback; die "blade me hamburger nahi"; }
+grep -q "config('acp.brand.name'" "${PANEL}/resources/views/layouts/panel.blade.php" \
+  || { rollback; die "blade me white-label brand hook nahi"; }
+grep -q 'max-width: 860px' "${PANEL}/public/assets/panel.css" \
+  || { rollback; die "css me mobile media query nahi"; }
+grep -q "'brand'" "${PANEL}/config/acp.php" \
+  || { rollback; die "config me brand hook nahi"; }
+ok "3 panel payloads likhi + asserts pass"
+
+# ---- 2) Roundcube branding ----
+hdr "Roundcube branding (logo + product_name)"
+backup "${RC_ETC}/config.inc.php"
+mkdir -p "${RC_SHARE}/skins/elastic/images"
+cat > "${RC_SHARE}/skins/elastic/images/acp-logo.svg" <<'PEOF'
+@@RC_LOGOSVG@@
+PEOF
+[[ -f "${RC_ETC}/config.inc.php" ]] || printf '<?php\n/* AlphaCP managed Roundcube config */\n' > "${RC_ETC}/config.inc.php"
+python3 - "$RC_ETC/config.inc.php" <<'PY'
+import sys, pathlib
+p = pathlib.Path(sys.argv[1]); s = p.read_text()
+block = """// ACP_BRAND_START
+$config['product_name'] = 'AlphaCP Webmail';
+$config['skin_logo'] = 'skins/elastic/images/acp-logo.svg';
+// ACP_BRAND_END"""
+if '// ACP_BRAND_START' in s:
+    a = s.index('// ACP_BRAND_START'); b = s.index('// ACP_BRAND_END') + len('// ACP_BRAND_END')
+    s = s[:a] + block + s[b:]
+else:
+    s = s.rstrip() + "\n" + block + "\n"
+p.write_text(s)
+PY
+grep -q "product_name'] = 'AlphaCP Webmail'" "${RC_ETC}/config.inc.php" \
+  || { rollback; die "rc config me product_name nahi"; }
+grep -q 'acp-logo.svg' "${RC_ETC}/config.inc.php" \
+  || { rollback; die "rc config me skin_logo nahi"; }
+[[ -s "${RC_SHARE}/skins/elastic/images/acp-logo.svg" ]] \
+  || { rollback; die "logo svg nahi likha"; }
+if [[ -n "$PHP_BIN" ]]; then
+  "$PHP_BIN" -l "${RC_ETC}/config.inc.php" >/dev/null || { rollback; die "rc config lint fail"; }
+fi
+ok "Roundcube branding set (product_name + logo)"
+
+# ---- 3) sync ----
+hdr "alphacp-sync"
+if [[ "$SIM" == "1" ]]; then
+  info "SIM: sync skip"
+else
+  alphacp-sync >/dev/null 2>&1 && ok "sync complete (repo snapshot update)" || warn "sync skip/fail"
+fi
+
+hdr "FINAL VERDICT"
+ok "Mobile: hamburger + stacked topbar (<=860px); white-label: ACP_BRAND_NAME/TAGLINE env"
+ok "Webmail: 'AlphaCP Webmail' product_name + AlphaCP logo (Roundcube elastic skin)"
+info "backup : ${BACKUP}"
+info "rollback: sudo bash /tmp/finalize-v1.0.sh --rollback"
+printf '\n  finalize v%s APPLY ho gaya.\n\n' "$VERSION"

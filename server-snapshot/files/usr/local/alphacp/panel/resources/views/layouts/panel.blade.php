@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>@yield('title', 'Dashboard') · AlphaCP</title>
+    <title>@yield('title', 'Dashboard') · {{ config('acp.brand.name', 'AlphaCP') }}</title>
     <link rel="stylesheet" href="{{ asset('assets/panel.css') }}?v={{ config('acp.version') }}">
 </head>
 <body>
@@ -14,12 +14,13 @@
     <div class="brand">
         <span class="logo">A</span>
         <span>
-            AlphaCP {{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : '' }}
+            {{ config('acp.brand.name', 'AlphaCP') }} {{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : '' }}
             <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : 'Account Panel' }} · {{ config('acp.version') }}</small>
         </span>
     </div>
 
-    <nav class="topnav" aria-label="Main">
+    <button class="nav-toggle" id="acp-nav-toggle" type="button" aria-label="Menu" aria-expanded="false">☰</button>
+    <nav class="topnav" id="acp-topnav" aria-label="Main">
         <a href="{{ route('dashboard') }}">Dashboard</a>
         @if (($panelMode ?? 'cpanel') === 'whm')
             @can('accounts.view')<a href="{{ route('accounts.index') }}">Accounts</a>@endcan
@@ -83,7 +84,7 @@
 @endif
 
 <footer class="wrap muted" style="padding-top:0; font-size:12.5px">
-    AlphaCP {{ config('acp.version') }} — AlphaCP control panel ·
+    {{ config('acp.brand.name', 'AlphaCP') }} {{ config('acp.version') }} — {{ config('acp.brand.tagline', 'Hosting control panel') }} ·
     parity checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span>
 </footer>
 
@@ -107,6 +108,18 @@
                 head.classList.toggle('hidden', visible === 0 && v !== '');
             }
         });
+    });
+})();
+</script>
+<script>
+/* P-UI-5: mobile hamburger — topnav ko stack karta hai chhoti screens par. */
+(function () {
+    var b = document.getElementById('acp-nav-toggle');
+    var n = document.getElementById('acp-topnav');
+    if (!b || !n) { return; }
+    b.addEventListener('click', function () {
+        var open = n.classList.toggle('open');
+        b.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
 })();
 </script>
