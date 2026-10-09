@@ -18,6 +18,10 @@ final class CommandRunner implements CommandExecutor
 {
     /** Binaries the agent is allowed to execute today (grows per step, reviewed). */
     private const BIN_ALLOWLIST = [
+        '/usr/sbin/nginx',
+        '/usr/bin/nginx',
+        '/usr/local/sbin/nginx',
+        '/usr/local/bin/nginx',
         '/usr/bin/systemctl',
         '/bin/systemctl',
         '/usr/bin/hostname',

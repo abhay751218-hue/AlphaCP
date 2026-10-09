@@ -34,7 +34,7 @@ class DashboardController extends Controller
             $audit = Audit::recent(6);
         }
 
-        return view('dashboard', [
+        return view($mode === 'whm' ? 'dashboard-whm' : 'dashboard-cpanel', [
             'panelMode' => $mode,
             'account'   => $account?->load(['package', 'domains']),
             'system'    => $system,
@@ -48,3 +48,4 @@ class DashboardController extends Controller
         ]);
     }
 }
+

@@ -3,8 +3,14 @@
 @section('title', 'Login')
 
 @section('content')
-    <h1>Panel Login</h1>
-    <p class="sub">Admin · Reseller · Customer — sab ek hi URL se</p>
+    <h1>{{ ($portFamily ?? null) === 'whm' ? 'WHM Login' : (($portFamily ?? null) === 'cpanel' ? 'cPanel Login' : 'Panel Login') }}</h1>
+    <p class="sub">@if(($portFamily ?? null) === 'whm')
+            Root · Reseller — server management
+        @elseif(($portFamily ?? null) === 'cpanel')
+            Customer — hosting control
+        @else
+            Admin · Reseller · Customer — sab ek hi URL se
+        @endif</p>
 
     <form method="post" action="{{ route('login.attempt') }}">
         @csrf
@@ -21,3 +27,4 @@
 
     <p class="help mt">Too many failed passwords lock the account for a short time (brute-force protection).</p>
 @endsection
+

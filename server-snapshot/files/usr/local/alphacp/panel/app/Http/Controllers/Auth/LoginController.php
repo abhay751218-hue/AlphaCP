@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\LoginAttempt;
 use App\Models\User;
 use App\Support\Audit;
+use App\Support\ModuleCatalog;
+use App\Support\PortMap;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -24,7 +26,10 @@ class LoginController extends Controller
 {
     public function show(): View
     {
-        return view('auth.login');
+        // Port se branding: 2087 → WHM login, 2083 → cPanel login.
+        return view('auth.login', [
+            'portFamily' => PortMap::familyFor((int) request()->getPort()),
+        ]);
     }
 
     public function login(Request $request): RedirectResponse
@@ -75,6 +80,24 @@ class LoginController extends Controller
             return $fail('bad_password', $user);
         }
 
+        // ---- port↔role lock: har panel sirf apne port par khulta hai ----
+        $family = PortMap::familyFor((int) $request->getPort());
+        if (in_array($family, ['whm', 'cpanel'], true)) {
+            $mode = ModuleCatalog::modeFor($user);
+            if ($mode !== $family) {
+                LoginAttempt::query()->create([
+                    'username' => $username, 'ip' => $ip, 'success' => false, 'reason' => 'wrong_port',
+                ]);
+                Audit::log('auth.login_wrong_port', 'warning', 'user', $user->id, [
+                    'port' => $request->getPort(), 'needs' => $mode,
+                ]);
+
+                return redirect()->to(PortMap::loginUrl($mode))->withErrors([
+                    'username' => sprintf('Aapka panel port %d par khulta hai — wahan login karein.', PortMap::portFor($mode)),
+                ]);
+            }
+        }
+
         // ---- success -------------------------------------------------------
         Auth::login($user, remember: false);              // no "remember me" (panel policy)
         $request->session()->regenerate();
@@ -108,3 +131,4 @@ class LoginController extends Controller
         return redirect()->route('login');
     }
 }
+
