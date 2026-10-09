@@ -101,10 +101,10 @@
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
 | 43 | Visitors | Latest Apache access log | S11 | ⏳ S11 |
-| 44 | Errors | Latest error log | S11 | 🟡 D7 (installer ready) |
+| 44 | Errors | Latest error log | S11 | ✅ LIVE (D7) |
 | 45 | Bandwidth | Monthly bandwidth | S11 | ⏳ S11 |
-| 46 | Raw Access | Download raw logs | S11 | 🟡 D7 (installer ready) |
-| 47 | Awstats | Full stats (geo, browsers) | S11 | 🟡 D7 (view/bars v1) |
+| 46 | Raw Access | Download raw logs | S11 | ✅ LIVE (D7) |
+| 47 | Awstats | Full stats (geo, browsers) | S11 | ✅ LIVE (D7, bars v1) |
 | 48 | Webalizer | Second stats engine | S11 | ⏳ S11 |
 | 49 | Webalizer FTP | FTP stats | S11 | ⏳ S11 |
 | 50 | Analog Stats | Third stats engine | S11 | ⏳ S11 |
@@ -154,7 +154,7 @@
 | 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 | ✅ D6c LIVE |
 | 80 | MIME Types | Custom MIME | S5 | ⏳ S5 | ✅ D6c LIVE |
 | 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 | ✅ D6c LIVE |
-| 82 | Network Tools | Ping/traceroute/lookup | S11 | 🟡 D7 (DNS lookup v1) |
+| 82 | Network Tools | Ping/traceroute/lookup | S11 | ✅ LIVE (D7, DNS lookup v1) |
 | 83 | Terminal | Browser SSH (jailed) | S6 | ⏳ S6 |
 | 84 | Hotlink Protection | Image hotlink block | S13 | ⏳ S13 |
 | 85 | Site IP Address | Account IP info | S3 | ⏳ S3 |
@@ -241,7 +241,7 @@
 ### Email (server-wide)
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 141 | Mail Queue Manager | S7 | ⏳ S7 |
+| 141 | Mail Queue Manager | S7 | 🟡 D8 (installer ready) |
 | 142 | Mail Delivery Reports | S7 | ⏳ S7 |
 | 143 | Exim Configuration Manager | S7 | ⏳ S7 |
 | 144 | Mailserver Configuration (Dovecot) | S7 | ⏳ S7 |
@@ -263,7 +263,7 @@
 |---|---|---|---|
 | 153 | **cPHulk Brute Force Protection** | S13 | ⏳ S13 |
 | 154 | Host Access Control | S13 | ⏳ S13 |
-| 155 | Configure Security Policies | S13 | ⏳ S13 |
+| 155 | Configure Security Policies | S13 | 🟡 D8 (posture page v1) |
 | 156 | Password Strength Configuration | S13 | ⏳ S13 |
 | 157 | Security Advisor | S13 | ⏳ S13 |
 | 158 | Security Questions | S13 | ⏳ S13 |

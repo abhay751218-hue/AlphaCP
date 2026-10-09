@@ -79,7 +79,7 @@ File Manager upload/zip/chmod (`files.set` me ops add karne honge)
 | **D6b** | UI pass 2: Files + Security groups (Images, Privacy, Disk, FTP, WebDisk, BackupWiz, Git, FileRest, Trash, Indexes, SSH, IP Blocker, API Tokens, Audit) | views-only | ✅ DEPLOYED LIVE 09 Oct |
 | **D6c** | UI pass 3: Software/Advanced + WHM pages | views-only | ✅ DEPLOYED LIVE 09 Oct |
 | **D7** | Metrics real: graphs (CSS/JS charts), Raw Access viewer, Visitors | views+JS | medium |
-| **D8** | Service Manager restart + Mail Queue + ModSecurity UI (waf tasks) | agent+panel | medium |
+| **D8** | ✅ BUILT: Mail Queue Manager + Security Policies (service restart = agent change, deferred) | panel-only | done |
 | **D9** | Webmail (Roundcube+SSO) + phpMyAdmin app + Terminal interactive | bada — server install | high |
 | **D10** | 1-click App Installer (WordPress) UI + 2FA + Branding/Customization | mixed | medium |
 
@@ -95,11 +95,11 @@ kuch me agent task) chahiye, isliye ye UI-wave me nahi, apni feature-wave me aay
 
 | Tile | Step | Kis wave me banega |
 |---|---|---|
-| Errors (error log viewer) | S11 | ✅ D7 BUILT — installer ready |
-| Raw Access (raw logs download) | S11 | ✅ D7 BUILT |
-| Awstats (visitor graphs) | S11 | ✅ D7 BUILT (bars v1) |
-| Network Tools (dig/trace) | S11 | ✅ D7 BUILT (DNS lookup v1) |
-| Security Policies | S13 | **D8** (security wave) |
+| Errors (error log viewer) | S11 | ✅ LIVE (D7) |
+| Raw Access (raw logs download) | S11 | ✅ LIVE (D7) |
+| Awstats (visitor graphs) | S11 | ✅ LIVE (D7, bars v1) |
+| Network Tools (dig/trace) | S11 | ✅ LIVE (D7, DNS lookup v1) |
+| Security Policies | S13 | ✅ D8 BUILT (posture page v1) — installer ready |
 | Node.js Selector | S14 | **D10** (software wave) |
 | PHP Composer | S14 | **D10** |
 | Updates (panel self-update UI) | S15 | **D10** |
