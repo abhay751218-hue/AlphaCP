@@ -61,8 +61,8 @@ cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
     <div class="side-brand">
         <span class="logo">A</span>
         <span>
-            {{ config('acp.brand.name', 'AlphaCP') }} {{ ($panelMode ?? 'cpanel') === 'whm' ? 'WHM' : 'cPanel' }}
-            <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : 'Account Panel' }} · {{ config('acp.version') }}</small>
+            {{ config('acp.brand.name', 'AlphaCP') }}
+            <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'WHM · Server Manager' : 'cPanel · Account Panel' }} · {{ config('acp.version') }}</small>
         </span>
     </div>
     @if (($panelMode ?? 'cpanel') === 'whm')
@@ -140,15 +140,20 @@ cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
 (function () {
     var b = document.getElementById('acp-nav-toggle');
     if (!b) { return; }
-    b.addEventListener('click', function () {
+    b.addEventListener('click', function (e) {
+        e.stopPropagation();
         var open = document.body.classList.toggle('nav-open');
         b.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
     document.addEventListener('click', function (e) {
         if (!document.body.classList.contains('nav-open')) { return; }
-        if (e.target.closest && e.target.closest('.side, .topbar')) { return; }
+        if (e.target.closest && e.target.closest('.sidenav, .mainbar, #acp-nav-toggle')) { return; }
         document.body.classList.remove('nav-open');
         b.setAttribute('aria-expanded', 'false');
+    });
+    document.addEventListener('click', function (e) {
+        var c = e.target.closest ? e.target.closest('.sect-head .chev') : null;
+        if (c && c.closest('.sect-card')) { c.closest('.sect-card').classList.toggle('collapsed'); }
     });
 })();
 </script>
@@ -703,11 +708,29 @@ svg.hico { width: 15px; height: 15px; }
   .page-head h1 { font-size: 20px; }
   .page-head p { font-size: 13px; }
 }
+
+/* DESIGN-PARITY v2.2 — brand-first + collapsible Jupiter section cards */
+.wm-sub { text-align: center; color: rgba(255,255,255,.62); font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; margin: -18px 0 24px; }
+.sect-card { padding: 0; overflow: hidden; }
+.sect-head {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  border-bottom: 1px solid var(--jup-line); background: #fff;
+}
+.sect-head h3 { margin: 0; display: flex; align-items: center; gap: 8px; }
+.sect-head .count { color: #7a8a99; font-size: 12px; }
+.sect-head .chev {
+  margin-left: auto; background: none; border: 0; color: #7a8a99; font-size: 14px;
+  cursor: pointer; padding: 4px 6px; transition: transform .15s ease;
+}
+.sect-card.collapsed .chev { transform: rotate(-90deg); }
+.sect-card.collapsed .sect-body { display: none; }
+.sect-card.collapsed .sect-head { border-bottom-color: transparent; }
+.sect-body { padding: 12px; background: #fff; }
 PEOF
 cat > "${PANEL}/resources/views/dashboard-whm.blade.php" <<'PEOF'
 @extends('layouts.panel')
 
-@section('title', 'WHM — Server Manager Dashboard')
+@section('title', config('acp.brand.name','AlphaCP').' WHM — Server Manager Dashboard')
 @section('subtitle', 'Server health, accounts, packages — customer sites are not created on this page; they use the account panel')
 
 @section('actions')
@@ -827,7 +850,7 @@ PEOF
 cat > "${PANEL}/resources/views/dashboard-cpanel.blade.php" <<'PEOF'
 @extends('layouts.panel')
 
-@section('title', 'cPanel — Account Panel')
+@section('title', config('acp.brand.name','AlphaCP').' cPanel — Account Panel')
 @section('subtitle', 'Files, email, domains, databases — ye aapka hosting control panel hai')
 
 @section('actions')
@@ -976,15 +999,17 @@ cat > "${PANEL}/resources/views/partials/dash-sections.blade.php" <<'PEOF'
     @php
         $liveCount = collect($section['items'])->where('status', 'live')->count();
     @endphp
-    <div class="section-title">
-        <h2>{{ $section['label'] }}</h2>
-        <span class="count">{{ $liveCount }} live / {{ count($section['items']) }}</span>
-    </div>
-
-    <div class="grid tiles">
-        @foreach ($section['items'] as $item)
-            @include('partials.tile', ['item' => $item])
-        @endforeach
+    <div class="card mt sect-card">
+        <div class="sect-head">
+            <h3>@include('partials.icons', ['icon' => $section['icon'] ?? $key, 'cls' => 'hico']) {{ $section['label'] }}</h3>
+            <span class="count">{{ $liveCount }} live / {{ count($section['items']) }}</span>
+            <button class="chev" type="button" aria-label="Toggle section">▾</button>
+        </div>
+        <div class="sect-body grid tiles">
+            @foreach ($section['items'] as $item)
+                @include('partials.tile', ['item' => $item])
+            @endforeach
+        </div>
     </div>
 @endforeach
 PEOF
@@ -1101,7 +1126,26 @@ cat > "${PANEL}/resources/views/partials/whm-sidebar.blade.php" <<'PEOF'
 PEOF
 cat > "${PANEL}/resources/views/partials/icons.blade.php" <<'PEOF'
 {{-- cPanel-jaisa clean stroke-SVG icon set (emoji nahi). Usage: @include('partials.icons', ['icon'=>'mail']) --}}
-@switch($icon ?? 'folder')
+@php
+    $__known = ['folder','mail','globe','database','shield','cog','user','disk','chip','gauge','queue','audit','box','lock','clock','home','services','plug','target','chart','server'];
+    $ico = $icon ?? 'folder';
+    if (!in_array($ico, $__known, true)) {
+        switch (true) {
+            case (bool) preg_match('/sec|auth|shield|pass|hotlink|modsec|firewall|block/', $ico): $ico = 'shield'; break;
+            case (bool) preg_match('/user|account|reseller|contact|session/', $ico):            $ico = 'user'; break;
+            case (bool) preg_match('/mail|email|forward|autorespon|filter|spam|deliver/', $ico): $ico = 'mail'; break;
+            case (bool) preg_match('/dns|zone|domain|park|redirect|ssl|route/', $ico):           $ico = 'globe'; break;
+            case (bool) preg_match('/db|mysql|database|postgres|sql/', $ico):                    $ico = 'database'; break;
+            case (bool) preg_match('/stat|metric|chart|awstat|bandwidth|usage|monitor/', $ico):  $ico = 'chart'; break;
+            case (bool) preg_match('/package|box|backup|archive|transfer/', $ico):               $ico = 'box'; break;
+            case (bool) preg_match('/service|daemon|process|queue|cron|task|reboot/', $ico):     $ico = 'services'; break;
+            case (bool) preg_match('/config|setting|tweak|php|software|plugin|theme/', $ico):    $ico = 'cog'; break;
+            case (bool) preg_match('/log|audit|report/', $ico):                                  $ico = 'audit'; break;
+            default: $ico = 'chip'; break;
+        }
+    }
+@endphp
+@switch($ico)
     @case('folder')
         <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
         @break
@@ -1159,6 +1203,15 @@ cat > "${PANEL}/resources/views/partials/icons.blade.php" <<'PEOF'
     @case('target')
         <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"/><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/><path d="M12 11.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1z"/></svg>
         @break
+    @case('chart')
+        <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V6"/><path d="M4 20h16"/><path d="M8 16v-5"/><path d="M12 16V8"/><path d="M16 16v-3"/></svg>
+        @break
+    @case('box')
+        <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l9-4 9 4v8l-9 4-9-4z"/><path d="M3 8l9 4 9-4"/><path d="M12 12v8"/></svg>
+        @break
+    @case('server')
+        <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>
+        @break
     @default
         <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
 @endswitch
@@ -1196,7 +1249,8 @@ cat > "${PANEL}/resources/views/layouts/guest.blade.php" <<'PEOF'
 <body>
 <div class="auth-wrap">
     <div class="auth-card">
-        <div class="wm-mark">@yield('wordmark', 'AlphaCP')</div>
+        <div class="wm-mark">@yield('wordmark', config('acp.brand.name', 'AlphaCP'))</div>
+        <div class="wm-sub">@yield('wordmark-sub', 'Control Panel')</div>
 
         <div class="card">
             @include('partials.flash', [])
@@ -1216,7 +1270,9 @@ cat > "${PANEL}/resources/views/auth/login.blade.php" <<'PEOF'
 
 @section('title', 'Login')
 
-@section('wordmark', 'AlphaCP '.((($portFamily ?? null) === 'whm') ? 'WHM' : ((($portFamily ?? null) === 'cpanel') ? 'cPanel' : '')))
+@section('wordmark', config('acp.brand.name', 'AlphaCP'))
+
+@section('wordmark-sub', (($portFamily ?? null) === 'whm') ? 'WHM · Server Manager' : ((($portFamily ?? null) === 'cpanel') ? 'cPanel · Account Panel' : 'Control Panel'))
 
 @section('content')
     <h1>{{ ($portFamily ?? null) === 'whm' ? 'WHM Login' : (($portFamily ?? null) === 'cpanel' ? 'cPanel Login' : 'Panel Login') }}</h1>

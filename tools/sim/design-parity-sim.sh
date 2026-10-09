@@ -43,6 +43,10 @@ t "tile icon chip"            grep -q 'tchip' "$V/partials/tile.blade.php"
 t "whm login wordmark"      grep -q 'wm-mark' "$V/layouts/guest.blade.php"
 t "whm login blue btn"      grep -q '29a9e0' "$FAKE/home/panel/public/assets/panel.css"
 t "mobile dark mainbar"     grep -q 'mainbar .crumb { display: none' "$FAKE/home/panel/public/assets/panel.css"
+t "drawer click fix"         grep -q '.sidenav, .mainbar, #acp-nav-toggle' "$V/layouts/panel.blade.php"
+t "brand-first wordmark"     grep -q "wordmark', config('acp.brand.name" "$V/layouts/guest.blade.php"
+t "sect cards collapsible"   grep -q 'sect-card' "$V/partials/dash-sections.blade.php"
+t "icon keyword fallback"    grep -q "case('chart')" "$V/partials/icons.blade.php"
 
 B="$(ls -dt "$FAKE/home"/releases/design-parity-* | head -1)"
 sleep 1

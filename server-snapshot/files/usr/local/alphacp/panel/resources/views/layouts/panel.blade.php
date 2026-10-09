@@ -15,8 +15,8 @@
     <div class="side-brand">
         <span class="logo">A</span>
         <span>
-            {{ config('acp.brand.name', 'AlphaCP') }} {{ ($panelMode ?? 'cpanel') === 'whm' ? 'WHM' : 'cPanel' }}
-            <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : 'Account Panel' }} · {{ config('acp.version') }}</small>
+            {{ config('acp.brand.name', 'AlphaCP') }}
+            <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'WHM · Server Manager' : 'cPanel · Account Panel' }} · {{ config('acp.version') }}</small>
         </span>
     </div>
     @if (($panelMode ?? 'cpanel') === 'whm')
@@ -94,15 +94,20 @@
 (function () {
     var b = document.getElementById('acp-nav-toggle');
     if (!b) { return; }
-    b.addEventListener('click', function () {
+    b.addEventListener('click', function (e) {
+        e.stopPropagation();
         var open = document.body.classList.toggle('nav-open');
         b.setAttribute('aria-expanded', open ? 'true' : 'false');
     });
     document.addEventListener('click', function (e) {
         if (!document.body.classList.contains('nav-open')) { return; }
-        if (e.target.closest && e.target.closest('.side, .topbar')) { return; }
+        if (e.target.closest && e.target.closest('.sidenav, .mainbar, #acp-nav-toggle')) { return; }
         document.body.classList.remove('nav-open');
         b.setAttribute('aria-expanded', 'false');
+    });
+    document.addEventListener('click', function (e) {
+        var c = e.target.closest ? e.target.closest('.sect-head .chev') : null;
+        if (c && c.closest('.sect-card')) { c.closest('.sect-card').classList.toggle('collapsed'); }
     });
 })();
 </script>

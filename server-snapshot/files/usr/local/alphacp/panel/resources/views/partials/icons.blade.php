@@ -1,5 +1,24 @@
 {{-- cPanel-jaisa clean stroke-SVG icon set (emoji nahi). Usage: @include('partials.icons', ['icon'=>'mail']) --}}
-@switch($icon ?? 'folder')
+@php
+    $__known = ['folder','mail','globe','database','shield','cog','user','disk','chip','gauge','queue','audit','box','lock','clock','home','services','plug','target','chart','server'];
+    $ico = $icon ?? 'folder';
+    if (!in_array($ico, $__known, true)) {
+        switch (true) {
+            case (bool) preg_match('/sec|auth|shield|pass|hotlink|modsec|firewall|block/', $ico): $ico = 'shield'; break;
+            case (bool) preg_match('/user|account|reseller|contact|session/', $ico):            $ico = 'user'; break;
+            case (bool) preg_match('/mail|email|forward|autorespon|filter|spam|deliver/', $ico): $ico = 'mail'; break;
+            case (bool) preg_match('/dns|zone|domain|park|redirect|ssl|route/', $ico):           $ico = 'globe'; break;
+            case (bool) preg_match('/db|mysql|database|postgres|sql/', $ico):                    $ico = 'database'; break;
+            case (bool) preg_match('/stat|metric|chart|awstat|bandwidth|usage|monitor/', $ico):  $ico = 'chart'; break;
+            case (bool) preg_match('/package|box|backup|archive|transfer/', $ico):               $ico = 'box'; break;
+            case (bool) preg_match('/service|daemon|process|queue|cron|task|reboot/', $ico):     $ico = 'services'; break;
+            case (bool) preg_match('/config|setting|tweak|php|software|plugin|theme/', $ico):    $ico = 'cog'; break;
+            case (bool) preg_match('/log|audit|report/', $ico):                                  $ico = 'audit'; break;
+            default: $ico = 'chip'; break;
+        }
+    }
+@endphp
+@switch($ico)
     @case('folder')
         <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
         @break
@@ -56,6 +75,15 @@
         @break
     @case('target')
         <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"/><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"/><path d="M12 11.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1z"/></svg>
+        @break
+    @case('chart')
+        <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V6"/><path d="M4 20h16"/><path d="M8 16v-5"/><path d="M12 16V8"/><path d="M16 16v-3"/></svg>
+        @break
+    @case('box')
+        <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8l9-4 9 4v8l-9 4-9-4z"/><path d="M3 8l9 4 9-4"/><path d="M12 12v8"/></svg>
+        @break
+    @case('server')
+        <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>
         @break
     @default
         <svg class="{{ $cls ?? 'ico' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
