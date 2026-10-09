@@ -14,7 +14,19 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-_D17 (look-parity: WHM tiles + FM toolbar + login polish + apps grid) build ho raha hai — command yahan aayegi._
+### D17 — Look parity: WHM-style tiles + File Manager toolbar + Apps grid
+
+SSH se `sudo -i` karke root prompt par:
+
+```bash
+cd /root && rm -rf AlphaCP-d17 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d17 && cd AlphaCP-d17 && echo "b784303fbea509463dda29c45779ca06c7032e15a0cd4f449491fadc68e36d5a  installer/d17-look-parity.sh" | sha256sum -c - && bash installer/d17-look-parity.sh
+```
+
+Kya milega:
+- 2087 Dashboard: Quick links ke neeche **icon TILES grid** (WHM home jaisa)
+- 2083 File Manager: upar **toolbar** — Upload / New Folder / New File / Rename buttons
+- 2083 Site Software: **app tiles grid** (Softaculous jaisa)
+- Rollback stamp: `bak-d17look-…`
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 
