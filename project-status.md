@@ -49,7 +49,7 @@
 | D13-NODEJS-APPS | Phase-2: Node.js App Manager (PM2-style) — agent node.list/setup/control (systemd units alphacp-node-<user>-<app>, Restart=always, log tail) + Setup Node.js App page (create/start/stop/restart/remove) | ✅ DEPLOYED 09 Oct (user-confirmed, backups bak-d13node-20261009164655; node v20.20.2) |
 | D14-PARITY-GAPS | Phase-2: mailbox Suspend/Unsuspend + DNS AAAA/MX-priority + db.user.revoke + FIX: email.update & zone-editor.update routes wapas | ✅ DEPLOYED 09 Oct (user-confirmed, backups bak-d14parity-20261009165725) |
 | D15-FILEMGR | File Manager: Upload (64 MB staging) + Compress/Extract (.tar.gz) + chmod + php upload limits | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed (bak-d15fm-20261009171411) |
-| D16-BRANDING | AlphaCP-only branding sweep (login/dashboards/footer/sidebar/ports/subtitles) + progress-card removal | 🟡 BUILT — sims green, deploy pending |
+| D16-BRANDING | AlphaCP-only branding sweep + progress-card removal | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed (bak-d16brand-20261009174013) |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |

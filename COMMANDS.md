@@ -14,7 +14,11 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D16 — AlphaCP-only branding + progress-card removal
+_D17 (look-parity: WHM tiles + FM toolbar + login polish + apps grid) build ho raha hai — command yahan aayegi._
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✔️ D16 (DEPLOYED 09 Oct 2026 — backups bak-d16brand-20261009174013) — AlphaCP-only branding + progress-card removal
 
 SSH se `sudo -i` karke root prompt par:
 
@@ -30,7 +34,6 @@ Kya milega (15 views):
 
 (Note: agar sha256 FAIL bole to pehle `git log -1 --format=%H` se commit 13f4c30df9c6148fe46b10b4075afdd2a363daf6 confirm karo.)
 
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✔️ D15 (DEPLOYED 09 Oct 2026 — backups bak-d15fm-20261009171411; FINAL wave) — File Manager plus: Upload + Compress/Extract + chmod (FINAL parity wave)
 
