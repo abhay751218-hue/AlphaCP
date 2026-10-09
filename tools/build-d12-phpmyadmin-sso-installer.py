@@ -22,7 +22,7 @@ import subprocess
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "refs" / "live-theme-fix"
 OUT = ROOT / "installer" / "d12-phpmyadmin-sso.sh"
-VERSION = "1.0"
+VERSION = "1.1"
 
 FILES = [
     ("d12-agent-tasks.php", "AGENT:config/tasks.php"),
@@ -208,6 +208,51 @@ if [[ "${{LIVE_SRV}}" -eq 1 ]]; then
       || die "apt-get install phpmyadmin FAIL — log dekho. (Abhi tak KUCH install nahi hua, panel 100% safe)"
     [[ -f "${{PMA_ROOT}}/index.php" ]] || die "apt chala par ${{PMA_ROOT}}/index.php nahi mila"
     ok "phpMyAdmin installed via apt: ${{PMA_ROOT}}"
+  fi
+  # --- v1.1: PHP CLI guard — apt naya PHP laakar /usr/bin/php switch kar deta hai
+  #     (v1.0 fail yahi tha: php8.5 aaya, pdo_mysql gayab, paneld crash-loop)
+  if /usr/bin/php -m 2>/dev/null | grep -qix 'pdo_mysql'; then
+    ok "php CLI pdo_mysql OK ($(readlink -f /usr/bin/php))"
+  else
+    warn "/usr/bin/php ($(readlink -f /usr/bin/php)) me pdo_mysql NAHI — alternatives restore karte hain"
+    PHP_FIXED=0
+    for pv in php8.4 php8.3 php8.2; do
+      if [[ -x "/usr/bin/${{pv}}" ]] && "/usr/bin/${{pv}}" -m 2>/dev/null | grep -qix 'pdo_mysql'; then
+        update-alternatives --set php "/usr/bin/${{pv}}" >>"${{LOG_FILE}}" 2>&1 || true
+        if /usr/bin/php -m 2>/dev/null | grep -qix 'pdo_mysql'; then
+          ok "php alternative -> ${{pv}} (pdo_mysql wapas)"
+          PHP_FIXED=1
+          break
+        fi
+      fi
+    done
+    [[ "${{PHP_FIXED}}" -eq 1 ]] || die "kisi php binary me pdo_mysql nahi — paneld nahi chalega (AlphaCP files abhi install NAHI hui, panel safe)"
+  fi
+  # paneld unit ko exact php par pin karo (future apt switch se bachao)
+  PHP_REAL="$(readlink -f /usr/bin/php)"
+  if grep -q "ExecStart=/usr/bin/php " /etc/systemd/system/paneld.service 2>/dev/null; then
+    sed -i.bak-d12pma "s|ExecStart=/usr/bin/php |ExecStart=${{PHP_REAL}} |" /etc/systemd/system/paneld.service
+    systemctl daemon-reload
+    ok "paneld unit pinned: ${{PHP_REAL}} (ab apt kabhi tod nahi payega)"
+  fi
+  # fpm extensions ensure (phpMyAdmin ko mysqli/mbstring chahiye)
+  for pv in 8.4 8.3; do
+    if systemctl is-active --quiet "php${{pv}}-fpm" 2>/dev/null; then
+      apt-get install -y "php${{pv}}-mysql" "php${{pv}}-mbstring" "php${{pv}}-zip" >>"${{LOG_FILE}}" 2>&1 \
+        && ok "php${{pv}}-fpm extensions ensure (mysql/mbstring/zip)" || warn "php${{pv}} extensions warn (non-fatal)"
+      break
+    fi
+  done
+  # paneld crash-loop recovery (v1.0 fail ke baad) — restart gate wapas ON
+  if [[ "${{PANELD_WAS_ACTIVE}}" -ne 1 ]]; then
+    systemctl restart paneld >>"${{LOG_FILE}}" 2>&1 || true
+    sleep 2
+    if systemctl is-active paneld >/dev/null 2>&1; then
+      PANELD_WAS_ACTIVE=1
+      ok "paneld recover ho gaya (restart gate wapas ON)"
+    else
+      die "paneld active nahi ho pa raha — 'sudo systemctl status paneld' dekho (AlphaCP files abhi install NAHI hui)"
+    fi
   fi
 fi
 
