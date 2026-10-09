@@ -89,9 +89,9 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 37 | MySQL® Databases | DB + users + privileges + Users column + custom password | S8 | 🟡 D3 (installer ready; revoke = D3.5 agent change) |
+| 37 | MySQL® Databases | DB + users + privileges + Users column + custom password | S8 | ✅ D3 LIVE (09 Oct 2026; revoke = D3.5) |
 | 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 |
-| 39 | phpMyAdmin | Preference + client-connect card | S8 | 🟡 D3 (app/SSO = later wave) |
+| 39 | phpMyAdmin | Preference + client-connect card | S8 | ✅ D3 LIVE (09 Oct 2026; app/SSO later) |
 | 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
 | 42 | PostgreSQL Wizard | 🔵 optional module | post-v1 | 🔵 |
@@ -192,8 +192,8 @@
 ### Account Functions / Information
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 104 | Create a New Account | S3 | ⏳ S3 |
-| 105 | List Accounts | S3 | 🟡 WHM home pe accounts table live (09 Oct); full page S3 |
+| 104 | Create a New Account | S3 | 🟡 D4 (installer ready — WHM-order form, autofill, generator) |
+| 105 | List Accounts | S3 | 🟡 D4 (installer ready — stats, search, quick suspend) |
 | 106 | Modify an Account | S3 | ⏳ S3 |
 | 107 | Suspend / Unsuspend (Manage Account Suspension) | S3 | ⏳ S3 |
 | 108 | Terminate Accounts | S3 | ⏳ S3 |

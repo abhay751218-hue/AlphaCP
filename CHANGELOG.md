@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 
+### Added — Depth Wave D4: WHM Create Account + List Accounts + Packages (09 Oct 2026)
+- `installer/d4-whm-fix.sh` v1.0 (builder: `tools/build-d4-whm-installer.py`) — 4 files, views+JS only (no controllers/routes/DB); install & rollback sims green.
+- Create a New Account: WHM field-order (Domain → Username auto-suggest), password Generate + strength meter + Show, package select with limits summary, provisioning/policy info cards.
+- List Accounts: stats strip (total/active/suspended/live), search, quick Suspend/Unsuspend actions, Manage button, domain links.
+- Packages: stats strip, search, Addon/Sub column, feature-list badges, "Add a Package".
+- `panel.js` v1.4: WHM-style domain → username autofill (`data-autofill-username`).
+
 ### Added — Depth Wave D3: MySQL Databases + Users + phpMyAdmin (09 Oct 2026)
 - `installer/d3-mysql-fix.sh` v1.0 (builder: `tools/build-d3-mysql-installer.py`) — 6 files, no routes/migrations; install & rollback sims green.
 - MysqlUsersController: optional USER-CHOSEN password (alnum 10–64, SQL-literal safe) on create + change-password; blank = strong random; shown once either way.

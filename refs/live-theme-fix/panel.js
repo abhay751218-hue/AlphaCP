@@ -297,3 +297,27 @@
     applyZoneType();
   }
 })();
+
+/* ===== AlphaCP panel.js v1.4 additions (D4: WHM create account) ========= */
+(function () {
+  'use strict';
+
+  /* WHM-style: typing the domain suggests a username (until user edits it) */
+  document.querySelectorAll('[data-autofill-username]').forEach(function (domainInput) {
+    var target = document.querySelector(domainInput.getAttribute('data-autofill-username'));
+    if (!target) return;
+    var touched = target.value !== '';
+    target.addEventListener('input', function () { touched = true; });
+    domainInput.addEventListener('input', function () {
+      if (touched) return;
+      var label = domainInput.value.trim().toLowerCase().split('.')[0] || '';
+      label = label.replace(/^www$/, '');
+      if (label === '') {
+        var parts = domainInput.value.trim().toLowerCase().split('.');
+        label = parts.length > 1 ? parts[1] : '';
+      }
+      label = label.replace(/[^a-z0-9]/g, '').replace(/^[0-9]+/, '');
+      target.value = label.slice(0, 16);
+    });
+  });
+})();
