@@ -12,7 +12,7 @@ Type=simple
 User=root
 Group=root
 Environment=ACP_HOME=/usr/local/alphacp
-ExecStart=/usr/bin/php /usr/local/alphacp/agent/bin/paneld --daemon
+ExecStart=/usr/bin/php8.4 /usr/local/alphacp/agent/bin/paneld --daemon
 Restart=always
 RestartSec=3
 TimeoutStopSec=20

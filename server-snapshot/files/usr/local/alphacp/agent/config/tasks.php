@@ -77,6 +77,27 @@ return [
         ],
     ],
 
+    'service.restart' => [
+        'handler'     => Tasks\ServiceRestart::class,
+        'safety'      => 'mutating',
+        'timeout'     => 90,
+        'description' => 'WHM Restart Services: systemctl restart for allowlisted hosting services only.',
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['service'],
+            'properties'           => [
+                'service' => ['type' => 'string', 'maxLength' => 60],
+            ],
+        ],
+        // The ONLY services the agent will ever restart. paneld is excluded on
+        // purpose (restart via SSH only) — the agent must never kill itself.
+        'services'    => [
+            'apache2', 'nginx', 'mariadb', 'redis-server', 'bind9', 'fail2ban',
+            'exim4', 'dovecot', 'clamav-daemon', 'opendkim', 'pure-ftpd',
+        ],
+    ],
+
     // ---------------------------------------------------------------------
     //  ACCOUNTS (Step 3)
     // ---------------------------------------------------------------------
@@ -964,6 +985,75 @@ return [
             'properties'           => [
                 'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
                 'enabled'  => ['type' => 'boolean'],
+            ],
+        ],
+    ],
+
+    'db.pmaSignon' => [
+        'handler'     => Tasks\PmaSignon::class,
+        'safety'      => 'mutating',
+        'timeout'     => 40,
+        'description' => 'phpMyAdmin one-click SSO: rotate pma_<account> MariaDB user (random password, grants only on account DBs).',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+            ],
+        ],
+    ],
+
+    'node.list' => [
+        'handler'     => Tasks\NodeAppList::class,
+        'safety'      => 'readonly',
+        'timeout'     => 30,
+        'description' => 'List the account Node.js apps (PM2-style): state, PID, port, log tail.',
+        'paths'       => ['/home', '/etc/systemd/system', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+            ],
+        ],
+    ],
+
+    'node.setup' => [
+        'handler'     => Tasks\NodeAppSetup::class,
+        'safety'      => 'mutating',
+        'timeout'     => 90,
+        'description' => 'Setup Node.js App (cPanel-style): app dir + sample entry + systemd unit (Restart=always) + start.',
+        'paths'       => ['/home', '/etc/systemd/system', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'name'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'name'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{0,15}$', 'maxLength' => 16],
+                'entry'    => ['type' => 'string', 'pattern' => '^[a-z0-9][a-z0-9._-]{0,30}\\.(js|mjs|cjs)$', 'maxLength' => 35],
+                'port'     => ['type' => 'integer', 'minimum' => 3000, 'maximum' => 3999],
+            ],
+        ],
+    ],
+
+    'node.control' => [
+        'handler'     => Tasks\NodeAppControl::class,
+        'safety'      => 'mutating',
+        'timeout'     => 90,
+        'description' => 'Control a Node.js app: start/stop/restart/remove — only alphacp-node-<user>-<app> units.',
+        'paths'       => ['/home', '/etc/systemd/system', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'name', 'action'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'name'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{0,15}$', 'maxLength' => 16],
+                'action'   => ['type' => 'string', 'enum' => ['start', 'stop', 'restart', 'remove']],
             ],
         ],
     ],

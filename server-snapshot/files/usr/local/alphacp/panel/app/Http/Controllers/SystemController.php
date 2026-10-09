@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Support\Audit;
 use App\Support\Panel;
 use App\Support\Paneld;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** Server information, service status and the task-queue monitor (WHM-style). */
+/** Server information, service status/restart and the task-queue monitor (WHM-style). */
 class SystemController extends Controller
 {
     public function index(): View
@@ -25,9 +28,46 @@ class SystemController extends Controller
 
     public function services(): View
     {
+        $registry = Paneld::registry();
+
         return view('system.services', [
-            'services' => Paneld::run('service.status', [], 12)['services'] ?? [],
+            'services'    => Paneld::run('service.status', [], 12)['services'] ?? [],
+            'restartable' => (array) ($registry['service.restart']['services'] ?? []),
+            'canRestart'  => isset($registry['service.restart']),
         ]);
+    }
+
+    /** D11 — WHM "Restart Services": agent allowlist se validate + audit. */
+    public function restartService(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'service' => ['required', 'string', 'max:60'],
+        ]);
+
+        $registry  = Paneld::registry();
+        $allowlist = (array) ($registry['service.restart']['services'] ?? []);
+
+        if (! isset($registry['service.restart'])) {
+            return redirect()->route('system.services')
+                ->withErrors(['service' => 'Agent par service.restart task nahi hai — paneld update/restart chahiye.']);
+        }
+        if (! in_array($data['service'], $allowlist, true)) {
+            return redirect()->route('system.services')
+                ->withErrors(['service' => 'Ye service restart allowlist me nahi hai.']);
+        }
+
+        $res = Paneld::run('service.restart', ['service' => $data['service']], 75);
+        Audit::log('service.restart', 'warning', 'system', null, ['service' => $data['service'], 'ok' => (bool) ($res['ok'] ?? false)]);
+
+        if (is_array($res) && (bool) ($res['ok'] ?? false)) {
+            return redirect()->route('system.services')
+                ->with('success', $data['service'] . ' restart ho gaya — state: ' . (string) ($res['active'] ?? 'active'));
+        }
+
+        $why = is_array($res) ? (string) ($res['error'] ?? 'agent ne fail bataya') : 'agent se jawab nahi mila (timeout)';
+
+        return redirect()->route('system.services')
+            ->withErrors(['service' => $data['service'] . ' restart FAIL — ' . $why]);
     }
 
     public function tasks(): View

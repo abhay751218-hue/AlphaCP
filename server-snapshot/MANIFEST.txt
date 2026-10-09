@@ -1,6 +1,9 @@
 /usr/local/alphacp/agent/README.md
 /usr/local/alphacp/agent/bin/paneld
 /usr/local/alphacp/agent/config/tasks.php
+/usr/local/alphacp/agent/config/tasks.php.bak-d11restart-20261009160034
+/usr/local/alphacp/agent/config/tasks.php.bak-d12pma-20261009162458
+/usr/local/alphacp/agent/config/tasks.php.bak-d13node-20261009164655
 /usr/local/alphacp/agent/src/AccountIdentity.php
 /usr/local/alphacp/agent/src/AccountOs.php
 /usr/local/alphacp/agent/src/AccountPaths.php
@@ -120,15 +123,22 @@
 /usr/local/alphacp/agent/src/Tasks/MimeTypesSet.php
 /usr/local/alphacp/agent/src/Tasks/MysqlSet.php
 /usr/local/alphacp/agent/src/Tasks/NameserverSet.php
+/usr/local/alphacp/agent/src/Tasks/NodeAppControl.php
+/usr/local/alphacp/agent/src/Tasks/NodeAppList.php
+/usr/local/alphacp/agent/src/Tasks/NodeAppSetup.php
+/usr/local/alphacp/agent/src/Tasks/NodeTask.php
 /usr/local/alphacp/agent/src/Tasks/NsReportSet.php
 /usr/local/alphacp/agent/src/Tasks/ParkSet.php
 /usr/local/alphacp/agent/src/Tasks/PhpSetIni.php
 /usr/local/alphacp/agent/src/Tasks/PhpSetVersion.php
 /usr/local/alphacp/agent/src/Tasks/PhpmyadminSet.php
+/usr/local/alphacp/agent/src/Tasks/PmaSignon.php
+/usr/local/alphacp/agent/src/Tasks/PmaSignon.php.bak-d12pma-20261009162458
 /usr/local/alphacp/agent/src/Tasks/PortsApply.php
 /usr/local/alphacp/agent/src/Tasks/PrivacySet.php
 /usr/local/alphacp/agent/src/Tasks/RemoteMysqlSet.php
 /usr/local/alphacp/agent/src/Tasks/SecurityTask.php
+/usr/local/alphacp/agent/src/Tasks/ServiceRestart.php
 /usr/local/alphacp/agent/src/Tasks/ServiceStatus.php
 /usr/local/alphacp/agent/src/Tasks/SshSet.php
 /usr/local/alphacp/agent/src/Tasks/SslIssue.php
@@ -172,6 +182,8 @@
 /usr/local/alphacp/etc/my.cnf
 /usr/local/alphacp/etc/panel-vhost.template
 /usr/local/alphacp/etc/panel.env
+/usr/local/alphacp/etc/pma-sso-internal.url
+/usr/local/alphacp/etc/pma-sso.secret
 /usr/local/alphacp/etc/ports.json
 /usr/local/alphacp/etc/webmail-internal.url
 /usr/local/alphacp/etc/webmail-master.plain
@@ -300,6 +312,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/NameserverSelectionController.php
 /usr/local/alphacp/panel/app/Http/Controllers/NetworkToolsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/NodejsSelectorController.php
+/usr/local/alphacp/panel/app/Http/Controllers/NodejsSelectorController.php.bak-d13node-20261009164655
 /usr/local/alphacp/panel/app/Http/Controllers/NsReportController.php
 /usr/local/alphacp/panel/app/Http/Controllers/OptimizeController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PackagesController.php
@@ -307,6 +320,9 @@
 /usr/local/alphacp/panel/app/Http/Controllers/PhpController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PhpIniController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PhpmyadminController.php
+/usr/local/alphacp/panel/app/Http/Controllers/PhpmyadminController.php.bak-d12pma-20261009162458
+/usr/local/alphacp/panel/app/Http/Controllers/PmaSsoController.php
+/usr/local/alphacp/panel/app/Http/Controllers/PmaSsoController.php.bak-d12pma-20261009162458
 /usr/local/alphacp/panel/app/Http/Controllers/PortsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PrivacyController.php
 /usr/local/alphacp/panel/app/Http/Controllers/RawAccessController.php
@@ -320,6 +336,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/SshController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SslController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SystemController.php
+/usr/local/alphacp/panel/app/Http/Controllers/SystemController.php.bak-d11restart-20261009160034
 /usr/local/alphacp/panel/app/Http/Controllers/TerminalController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TerminalController.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/app/Http/Controllers/TrackDeliveryController.php
@@ -689,6 +706,7 @@
 /usr/local/alphacp/panel/resources/views/nameserver-selection/index.blade.php
 /usr/local/alphacp/panel/resources/views/network-tools/index.blade.php
 /usr/local/alphacp/panel/resources/views/nodejs/index.blade.php
+/usr/local/alphacp/panel/resources/views/nodejs/index.blade.php.bak-d13node-20261009164655
 /usr/local/alphacp/panel/resources/views/ns-report/index.blade.php
 /usr/local/alphacp/panel/resources/views/optimize/index.blade.php
 /usr/local/alphacp/panel/resources/views/optimize/index.blade.php.bak-d6csoft-20261009124856
@@ -711,6 +729,7 @@
 /usr/local/alphacp/panel/resources/views/php/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/php/ini.blade.php
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php
+/usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d12pma-20261009162458
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/resources/views/ports/index.blade.php
 /usr/local/alphacp/panel/resources/views/ports/index.blade.php.bak-d6csoft-20261009124856
@@ -737,6 +756,7 @@
 /usr/local/alphacp/panel/resources/views/ssl/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/system/index.blade.php
 /usr/local/alphacp/panel/resources/views/system/services.blade.php
+/usr/local/alphacp/panel/resources/views/system/services.blade.php.bak-d11restart-20261009160034
 /usr/local/alphacp/panel/resources/views/system/tasks.blade.php
 /usr/local/alphacp/panel/resources/views/terminal/index.blade.php
 /usr/local/alphacp/panel/resources/views/terminal/index.blade.php.bak-d9termweb-20261009154216
@@ -764,6 +784,9 @@
 /usr/local/alphacp/panel/routes/console.php
 /usr/local/alphacp/panel/routes/web.php
 /usr/local/alphacp/panel/routes/web.php.bak-d10final-20261009154757
+/usr/local/alphacp/panel/routes/web.php.bak-d11restart-20261009160034
+/usr/local/alphacp/panel/routes/web.php.bak-d12pma-20261009162458
+/usr/local/alphacp/panel/routes/web.php.bak-d13node-20261009164655
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d7metrics-20261009130206

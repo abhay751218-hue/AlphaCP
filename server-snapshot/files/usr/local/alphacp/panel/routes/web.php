@@ -668,6 +668,28 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:system.view')->name('updates.index');
 });
 // ---- /D10 ----
+// ---- D11: Restart Services (WHM) ----
+Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
+    Route::post('/system/services/restart', [\App\Http\Controllers\SystemController::class, 'restartService'])
+        ->middleware('perm:system.manage')->name('system.services.restart');
+});
+// ---- /D11 ----
+// ---- D12: phpMyAdmin one-click SSO ----
+Route::get('/internal/pma-sso', [\App\Http\Controllers\PmaSsoController::class, 'verify'])
+    ->middleware('throttle:60,1')->name('internal.pma-sso');
+Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
+    Route::post('/phpmyadmin/open', [\App\Http\Controllers\PhpmyadminController::class, 'open'])
+        ->middleware('perm:databases.view')->name('phpmyadmin.open');
+});
+// ---- /D12 ----
+// ---- D13: Node.js App Manager (PM2-style) ----
+Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
+    Route::post('/nodejs/apps', [\App\Http\Controllers\NodejsSelectorController::class, 'store'])
+        ->middleware('perm:software.manage')->name('nodejs.apps.store');
+    Route::post('/nodejs/apps/control', [\App\Http\Controllers\NodejsSelectorController::class, 'control'])
+        ->middleware('perm:software.manage')->name('nodejs.apps.control');
+});
+// ---- /D13 ----
 // ---- WHM API 1 compatible (billing integration, Bearer token) ----
 Route::prefix('json-api')->middleware([\App\Http\Middleware\EnsureApiToken::class])->group(function (): void {
     Route::get('/listaccts', [\App\Http\Controllers\WhmApiController::class, 'listaccts']);

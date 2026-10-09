@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'phpMyAdmin')
-@section('subtitle', 'Database browser access preference')
+@section('subtitle', 'One-click database browser — cPanel jaisa SSO, password nahi poochta')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('mysql.index') }}">Databases</a>
@@ -19,18 +19,35 @@
 </div>
 @else
 
+@if (session('success'))
+    <div class="card mb"><p class="help" style="margin:0">✅ {{ session('success') }}</p></div>
+@endif
+@if ($errors->any())
+    <div class="card mb"><p class="empty" style="margin:0">⚠️ {{ $errors->first() }}</p></div>
+@endif
+
 <div class="grid cols-2">
     <div class="card">
         <h3>@include('partials.icons', ['icon' => 'database', 'cls' => 'hico']) phpMyAdmin — {{ $account->username }}</h3>
         <p style="margin:10px 0 4px">Status:
             <span class="badge {{ $enabled ? 'green' : 'amber' }}">{{ $enabled ? 'enabled' : 'disabled' }}</span>
+            · SSO: <span class="badge {{ $ssoReady ? 'green' : 'amber' }}">{{ $ssoReady ? 'ready' : 'agent update chahiye' }}</span>
+            · Port: <span class="badge blue mono">{{ $pmaPort }}</span>
         </p>
-        <p class="help">Preference JSON <span class="mono">~/etc/mysql/phpmyadmin.json</span> me sync hoti hai.
-            phpMyAdmin app + one-click SSO agle update me aayega — tab tak neeche wale connection
-            details se koi bhi MySQL client (HeidiSQL, DBeaver, TablePlus, mysql CLI) use karo.</p>
+        @if ($enabled && $ssoReady)
+            <form method="post" action="{{ route('phpmyadmin.open') }}" class="mt">
+                @csrf
+                <button class="btn" type="submit">🗄️ Open phpMyAdmin</button>
+            </form>
+            <p class="help" style="margin:8px 0 0">Password nahi poochega — 10-minute ka one-time SSO token banta hai,
+                aur access sirf tumhare apne databases par hota hai (<span class="mono">pma_{{ $account->username }}</span>,
+                har click par password rotate).</p>
+        @elseif (! $enabled)
+            <p class="help" style="margin:10px 0 0">Pehle neeche <strong>Access preference</strong> me Enable karke Save karo.</p>
+        @endif
     </div>
     <div class="card">
-        <h3>@include('partials.icons', ['icon' => 'plug', 'cls' => 'hico']) Connect via client</h3>
+        <h3>@include('partials.icons', ['icon' => 'plug', 'cls' => 'hico']) Ya kisi client se connect karo</h3>
         <dl class="kv">
             <dt>Host</dt><dd class="mono">localhost <span class="muted">(ya server IP — Remote MySQL allow karke)</span></dd>
             <dt>Port</dt><dd class="mono">3306</dd>
