@@ -14,7 +14,12 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D12 — phpMyAdmin app + one-click SSO (v1.0)
+### D12 — phpMyAdmin app + one-click SSO (v1.1)
+
+> ⚠️ v1.0 deploy fail hua tha (09 Oct 21:42): apt ne PHP 8.5 laakar `/usr/bin/php`
+> switch kar diya, pdo_mysql gayab, paneld crash-loop — rollback ne panel bacha liya.
+> v1.1 me PHP CLI guard hai: pdo_mysql check + alternatives restore + paneld unit
+> ko exact php par pin + crash-loop recovery. v1.0 command dobara MAT chalao.
 
 Ye command **asli phpMyAdmin** install karti hai (apt se, port **2098**) aur
 cPanel-jaisa **one-click login** jodti hai — Databases → phpMyAdmin → *Open
@@ -25,12 +30,13 @@ restart gate ke saath), nginx vhost `nginx -t` gate ke saath — kuch bhi fail
 to **full auto-rollback**.
 
 ```bash
-sudo alphacp-sync get 67bb91085ee7aa17dccc60357dcc2d2251ded48a installer/d12-phpmyadmin-sso.sh /tmp/d12-phpmyadmin-sso-v1.0.sh 4589300155e4baf5890ad0618378eca2ccd5048dae98855ca40a2e2b1a260dfa && sudo bash /tmp/d12-phpmyadmin-sso-v1.0.sh
+sudo alphacp-sync get e38cd66f095112a6d33f2f217441de016a7bb412 installer/d12-phpmyadmin-sso.sh /tmp/d12-phpmyadmin-sso-v1.1.sh 72d1929efc188158922ed964666e9ebabd8ca1d3e71acf66974ccd9811c10708 && sudo bash /tmp/d12-phpmyadmin-sso-v1.1.sh
 ```
 
 Expected output (short):
 - `-- Step 1: pre-check --` → health 3×200, paneld active, nginx active (LIVE mode)
 - `-- Step 1b: phpMyAdmin app (apt) --` → `[OK] phpMyAdmin installed via apt` (ya "pehle se installed")
+- v1.1 guard: `[OK] php CLI pdo_mysql OK` (ya `php alternative -> php8.4`) + `[OK] paneld unit pinned` + `[OK] paneld recover ho gaya` (agar crash-loop tha)
 - `-- Step 1c: secrets + pma config glue --` → pma-sso.secret + blowfish + conf.d include
 - `-- Step 2: install (9 files, backup ke saath) --` → 9× `[OK] installed` (backups `.bak-d12pma-<stamp>`)
 - `-- Step 3b: paneld restart --` → `[OK] paneld restarted — db.pmaSignon task ab live`
