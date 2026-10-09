@@ -2,7 +2,9 @@
 
 @section('title', 'Login')
 
-@section('wordmark', 'AlphaCP '.((($portFamily ?? null) === 'whm') ? 'WHM' : ((($portFamily ?? null) === 'cpanel') ? 'cPanel' : '')))
+@section('wordmark', config('acp.brand.name', 'AlphaCP'))
+
+@section('wordmark-sub', (($portFamily ?? null) === 'whm') ? 'WHM · Server Manager' : ((($portFamily ?? null) === 'cpanel') ? 'cPanel · Account Panel' : 'Control Panel'))
 
 @section('content')
     <h1>{{ ($portFamily ?? null) === 'whm' ? 'WHM Login' : (($portFamily ?? null) === 'cpanel' ? 'cPanel Login' : 'Panel Login') }}</h1>

@@ -545,3 +545,21 @@ svg.hico { width: 15px; height: 15px; }
   .page-head h1 { font-size: 20px; }
   .page-head p { font-size: 13px; }
 }
+
+/* DESIGN-PARITY v2.2 — brand-first + collapsible Jupiter section cards */
+.wm-sub { text-align: center; color: rgba(255,255,255,.62); font-size: 12px; letter-spacing: 1.4px; text-transform: uppercase; margin: -18px 0 24px; }
+.sect-card { padding: 0; overflow: hidden; }
+.sect-head {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+  border-bottom: 1px solid var(--jup-line); background: #fff;
+}
+.sect-head h3 { margin: 0; display: flex; align-items: center; gap: 8px; }
+.sect-head .count { color: #7a8a99; font-size: 12px; }
+.sect-head .chev {
+  margin-left: auto; background: none; border: 0; color: #7a8a99; font-size: 14px;
+  cursor: pointer; padding: 4px 6px; transition: transform .15s ease;
+}
+.sect-card.collapsed .chev { transform: rotate(-90deg); }
+.sect-card.collapsed .sect-body { display: none; }
+.sect-card.collapsed .sect-head { border-bottom-color: transparent; }
+.sect-body { padding: 12px; background: #fff; }

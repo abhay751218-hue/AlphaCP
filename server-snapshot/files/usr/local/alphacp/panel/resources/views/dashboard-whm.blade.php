@@ -1,6 +1,6 @@
 @extends('layouts.panel')
 
-@section('title', 'WHM — Server Manager Dashboard')
+@section('title', config('acp.brand.name','AlphaCP').' WHM — Server Manager Dashboard')
 @section('subtitle', 'Server health, accounts, packages — customer sites are not created on this page; they use the account panel')
 
 @section('actions')

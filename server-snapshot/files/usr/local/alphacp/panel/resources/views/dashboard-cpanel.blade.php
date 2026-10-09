@@ -1,6 +1,6 @@
 @extends('layouts.panel')
 
-@section('title', 'cPanel — Account Panel')
+@section('title', config('acp.brand.name','AlphaCP').' cPanel — Account Panel')
 @section('subtitle', 'Files, email, domains, databases — ye aapka hosting control panel hai')
 
 @section('actions')
