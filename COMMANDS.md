@@ -14,6 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### d5-tools-fix v1.0 — Depth Wave D5 (FINAL): Cron presets + SSL + File Manager + DARK MODE (09 Oct 2026)
+Cron Jobs me cPanel "Common Settings" presets (Once Per Minute se Once Per Year tak — select
+karo, 5 fields khud bhar jati hain). SSL/TLS: secured/attention stats + expiry warning badges.
+File Manager: breadcrumbs + icons + filter + editor. Aur sabse mazedaar: **DARK MODE** — topbar
+me chand/sooraj button, dono panels me, choice saved rehti hai. 6 files (4 views + panel.js
+v1.5 + panel.css v3.3) — koi controller/routes/DB change NAHI. Backup + auto-rollback.
+```bash
+sudo alphacp-sync get a0d496ad1561ed36347440241df0db263456d4d4 installer/d5-tools-fix.sh /tmp/d5-tools-fix-v1.0.sh cab610594f874219850ed7ac9c115c91363fb60256884c224dbf87c836e0c710 && sudo bash /tmp/d5-tools-fix-v1.0.sh
+```
+- sha256: `cab610594f874219850ed7ac9c115c91363fb60256884c224dbf87c836e0c710`
+- Expected: banner `v1.0` → pre-check 3×200 → 6× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D5 TOOLS DEPTH FIX COMPLETE ✅`
+- Phir 2083 → Cron Jobs / SSL/TLS / File Manager hard-refresh + topbar 🌙 button dabao
+- Rollback: `*.bak-d5tools-<stamp>` files `/usr/local/alphacp/panel` me
+
 ### d4-whm-fix v1.0 — Depth Wave D4: WHM Create Account + List Accounts + Packages (09 Oct 2026)
 WHM side ab real WHM jaisa: Create a New Account me Domain pehle (username auto-suggest),
 password Generate + strength meter, package select me limits summary. List Accounts: stats
