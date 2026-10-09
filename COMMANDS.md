@@ -14,7 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### Abhi KOI deploy command nahi — sirf health/status check (09 Oct 2026)
+### theme-fix v1.0 — LIVE PANEL ka cPanel-company look + 2 layout bugs fix (09 Oct 2026)
+Design errors fix: client dashboard ka toota layout (extra div), WHM sidebar ka white-box bug,
+aur 5 conflicting CSS layers ki jagah EK clean cPanel-grade theme (dark sidenav + orange #FF6C2C).
+Sirf 3 files badalti hain — DB/composer/migration kuch NahI. Backup + auto-rollback built-in.
+```bash
+sudo alphacp-sync get 8e815e4ee54a25685904be16691d9e8063edec99 installer/theme-fix.sh /tmp/theme-fix-v1.0.sh 5afd4dd2bc02880dd1568faff52a2b74630223e5387a2c33302988c575903739 && sudo bash /tmp/theme-fix-v1.0.sh
+```
+- sha256: `5afd4dd2bc02880dd1568faff52a2b74630223e5387a2c33302988c575903739`
+- Expected: banner `v1.0` → pre-check 3×200 → 3× `installed` → `view cache cleared` → health 3×200 → `==> THEME FIX COMPLETE ✅`
+- Phir browser me **hard refresh** (Ctrl+Shift+R): `https://<ip>:2083` + `https://<ip>:2087`
+- Agar health fail ho jaye: script KHUD rollback kar deta hai (panel pehle jaisa)
+- Manual rollback kabhi bhi: `*.bak-themefix-<stamp>` files panel me hain
+
+### Health/status check (kabhi bhi)
 Server already aage hai: **panel 0.75.0 (Step 5)** + **alphacp-sync v1.5** + HTTP 200.
 Naya theme/demo kaam (PR #9 — WHM/reseller panels, demo images) **repo-side** hai; server pe
 chalane ke liye abhi kuch nahi. Status dekhna ho to:
