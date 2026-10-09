@@ -2495,6 +2495,7 @@ return [
             'properties'           => [
                 'action' => ['type' => 'string', 'enum' => ['apply', 'status']],
             ],
+            'required'             => ['action'],
         ],
     ],
 
@@ -3434,11 +3435,12 @@ fi
 # ---- 8) agent suite ----
 hdr "AGENT SUITE — full run (current era)"
 set +e
-SUITE_OUT="$(cd "${AGENT}" && "$PHP_BIN" tests/run-tests.php 2>&1 | tail -6)"
+SUITE_FULL="$(cd "${AGENT}" && "$PHP_BIN" tests/run-tests.php 2>&1)"
 SUITE_RC=$?
 set -e
-echo "$SUITE_OUT" | sed 's/^/  · /'
-{ [[ "$SUITE_RC" -eq 0 ]] && echo "$SUITE_OUT" | grep -q "failed: 0"; } || { rollback; die "agent suite fail (rc=${SUITE_RC}, output upar)"; }
+echo "$SUITE_FULL" | tail -4 | sed 's/^/  · /'
+echo "$SUITE_FULL" | grep -a -A2 "^  FAIL" | head -24 | sed 's/^/  ! /'
+{ [[ "$SUITE_RC" -eq 0 ]] && echo "$SUITE_FULL" | grep -q "failed: 0"; } || { rollback; die "agent suite fail (rc=${SUITE_RC}, FAIL lines upar)"; }
 ok "agent suite GREEN"
 cd - >/dev/null 2>&1 || true
 

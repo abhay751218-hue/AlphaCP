@@ -1128,6 +1128,7 @@ return [
             'properties'           => [
                 'action' => ['type' => 'string', 'enum' => ['apply', 'status']],
             ],
+            'required'             => ['action'],
         ],
     ],
 
