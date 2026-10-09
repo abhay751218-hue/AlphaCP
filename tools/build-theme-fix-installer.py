@@ -19,13 +19,16 @@ import subprocess
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "refs" / "live-theme-fix"
 OUT = ROOT / "installer" / "theme-fix.sh"
-VERSION = "1.1"
+VERSION = "1.2"
 
 FILES = [
     ("panel.css", "public/assets/panel.css"),
+    ("panel.js", "public/assets/panel.js"),
     ("panel-layout.blade.php", "resources/views/layouts/panel.blade.php"),
     ("dashboard-cpanel.blade.php", "resources/views/dashboard-cpanel.blade.php"),
     ("whm-sidebar.blade.php", "resources/views/partials/whm-sidebar.blade.php"),
+    ("icons.blade.php", "resources/views/partials/icons.blade.php"),
+    ("tile.blade.php", "resources/views/partials/tile.blade.php"),
 ]
 
 blocks = []
@@ -45,7 +48,7 @@ script = r'''#!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — THEME FIX v{VER}  (live panel 0.75.x line · 09 Oct 2026)
 #
-# Kya karta hai (sirf 4 files — koi DB/composer/migration NAHI):
+# Kya karta hai (7 files — koi DB/composer/migration NAHI):
 #   1. public/assets/panel.css                    -> DESIGN-PARITY v3 (clean cPanel-company theme:
 #                                                    dark charcoal sidenav + orange #FF6C2C + white cards;
 #                                                    5 purani conflicting CSS layers ki jagah EK coherent file)
@@ -57,6 +60,11 @@ script = r'''#!/usr/bin/env bash
 #   4. resources/views/layouts/panel.blade.php  -> body.mode-cpanel/mode-whm class (cPanel=LIGHT,
 #                                                    WHM=DARK — ab dono alag dikhte hain) + hamburger
 #                                                    menu JS capture-phase rewrite (ab pakka chalega)
+#   v1.2 ROOT-CAUSE FIX: CSP `script-src 'self'` saara INLINE JS block karta tha
+#   (isliye hamburger/menu/search kabhi nahi chalte the) -> saara JS ab EXTERNAL
+#   public/assets/panel.js me (CSP-safe, security strict hi rehti hai).
+#   + icons.blade.php v2: 36 distinct product icons + naam-se mapping
+#   + tile.blade.php: tool ke naam/route se sahi icon (pehle sab 'folder' the)
 # Safety: har file ka backup (.bak-themefix-<stamp>) -> install -> view:clear ->
 #         health check https 8090/2083/2087 == 200 -> fail par AUTO-ROLLBACK.
 # =============================================================================
@@ -84,26 +92,39 @@ __PAYLOADS__
 install_one() {{
   local rel="$1" sha="$2" b64="$3"
   local dst="${{PANEL_ROOT}}/${{rel}}"
-  [[ -f "${{dst}}" ]] || die "target missing: ${{dst}}"
+  local is_new=0
+  [[ -f "${{dst}}" ]] || is_new=1
   local tmp="${{dst}}.new-${{STAMP}}"
   printf '%s' "${{b64}}" | base64 -d > "${{tmp}}" || die "decode fail: ${{rel}}"
   local got; got="$(sha256sum "${{tmp}}" | awk '{{print $1}}')"
   [[ "${{got}}" == "${{sha}}" ]] || {{ rm -f "${{tmp}}"; die "sha256 mismatch: ${{rel}} (${{got}})"; }}
-  cp -a "${{dst}}" "${{dst}}.bak-themefix-${{STAMP}}"
-  chown --reference="${{dst}}" "${{tmp}}" 2>/dev/null || true
-  chmod --reference="${{dst}}" "${{tmp}}" 2>/dev/null || true
+  if [[ "${{is_new}}" -eq 0 ]]; then
+    cp -a "${{dst}}" "${{dst}}.bak-themefix-${{STAMP}}"
+    chown --reference="${{dst}}" "${{tmp}}" 2>/dev/null || true
+    chmod --reference="${{dst}}" "${{tmp}}" 2>/dev/null || true
+  else
+    chown --reference="${{PANEL_ROOT}}/public/assets/panel.css" "${{tmp}}" 2>/dev/null || true
+    chmod 0644 "${{tmp}}" 2>/dev/null || true
+  fi
   mv -f "${{tmp}}" "${{dst}}"
-  ok "installed: ${{rel}}  (backup: $(basename "${{dst}}").bak-themefix-${{STAMP}})"
+  if [[ "${{is_new}}" -eq 0 ]]; then
+    ok "installed: ${{rel}}  (backup: $(basename "${{dst}}").bak-themefix-${{STAMP}})"
+  else
+    ok "installed (NEW): ${{rel}}"
+  fi
 }}
 
 rollback() {{
   warn "ROLLBACK shuru..."
   local rel dst
-  for rel in "${{F0_PATH}}" "${{F1_PATH}}" "${{F2_PATH}}" "${{F3_PATH}}"; do
+  for rel in __ROLLBACK_LIST__; do
     dst="${{PANEL_ROOT}}/${{rel}}"
     if [[ -f "${{dst}}.bak-themefix-${{STAMP}}" ]]; then
       mv -f "${{dst}}.bak-themefix-${{STAMP}}" "${{dst}}"
       warn "restored: ${{rel}}"
+    elif [[ "${{rel}}" == "public/assets/panel.js" && -f "${{dst}}" ]]; then
+      rm -f "${{dst}}"
+      warn "removed (was new): ${{rel}}"
     fi
   done
   clear_views
@@ -139,11 +160,8 @@ say "${{C_B}}-- Step 1: pre-check --${{C_0}}"
 health || die "panel pehle se unhealthy hai — pehle panel-doctor chalao, phir theme fix"
 
 say ""
-say "${{C_B}}-- Step 2: install (4 files, backup ke saath) --${{C_0}}"
-install_one "${{F0_PATH}}" "${{F0_SHA}}" "${{F0_B64}}"
-install_one "${{F1_PATH}}" "${{F1_SHA}}" "${{F1_B64}}"
-install_one "${{F2_PATH}}" "${{F2_SHA}}" "${{F2_B64}}"
-install_one "${{F3_PATH}}" "${{F3_SHA}}" "${{F3_B64}}"
+say "${{C_B}}-- Step 2: install (7 files, backup ke saath) --${{C_0}}"
+__INSTALL_LINES__
 
 say ""
 say "${{C_B}}-- Step 3: view cache clear --${{C_0}}"
@@ -167,6 +185,10 @@ say "    — theme-fix v${{THEME_FIX_VERSION}}"
 script = script.replace("{", "{").replace("}", "}")
 script = script.replace("\x00", "{").replace("\x01", "}")
 script = script.replace("__PAYLOADS__", "\n\n".join(payload_vars))
+install_lines = "\n".join(f'install_one "${{F{i}_PATH}}" "${{F{i}_SHA}}" "${{F{i}_B64}}"' for i in range(len(FILES)))
+rollback_list = " ".join(f'"${{F{i}_PATH}}"' for i in range(len(FILES)))
+script = script.replace("__INSTALL_LINES__", install_lines)
+script = script.replace("__ROLLBACK_LIST__", rollback_list)
 
 OUT.write_text(script)
 OUT.chmod(0o755)

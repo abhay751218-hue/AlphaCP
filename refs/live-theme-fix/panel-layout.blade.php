@@ -64,62 +64,7 @@
 </footer>
 </div>
 
-<script>
-/* cPanel-style top search: dashboard ke tool tiles live filter karta hai. */
-(function () {
-    var q = document.getElementById('acp-search');
-    if (!q) { return; }
-    q.addEventListener('input', function () {
-        var v = q.value.trim().toLowerCase();
-        document.querySelectorAll('.grid.tiles').forEach(function (grid) {
-            var visible = 0;
-            grid.querySelectorAll('.tile').forEach(function (tile) {
-                var name = tile.querySelector('.name');
-                var hit = v === '' || (name && name.textContent.toLowerCase().indexOf(v) !== -1);
-                tile.classList.toggle('hidden', !hit);
-                if (hit) { visible++; }
-            });
-            var head = grid.previousElementSibling;
-            if (head && head.classList.contains('section-title')) {
-                head.classList.toggle('hidden', visible === 0 && v !== '');
-            }
-        });
-    });
-})();
-</script>
-<script>
-/* P-UI-5.2: mobile hamburger — capture-phase delegation (bulletproof).
-   #acp-nav-toggle tap -> body.nav-open toggle; sidebar ke bahar tap / Escape /
-   backdrop tap -> close. Capture phase isliye ki koi aur handler
-   stopPropagation() kar de to bhi ye hamesha chale. */
-(function () {
-    function isOpen() { return document.body.classList.contains('nav-open'); }
-    function setOpen(open) {
-        document.body.classList.toggle('nav-open', open);
-        var b = document.getElementById('acp-nav-toggle');
-        if (b) { b.setAttribute('aria-expanded', open ? 'true' : 'false'); }
-    }
-    document.addEventListener('click', function (e) {
-        var t = e.target && e.target.closest ? e.target.closest('#acp-nav-toggle') : null;
-        if (t) { e.preventDefault(); setOpen(!isOpen()); return; }
-        if (!isOpen()) { return; }
-        if (e.target.closest && e.target.closest('.sidenav')) { return; }
-        setOpen(false);
-    }, true);
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && isOpen()) { setOpen(false); }
-    });
-    /* sidebar link tap -> drawer band (mobile UX) */
-    document.addEventListener('click', function (e) {
-        var a = e.target && e.target.closest ? e.target.closest('.sidenav a[href]') : null;
-        if (a && isOpen()) { setOpen(false); }
-    });
-    /* collapsible section cards */
-    document.addEventListener('click', function (e) {
-        var c = e.target.closest ? e.target.closest('.sect-head .chev') : null;
-        if (c && c.closest('.sect-card')) { c.closest('.sect-card').classList.toggle('collapsed'); }
-    });
-})();
-</script>
+
+<script src="{{ asset('assets/panel.js') }}?v={{ @filemtime(public_path('assets/panel.js')) ?: config('acp.version') }}" defer></script>
 </body>
 </html>
