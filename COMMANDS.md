@@ -14,7 +14,25 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D14 — Parity Gaps: suspend + AAAA/MX-prio + revoke + 2 ROUTE FIX (v1.0)
+### D15 — File Manager plus: Upload + Compress/Extract + chmod (FINAL parity wave)
+
+SSH se root banke ye chalao:
+
+```bash
+cd /root && rm -rf AlphaCP-d15 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d15 && cd AlphaCP-d15 && git checkout bb18732c941d78c19cf5c721baf44528ba8b26cb -- installer/d15-filemanager-plus.sh && echo "4fda14632883e96f44b701a244f81b9d525c27cce8943fae3f725e1a5abfdf65  installer/d15-filemanager-plus.sh" | sha256sum -c - && sudo bash installer/d15-filemanager-plus.sh
+```
+
+Kya milega:
+- File Manager me **Upload card** (64 MB tak, ownership account user ki)
+- Har file/folder row par **chmod dropdown**, **Compress (.tar.gz)**, **Extract** buttons
+- nginx `client_max_body_size 64m` + php-fpm upload limits (backup + nginx -t gate ke saath)
+- Rollback: script ke end me backup stamp print hota hai (`bak-d15fm-…`)
+
+Check: 2083 panel hard-refresh → Files → File Manager.
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✔️ D14 (DEPLOYED 09 Oct 2026 — backups bak-d14parity-20261009165725) — Parity Gaps: suspend + AAAA/MX-prio + revoke + 2 ROUTE FIX (v1.0)
 
 Deferred items ("ek bhi nahi chutna chahiye") + ek **important bug fix**:
 - **Email Accounts**: har mailbox par **Suspend/Unsuspend** (login band, data/mail safe — cPanel style)
@@ -38,7 +56,6 @@ Test (browser, hard-refresh):
 2. Zone Editor → type dropdown me **AAAA**; MX add karo value `10 mail.<domain>` se
 3. MySQL Users → **Revoke User From Database** → user ka access us DB se hat jayega (Task Queue me db.user.revoke)
 
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### D13 — Node.js App Manager v1.0 ✅ (09 Oct 2026 — DEPLOYED, user-confirmed)
 
