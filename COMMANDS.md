@@ -14,45 +14,42 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D12 — phpMyAdmin app + one-click SSO (v1.1)
+### D13 — Node.js App Manager, PM2-style (v1.0)
 
-> ⚠️ v1.0 deploy fail hua tha (09 Oct 21:42): apt ne PHP 8.5 laakar `/usr/bin/php`
-> switch kar diya, pdo_mysql gayab, paneld crash-loop — rollback ne panel bacha liya.
-> v1.1 me PHP CLI guard hai: pdo_mysql check + alternatives restore + paneld unit
-> ko exact php par pin + crash-loop recovery. v1.0 command dobara MAT chalao.
-
-Ye command **asli phpMyAdmin** install karti hai (apt se, port **2098**) aur
-cPanel-jaisa **one-click login** jodti hai — Databases → phpMyAdmin → *Open
-phpMyAdmin* dabao, password nahi poochega, seedha apne databases khulenge.
-Access sirf apne DBs par (`pma_<account>` user, har click par password rotate,
-10-minute one-time token). Agent me `db.pmaSignon` task judta hai (paneld
-restart gate ke saath), nginx vhost `nginx -t` gate ke saath — kuch bhi fail
-to **full auto-rollback**.
+cPanel ka **"Setup Node.js App"**: app banao (naam + port), wo turant systemd
+unit ke roop me chalti hai — **crash par auto-restart, boot par auto-start**
+(PM2-style), output `~/nodeapps/<app>/app.log` me. Panel se start/stop/restart/
+remove + log tail. Har unit `alphacp-node-<user>-<app>` prefix ke saath —
+system services kabhi touch nahi ho saktin. D12 ka PHP guard isme bhi hai.
 
 ```bash
-sudo alphacp-sync get e38cd66f095112a6d33f2f217441de016a7bb412 installer/d12-phpmyadmin-sso.sh /tmp/d12-phpmyadmin-sso-v1.1.sh 72d1929efc188158922ed964666e9ebabd8ca1d3e71acf66974ccd9811c10708 && sudo bash /tmp/d12-phpmyadmin-sso-v1.1.sh
+sudo alphacp-sync get d0271e0a43c42dcc94697b12c252b8e7c6e1c88f installer/d13-nodejs-apps.sh /tmp/d13-nodejs-apps-v1.0.sh 40a650b2203c60ec79f7c5d7f5ca3cc050ea7013d5fc63747c17b49c4810e37d && sudo bash /tmp/d13-nodejs-apps-v1.0.sh
 ```
 
 Expected output (short):
-- `-- Step 1: pre-check --` → health 3×200, paneld active, nginx active (LIVE mode)
-- `-- Step 1b: phpMyAdmin app (apt) --` → `[OK] phpMyAdmin installed via apt` (ya "pehle se installed")
-- v1.1 guard: `[OK] php CLI pdo_mysql OK` (ya `php alternative -> php8.4`) + `[OK] paneld unit pinned` + `[OK] paneld recover ho gaya` (agar crash-loop tha)
-- `-- Step 1c: secrets + pma config glue --` → pma-sso.secret + blowfish + conf.d include
-- `-- Step 2: install (9 files, backup ke saath) --` → 9× `[OK] installed` (backups `.bak-d12pma-<stamp>`)
-- `-- Step 3b: paneld restart --` → `[OK] paneld restarted — db.pmaSignon task ab live`
-- `-- Step 3c: nginx vhost (port 2098) + firewall --` → `[OK] nginx reloaded — phpMyAdmin :2098 live` + ufw 2098
-- `-- Step 4: health check --` → 3×200 + `[OK] health :2098 (phpMyAdmin SSO shim) -> HTTP 200`
-- `==> D12 PHPMYADMIN + SSO COMPLETE ✅`
+- `-- Step 1: pre-check --` → health 3×200, paneld active, nginx active
+- `-- Step 1b: Node.js ensure + PHP guard --` → `[OK] Node.js ... installed` + `[OK] php CLI pdo_mysql OK`
+- `-- Step 2: install (8 files, backup ke saath) --` → 8× `[OK] installed` (backups `.bak-d13node-<stamp>`)
+- `-- Step 3b: paneld restart --` → `[OK] paneld restarted — node.list/node.setup/node.control ab live`
+- `-- Step 4: health check --` → 3×200 → `==> D13 NODE.JS APP MANAGER COMPLETE ✅`
 
-Test (browser, hard-refresh Ctrl+Shift+R):
-1. `https://13.207.123.177:2083` → Databases → **phpMyAdmin**
-2. Access preference **Enabled** + Save (agar off hai)
-3. **🗄️ Open phpMyAdmin** dabao → naya tab `:2098` par — **bina password** phpMyAdmin khulega, sirf tumhare databases dikhenge
-4. WHM → Audit Log me `db.pma.sso` entry
+Test (browser, hard-refresh):
+1. `https://13.207.123.177:2083` → Software → **Node.js Selector / Setup Node.js App**
+2. App name `demo`, port `3000` → **Create & Start** → status `active` + PID dikhega
+3. Log tail kholo — "AlphaCP node app listening on 3000"
+4. Stop/Restart/Remove buttons try karo — Audit Log me entries
 
-Rollback kabhi bhi: `*.bak-d12pma-<stamp>` files apni jagah par hain; vhost disable = `sudo rm /etc/nginx/sites-enabled/alphacp-pma.conf && sudo nginx -t && sudo systemctl reload nginx`
+Note (naye server par bhi yaad rakhna): node.* / db.* tasks ke liye account ka
+ASLI Linux user hona chahiye (GECOS me `AlphaCP` marker). Demo account ke liye:
+`sudo useradd -m -d /home/democust -c "AlphaCP demo" -s /usr/sbin/nologin democust 2>/dev/null; sudo usermod -c "AlphaCP demo" democust`
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
+
+### D12 — phpMyAdmin + One-Click SSO v1.1 ✅ (09 Oct 2026 — DEPLOYED)
+
+Commit `e38cd66f095112a6d33f2f217441de016a7bb412` · sha256 `72d1929efc188158922ed964666e9ebabd8ca1d3e71acf66974ccd9811c10708`
+9 files + apt phpMyAdmin + nginx :2098, backups `*.bak-d12pma-20261009162458`. v1.0 fail (apt ne PHP 8.5 par switch kiya) → v1.1 PHP guard ne fix kiya; paneld unit ab php8.4 par pinned.
+SSO click-test naye server par hoga — demo account me Linux user nahi tha (fix: upar wali useradd command).
 
 ### D11 — WHM Restart Services v1.0 ✅ (09 Oct 2026 — DEPLOYED, user-confirmed)
 
