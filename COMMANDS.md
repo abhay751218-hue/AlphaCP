@@ -14,7 +14,24 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### d7-metrics-tools v1.0 — Depth Wave D7: Errors + Raw Access + Awstats + Network Tools AB KAAM KARTE HAIN (09 Oct 2026)
+### d8-mailqueue-secpol v1.0 — Depth Wave D8: Mail Queue Manager + Security Policies (09 Oct 2026)
+WHM ke 2 naye tools LIVE: **Mail Queue Manager** (exim queue — har message deliver/freeze/thaw/remove,
+poori queue flush) aur **Security Policies** (2FA adoption har user ka, shield services ka asli state,
+enforced policies table). Dashboard counter 98→100. 6 files (2 controllers + 2 views + routes + catalog).
+Backup + auto-rollback.
+```bash
+sudo alphacp-sync get 4b55c0a72612b0a6b94c0bd0bd83745cdf2445ba installer/d8-mailqueue-secpol.sh /tmp/d8-mailqueue-secpol-v1.0.sh 428942357e57858e7c1ca2f8c47dfb27fbf855319cbffa5a2cfb04c43bad6052 && sudo bash /tmp/d8-mailqueue-secpol-v1.0.sh
+```
+- sha256: `428942357e57858e7c1ca2f8c47dfb27fbf855319cbffa5a2cfb04c43bad6052`
+- Expected: banner `v1.0` → pre-check 3×200 → 6× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D8 MAIL QUEUE + SECURITY POLICIES COMPLETE ✅`
+- Phir **2087 (WHM)** hard-refresh (Ctrl+Shift+R) → naya **Email (Server)** section me Mail Queue Manager,
+  **Security Center** me Security Policies ab GREY nahi
+- Test: Security Policies kholo (2FA table + shield services), Mail Queue me "Deliver All Now"
+- Rollback: `*.bak-d8mailsec-<stamp>` files `/usr/local/alphacp/panel` me
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✅ DONE 09 Oct — d7-metrics-tools v1.0 — Depth Wave D7: Errors + Raw Access + Awstats + Network Tools AB KAAM KARTE HAIN (09 Oct 2026)
 Metrics ke 4 naye tools LIVE: **Errors** (error log last 40 lines), **Raw Access** (access log
 last 50 + traffic summary), **Awstats** (visitors/bandwidth/requests stats + top pages bars),
 **Network Tools** (DNS lookup — A/AAAA/MX/NS/TXT/CNAME). Dashboard counter 94→98.
@@ -27,8 +44,6 @@ sudo alphacp-sync get 25c29ca036df7daa039fa6e65fffca42db4e9207 installer/d7-metr
 - Phir 2083 hard-refresh (Ctrl+Shift+R) → Metrics section → Errors / Raw Access / Awstats / Network Tools kholo
 - Network Tools me koi bhi domain daal ke Lookup chalao (e.g. google.com, MX)
 - Rollback: `*.bak-d7metrics-<stamp>` files `/usr/local/alphacp/panel` me
-
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✅ DONE 09 Oct — d6c-software-whm-fix v1.0 — Depth Wave D6c: Software/Advanced + WHM ke 15 pages cPanel-style (09 Oct 2026)
 Software/Advanced + WHM ke 15 tools ab company-jaisa look: **Optimize Website, Site Software,
