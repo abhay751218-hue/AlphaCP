@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 
+### Added — Depth Wave D2: Domains + Zone Editor (09 Oct 2026)
+- `installer/d2-domains-fix.sh` v1.0 (builder: `tools/build-d2-domains-installer.py`) — 5 files, backup + auto-rollback + route:clear; install & rollback sims green.
+- ZoneEditorController: NEW `update()` — record name/value edit (type/zone fixed), dup check, declarative `dns.zone` + BIND zone enqueue.
+- `routes/web.php`: `PUT /zone-editor/{dns_record}` → `zone-editor.update` (perm:dns.manage).
+- Domains view: cPanel-style — stats (addon/sub/alias vs MAXADDON/MAXSUB/MAXPARK), search, type badges, Visit link, Create a New Domain with type radios + live hints + conditional redirect fields.
+- Zone Editor view: cPanel-style — stats, search, per-record Edit expander (PUT), Add Record with type-aware value placeholders (TXT placeholder validator-safe).
+- `panel.js` v1.2: domain-type toggle/hints + zone-type placeholder switcher (CSP-safe external).
+- Out of D2 scope (agent `dns.zone` schema `additionalProperties:false`): TTL, MX priority, AAAA — noted for D2.5.
+
 ### Added — Depth Wave D1: Email Accounts + Forwarders (09 Oct 2026)
 - `installer/d1-email-fix.sh` v1.0 (builder: `tools/build-d1-email-installer.py`) — live 0.75.x hotfix, 6 files, backup + auto-rollback + route:clear + php-fpm reload; install & rollback sims green.
 - MailController: NEW `update()` (quota edit + password change via declarative `mail.set`), per-box disk usage via readonly `mail.usage` (guarded — page never breaks), Connect Devices data.

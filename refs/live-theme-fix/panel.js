@@ -247,3 +247,51 @@
     });
   });
 })();
+
+/* ===== AlphaCP panel.js v1.2 additions (D2: domains + zone editor) ====== */
+(function () {
+  'use strict';
+
+  /* ---- Domains create: type radio -> hint text + redirect fields -------- */
+  var domRadios = document.querySelectorAll('[data-domtype]');
+  if (domRadios.length) {
+    var hintEl = document.querySelector('[data-domtype-hint]');
+    var redirectBox = document.querySelector('[data-redirect-fields]');
+    var domainInput = document.getElementById('domain');
+    var placeholders = {
+      addon: 'example.net',
+      sub: 'blog.' + ((domainInput && domainInput.getAttribute('data-main')) || 'yourdomain.com'),
+      parked: 'alias-domain.com',
+      redirect: 'old-domain.com'
+    };
+    function applyDomType() {
+      var sel = document.querySelector('[data-domtype]:checked');
+      if (!sel) return;
+      var t = sel.value;
+      if (hintEl) {
+        var hint = hintEl.getAttribute('data-hint-' + t);
+        if (hint) hintEl.textContent = hint;
+      }
+      if (redirectBox) {
+        redirectBox.hidden = (t !== 'redirect');
+        var url = redirectBox.querySelector('input[name="redirect_url"]');
+        if (url) url.required = (t === 'redirect');
+      }
+      if (domainInput && placeholders[t]) domainInput.placeholder = placeholders[t];
+    }
+    domRadios.forEach(function (r) { r.addEventListener('change', applyDomType); });
+    applyDomType();
+  }
+
+  /* ---- Zone Editor: record type -> value placeholder -------------------- */
+  var zoneType = document.querySelector('[data-zonetype]');
+  var zoneValue = document.querySelector('[data-zonevalue]');
+  if (zoneType && zoneValue) {
+    function applyZoneType() {
+      var ph = zoneValue.getAttribute('data-ph-' + zoneType.value.toLowerCase());
+      if (ph) zoneValue.placeholder = ph;
+    }
+    zoneType.addEventListener('change', applyZoneType);
+    applyZoneType();
+  }
+})();

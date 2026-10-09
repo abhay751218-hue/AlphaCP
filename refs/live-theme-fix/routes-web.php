@@ -344,6 +344,8 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:dns.manage')->name('zone-editor.store');
     Route::delete('/zone-editor/{dns_record}', [ZoneEditorController::class, 'destroy'])
         ->middleware('perm:dns.manage')->name('zone-editor.destroy');
+    Route::put('/zone-editor/{dns_record}', [ZoneEditorController::class, 'update'])
+        ->middleware('perm:dns.manage')->name('zone-editor.update');
 
     Route::get('/dynamic-dns', [DynamicDnsController::class, 'index'])
         ->middleware('perm:dns.view')->name('dynamic-dns.index');

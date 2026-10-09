@@ -55,8 +55,8 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 13 | Email Accounts | Mailboxes + quota + edit/password + usage + Connect Devices | S7 | 🟡 D1 (installer ready) |
-| 14 | Forwarders | Email forward (cPanel-style list/search/create) | S7 | 🟡 D1 (installer ready) |
+| 13 | Email Accounts | Mailboxes + quota + edit/password + usage + Connect Devices | S7 | ✅ D1 LIVE (09 Oct 2026) |
+| 14 | Forwarders | Email forward (cPanel-style list/search/create) | S7 | ✅ D1 LIVE (09 Oct 2026) |
 | 15 | Email Routing | MX/local routing per domain | S7 | ⏳ S7 |
 | 16 | Autoresponders | Vacation/auto reply | S7 | ⏳ S7 |
 | 17 | Default Address | Catch-all | S7 | ⏳ S7 |
@@ -77,12 +77,12 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 30 | Domains | Overview + actions | S5 | ⏳ S5 |
+| 30 | Domains | Overview + stats vs limits + search + type-aware create | S5 | 🟡 D2 (installer ready) |
 | 31 | Subdomains | sub.domain.com | S5 | ⏳ S5 |
 | 32 | Addon Domains | Extra domain, alag site | S5 | ⏳ S5 |
 | 33 | Aliases (Parked) | Domain aliases | S5 | ⏳ S5 |
 | 34 | Redirects | 301/302 redirect | S5 | ⏳ S5 |
-| 35 | Zone Editor | A/CNAME/MX/TXT/… records | S9 | ⏳ S9 |
+| 35 | Zone Editor | A/CNAME/MX/TXT + record EDIT + type-aware hints | S9 | 🟡 D2 (installer ready; TTL/priority = D2.5 agent change) |
 | 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 |
 
 ### 🗄️ Databases
