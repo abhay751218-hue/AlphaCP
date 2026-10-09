@@ -20,7 +20,9 @@ Naya theme/demo kaam (PR #9 — WHM/reseller panels, demo images) **repo-side** 
 chalane ke liye abhi kuch nahi. Status dekhna ho to:
 ```bash
 sudo alphacp-sync --status                                        # sync setup/timer/last-sync
-curl -s -o /dev/null -w "panel HTTP %{http_code}\n" http://127.0.0.1:8090   # panel health
+curl -k -s -o /dev/null -w "panel HTTP %{http_code}\n" https://127.0.0.1:8090/   # panel health (HTTPS! http:// dene par 400 aata hai)
+curl -k -s -o /dev/null -w "cPanel HTTP %{http_code}\n" https://127.0.0.1:2083/   # client panel port
+curl -k -s -o /dev/null -w "WHM    HTTP %{http_code}\n" https://127.0.0.1:2087/   # WHM port
 sudo alphacp-sync                                                 # (optional) turant snapshot push
 ```
 
