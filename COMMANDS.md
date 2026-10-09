@@ -14,6 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### d3-mysql-fix v1.0 — Depth Wave D3: MySQL Databases + Users + phpMyAdmin cPanel-depth (09 Oct 2026)
+MySQL Users: APNA password choose karo (ya Generate — SQL-safe alnum 10–64), create aur
+change-password dono me; password sirf ek baar dikhega + copy chips. Databases page:
+"Privileged users" column, stats vs MAXSQL, search, connection-settings card. Add User To
+Database (grant) card. phpMyAdmin: status + client-connect card. 6 files (2 controllers +
+3 views + panel.js v1.3) — routes/DB change NAHI. Backup + auto-rollback.
+```bash
+sudo alphacp-sync get c2cb9da1db9595fdc5258a153358254a49445faa installer/d3-mysql-fix.sh /tmp/d3-mysql-fix-v1.0.sh 61a239ab7c42824e4585abe6c1783337ca256708d5cbed775304b6c83a5011f8 && sudo bash /tmp/d3-mysql-fix-v1.0.sh
+```
+- sha256: `61a239ab7c42824e4585abe6c1783337ca256708d5cbed775304b6c83a5011f8`
+- Expected: banner `v1.0` → pre-check 3×200 → 6× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D3 MYSQL DEPTH FIX COMPLETE ✅`
+- Phir 2083 → MySQL Databases / MySQL Users hard-refresh
+- Rollback: `*.bak-d3mysql-<stamp>` files `/usr/local/alphacp/panel` me
+
 ### d2-domains-fix v1.0 — Depth Wave D2: Domains + Zone Editor cPanel-depth (09 Oct 2026)
 Domains page: stats vs package limits, search, type badges + Visit link, Create a New
 Domain (type radio + live hints + redirect fields auto show/hide). Zone Editor: DNS
