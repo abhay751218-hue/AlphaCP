@@ -10,10 +10,7 @@
 <body>
 <div class="auth-wrap">
     <div class="auth-card">
-        <div class="brand">
-            <span class="logo">A</span>
-            <span>AlphaCP<small>Control Panel</small></span>
-        </div>
+        <div class="wm-mark">@yield('wordmark', 'AlphaCP')</div>
 
         <div class="card">
             @include('partials.flash', [])

@@ -499,3 +499,49 @@ svg.hico { width: 15px; height: 15px; }
   .grid.tiles { grid-template-columns: 1fr; }
   .grid.cols-4, .grid.cols-2 { grid-template-columns: 1fr; }
 }
+
+/* ============================================================================
+   DESIGN-PARITY v2.1 — real WHM login page + mobile header fixes
+   ========================================================================== */
+.auth-wrap { background: #364552; }
+.wm-mark {
+  text-align: center; color: #fff; font-style: italic; font-weight: 800;
+  font-size: 40px; letter-spacing: 1px; margin: 6px 0 26px; line-height: 1;
+}
+.auth-card { max-width: 360px; }
+.auth-card .card { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.auth-card h1 { display: none; }
+.auth-card .sub { color: rgba(255,255,255,.62); margin-bottom: 20px; }
+.auth-card label { color: #fff; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+.auth-card input {
+  background: #fff; border: 0; border-radius: 3px; padding: 10px 12px;
+  width: 100%; font-size: 13px; color: #243447; margin-bottom: 14px;
+}
+.auth-card .btn[type="submit"], .auth-card button.btn {
+  background: #29a9e0; border: 0; border-radius: 3px; color: #fff;
+  font-weight: 700; font-size: 13px; padding: 10px 12px; width: 100%;
+  justify-content: center; margin-top: 4px;
+}
+.auth-card .btn[type="submit"]:hover, .auth-card button.btn:hover { background: #1b93c9; }
+.auth-card .help { color: rgba(255,255,255,.5); font-size: 11.5px; text-align: center; }
+.auth-foot { color: rgba(255,255,255,.55); }
+.auth-card .flash, .auth-card .alert { background: rgba(224,82,82,.16); border-color: rgba(224,82,82,.5); color: #ffd7d7; }
+
+/* mainbar: single row, crumb ellipsis */
+.mainbar { flex-wrap: nowrap; }
+.mainbar .crumb { max-width: 26vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* mobile: dark navy header (Jupiter mobile jaisa) */
+@media (max-width: 980px) {
+  .mainbar { background: var(--jup-navy); border-bottom-color: transparent; }
+  .mainbar .crumb { display: none; }
+  .nav-toggle { background: transparent; border-color: #3c4d63; color: #fff; }
+  .mainbar .searchbox { background: var(--jup-navy-2); border-color: #3c4d63; color: #fff; }
+  .mainbar .searchbox::placeholder { color: #8fa1b3; }
+  .mainbar .btn.secondary { background: transparent; border-color: #3c4d63; color: #dfe7ee; }
+  .mainbar .avatar { background: var(--jup-navy-3); border-color: var(--jup-navy-3); }
+}
+@media (max-width: 640px) {
+  .page-head h1 { font-size: 20px; }
+  .page-head p { font-size: 13px; }
+}
