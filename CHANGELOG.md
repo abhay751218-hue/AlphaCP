@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **Paper Lantern theme (09 Oct)** — panel UI ab cPanel company-grade look me hai:
+  cPanel signature orange `#FF6C2C` accent, light canvas, thin orange left-edge stripe
+  (Jupiter signature), top tool-search (press `/`), left sidebar nav with per-section
+  colours, dashboard = Statistics cards + cPanel icon grid (9 sections · 82 tools, har
+  tool ka apna inline SVG icon), right rail = General information + Services +
+  Recent activity. 51 hand-drawn SVG stroke icons (`partials/icons.blade.php`) — no
+  emoji, no icon font. Files: `panel/public/css/panel.css` (rewrite),
+  `layouts/panel.blade.php`, `dashboard.blade.php`, `auth/login.blade.php`,
+  `config/panel_modules.php` (+ per-section `color`, per-tile `icon`).
+  Demo: `demo/cpanel-theme-demo.html` (self-contained; `tools/sim/build-theme-demo.py`
+  se generate hota hai). No-error gate: `tools/sim/theme-check.py` **21/21 green**.
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
   PR refs se commit milta hai. sync-sim **60/60**. `panel-update 0.3.0`: artifact/sync-tool pehle `get` se,
