@@ -1,3 +1,4 @@
+<nav class="side-tree">
 {{--
   WHM left sidebar — cPanel WHM ke navigation tree jaisa: search box sabse
   upar, collapsible category groups (ModuleCatalog ke whm-audience sections),
@@ -104,3 +105,5 @@
   render();
 })();
 </script>
+
+</nav>

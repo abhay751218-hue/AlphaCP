@@ -53,69 +53,40 @@ cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
     <link rel="stylesheet" href="{{ asset('assets/panel.css') }}?v={{ @filemtime(public_path('assets/panel.css')) ?: config('acp.version') }}">
 </head>
 <body>
+<div class="nav-backdrop" aria-hidden="true"></div>
 
-<header class="topbar">
-    <div class="brand">
+<aside class="sidenav" id="acp-side">
+    <div class="side-brand">
         <span class="logo">A</span>
         <span>
-            {{ config('acp.brand.name', 'AlphaCP') }} {{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : '' }}
+            {{ config('acp.brand.name', 'AlphaCP') }} {{ ($panelMode ?? 'cpanel') === 'whm' ? 'WHM' : 'cPanel' }}
             <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : 'Account Panel' }} · {{ config('acp.version') }}</small>
         </span>
     </div>
+    @if (($panelMode ?? 'cpanel') === 'whm')
+        @include('partials.whm-sidebar', [])
+    @else
+        @include('partials.cpanel-sidebar', [])
+    @endif
+</aside>
 
+<div class="main-col">
+<header class="mainbar">
     <button class="nav-toggle" id="acp-nav-toggle" type="button" aria-label="Menu" aria-expanded="false">☰</button>
-    <nav class="topnav" id="acp-topnav" aria-label="Main">
-        <a href="{{ route('dashboard') }}">Dashboard</a>
-        @if (($panelMode ?? 'cpanel') === 'whm')
-            @can('accounts.view')<a href="{{ route('accounts.index') }}">Accounts</a>@endcan
-            @can('packages.view')<a href="{{ route('packages.index') }}">Packages</a>@endcan
-            @can('users.view')<a href="{{ route('users.index') }}">Users</a>@endcan
-            @can('system.view')<a href="{{ route('system.index') }}">System</a>@endcan
-        @else
-            @can('domains.view')<a href="{{ route('domains.index') }}">Domains</a>@endcan
-            @can('software.view')<a href="{{ route('php.index') }}">MultiPHP</a>@endcan
-            @can('cron.view')<a href="{{ route('cron.index') }}">Cron</a>@endcan
-            @can('ssl.view')<a href="{{ route('ssl.index') }}">SSL</a>@endcan
-            <a href="{{ route('security.index') }}">Security</a>
-        @endif
-    </nav>
-
-    <input type="search" id="acp-search" class="searchbox" placeholder="Search tools…" autocomplete="off" aria-label="Search tools">
-
+    <span class="crumb">@yield('title', 'Dashboard')</span>
     <span class="spacer"></span>
-
-    <div class="meta">
-        server: <strong>{{ $server['hostname'] ?? 'unknown' }}</strong><br>
-        panel {{ config('acp.version') }} · agent {{ config('acp.agent_version') }}
-    </div>
-
-    <div class="user">
+    <input type="search" id="acp-search" class="searchbox" placeholder="Search Tools (/)" autocomplete="off" aria-label="Search tools">
+    <span class="user">
         <span class="avatar">{{ strtoupper(substr(auth()->user()?->username ?? 'A', 0, 1)) }}</span>
-        <span class="meta">
-            {{ auth()->user()?->username ?? 'Guest' }}<br>
-            <span class="muted">{{ auth()->user()?->role?->label ?? 'user' }}</span>
-        </span>
+        <span class="uname">{{ auth()->user()?->username ?? 'Guest' }}<small>{{ auth()->user()?->role?->label ?? 'user' }}</small></span>
         <form method="post" action="{{ route('logout') }}">
             @csrf
             <button class="btn small secondary" type="submit">Logout</button>
         </form>
-    </div>
+    </span>
 </header>
 
-@if (($panelMode ?? 'cpanel') === 'whm')
-<div class="nav-backdrop" aria-hidden="true"></div>
-<div class="shell whm-shell">
-    <aside class="side">
-        @include('partials.whm-sidebar', [])
-    </aside>
-    <main class="wrap main-col">
-@else
-<div class="shell">
-    <aside class="side">
-        @include('partials.cpanel-sidebar', [])
-    </aside>
-    <main class="wrap main-col">
-@endif
+<main class="wrap main-main">
     @include('partials.flash', [])
 
     <div class="page-head">
@@ -130,12 +101,12 @@ cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
 
     @yield('content')
 </main>
-</div>
 
 <footer class="wrap muted" style="padding-top:0; font-size:12.5px">
     {{ config('acp.brand.name', 'AlphaCP') }} {{ config('acp.version') }} — {{ config('acp.brand.tagline', 'Hosting control panel') }} ·
     parity checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span>
 </footer>
+</div>
 
 <script>
 /* cPanel-style top search: dashboard ke tool tiles live filter karta hai. */
@@ -588,6 +559,102 @@ svg.hico { width: 15px; height: 15px; }
 .side-card, .whm-sidebar { background: #f7f8f9; border: 1px solid var(--line); }
 .whm-sidebar h4::after, .side-card h4::after { content: '▾'; float: right; color: #9aa7b4; font-size: 10px; }
 .side-card a[aria-current="page"], .whm-sidebar a.active { background: #e8edf2; color: #101828; font-weight: 600; }
+
+/* ============================================================================
+   DESIGN-PARITY v2 — JUPITER-EXACT (real cPanel/WHM screenshots se match)
+   dark-navy left sidenav (brand+search+tree) | white main area | top search
+   row | tool rows = icon-chip + blue-gray label | right stats cards
+   ========================================================================== */
+:root { --jup-navy: #212b3b; --jup-navy-2: #2c3a4d; --jup-navy-3: #33455c;
+        --jup-link: #3b5b7d; --jup-line: #e3e8ee; --jup-bg: #f4f6f8; }
+
+/* --- dark sidenav (fixed, full height) --- */
+.sidenav {
+  position: fixed; top: 0; left: 0; bottom: 0; width: 252px; z-index: 50;
+  background: var(--jup-navy); color: #e6ebf1; overflow-y: auto;
+  scrollbar-width: thin; padding-bottom: 24px;
+}
+.side-brand {
+  display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px;
+  font-weight: 800; font-size: 15px; color: #fff; letter-spacing: .3px;
+  border-bottom: 1px solid rgba(255,255,255,.08); margin-bottom: 8px;
+}
+.side-brand small { display: block; font-weight: 500; font-size: 11px; color: #93a5b8; letter-spacing: .2px; }
+.sidenav .side-card, .sidenav .side-tree { background: transparent; border: 0; padding: 0 10px; font-size: 13px; }
+.sidenav h4, .side-tree h4 {
+  margin: 12px 8px 4px; font-size: 10.5px; letter-spacing: .7px; text-transform: uppercase;
+  color: #8fa1b3; font-weight: 700;
+}
+.sidenav a { display: block; padding: 7px 10px; border-radius: 6px; color: #dfe7ee; text-decoration: none; }
+.sidenav a:hover { background: var(--jup-navy-2); color: #fff; }
+.sidenav a.active, .sidenav a[aria-current="page"] { background: var(--jup-navy-3); color: #fff; font-weight: 600; }
+.sidenav input[type="search"], .sidenav .searchbox {
+  width: 100%; margin: 4px 0 6px; background: var(--jup-navy-2); border: 1px solid #3c4d63;
+  color: #fff; border-radius: 8px; padding: 8px 10px; font-size: 12.5px;
+}
+.sidenav input::placeholder { color: #8fa1b3; }
+.sidenav .soon { background: #3c4d63; color: #b9c6d4; }
+
+/* --- main column + top search row --- */
+.main-col { margin-left: 252px; min-height: 100vh; background: var(--jup-bg); display: flex; flex-direction: column; }
+.mainbar {
+  position: sticky; top: 0; z-index: 40; display: flex; align-items: center; gap: 12px;
+  background: #fff; border-bottom: 1px solid var(--jup-line); padding: 9px 18px;
+}
+.mainbar .crumb { font-size: 13px; font-weight: 600; color: #51637a; }
+.mainbar .spacer { flex: 1; }
+.mainbar .searchbox {
+  width: min(430px, 38vw); background: #fff; border: 1px solid #cbd5df; border-radius: 8px;
+  padding: 8px 12px; font-size: 13px; color: #243447;
+}
+.mainbar .user { display: flex; align-items: center; gap: 10px; }
+.mainbar .uname { font-size: 13px; font-weight: 600; color: #243447; text-align: right; }
+.mainbar .uname small { display: block; font-weight: 500; color: #7a8a99; font-size: 11px; }
+.mainbar .avatar { background: var(--jup-navy); border-color: var(--jup-navy); color: #fff; }
+.nav-toggle { display: none; background: #fff; border: 1px solid #cbd5df; color: #243447; }
+.main-main { flex: 1; }
+
+/* --- cards: Jupiter white bordered --- */
+.card { background: #fff; border: 1px solid var(--jup-line); border-radius: 8px; box-shadow: none; }
+.card h3 {
+  text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 600; color: #243447;
+}
+.card h3 .hico { color: var(--jup-link); }
+.section-title h2 { font-size: 15px; font-weight: 700; color: #243447; }
+
+/* --- tool rows: icon chip + blue-gray label, 2-col grid --- */
+.grid.tiles { grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 10px; }
+.tile { background: #fff; border: 1px solid var(--jup-line); border-radius: 8px; padding: 10px 12px; }
+.tile .tchip {
+  width: 38px; height: 38px; border-radius: 8px; background: #eef2f6;
+  display: grid; place-items: center; flex: none;
+}
+.tile .tico { width: 20px; height: 20px; color: var(--jup-link); }
+.tile .name { font-weight: 600; font-size: 13.5px; color: var(--jup-link); }
+.tile .sub { color: #7a8a99; font-size: 12px; }
+.tile.disabled .tchip { background: #f2f4f6; }
+.tile.disabled .tico { color: #9aa7b4; }
+.tile.disabled .name { color: #7a8a99; }
+
+/* page head + buttons */
+.page-head h1 { color: #16283c; }
+.btn { border-radius: 6px; }
+
+/* --- responsive: drawer sidenav --- */
+@media (max-width: 980px) {
+  .sidenav { transform: translateX(-102%); transition: transform .22s ease; width: min(292px, 84vw); }
+  body.nav-open .sidenav { transform: none; }
+  .main-col { margin-left: 0; }
+  .nav-toggle { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 34px; border-radius: 8px; font-size: 17px; cursor: pointer; }
+  .nav-backdrop { display: block; position: fixed; inset: 0; z-index: 45; background: rgba(16,24,40,.45); opacity: 0; pointer-events: none; transition: opacity .2s; }
+  body.nav-open .nav-backdrop { opacity: 1; pointer-events: auto; }
+  .mainbar .searchbox { width: auto; flex: 1; }
+  .mainbar .uname { display: none; }
+}
+@media (max-width: 640px) {
+  .grid.tiles { grid-template-columns: 1fr; }
+  .grid.cols-4, .grid.cols-2 { grid-template-columns: 1fr; }
+}
 PEOF
 cat > "${PANEL}/resources/views/dashboard-whm.blade.php" <<'PEOF'
 @extends('layouts.panel')
@@ -821,7 +888,7 @@ cat > "${PANEL}/resources/views/partials/tile.blade.php" <<'PEOF'
     <div class="{{ $classes }}" title="{{ $addon ? 'Optional module' : 'Step ' . $item['step'] . ' me aayega' }}">
 @endif
 
-    @include('partials.icons', ['icon' => $item['icon'] ?? 'folder', 'cls' => 'tico'])
+    <span class="tchip">@include('partials.icons', ['icon' => $item['icon'] ?? 'folder', 'cls' => 'tico'])</span>
     <span>
         <span class="name">{{ $item['name'] }}</span>
         <span class="sub">
@@ -874,6 +941,7 @@ cat > "${PANEL}/resources/views/partials/dash-sections.blade.php" <<'PEOF'
 @endforeach
 PEOF
 cat > "${PANEL}/resources/views/partials/whm-sidebar.blade.php" <<'PEOF'
+<nav class="side-tree">
 {{--
   WHM left sidebar — cPanel WHM ke navigation tree jaisa: search box sabse
   upar, collapsible category groups (ModuleCatalog ke whm-audience sections),
@@ -980,6 +1048,8 @@ cat > "${PANEL}/resources/views/partials/whm-sidebar.blade.php" <<'PEOF'
   render();
 })();
 </script>
+
+</nav>
 PEOF
 cat > "${PANEL}/resources/views/partials/icons.blade.php" <<'PEOF'
 {{-- cPanel-jaisa clean stroke-SVG icon set (emoji nahi). Usage: @include('partials.icons', ['icon'=>'mail']) --}}
@@ -1050,8 +1120,8 @@ cat > "${PANEL}/resources/views/partials/cpanel-sidebar.blade.php" <<'PEOF'
 @php
     $cats = \App\Support\ModuleCatalog::sectionsFor(auth()->user());
 @endphp
-<div class="side-card">
-    <div class="side-head">{{ config('acp.brand.name', 'AlphaCP') }} — Tools</div>
+<nav class="side-tree">
+    
     @foreach ($cats as $key => $section)
         @php
             $liveItems = collect($section['items'])->where('status', 'live');
@@ -1063,10 +1133,12 @@ cat > "${PANEL}/resources/views/partials/cpanel-sidebar.blade.php" <<'PEOF'
             @endforeach
         @endif
     @endforeach
-</div>
+</nav>
 PEOF
-grep -q 'class="shell' "${PANEL}/resources/views/layouts/panel.blade.php" \
-  || { die "layout me shell grid nahi"; }
+grep -q 'class="sidenav"' "${PANEL}/resources/views/layouts/panel.blade.php" \
+  || { die "layout me Jupiter sidenav nahi"; }
+grep -q 'class="mainbar"' "${PANEL}/resources/views/layouts/panel.blade.php" \
+  || { die "layout me mainbar (top search row) nahi"; }
 grep -q 'cpanel-sidebar' "${PANEL}/resources/views/layouts/panel.blade.php" \
   || { die "layout me cpanel sidebar nahi"; }
 grep -q 'DESIGN-PARITY v1.0' "${PANEL}/public/assets/panel.css" \

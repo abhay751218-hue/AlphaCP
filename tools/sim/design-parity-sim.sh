@@ -21,7 +21,7 @@ RC=0
 SIM=1 ACP_HOME="$FAKE/home" bash "$FIX" > "$FAKE/.a1" 2>&1 || RC=$?
 if [[ "$RC" -ne 0 ]]; then echo "--- A1 tail ---"; tail -15 "$FAKE/.a1"; echo "---------------"; fi
 t "installer exit 0"       test "$RC" -eq 0
-t "layout shell grid"      grep -q 'class="shell' "$V/layouts/panel.blade.php"
+t "layout sidenav"         grep -q 'class="sidenav"' "$V/layouts/panel.blade.php"
 t "layout cpanel sidebar"  grep -q 'cpanel-sidebar' "$V/layouts/panel.blade.php"
 t "layout cache-bust"      grep -q 'filemtime' "$V/layouts/panel.blade.php"
 t "css jupiter block"      grep -q 'DESIGN-PARITY v1.0' "$FAKE/home/panel/public/assets/panel.css"
@@ -36,6 +36,10 @@ t "brand light-visible"        grep -q '.brand { color: var(--ink); }' "$FAKE/ho
 t "mobile drawer css"        grep -q 'body.nav-open .side' "$FAKE/home/panel/public/assets/panel.css"
 t "drawer js body toggle"    grep -q "classList.toggle('nav-open')" "$V/layouts/panel.blade.php"
 t "backdrop element"         grep -q 'nav-backdrop' "$V/layouts/panel.blade.php"
+t "jupiter sidenav layout"   grep -q 'class="sidenav"' "$V/layouts/panel.blade.php"
+t "jupiter mainbar"           grep -q 'class="mainbar"' "$V/layouts/panel.blade.php"
+t "jupiter css vars"          grep -q 'jup-navy' "$FAKE/home/panel/public/assets/panel.css"
+t "tile icon chip"            grep -q 'tchip' "$V/partials/tile.blade.php"
 
 B="$(ls -dt "$FAKE/home"/releases/design-parity-* | head -1)"
 sleep 1
