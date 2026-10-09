@@ -12,6 +12,8 @@ PAYLOADS = [
     ('P_WSIDE',  'server-snapshot/files/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php'),
     ('P_ICONS',  'server-snapshot/files/usr/local/alphacp/panel/resources/views/partials/icons.blade.php'),
     ('P_CSIDE',  'server-snapshot/files/usr/local/alphacp/panel/resources/views/partials/cpanel-sidebar.blade.php'),
+    ('P_GUEST',  'server-snapshot/files/usr/local/alphacp/panel/resources/views/layouts/guest.blade.php'),
+    ('P_LOGIN',  'server-snapshot/files/usr/local/alphacp/panel/resources/views/auth/login.blade.php'),
 ]
 src = (ROOT / 'installer' / 'design-parity.sh.in').read_text()
 for marker, rel in PAYLOADS:

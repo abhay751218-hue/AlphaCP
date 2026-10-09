@@ -40,7 +40,9 @@ backup "${PANEL}/resources/views/partials/dash-sections.blade.php"
 backup "${PANEL}/resources/views/partials/whm-sidebar.blade.php"
 backup "${PANEL}/resources/views/partials/icons.blade.php"
 backup "${PANEL}/resources/views/partials/cpanel-sidebar.blade.php"
-mkdir -p "${PANEL}/resources/views/layouts" "${PANEL}/resources/views/partials" "${PANEL}/public/assets"
+backup "${PANEL}/resources/views/layouts/guest.blade.php"
+backup "${PANEL}/resources/views/auth/login.blade.php"
+mkdir -p "${PANEL}/resources/views/layouts" "${PANEL}/resources/views/partials" "${PANEL}/resources/views/auth" "${PANEL}/public/assets"
 cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
 {{-- REBRAND_DONE --}}
 <!doctype html>
@@ -655,6 +657,52 @@ svg.hico { width: 15px; height: 15px; }
   .grid.tiles { grid-template-columns: 1fr; }
   .grid.cols-4, .grid.cols-2 { grid-template-columns: 1fr; }
 }
+
+/* ============================================================================
+   DESIGN-PARITY v2.1 — real WHM login page + mobile header fixes
+   ========================================================================== */
+.auth-wrap { background: #364552; }
+.wm-mark {
+  text-align: center; color: #fff; font-style: italic; font-weight: 800;
+  font-size: 40px; letter-spacing: 1px; margin: 6px 0 26px; line-height: 1;
+}
+.auth-card { max-width: 360px; }
+.auth-card .card { background: transparent; border: 0; box-shadow: none; padding: 0; }
+.auth-card h1 { display: none; }
+.auth-card .sub { color: rgba(255,255,255,.62); margin-bottom: 20px; }
+.auth-card label { color: #fff; font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+.auth-card input {
+  background: #fff; border: 0; border-radius: 3px; padding: 10px 12px;
+  width: 100%; font-size: 13px; color: #243447; margin-bottom: 14px;
+}
+.auth-card .btn[type="submit"], .auth-card button.btn {
+  background: #29a9e0; border: 0; border-radius: 3px; color: #fff;
+  font-weight: 700; font-size: 13px; padding: 10px 12px; width: 100%;
+  justify-content: center; margin-top: 4px;
+}
+.auth-card .btn[type="submit"]:hover, .auth-card button.btn:hover { background: #1b93c9; }
+.auth-card .help { color: rgba(255,255,255,.5); font-size: 11.5px; text-align: center; }
+.auth-foot { color: rgba(255,255,255,.55); }
+.auth-card .flash, .auth-card .alert { background: rgba(224,82,82,.16); border-color: rgba(224,82,82,.5); color: #ffd7d7; }
+
+/* mainbar: single row, crumb ellipsis */
+.mainbar { flex-wrap: nowrap; }
+.mainbar .crumb { max-width: 26vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* mobile: dark navy header (Jupiter mobile jaisa) */
+@media (max-width: 980px) {
+  .mainbar { background: var(--jup-navy); border-bottom-color: transparent; }
+  .mainbar .crumb { display: none; }
+  .nav-toggle { background: transparent; border-color: #3c4d63; color: #fff; }
+  .mainbar .searchbox { background: var(--jup-navy-2); border-color: #3c4d63; color: #fff; }
+  .mainbar .searchbox::placeholder { color: #8fa1b3; }
+  .mainbar .btn.secondary { background: transparent; border-color: #3c4d63; color: #dfe7ee; }
+  .mainbar .avatar { background: var(--jup-navy-3); border-color: var(--jup-navy-3); }
+}
+@media (max-width: 640px) {
+  .page-head h1 { font-size: 20px; }
+  .page-head p { font-size: 13px; }
+}
 PEOF
 cat > "${PANEL}/resources/views/dashboard-whm.blade.php" <<'PEOF'
 @extends('layouts.panel')
@@ -1135,12 +1183,77 @@ cat > "${PANEL}/resources/views/partials/cpanel-sidebar.blade.php" <<'PEOF'
     @endforeach
 </nav>
 PEOF
+cat > "${PANEL}/resources/views/layouts/guest.blade.php" <<'PEOF'
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>@yield('title', 'Login') · AlphaCP</title>
+    <link rel="stylesheet" href="{{ asset('assets/panel.css') }}?v={{ config('acp.version') }}">
+</head>
+<body>
+<div class="auth-wrap">
+    <div class="auth-card">
+        <div class="wm-mark">@yield('wordmark', 'AlphaCP')</div>
+
+        <div class="card">
+            @include('partials.flash', [])
+            @yield('content')
+        </div>
+
+        <div class="auth-foot">
+            AlphaCP {{ config('acp.version') }} · {{ parse_url(config('app.url'), PHP_URL_HOST) ?: 'server' }}
+        </div>
+    </div>
+</div>
+</body>
+</html>
+PEOF
+cat > "${PANEL}/resources/views/auth/login.blade.php" <<'PEOF'
+@extends('layouts.guest')
+
+@section('title', 'Login')
+
+@section('wordmark', 'AlphaCP '.((($portFamily ?? null) === 'whm') ? 'WHM' : ((($portFamily ?? null) === 'cpanel') ? 'cPanel' : '')))
+
+@section('content')
+    <h1>{{ ($portFamily ?? null) === 'whm' ? 'WHM Login' : (($portFamily ?? null) === 'cpanel' ? 'cPanel Login' : 'Panel Login') }}</h1>
+    <p class="sub">@if(($portFamily ?? null) === 'whm')
+            Root · Reseller — server management
+        @elseif(($portFamily ?? null) === 'cpanel')
+            Customer — hosting control
+        @else
+            Admin · Reseller · Customer — sab ek hi URL se
+        @endif</p>
+
+    <form method="post" action="{{ route('login.attempt') }}">
+        @csrf
+
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" value="{{ old('username') }}"
+               autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+
+        <button class="btn mt" type="submit" style="width:100%; justify-content:center">Login</button>
+    </form>
+
+    <p class="help mt">Too many failed passwords lock the account for a short time (brute-force protection).</p>
+@endsection
+PEOF
 grep -q 'class="sidenav"' "${PANEL}/resources/views/layouts/panel.blade.php" \
   || { die "layout me Jupiter sidenav nahi"; }
 grep -q 'class="mainbar"' "${PANEL}/resources/views/layouts/panel.blade.php" \
   || { die "layout me mainbar (top search row) nahi"; }
 grep -q 'cpanel-sidebar' "${PANEL}/resources/views/layouts/panel.blade.php" \
   || { die "layout me cpanel sidebar nahi"; }
+grep -q 'wm-mark' "${PANEL}/resources/views/layouts/guest.blade.php" \
+  || { die "guest layout me WHM wordmark nahi"; }
+grep -q '29a9e0' "${PANEL}/public/assets/panel.css" \
+  || { die "css me WHM login blue nahi"; }
 grep -q 'DESIGN-PARITY v1.0' "${PANEL}/public/assets/panel.css" \
   || { die "css me design-parity block nahi"; }
 grep -q 'filemtime' "${PANEL}/resources/views/layouts/panel.blade.php" \

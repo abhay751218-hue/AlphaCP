@@ -40,7 +40,9 @@ backup "${PANEL}/resources/views/partials/dash-sections.blade.php"
 backup "${PANEL}/resources/views/partials/whm-sidebar.blade.php"
 backup "${PANEL}/resources/views/partials/icons.blade.php"
 backup "${PANEL}/resources/views/partials/cpanel-sidebar.blade.php"
-mkdir -p "${PANEL}/resources/views/layouts" "${PANEL}/resources/views/partials" "${PANEL}/public/assets"
+backup "${PANEL}/resources/views/layouts/guest.blade.php"
+backup "${PANEL}/resources/views/auth/login.blade.php"
+mkdir -p "${PANEL}/resources/views/layouts" "${PANEL}/resources/views/partials" "${PANEL}/resources/views/auth" "${PANEL}/public/assets"
 cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
 @@P_LAYOUT@@
 PEOF
@@ -68,12 +70,22 @@ PEOF
 cat > "${PANEL}/resources/views/partials/cpanel-sidebar.blade.php" <<'PEOF'
 @@P_CSIDE@@
 PEOF
+cat > "${PANEL}/resources/views/layouts/guest.blade.php" <<'PEOF'
+@@P_GUEST@@
+PEOF
+cat > "${PANEL}/resources/views/auth/login.blade.php" <<'PEOF'
+@@P_LOGIN@@
+PEOF
 grep -q 'class="sidenav"' "${PANEL}/resources/views/layouts/panel.blade.php" \
   || { die "layout me Jupiter sidenav nahi"; }
 grep -q 'class="mainbar"' "${PANEL}/resources/views/layouts/panel.blade.php" \
   || { die "layout me mainbar (top search row) nahi"; }
 grep -q 'cpanel-sidebar' "${PANEL}/resources/views/layouts/panel.blade.php" \
   || { die "layout me cpanel sidebar nahi"; }
+grep -q 'wm-mark' "${PANEL}/resources/views/layouts/guest.blade.php" \
+  || { die "guest layout me WHM wordmark nahi"; }
+grep -q '29a9e0' "${PANEL}/public/assets/panel.css" \
+  || { die "css me WHM login blue nahi"; }
 grep -q 'DESIGN-PARITY v1.0' "${PANEL}/public/assets/panel.css" \
   || { die "css me design-parity block nahi"; }
 grep -q 'filemtime' "${PANEL}/resources/views/layouts/panel.blade.php" \

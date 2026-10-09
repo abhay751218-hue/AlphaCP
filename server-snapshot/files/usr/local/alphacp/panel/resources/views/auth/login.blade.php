@@ -2,6 +2,8 @@
 
 @section('title', 'Login')
 
+@section('wordmark', 'AlphaCP '.((($portFamily ?? null) === 'whm') ? 'WHM' : ((($portFamily ?? null) === 'cpanel') ? 'cPanel' : '')))
+
 @section('content')
     <h1>{{ ($portFamily ?? null) === 'whm' ? 'WHM Login' : (($portFamily ?? null) === 'cpanel' ? 'cPanel Login' : 'Panel Login') }}</h1>
     <p class="sub">@if(($portFamily ?? null) === 'whm')

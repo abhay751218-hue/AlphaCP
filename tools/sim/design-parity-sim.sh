@@ -40,6 +40,9 @@ t "jupiter sidenav layout"   grep -q 'class="sidenav"' "$V/layouts/panel.blade.p
 t "jupiter mainbar"           grep -q 'class="mainbar"' "$V/layouts/panel.blade.php"
 t "jupiter css vars"          grep -q 'jup-navy' "$FAKE/home/panel/public/assets/panel.css"
 t "tile icon chip"            grep -q 'tchip' "$V/partials/tile.blade.php"
+t "whm login wordmark"      grep -q 'wm-mark' "$V/layouts/guest.blade.php"
+t "whm login blue btn"      grep -q '29a9e0' "$FAKE/home/panel/public/assets/panel.css"
+t "mobile dark mainbar"     grep -q 'mainbar .crumb { display: none' "$FAKE/home/panel/public/assets/panel.css"
 
 B="$(ls -dt "$FAKE/home"/releases/design-parity-* | head -1)"
 sleep 1
