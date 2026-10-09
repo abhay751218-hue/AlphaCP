@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AlphaCP — The Hosting Control Panel</title>
+<meta name="description" content="AlphaCP — complete hosting control panel. Websites, email, DNS, databases, backups, security — one panel. Install in minutes.">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#"><span class="logo">A</span> AlphaCP</a>
+    <nav class="links">
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#install">Install</a>
+      <a href="#docs">Docs</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="btn ghost" href="#login">Panel Login</a>
+      <a class="btn" href="#pricing">Buy License</a>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <h1>Apna hosting business,<br><em>ek panel</em> me.</h1>
+    <p class="lead">AlphaCP ek complete hosting control panel hai — websites, email, DNS,
+      databases, SSL, backups, security aur 100+ tools. Server Manager (admin) +
+      Account Panel (customer) — sab included.</p>
+    <div class="hero-cta">
+      <a class="btn big" href="#install">Install AlphaCP →</a>
+      <a class="btn big ghost" href="#pricing">Pricing dekho</a>
+    </div>
+    <p class="trust">15-din FREE trial · license ke bina bhi customer sites kabhi band nahi hoti</p>
+  </div>
+</section>
+
+<section id="features" class="features">
+  <div class="wrap">
+    <h2>Sab kuch jo ek hosting company ko chahiye</h2>
+    <div class="fgrid">
+      <div class="f"><h3>🌐 Websites & Domains</h3><p>Addon domains, subdomains, redirects, Zone Editor (A/AAAA/CNAME/MX/TXT/SRV), SSL/TLS, Sitejet-style tools.</p></div>
+      <div class="f"><h3>📧 Email</h3><p>Mailboxes, forwarders, autoresponders, spam filters, DKIM/SPF, webmail, mail queue manager.</p></div>
+      <div class="f"><h3>🗄️ Databases</h3><p>MySQL databases & users, privileges, one-click phpMyAdmin SSO, remote MySQL.</p></div>
+      <div class="f"><h3>📁 Files & Backups</h3><p>File Manager (upload, compress/extract, permissions), FTP, full & incremental backups, restore wizard.</p></div>
+      <div class="f"><h3>🛡️ Security</h3><p>2FA, brute-force lockout, IP blocker, hotlink protection, leech protect, ModSecurity-style rules, audit log.</p></div>
+      <div class="f"><h3>⚙️ Server Manager</h3><p>Create/suspend/terminate accounts, packages, resellers, service monitor, PHP versions, terminal, updates.</p></div>
+      <div class="f"><h3>🚀 Developer Tools</h3><p>Node.js apps, Git deployment, Cron jobs, Terminal, API — modern stacks ready.</p></div>
+      <div class="f"><h3>📊 Metrics</h3><p>Resource usage, Awstats-style analytics, error logs, raw access logs, bandwidth tracking.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing" class="pricing">
+  <div class="wrap">
+    <h2>Simple pricing — per server</h2>
+    <p class="sub">Har license me PURA panel milta hai. Fark sirf hosting accounts ki limit ka hai.</p>
+    <div class="pgrid">
+      <div class="plan">
+        <h3>Trial</h3>
+        <div class="price">FREE<span>/15 din</span></div>
+        <ul><li>1 server</li><li>20 accounts</li><li>Full features</li><li>No card needed</li></ul>
+        <a class="btn ghost" href="#install">Try Free</a>
+      </div>
+      <div class="plan">
+        <h3>Starter</h3>
+        <div class="price">₹—<span>/month</span></div>
+        <ul><li>1 server</li><li>50 accounts</li><li>Full features</li><li>Email support</li></ul>
+        <a class="btn" href="#buy">Buy Starter</a>
+      </div>
+      <div class="plan hot">
+        <div class="tag">POPULAR</div>
+        <h3>Business</h3>
+        <div class="price">₹—<span>/month</span></div>
+        <ul><li>1 server</li><li>250 accounts</li><li>Full features</li><li>Priority support</li></ul>
+        <a class="btn" href="#buy">Buy Business</a>
+      </div>
+      <div class="plan">
+        <h3>Unlimited</h3>
+        <div class="price">₹—<span>/month</span></div>
+        <ul><li>1 server</li><li>Unlimited accounts</li><li>Full features</li><li>Priority support</li></ul>
+        <a class="btn" href="#buy">Buy Unlimited</a>
+      </div>
+    </div>
+    <p class="note">₹— = pricing aap (owner) final karoge. Node add-on aur OEM/Reseller plans alag se.</p>
+  </div>
+</section>
+
+<section id="install" class="install">
+  <div class="wrap">
+    <h2>Install in minutes</h2>
+    <p class="sub">Fresh Ubuntu 24.04 server par, root se ye ek line chalao:</p>
+    <div class="cmd"><code>bash &lt;(curl -fsSL https://get.alphacp.com/install)</code><button class="copy" data-copy="bash <(curl -fsSL https://get.alphacp.com/install)">Copy</button></div>
+    <ol class="steps">
+      <li><strong>Base stack</strong> — web, PHP, MariaDB, mail, DNS, FTP, firewall sab auto-setup</li>
+      <li><strong>Panel + Agent</strong> — signed release bundle, sha256-verified</li>
+      <li><strong>15-din trial license</strong> auto-activate — turant accounts banao</li>
+    </ol>
+    <p class="note">Ports: <code>2083</code> Account Panel · <code>2087</code> Server Manager · <code>2098</code> Webmail</p>
+  </div>
+</section>
+
+<section id="docs" class="docs">
+  <div class="wrap">
+    <h2>Docs & Support</h2>
+    <div class="dgrid">
+      <a class="d" href="#">📘 Installation Guide</a>
+      <a class="d" href="#">🎓 Admin Handbook</a>
+      <a class="d" href="#">🔑 License & Billing FAQ</a>
+      <a class="d" href="#">🛟 Support Ticket</a>
+    </div>
+  </div>
+</section>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span><span class="logo sm">A</span> AlphaCP — The Hosting Control Panel</span>
+    <span class="fl"><a href="#">EULA</a> · <a href="#">Privacy</a> · <a href="#">Refund Policy</a> · <a href="#">Status</a></span>
+    <span>© 2026 AlphaCP. All rights reserved.</span>
+  </div>
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>
