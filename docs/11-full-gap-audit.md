@@ -77,7 +77,7 @@ File Manager upload/zip/chmod (`files.set` me ops add karne honge)
 |---|---|---|---|
 | **D6a** | UI-uniformity pass 1: Email group ke 14 pages → D1-style pattern | views-only, zero | ✅ DEPLOYED LIVE 09 Oct |
 | **D6b** | UI pass 2: Files + Security groups (Images, Privacy, Disk, FTP, WebDisk, BackupWiz, Git, FileRest, Trash, Indexes, SSH, IP Blocker, API Tokens, Audit) | views-only | ✅ DEPLOYED LIVE 09 Oct |
-| **D6c** | UI pass 3: Software/Advanced + WHM pages | views-only | ✅ BUILT — installer ready |
+| **D6c** | UI pass 3: Software/Advanced + WHM pages | views-only | ✅ DEPLOYED LIVE 09 Oct |
 | **D7** | Metrics real: graphs (CSS/JS charts), Raw Access viewer, Visitors | views+JS | medium |
 | **D8** | Service Manager restart + Mail Queue + ModSecurity UI (waf tasks) | agent+panel | medium |
 | **D9** | Webmail (Roundcube+SSO) + phpMyAdmin app + Terminal interactive | bada — server install | high |
@@ -95,10 +95,10 @@ kuch me agent task) chahiye, isliye ye UI-wave me nahi, apni feature-wave me aay
 
 | Tile | Step | Kis wave me banega |
 |---|---|---|
-| Errors (error log viewer) | S11 | **D7** (metrics/logs wave) |
-| Raw Access (raw logs download) | S11 | **D7** |
-| Awstats (visitor graphs) | S11 | **D7** |
-| Network Tools (dig/trace) | S11 | **D7** |
+| Errors (error log viewer) | S11 | ✅ D7 BUILT — installer ready |
+| Raw Access (raw logs download) | S11 | ✅ D7 BUILT |
+| Awstats (visitor graphs) | S11 | ✅ D7 BUILT (bars v1) |
+| Network Tools (dig/trace) | S11 | ✅ D7 BUILT (DNS lookup v1) |
 | Security Policies | S13 | **D8** (security wave) |
 | Node.js Selector | S14 | **D10** (software wave) |
 | PHP Composer | S14 | **D10** |

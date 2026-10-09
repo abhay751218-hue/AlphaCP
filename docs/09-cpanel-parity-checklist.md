@@ -83,16 +83,16 @@
 | 33 | Aliases (Parked) | Domain aliases | S5 | ⏳ S5 |
 | 34 | Redirects | 301/302 redirect | S5 | ⏳ S5 |
 | 35 | Zone Editor | A/CNAME/MX/TXT + record EDIT + type-aware hints | S9 | ✅ D2 LIVE (09 Oct 2026; TTL/priority = D2.5) |
-| 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 | 🟡 D6c (installer ready) |
+| 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 | ✅ D6c LIVE |
 
 ### 🗄️ Databases
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
 | 37 | MySQL® Databases | DB + users + privileges + Users column + custom password | S8 | ✅ D3 LIVE (09 Oct 2026; revoke = D3.5) |
-| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 | 🟡 D6c (installer ready) |
+| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 | ✅ D6c LIVE |
 | 39 | phpMyAdmin | Preference + client-connect card | S8 | ✅ D3 LIVE (09 Oct 2026; app/SSO later) |
-| 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 | 🟡 D6c (installer ready) |
+| 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 | ✅ D6c LIVE |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
 | 42 | PostgreSQL Wizard | 🔵 optional module | post-v1 | 🔵 |
 
@@ -101,10 +101,10 @@
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
 | 43 | Visitors | Latest Apache access log | S11 | ⏳ S11 |
-| 44 | Errors | Latest error log | S11 | ⏳ S11 |
+| 44 | Errors | Latest error log | S11 | 🟡 D7 (installer ready) |
 | 45 | Bandwidth | Monthly bandwidth | S11 | ⏳ S11 |
-| 46 | Raw Access | Download raw logs | S11 | ⏳ S11 |
-| 47 | Awstats | Full stats (geo, browsers) | S11 | ⏳ S11 |
+| 46 | Raw Access | Download raw logs | S11 | 🟡 D7 (installer ready) |
+| 47 | Awstats | Full stats (geo, browsers) | S11 | 🟡 D7 (view/bars v1) |
 | 48 | Webalizer | Second stats engine | S11 | ⏳ S11 |
 | 49 | Webalizer FTP | FTP stats | S11 | ⏳ S11 |
 | 50 | Analog Stats | Third stats engine | S11 | ⏳ S11 |
@@ -123,7 +123,7 @@
 | 58 | Two-Factor Authentication | TOTP 2FA |S2B-2|✅|
 | 59 | Password & Security | Password change + strength |S2B|✅|
 | 60 | Leech Protection | Password vs hotlink abusers | S13 | ⏳ S13 |
-| 61 | ModSecurity (WAF) | Per-account WAF on/off | S13 | ⏳ S13 | 🟡 D6c (installer ready) |
+| 61 | ModSecurity (WAF) | Per-account WAF on/off | S13 | ⏳ S13 | ✅ D6c LIVE |
 | 62 | Security Policy | Account-level policy | S13 | ⏳ S13 |
 
 ### 🧩 Software
@@ -134,8 +134,8 @@
 | 64 | WordPress Toolkit | Staging/clone/scan/update | S14 | ⏳ S14 |
 | 65 | WP Guardian-style security | Malware scan + vuln patch | S14 | ⏳ S14 |
 | 66 | Node.js® Selector | Node apps + npm | S14 | ⏳ S14 |
-| 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 | 🟡 D6c (installer ready) |
-| 68 | MultiPHP Manager | Per-domain PHP version | S5 | ⏳ S5 | 🟡 D6c (installer ready) |
+| 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 | ✅ D6c LIVE |
+| 68 | MultiPHP Manager | Per-domain PHP version | S5 | ⏳ S5 | ✅ D6c LIVE |
 | 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ⏳ S5 |
 | 70 | PHP Composer | Composer in panel | S14 | ⏳ S14 |
 | 71 | PHP PEAR Packages | 🔵 legacy | post-v1 | 🔵 |
@@ -151,10 +151,10 @@
 | 76 | Cron Jobs | Common Settings presets + stats + search | S5 | ✅ D5 LIVE |
 | 77 | Track DNS | DNS trace/debug | S9 | ⏳ S9 |
 | 78 | Indexes | Directory listing control | S5 | ✅ D6b LIVE |
-| 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 | 🟡 D6c (installer ready) |
-| 80 | MIME Types | Custom MIME | S5 | ⏳ S5 | 🟡 D6c (installer ready) |
-| 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 | 🟡 D6c (installer ready) |
-| 82 | Network Tools | Ping/traceroute/lookup | S11 | ⏳ S11 |
+| 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 | ✅ D6c LIVE |
+| 80 | MIME Types | Custom MIME | S5 | ⏳ S5 | ✅ D6c LIVE |
+| 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 | ✅ D6c LIVE |
+| 82 | Network Tools | Ping/traceroute/lookup | S11 | 🟡 D7 (DNS lookup v1) |
 | 83 | Terminal | Browser SSH (jailed) | S6 | ⏳ S6 |
 | 84 | Hotlink Protection | Image hotlink block | S13 | ⏳ S13 |
 | 85 | Site IP Address | Account IP info | S3 | ⏳ S3 |
@@ -169,7 +169,7 @@
 | 89 | Change Style | Theme/colors, dark mode | S2B | 🟡 2B · Paper Lantern theme shipped 09 Oct; style-switcher UI pending |
 | 90 | Change Password | Password update | S2B | ✅ |
 | 91 | Contact Information | Email + alerts |S2B|🟡 2B-2|
-| 92 | User Manager | Sub-users + roles |S2B|🟡 2B-2| 🟡 D6c (installer ready) |
+| 92 | User Manager | Sub-users + roles |S2B|🟡 2B-2| ✅ D6c LIVE |
 | 93 | Shortcuts / Favorites | Quick links | S2B | 🟡 2B |
 
 ---
@@ -218,7 +218,7 @@
 | 123 | Add / Edit / Delete a Package | S4 | ⏳ S4 |
 | 124 | Feature Manager (feature lists) | S4 | ⏳ S4 |
 | 125 | Feature Showcase (client panel sections on/off) | S2B | 🟡 2B |
-| 126 | Reseller Center + ACLs + Reseller packages | S15 | ⏳ S15 | 🟡 D6c (installer ready) |
+| 126 | Reseller Center + ACLs + Reseller packages | S15 | ⏳ S15 | ✅ D6c LIVE |
 | 127 | Themes / Theme Manager | S2B | 🟡 2B |
 
 ### DNS Functions
@@ -234,7 +234,7 @@
 | 135 | Park a Domain | S9 | ⏳ S9 |
 | 136 | Perform a DNS Cleanup | S9 | ⏳ S9 |
 | 137 | Set Zone TTL | S9 | ⏳ S9 |
-| 138 | Setup/Edit Domain Forwarding | S9 | ⏳ S9 | 🟡 D6c (installer ready) |
+| 138 | Setup/Edit Domain Forwarding | S9 | ⏳ S9 | ✅ D6c LIVE |
 | 139 | Synchronize DNS Records | S9 | ⏳ S9 |
 | 140 | DNS Cluster | S15 | ⏳ S15 |
 
