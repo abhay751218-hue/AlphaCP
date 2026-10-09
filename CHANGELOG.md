@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **theme-fix v1.0 — live panel (09 Oct)**: live server (0.75.x) ke UI errors fix —
+  client dashboard ka extra-div layout bug, WHM sidebar white-box bug, aur 5 conflicting
+  CSS layers ki jagah DESIGN-PARITY v3 (dark charcoal sidenav + orange #FF6C2C + white
+  cards). Self-contained installer (`installer/theme-fix.sh`): backup → install →
+  view:clear → health 8090/2083/2087 → auto-rollback. Deploy row: COMMANDS.md.
 - **WHM admin panel + Reseller panel (09 Oct)** — sabhi panels ab cPanel company-grade:
   naye `layouts/whm.blade.php` shell (dark charcoal sidebar, categorized WHM menu,
   sidebar search, WHM/RESELLER badge, orange #FF6C2C accents), `config/whm_menu.php`
