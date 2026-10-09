@@ -133,11 +133,11 @@
 | 63 | **Softaculous-style App Installer** | 50+ apps one-click (WordPress…) | S14 | ⏳ S14 |
 | 64 | WordPress Toolkit | Staging/clone/scan/update | S14 | ⏳ S14 |
 | 65 | WP Guardian-style security | Malware scan + vuln patch | S14 | ⏳ S14 |
-| 66 | Node.js® Selector | Node apps + npm | S14 | 🟡 D10 (runtime detect v1) |
+| 66 | Node.js® Selector | Node apps + npm | S14 | ✅ LIVE (D10, detect v1) |
 | 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 | ✅ D6c LIVE |
 | 68 | MultiPHP Manager | Per-domain PHP version | S5 | ⏳ S5 | ✅ D6c LIVE |
 | 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ⏳ S5 |
-| 70 | PHP Composer | Composer in panel | S14 | 🟡 D10 (composer.json live-read) |
+| 70 | PHP Composer | Composer in panel | S14 | ✅ LIVE (D10) |
 | 71 | PHP PEAR Packages | 🔵 legacy | post-v1 | 🔵 |
 | 72 | Ruby Gems | 🔵 legacy | post-v1 | 🔵 |
 | 73 | Perl Modules | 🔵 legacy | post-v1 | 🔵 |
@@ -187,7 +187,7 @@
 | 100 | Server Time (NTP) | S11 | ⏳ S11 |
 | 101 | Statistics Software Configuration | S11 | ⏳ S11 |
 | 102 | Terminal (root, audited) | S6 | ✅ LIVE (D9, whitelist) |
-| 103 | Update Preferences (panel updates) | S15 | 🟡 D10 (versions + wave history) |
+| 103 | Update Preferences (panel updates) | S15 | ✅ LIVE (D10) |
 
 ### Account Functions / Information
 | # | WHM tool | Step | Status |

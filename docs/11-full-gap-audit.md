@@ -100,9 +100,9 @@ kuch me agent task) chahiye, isliye ye UI-wave me nahi, apni feature-wave me aay
 | Awstats (visitor graphs) | S11 | ✅ LIVE (D7, bars v1) |
 | Network Tools (dig/trace) | S11 | ✅ LIVE (D7, DNS lookup v1) |
 | Security Policies | S13 | ✅ D8 BUILT (posture page v1) — installer ready |
-| Node.js Selector | S14 | ✅ D10 BUILT (runtime detect v1) — installer ready |
-| PHP Composer | S14 | ✅ D10 BUILT (composer.json live-read) |
-| Updates (panel self-update UI) | S15 | ✅ D10 BUILT (versions + wave history) |
+| Node.js Selector | S14 | ✅ LIVE (D10) |
+| PHP Composer | S14 | ✅ LIVE (D10) |
+| Updates (panel self-update UI) | S15 | ✅ LIVE (D10) |
 | PostgreSQL | post-v1 | optional addon — v1 ke baad |
 
 Baaki 94 tiles LIVE hain — unki kami "feature missing" nahi, "UI plain" thi,
