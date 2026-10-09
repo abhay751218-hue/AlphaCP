@@ -321,3 +321,41 @@
     });
   });
 })();
+
+/* ===== AlphaCP panel.js v1.5 additions (D5: cron presets + dark mode) === */
+(function () {
+  'use strict';
+
+  /* ---- cron "Common Settings" preset -> fill the 5 fields --------------- */
+  var preset = document.querySelector('[data-cron-preset]');
+  if (preset) {
+    preset.addEventListener('change', function () {
+      if (!preset.value) return;
+      var parts = preset.value.split(' ');
+      document.querySelectorAll('[data-cron-field]').forEach(function (input) {
+        var i = parseInt(input.getAttribute('data-cron-field'), 10);
+        if (parts[i] !== undefined) input.value = parts[i];
+      });
+    });
+  }
+
+  /* ---- dark mode toggle (persists in localStorage) ----------------------- */
+  var darkBtn = document.getElementById('acp-dark-toggle');
+  function applyTheme(dark) {
+    document.body.classList.toggle('theme-dark', dark);
+    if (darkBtn) {
+      darkBtn.textContent = dark ? '☀️' : '🌙';
+      darkBtn.title = dark ? 'Light mode' : 'Dark mode';
+    }
+  }
+  var saved = null;
+  try { saved = localStorage.getItem('acp-theme'); } catch (e) { /* noop */ }
+  applyTheme(saved === 'dark');
+  if (darkBtn) {
+    darkBtn.addEventListener('click', function () {
+      var dark = !document.body.classList.contains('theme-dark');
+      applyTheme(dark);
+      try { localStorage.setItem('acp-theme', dark ? 'dark' : 'light'); } catch (e) { /* noop */ }
+    });
+  }
+})();

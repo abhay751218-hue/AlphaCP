@@ -38,7 +38,7 @@
 
 | # | cPanel tool | Kya karta hai | Humara step | Status |
 |---|---|---|---|---|
-| 1 | File Manager | Upload/edit/delete/zip/permissions | S6 | ⏳ S6 |
+| 1 | File Manager | Breadcrumbs/icons/filter/editor (upload/zip/chmod = later) | S6 | 🟡 D5 (installer ready) |
 | 2 | Images | Resize/convert images | S6 | ⏳ S6 |
 | 3 | Directory Privacy | Password-protected folders | S6 | ⏳ S6 |
 | 4 | Disk Usage | Folder-wise space | S6 | ⏳ S6 |
@@ -119,7 +119,7 @@
 | 54 | SSH Access | Keys + shell access control | S6 | ⏳ S6 |
 | 55 | IP Blocker | IP/range block | S13 | ⏳ S13 |
 | 56 | SSL/TLS | CSR, cert install, keys | S5 | ⏳ S5 |
-| 57 | SSL/TLS Status | Sab domains ka SSL ek table | S5 | ⏳ S5 |
+| 57 | SSL/TLS Status | Stats + expiry warnings + search + AutoSSL | S5 | 🟡 D5 (installer ready) |
 | 58 | Two-Factor Authentication | TOTP 2FA |S2B-2|✅|
 | 59 | Password & Security | Password change + strength |S2B|✅|
 | 60 | Leech Protection | Password vs hotlink abusers | S13 | ⏳ S13 |
@@ -148,7 +148,7 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 76 | Cron Jobs | Scheduled tasks | S5 | ⏳ S5 |
+| 76 | Cron Jobs | Common Settings presets + stats + search | S5 | 🟡 D5 (installer ready) |
 | 77 | Track DNS | DNS trace/debug | S9 | ⏳ S9 |
 | 78 | Indexes | Directory listing control | S5 | ⏳ S5 |
 | 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 |
@@ -192,8 +192,8 @@
 ### Account Functions / Information
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 104 | Create a New Account | S3 | 🟡 D4 (installer ready — WHM-order form, autofill, generator) |
-| 105 | List Accounts | S3 | 🟡 D4 (installer ready — stats, search, quick suspend) |
+| 104 | Create a New Account | S3 | ✅ D4 LIVE (09 Oct 2026) |
+| 105 | List Accounts | S3 | ✅ D4 LIVE (09 Oct 2026) |
 | 106 | Modify an Account | S3 | ⏳ S3 |
 | 107 | Suspend / Unsuspend (Manage Account Suspension) | S3 | ⏳ S3 |
 | 108 | Terminate Accounts | S3 | ⏳ S3 |

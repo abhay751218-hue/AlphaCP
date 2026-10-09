@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 
+### Added — Depth Wave D5 (final planned wave): Cron + SSL + File Manager + Dark Mode (09 Oct 2026)
+- `installer/d5-tools-fix.sh` v1.0 (builder: `tools/build-d5-tools-installer.py`) — 6 files, views+JS+CSS only; install & rollback sims green.
+- Cron Jobs: cPanel "Common Settings" presets (Once Per Minute → Once Per Year) that fill the 5 fields, stats vs MAXCRON, search, output-redirect tip.
+- SSL/TLS Status: stats strip (secured/attention/AutoSSL), expiry badges (≤21 days amber, ≤7 red), search.
+- File Manager: breadcrumbs, folder/file icons, human sizes, per-folder filter, 2-col folder/rename cards, monospace file editor.
+- DARK MODE: topbar moon/sun toggle (both panels), full dark token set in `panel.css` v3.3, persisted via localStorage (`panel.js` v1.5).
+
 ### Added — Depth Wave D4: WHM Create Account + List Accounts + Packages (09 Oct 2026)
 - `installer/d4-whm-fix.sh` v1.0 (builder: `tools/build-d4-whm-installer.py`) — 4 files, views+JS only (no controllers/routes/DB); install & rollback sims green.
 - Create a New Account: WHM field-order (Domain → Username auto-suggest), password Generate + strength meter + Show, package select with limits summary, provisioning/policy info cards.
