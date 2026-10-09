@@ -131,6 +131,31 @@ class MailController extends Controller
         return redirect()->route('email.index')->with('success', 'Mailbox update is queued (' . implode(' + ', $changes) . ').');
     }
 
+    /** D14 — cPanel-style mailbox login suspend/unsuspend ('!'-prefix hash, no data loss). */
+    public function suspend(Request $request, Mailbox $mailbox): RedirectResponse
+    {
+        $account = $this->requireAccount($request);
+        if ($mailbox->account_id !== $account->id) {
+            abort(403);
+        }
+        if ($account->isTerminated() || $account->isSuspended()) {
+            return back()->withErrors(['localpart' => 'Cannot change email on a suspended/terminated account.']);
+        }
+        $hash = (string) $mailbox->password_hash;
+        $suspending = ! str_starts_with($hash, '!');
+        $mailbox->password_hash = $suspending ? '!' . $hash : substr($hash, 1);
+        $mailbox->status = 'pending';
+        $mailbox->save();
+        MailProvisioner::enqueue($account);
+        $account->recordEvent('mail.set.queued', $mailbox->address());
+        Audit::log($suspending ? 'mail.suspend' : 'mail.unsuspend', 'warning', 'account', $account->id, [
+            'address' => $mailbox->address(),
+        ]);
+
+        return redirect()->route('email.index')->with('success',
+            'Mailbox ' . $mailbox->address() . ($suspending ? ' suspended (login band)' : ' unsuspended') . ' — queued.');
+    }
+
     public function destroy(Request $request, Mailbox $mailbox): RedirectResponse
     {
         $account = $this->requireAccount($request);

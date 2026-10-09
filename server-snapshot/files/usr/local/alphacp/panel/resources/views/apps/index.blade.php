@@ -21,23 +21,22 @@
     </div>
 </div>
 
-<div class="cards mt">
+<div class="apps-grid mt">
     @foreach ($catalog as $app)
-    <div class="card">
-        <h3>@include('partials.icons', ['icon' => 'box', 'cls' => 'hico']) {{ $app['name'] }}
-            @if ($app['id'] === 'wordpress')<span class="badge green">ready</span>@else<span class="badge gray">jald</span>@endif
-        </h3>
-        <p class="help">{{ $app['desc'] }}</p>
-        @if ($app['id'] === 'wordpress')
-            <form method="POST" action="{{ route('apps.store') }}">
-                @csrf
-                <input type="hidden" name="app" value="wordpress">
-                <button class="btn mt" type="submit">Install WordPress</button>
-            </form>
-        @else
-            <button class="btn secondary mt" disabled>Jald</button>
-        @endif
-    </div>
+        <div class="atile">
+            @include('partials.icons', ['icon' => 'box', 'cls' => 'atico'])
+            <strong>{{ $app['name'] }}</strong>
+            <p class="help">{{ $app['desc'] }}</p>
+            @if ($app['id'] === 'wordpress')
+                <form method="POST" action="{{ route('apps.store') }}">
+                    @csrf
+                    <input type="hidden" name="app" value="wordpress">
+                    <button class="btn small" type="submit">Install</button>
+                </form>
+            @else
+                <span class="badge gray">jald aayega</span>
+            @endif
+        </div>
     @endforeach
 </div>
 @endsection

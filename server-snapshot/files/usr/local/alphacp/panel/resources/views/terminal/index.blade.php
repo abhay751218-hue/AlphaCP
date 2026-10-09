@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Terminal')
-@section('subtitle', 'cPanel-style Terminal — read-only whitelist, command root agent chalata hai')
+@section('subtitle', 'AlphaCP Terminal — read-only whitelist, command root agent chalata hai')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('system.services') }}">Service Status</a>

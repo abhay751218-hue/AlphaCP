@@ -24,8 +24,8 @@
         <div class="table-wrap mt">
             <table>
                 <tbody>
-                <tr><td><span class="badge red">WHM</span> root/reseller</td><td class="mono">https://{{ request()->getHost() }}:{{ $cfg['whm'] }}/</td></tr>
-                <tr><td><span class="badge blue">cPanel</span> customer</td><td class="mono">https://{{ request()->getHost() }}:{{ $cfg['cpanel'] }}/</td></tr>
+                <tr><td><span class="badge red">Server Manager</span> root/reseller</td><td class="mono">https://{{ request()->getHost() }}:{{ $cfg['whm'] }}/</td></tr>
+                <tr><td><span class="badge blue">Account Panel</span> customer</td><td class="mono">https://{{ request()->getHost() }}:{{ $cfg['cpanel'] }}/</td></tr>
                 <tr><td><span class="badge green">Webmail</span> Roundcube</td><td class="mono">https://{{ request()->getHost() }}:{{ $cfg['webmail'] }}/</td></tr>
                 <tr><td><span class="badge gray">Link-page</span></td><td class="mono">@if ($cfg['link_enabled'])https://{{ request()->getHost() }}:{{ $cfg['link'] }}/@else — band hai @endif</td></tr>
                 </tbody>
@@ -51,9 +51,9 @@
         @csrf
         <div class="grid cols-2">
             <div>
-                <label for="pt-whm">WHM port (root / reseller)</label>
+                <label for="pt-whm">Server Manager port (root / reseller)</label>
                 <input id="pt-whm" type="number" name="whm" min="1024" max="65535" value="{{ old('whm', $cfg['whm']) }}" required>
-                <label for="pt-cpanel">cPanel port (customers)</label>
+                <label for="pt-cpanel">Account Panel port (customers)</label>
                 <input id="pt-cpanel" type="number" name="cpanel" min="1024" max="65535" value="{{ old('cpanel', $cfg['cpanel']) }}" required>
             </div>
             <div>

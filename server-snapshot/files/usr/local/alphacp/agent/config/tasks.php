@@ -712,7 +712,7 @@ return [
         'handler'     => Tasks\FilesSet::class,
         'safety'      => 'mutating',
         'timeout'     => 30,
-        'description' => 'mkdir/write/delete/rename a path under the account home.',
+        'description' => 'mkdir/write/delete/rename/chmod/compress/extract/upload a path under the account home.',
         'paths'       => ['/home', '/etc/apache2', '/etc/php', '/usr/local/alphacp'],
         'schema'      => [
             'type'                 => 'object',
@@ -720,10 +720,12 @@ return [
             'required'             => ['username', 'op', 'path'],
             'properties'           => [
                 'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
-                'op'       => ['type' => 'string', 'enum' => ['mkdir', 'write', 'delete', 'rename']],
+                'op'       => ['type' => 'string', 'enum' => ['mkdir', 'write', 'delete', 'rename', 'chmod', 'compress', 'extract', 'upload']],
                 'path'     => ['type' => 'string', 'maxLength' => 240],
                 'to'       => ['type' => 'string', 'maxLength' => 240],
                 'content'  => ['type' => 'string', 'maxLength' => 262144],
+                'mode'     => ['type' => 'string', 'pattern' => '^[0-7]{3}$'],
+                'staging'  => ['type' => 'string', 'pattern' => '^/usr/local/alphacp/panel/storage/app/fm-staging/[A-Za-z0-9._-]{1,120}$', 'maxLength' => 240],
             ],
         ],
     ],
@@ -834,6 +836,25 @@ return [
         'safety'      => 'mutating',
         'timeout'     => 60,
         'description' => 'Add User To Database: grant an account MariaDB user ALL PRIVILEGES on one database.',
+        'paths'       => ['/home', '/usr/local/alphacp'],
+        'schema'      => [
+            'type'                 => 'object',
+            'additionalProperties' => false,
+            'required'             => ['username', 'user', 'database'],
+            'properties'           => [
+                'username' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9]{2,15}$', 'maxLength' => 16],
+                'user'     => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+                'database' => ['type' => 'string', 'pattern' => '^[a-z][a-z0-9_]{0,15}$', 'maxLength' => 16],
+                'host'     => ['type' => 'string', 'maxLength' => 190],
+            ],
+        ],
+    ],
+
+    'db.user.revoke' => [
+        'handler'     => Tasks\DbUserRevoke::class,
+        'safety'      => 'mutating',
+        'timeout'     => 60,
+        'description' => 'Revoke all privileges of an account MariaDB user on one database (undo grant).',
         'paths'       => ['/home', '/usr/local/alphacp'],
         'schema'      => [
             'type'                 => 'object',
@@ -1108,7 +1129,7 @@ return [
                         'properties'           => [
                             'domain' => ['type' => 'string', 'maxLength' => 190],
                             'name'   => ['type' => 'string', 'maxLength' => 63],
-                            'type'   => ['type' => 'string', 'enum' => ['A', 'CNAME', 'MX', 'TXT']],
+                            'type'   => ['type' => 'string', 'enum' => ['A', 'AAAA', 'CNAME', 'MX', 'TXT']],
                             'value'  => ['type' => 'string', 'maxLength' => 255],
                         ],
                     ],
@@ -1643,7 +1664,7 @@ return [
                         'properties'           => [
                             'domain' => ['type' => 'string', 'maxLength' => 190],
                             'name'   => ['type' => 'string', 'maxLength' => 63],
-                            'type'   => ['type' => 'string', 'enum' => ['A', 'CNAME', 'MX', 'TXT']],
+                            'type'   => ['type' => 'string', 'enum' => ['A', 'AAAA', 'CNAME', 'MX', 'TXT']],
                             'value'  => ['type' => 'string', 'maxLength' => 255],
                         ],
                     ],

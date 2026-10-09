@@ -1,6 +1,6 @@
 @extends('layouts.panel')
 
-@section('title', config('acp.brand.name','AlphaCP').' cPanel — Account Panel')
+@section('title', config('acp.brand.name','AlphaCP').' — Account Panel')
 @section('subtitle', 'Files, email, domains, databases — ye aapka hosting control panel hai')
 
 @section('actions')
@@ -65,7 +65,7 @@
                     <dt>PHP version</dt><dd>{{ $account->php_version }}</dd>
                     <dt>Package</dt><dd>{{ $account->package?->name ?? '—' }}</dd>
                     <dt>Status</dt><dd>{{ $account->status }}</dd>
-                    <dt>Theme</dt><dd>Paper (cPanel-style)</dd>
+                    <dt>Theme</dt><dd>AlphaCP Paper</dd>
                     <dt>Panel version</dt><dd>{{ config('acp.version') }}</dd>
                 </dl>
             @else

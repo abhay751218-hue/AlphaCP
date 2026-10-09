@@ -169,7 +169,39 @@
             <button class="btn" type="submit">Grant ALL PRIVILEGES</button>
         </div>
         @error('database')<p class="error">{{ $message }}</p>@enderror
-        <p class="help">cPanel jaisa ALL PRIVILEGES ek database par. Revoke (privilege hatana) agle update me — abhi ke liye user delete karke dubara banao.</p>
+        <p class="help">ALL PRIVILEGES ek database par — one click.</p>
+    </form>
+</div>
+
+{{-- D14: revoke privileges (grant ka ulta) --}}
+<div class="card mt">
+    <h3>@include('partials.icons', ['icon' => 'ban', 'cls' => 'hico']) Revoke User From Database</h3>
+    <form method="post" action="{{ route('mysql-users.revoke') }}">
+        @csrf
+        <div class="row" style="flex-wrap:wrap; align-items:flex-end">
+            <div>
+                <label for="revoke-user">User</label>
+                <select id="revoke-user" name="mysql_user_id" required style="min-width:200px">
+                    @forelse ($users as $user)
+                        <option value="{{ $user->id }}">{{ $account->username . '_' . $user->name . '@' . $user->host }}</option>
+                    @empty
+                        <option value="" disabled>No users</option>
+                    @endforelse
+                </select>
+            </div>
+            <div>
+                <label for="revoke-db">Database</label>
+                <select id="revoke-db" name="mysql_database_id" required style="min-width:200px">
+                    @forelse ($databases as $database)
+                        <option value="{{ $database->id }}">{{ $database->fullName($account->username) }}</option>
+                    @empty
+                        <option value="" disabled>No databases</option>
+                    @endforelse
+                </select>
+            </div>
+            <button class="btn small danger" type="submit">Revoke privileges</button>
+        </div>
+        <p class="help">User aur database dono bache rehte hain — sirf access hatta hai (REVOKE ALL PRIVILEGES).</p>
     </form>
 </div>
 @endcan

@@ -91,11 +91,17 @@ final class Mail
         if (str_starts_with($hash, '{BLF-CRYPT}')) {
             $hash = substr($hash, strlen('{BLF-CRYPT}'));
         }
+        // D14: '!' prefix = suspended mailbox (cPanel-style login suspend) —
+        // dovecot ke liye invalid hash ban jata hai, auth hamesha fail.
+        $suspended = str_starts_with($hash, '!');
+        if ($suspended) {
+            $hash = substr($hash, 1);
+        }
         if (preg_match('/^\$2[ayb]\$[0-9]{2}\$[A-Za-z0-9.\/]{53}$/', $hash) !== 1) {
             throw new TaskRejectedException('mailbox hash must be bcrypt');
         }
 
-        return $hash;
+        return ($suspended ? '!' : '') . $hash;
     }
 
     public static function normalizeQuota(mixed $quota): int

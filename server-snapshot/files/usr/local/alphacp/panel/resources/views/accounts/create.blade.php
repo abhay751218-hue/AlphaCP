@@ -28,7 +28,7 @@
             <input id="main_domain" name="main_domain" value="{{ old('main_domain') }}" required
                    autocapitalize="none" spellcheck="false" placeholder="example.com"
                    data-autofill-username="#username" @disabled(! $gate['ok'])>
-            <p class="help">FQDN — username neeche auto-suggest hoga (WHM jaisa).</p>
+            <p class="help">FQDN — username neeche auto-suggest hoga.</p>
 
             <label for="username">Username</label>
             <input id="username" name="username" value="{{ old('username') }}" required
@@ -88,7 +88,7 @@
             <strong>sirf ek baar</strong> dikhta hai — copy karke customer ko do. Customer pehle login par apna password set karega.</p>
         <h3 class="mt">@include('partials.icons', ['icon' => 'mail', 'cls' => 'hico']) Baad me kya</h3>
         <p class="help">Account banne ke baad: <span class="mono">List Accounts → open</span> se package upgrade,
-            quota, PHP version, suspend/terminate. Email/DB/domains customer apne cPanel-style panel (2083) me banayega.</p>
+            quota, PHP version, suspend/terminate. Email/DB/domains customer apne Account Panel (2083) me banayega.</p>
     </div>
 </div>
 @endsection

@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Packages')
-@section('subtitle', 'Hosting plans — cPanel-compatible limit keys (QUOTA, MAXPOP, MAXSQL…)')
+@section('subtitle', 'Hosting plans — standard limit keys (QUOTA, MAXPOP, MAXSQL…)')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('accounts.index') }}">List Accounts</a>

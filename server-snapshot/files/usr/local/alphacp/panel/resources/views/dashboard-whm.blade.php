@@ -1,6 +1,6 @@
 @extends('layouts.panel')
 
-@section('title', config('acp.brand.name','AlphaCP').' WHM — Server Manager Dashboard')
+@section('title', config('acp.brand.name','AlphaCP').' — Server Manager Dashboard')
 @section('subtitle', 'Server health, accounts, packages — customer sites are not created on this page; they use the account panel')
 
 @section('actions')
@@ -22,6 +22,19 @@
         @can('packages.view')<a class="btn small secondary" href="{{ route('packages.index') }}">Packages</a>@endcan
         @can('accounts.view')<a class="btn small secondary" href="{{ route('transfer-restore.index') }}">Transfer or Restore a Hosting Account</a>@endcan
     </p>
+</div>
+
+<div class="whm-tiles">
+    @foreach ($sections as $sec)
+        @php $first = collect($sec['items'] ?? [])->first(fn ($it) => ($it['status'] ?? '') === 'live' && !empty($it['route'])); @endphp
+        @if ($first)
+            <a class="wtile" href="{{ route($first['route']) }}">
+                @include('partials.icons', ['icon' => $sec['icon'] ?? 'box', 'cls' => 'wtico'])
+                <span>{{ $sec['label'] }}</span>
+                <em>{{ count($sec['items']) }} tools</em>
+            </a>
+        @endif
+    @endforeach
 </div>
 <div class="grid cols-4">
     <div class="card">

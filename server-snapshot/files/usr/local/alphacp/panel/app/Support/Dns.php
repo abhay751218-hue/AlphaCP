@@ -7,7 +7,7 @@ namespace App\Support;
 /** Zone Editor name/type/value (agent re-validates). */
 final class Dns
 {
-    public const TYPES = ['A', 'CNAME', 'MX', 'TXT'];
+    public const TYPES = ['A', 'AAAA', 'CNAME', 'MX', 'TXT'];
     public const TRACK_TYPES = ['A', 'CNAME', 'MX', 'NS', 'TXT', 'ALL'];
     public const TTLS = [60, 300, 3600, 14400, 86400];
     public const NAMESERVER_SOFTWARE = ['bind', 'nsd', 'powerdns', 'disabled'];
@@ -64,7 +64,28 @@ final class Dns
 
             return $value;
         }
-        if ($type === 'CNAME' || $type === 'MX') {
+        if ($type === 'AAAA') {
+            if (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) === false) {
+                return null;
+            }
+
+            return strtolower($value);
+        }
+        if ($type === 'MX') {
+            // D14: optional priority — "10 mail.example.com"
+            $prio = '';
+            if (preg_match('/^(\d{1,5})\s+(.+)$/', $value, $m) === 1) {
+                if ((int) $m[1] > 65535) {
+                    return null;
+                }
+                $prio = $m[1] . ' ';
+                $value = trim($m[2]);
+            }
+            $domain = self::tryDomain($value);
+
+            return $domain === null ? null : $prio . $domain;
+        }
+        if ($type === 'CNAME') {
             return self::tryDomain($value);
         }
         if (preg_match('/^[A-Za-z0-9 .,_:+?=\\-]{1,255}$/', $value) !== 1) {

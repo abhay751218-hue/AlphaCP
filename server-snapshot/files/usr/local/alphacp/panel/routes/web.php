@@ -202,6 +202,8 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('email.store');
     Route::delete('/email/{mailbox}', [MailController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('email.destroy');
+    Route::put('/email/{mailbox}', [MailController::class, 'update'])
+        ->middleware('perm:email.manage')->name('email.update');
 
     Route::get('/forwarders', [ForwardersController::class, 'index'])
         ->middleware('perm:email.view')->name('forwarders.index');
@@ -342,6 +344,8 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:dns.manage')->name('zone-editor.store');
     Route::delete('/zone-editor/{dns_record}', [ZoneEditorController::class, 'destroy'])
         ->middleware('perm:dns.manage')->name('zone-editor.destroy');
+    Route::put('/zone-editor/{dns_record}', [ZoneEditorController::class, 'update'])
+        ->middleware('perm:dns.manage')->name('zone-editor.update');
 
     Route::get('/dynamic-dns', [DynamicDnsController::class, 'index'])
         ->middleware('perm:dns.view')->name('dynamic-dns.index');
@@ -690,6 +694,26 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:software.manage')->name('nodejs.apps.control');
 });
 // ---- /D13 ----
+// ---- D14: mailbox suspend + MX prio/AAAA + db-user revoke ----
+Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
+    Route::post('/email/{mailbox}/suspend', [MailController::class, 'suspend'])
+        ->middleware('perm:email.manage')->name('email.suspend');
+    Route::post('/mysql-users/revoke', [MysqlUsersController::class, 'revoke'])
+        ->middleware('perm:databases.manage')->name('mysql-users.revoke');
+});
+// ---- /D14 ----
+// ---- D15: File Manager upload + compress/extract + chmod ----
+Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
+    Route::post('/files/upload', [FilesController::class, 'upload'])
+        ->middleware('perm:files.manage')->name('files.upload');
+    Route::post('/files/chmod', [FilesController::class, 'chmod'])
+        ->middleware('perm:files.manage')->name('files.chmod');
+    Route::post('/files/compress', [FilesController::class, 'compress'])
+        ->middleware('perm:files.manage')->name('files.compress');
+    Route::post('/files/extract', [FilesController::class, 'extract'])
+        ->middleware('perm:files.manage')->name('files.extract');
+});
+// ---- /D15 ----
 // ---- WHM API 1 compatible (billing integration, Bearer token) ----
 Route::prefix('json-api')->middleware([\App\Http\Middleware\EnsureApiToken::class])->group(function (): void {
     Route::get('/listaccts', [\App\Http\Controllers\WhmApiController::class, 'listaccts']);

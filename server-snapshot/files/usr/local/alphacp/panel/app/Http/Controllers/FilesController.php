@@ -95,6 +95,103 @@ class FilesController extends Controller
             ->with('success', 'Delete is queued.');
     }
 
+    /** D15 — chmod (permissions). */
+    public function chmod(Request $request): RedirectResponse
+    {
+        $account = $this->guardAccount($request);
+        if ($account instanceof RedirectResponse) {
+            return $account;
+        }
+        $data = $request->validate([
+            'path' => ['required', 'string', 'max:240'],
+            'mode' => ['required', 'string', 'in:644,600,640,664,755,750,700,775'],
+        ]);
+        $path = Files::tryRel($data['path']);
+        if ($path === null || $path === '') {
+            return back()->withErrors(['path' => 'Invalid path (no ..).']);
+        }
+        $this->enqueue($account, 'chmod', $path, ['mode' => $data['mode']]);
+
+        return redirect()->route('files.index', ['path' => Files::parent($path)])
+            ->with('success', "Permissions {$data['mode']} queued.");
+    }
+
+    /** D15 — compress to <path>.tar.gz (cPanel Compress). */
+    public function compress(Request $request): RedirectResponse
+    {
+        $account = $this->guardAccount($request);
+        if ($account instanceof RedirectResponse) {
+            return $account;
+        }
+        $data = $request->validate(['path' => ['required', 'string', 'max:236']]);
+        $path = Files::tryRel($data['path']);
+        if ($path === null || $path === '') {
+            return back()->withErrors(['path' => 'Invalid path (no ..).']);
+        }
+        $this->enqueue($account, 'compress', $path);
+
+        return redirect()->route('files.index', ['path' => Files::parent($path)])
+            ->with('success', 'Compress (tar.gz) is queued.');
+    }
+
+    /** D15 — extract .tar.gz / .tgz in-place (cPanel Extract). */
+    public function extract(Request $request): RedirectResponse
+    {
+        $account = $this->guardAccount($request);
+        if ($account instanceof RedirectResponse) {
+            return $account;
+        }
+        $data = $request->validate(['path' => ['required', 'string', 'max:240']]);
+        $path = Files::tryRel($data['path']);
+        if ($path === null || $path === '' || (! str_ends_with($path, '.tar.gz') && ! str_ends_with($path, '.tgz'))) {
+            return back()->withErrors(['path' => 'Sirf .tar.gz / .tgz extract hota hai.']);
+        }
+        $this->enqueue($account, 'extract', $path);
+
+        return redirect()->route('files.index', ['path' => Files::parent($path)])
+            ->with('success', 'Extract is queued.');
+    }
+
+    /** D15 — browser upload (staging file -> agent moves with ownership). */
+    public function upload(Request $request): RedirectResponse
+    {
+        $account = $this->guardAccount($request);
+        if ($account instanceof RedirectResponse) {
+            return $account;
+        }
+        $data = $request->validate([
+            'dir'  => ['nullable', 'string', 'max:236'],
+            'file' => ['required', 'file', 'max:65536'], // 64 MB (KB me)
+        ]);
+        $dir = Files::tryRel((string) ($data['dir'] ?? 'public_html'));
+        if ($dir === null) {
+            return back()->withErrors(['file' => 'Invalid folder path.']);
+        }
+        $uploaded = $request->file('file');
+        $orig = (string) $uploaded->getClientOriginalName();
+        $name = preg_replace('/[^A-Za-z0-9._-]/', '_', $orig) ?: 'upload.bin';
+        $name = ltrim(substr($name, 0, 80), '.') ?: 'upload.bin';
+
+        $stagingDir = storage_path('app/fm-staging');
+        if (! is_dir($stagingDir)) {
+            @mkdir($stagingDir, 0750, true);
+        }
+        // purani staging files (1 ghanta+) saaf
+        foreach (glob($stagingDir . '/*') ?: [] as $old) {
+            if (is_file($old) && filemtime($old) < time() - 3600) {
+                @unlink($old);
+            }
+        }
+        $stagingName = bin2hex(random_bytes(8)) . '-' . $name;
+        $uploaded->move($stagingDir, $stagingName);
+
+        $path = $dir === '' ? $name : $dir . '/' . $name;
+        $this->enqueue($account, 'upload', $path, ['staging' => $stagingDir . '/' . $stagingName]);
+
+        return redirect()->route('files.index', ['path' => $dir])
+            ->with('success', "Upload '{$name}' is queued — kuch seconds me list me aa jayegi.");
+    }
+
     /** @param array<string, mixed> $rules */
     private function mutate(Request $request, string $op, array $rules): RedirectResponse
     {

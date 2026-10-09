@@ -4,6 +4,8 @@
 /usr/local/alphacp/agent/config/tasks.php.bak-d11restart-20261009160034
 /usr/local/alphacp/agent/config/tasks.php.bak-d12pma-20261009162458
 /usr/local/alphacp/agent/config/tasks.php.bak-d13node-20261009164655
+/usr/local/alphacp/agent/config/tasks.php.bak-d14parity-20261009165725
+/usr/local/alphacp/agent/config/tasks.php.bak-d15fm-20261009171411
 /usr/local/alphacp/agent/src/AccountIdentity.php
 /usr/local/alphacp/agent/src/AccountOs.php
 /usr/local/alphacp/agent/src/AccountPaths.php
@@ -11,6 +13,7 @@
 /usr/local/alphacp/agent/src/Backup.php
 /usr/local/alphacp/agent/src/BackupArchiveStore.php
 /usr/local/alphacp/agent/src/BindServer.php
+/usr/local/alphacp/agent/src/BindServer.php.bak-d14parity-20261009165725
 /usr/local/alphacp/agent/src/Bootstrap.php
 /usr/local/alphacp/agent/src/Cli.php
 /usr/local/alphacp/agent/src/CommandExecutor.php
@@ -21,14 +24,17 @@
 /usr/local/alphacp/agent/src/Daemon.php
 /usr/local/alphacp/agent/src/Db.php
 /usr/local/alphacp/agent/src/Dns.php
+/usr/local/alphacp/agent/src/Dns.php.bak-d14parity-20261009165725
 /usr/local/alphacp/agent/src/ErrorPages.php
 /usr/local/alphacp/agent/src/Files.php
+/usr/local/alphacp/agent/src/Files.php.bak-d15fm-20261009171411
 /usr/local/alphacp/agent/src/Ftp.php
 /usr/local/alphacp/agent/src/Git.php
 /usr/local/alphacp/agent/src/Handlers.php
 /usr/local/alphacp/agent/src/Indexes.php
 /usr/local/alphacp/agent/src/JsonSchema.php
 /usr/local/alphacp/agent/src/Mail.php
+/usr/local/alphacp/agent/src/Mail.php.bak-d14parity-20261009165725
 /usr/local/alphacp/agent/src/MailServer.php
 /usr/local/alphacp/agent/src/Metrics.php
 /usr/local/alphacp/agent/src/MimeTypes.php
@@ -78,6 +84,7 @@
 /usr/local/alphacp/agent/src/Tasks/DbUserDrop.php
 /usr/local/alphacp/agent/src/Tasks/DbUserGrant.php
 /usr/local/alphacp/agent/src/Tasks/DbUserPassword.php
+/usr/local/alphacp/agent/src/Tasks/DbUserRevoke.php
 /usr/local/alphacp/agent/src/Tasks/DnsTrack.php
 /usr/local/alphacp/agent/src/Tasks/DomainAdd.php
 /usr/local/alphacp/agent/src/Tasks/DomainRemove.php
@@ -85,6 +92,7 @@
 /usr/local/alphacp/agent/src/Tasks/ErrorPagesSet.php
 /usr/local/alphacp/agent/src/Tasks/FilesList.php
 /usr/local/alphacp/agent/src/Tasks/FilesSet.php
+/usr/local/alphacp/agent/src/Tasks/FilesSet.php.bak-d15fm-20261009171411
 /usr/local/alphacp/agent/src/Tasks/FilesUsage.php
 /usr/local/alphacp/agent/src/Tasks/ForwardSet.php
 /usr/local/alphacp/agent/src/Tasks/FtpAdd.php
@@ -285,6 +293,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/FileDirectoryRestorationController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FileRestorationController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FilesController.php
+/usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-d15fm-20261009171411
 /usr/local/alphacp/panel/app/Http/Controllers/ForwardersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FtpController.php
 /usr/local/alphacp/panel/app/Http/Controllers/GitController.php
@@ -298,6 +307,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseServerController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php
+/usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d14parity-20261009165725
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/app/Http/Controllers/MailQueueController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailingListsController.php
@@ -307,6 +317,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlDatabasesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlDatabasesController.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php
+/usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php.bak-d14parity-20261009165725
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlWizardController.php
 /usr/local/alphacp/panel/app/Http/Controllers/NameserverSelectionController.php
@@ -437,6 +448,7 @@
 /usr/local/alphacp/panel/app/Support/CronProvisioner.php
 /usr/local/alphacp/panel/app/Support/DatabaseProvisioner.php
 /usr/local/alphacp/panel/app/Support/Dns.php
+/usr/local/alphacp/panel/app/Support/Dns.php.bak-d14parity-20261009165725
 /usr/local/alphacp/panel/app/Support/DnsProvisioner.php
 /usr/local/alphacp/panel/app/Support/DomainProvisioner.php
 /usr/local/alphacp/panel/app/Support/DynamicDns.php
@@ -569,6 +581,7 @@
 /usr/local/alphacp/panel/deploy/php-fpm-alphacp.conf.in
 /usr/local/alphacp/panel/phpunit.xml
 /usr/local/alphacp/panel/public/assets/panel.css
+/usr/local/alphacp/panel/public/assets/panel.css.bak-d17look-20261009174756
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009073626
@@ -584,6 +597,7 @@
 /usr/local/alphacp/panel/public/index.php
 /usr/local/alphacp/panel/public/robots.txt
 /usr/local/alphacp/panel/resources/views/accounts/create.blade.php
+/usr/local/alphacp/panel/resources/views/accounts/create.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/accounts/create.blade.php.bak-d4whm-20261009092933
 /usr/local/alphacp/panel/resources/views/accounts/index.blade.php
 /usr/local/alphacp/panel/resources/views/accounts/index.blade.php.bak-d4whm-20261009092933
@@ -593,10 +607,12 @@
 /usr/local/alphacp/panel/resources/views/api-tokens/index.blade.php
 /usr/local/alphacp/panel/resources/views/api-tokens/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/apps/index.blade.php
+/usr/local/alphacp/panel/resources/views/apps/index.blade.php.bak-d17look-20261009174756
 /usr/local/alphacp/panel/resources/views/apps/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/audit/index.blade.php
 /usr/local/alphacp/panel/resources/views/audit/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/auth/login.blade.php
+/usr/local/alphacp/panel/resources/views/auth/login.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/auth/twofactor.blade.php
 /usr/local/alphacp/panel/resources/views/autoresponders/index.blade.php
 /usr/local/alphacp/panel/resources/views/autoresponders/index.blade.php.bak-d6aemail-20261009103449
@@ -616,10 +632,13 @@
 /usr/local/alphacp/panel/resources/views/cron/index.blade.php
 /usr/local/alphacp/panel/resources/views/cron/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php
+/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009073626
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/dashboard-whm.blade.php
+/usr/local/alphacp/panel/resources/views/dashboard-whm.blade.php.bak-d16brand-20261009174013
+/usr/local/alphacp/panel/resources/views/dashboard-whm.blade.php.bak-d17look-20261009174756
 /usr/local/alphacp/panel/resources/views/dashboard.blade.php
 /usr/local/alphacp/panel/resources/views/default-address/index.blade.php
 /usr/local/alphacp/panel/resources/views/default-address/index.blade.php.bak-d6aemail-20261009103449
@@ -644,6 +663,8 @@
 /usr/local/alphacp/panel/resources/views/email-routing/index.blade.php
 /usr/local/alphacp/panel/resources/views/email-routing/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/email/index.blade.php
+/usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d14parity-20261009165725
+/usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/resources/views/encryption/index.blade.php
 /usr/local/alphacp/panel/resources/views/encryption/index.blade.php.bak-d6aemail-20261009103449
@@ -661,12 +682,15 @@
 /usr/local/alphacp/panel/resources/views/file-restoration/index.blade.php
 /usr/local/alphacp/panel/resources/views/file-restoration/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/files/index.blade.php
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-d15fm-20261009171411
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-d17look-20261009174756
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/forwarders/index.blade.php
 /usr/local/alphacp/panel/resources/views/forwarders/index.blade.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/resources/views/ftp/index.blade.php
 /usr/local/alphacp/panel/resources/views/ftp/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/git/index.blade.php
+/usr/local/alphacp/panel/resources/views/git/index.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/git/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/git/status.blade.php
 /usr/local/alphacp/panel/resources/views/global-email-routing/index.blade.php
@@ -684,6 +708,7 @@
 /usr/local/alphacp/panel/resources/views/layouts/guest.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
+/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009075354
@@ -698,6 +723,8 @@
 /usr/local/alphacp/panel/resources/views/mime/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/monitoring/index.blade.php
 /usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php
+/usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php.bak-d14parity-20261009165725
+/usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/resources/views/mysql-wizard/index.blade.php
 /usr/local/alphacp/panel/resources/views/mysql-wizard/index.blade.php.bak-d6csoft-20261009124856
@@ -712,16 +739,19 @@
 /usr/local/alphacp/panel/resources/views/optimize/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/packages/edit.blade.php
 /usr/local/alphacp/panel/resources/views/packages/index.blade.php
+/usr/local/alphacp/panel/resources/views/packages/index.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/packages/index.blade.php.bak-d4whm-20261009092933
 /usr/local/alphacp/panel/resources/views/park-domain/index.blade.php
 /usr/local/alphacp/panel/resources/views/partials/cpanel-sidebar.blade.php
 /usr/local/alphacp/panel/resources/views/partials/dash-sections.blade.php
+/usr/local/alphacp/panel/resources/views/partials/dash-sections.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/partials/flash.blade.php
 /usr/local/alphacp/panel/resources/views/partials/icons.blade.php
 /usr/local/alphacp/panel/resources/views/partials/icons.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/partials/tile.blade.php
 /usr/local/alphacp/panel/resources/views/partials/tile.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php
+/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009073626
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009075354
@@ -730,8 +760,10 @@
 /usr/local/alphacp/panel/resources/views/php/ini.blade.php
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d12pma-20261009162458
+/usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/resources/views/ports/index.blade.php
+/usr/local/alphacp/panel/resources/views/ports/index.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/ports/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/privacy/index.blade.php
 /usr/local/alphacp/panel/resources/views/privacy/index.blade.php.bak-d6bfiles-20261009104956
@@ -757,8 +789,10 @@
 /usr/local/alphacp/panel/resources/views/system/index.blade.php
 /usr/local/alphacp/panel/resources/views/system/services.blade.php
 /usr/local/alphacp/panel/resources/views/system/services.blade.php.bak-d11restart-20261009160034
+/usr/local/alphacp/panel/resources/views/system/services.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/system/tasks.blade.php
 /usr/local/alphacp/panel/resources/views/terminal/index.blade.php
+/usr/local/alphacp/panel/resources/views/terminal/index.blade.php.bak-d16brand-20261009174013
 /usr/local/alphacp/panel/resources/views/terminal/index.blade.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php
 /usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php.bak-d6aemail-20261009103449
@@ -778,6 +812,7 @@
 /usr/local/alphacp/panel/resources/views/webmail/index.blade.php
 /usr/local/alphacp/panel/resources/views/webmail/index.blade.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php
+/usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d14parity-20261009165725
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/resources/views/zone-templates/index.blade.php
 /usr/local/alphacp/panel/resources/views/zone-ttl/index.blade.php
@@ -787,6 +822,8 @@
 /usr/local/alphacp/panel/routes/web.php.bak-d11restart-20261009160034
 /usr/local/alphacp/panel/routes/web.php.bak-d12pma-20261009162458
 /usr/local/alphacp/panel/routes/web.php.bak-d13node-20261009164655
+/usr/local/alphacp/panel/routes/web.php.bak-d14parity-20261009165725
+/usr/local/alphacp/panel/routes/web.php.bak-d15fm-20261009171411
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d7metrics-20261009130206

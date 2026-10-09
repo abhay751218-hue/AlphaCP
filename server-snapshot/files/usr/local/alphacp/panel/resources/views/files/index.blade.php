@@ -8,6 +8,16 @@
 @endsection
 
 @section('content')
+
+<div class="fm-toolbar">
+    @can('files.manage')
+        <a class="btn small" href="#fm-upload">@include('partials.icons', ['icon' => 'send', 'cls' => 'hico']) Upload</a>
+        <a class="btn small secondary" href="#fm-newfolder">@include('partials.icons', ['icon' => 'folder', 'cls' => 'hico']) New Folder</a>
+        <a class="btn small secondary" href="#fm-newfile">@include('partials.icons', ['icon' => 'file', 'cls' => 'hico']) New File</a>
+        <a class="btn small secondary" href="#fm-rename">@include('partials.icons', ['icon' => 'wrench', 'cls' => 'hico']) Rename / Move</a>
+    @endcan
+    <span class="fm-hint">Har row par: Permissions · Compress · Extract · Delete</span>
+</div>
 @if ($panelMode === 'whm')
 <div class="card">
     <p>This tool is part of the <strong>customer account panel</strong>. Customers manage files here.</p>
@@ -73,11 +83,37 @@
                     <td class="mono muted">{{ $isDir ? '—' : $size }}</td>
                     <td class="right">
                         @can('files.manage')
+                            @php($rowPath = trim($path.'/'.($row['name'] ?? ''), '/'))
+                            <div class="row" style="justify-content:flex-end; gap:6px; flex-wrap:wrap">
+                            <form method="post" action="{{ route('files.chmod') }}" class="row" style="gap:4px">
+                                @csrf
+                                <input type="hidden" name="path" value="{{ $rowPath }}">
+                                <select name="mode" style="min-width:86px">
+                                    @foreach (['644','600','640','664','755','750','700','775'] as $m)
+                                        <option value="{{ $m }}" @selected($m === ($isDir ? '755' : '644'))>{{ $m }}</option>
+                                    @endforeach
+                                </select>
+                                <button class="btn small secondary" type="submit">chmod</button>
+                            </form>
+                            @if (! $isDir && (str_ends_with((string) ($row['name'] ?? ''), '.tar.gz') || str_ends_with((string) ($row['name'] ?? ''), '.tgz')))
+                                <form method="post" action="{{ route('files.extract') }}">
+                                    @csrf
+                                    <input type="hidden" name="path" value="{{ $rowPath }}">
+                                    <button class="btn small secondary" type="submit">Extract</button>
+                                </form>
+                            @else
+                                <form method="post" action="{{ route('files.compress') }}">
+                                    @csrf
+                                    <input type="hidden" name="path" value="{{ $rowPath }}">
+                                    <button class="btn small secondary" type="submit">Compress</button>
+                                </form>
+                            @endif
                             <form method="post" action="{{ route('files.destroy') }}" onsubmit="return confirm('Delete {{ $row['name'] ?? '' }}?{{ $isDir ? ' Folder + andar ka sab kuch delete hoga!' : '' }}')">
                                 @csrf
                                 <input type="hidden" name="path" value="{{ trim($path.'/'.($row['name'] ?? ''), '/') }}">
                                 <button class="btn small danger" type="submit">Delete</button>
                             </form>
+                            </div>
                         @endcan
                     </td>
                 </tr>
@@ -87,12 +123,30 @@
             </tbody>
         </table>
     </div>
-    <p class="help">Backups ke liye <span class="mono">Backup</span> tool · bada upload FTP/SFTP se. Paths account home tak jailed hain (<span class="mono">..</span> blocked).</p>
+    <p class="help">Upload neeche se (64 MB tak) · usse bada FTP/SFTP se. Compress = <span class="mono">.tar.gz</span> · Paths account home tak jailed (<span class="mono">..</span> blocked).</p>
 </div>
 
 @can('files.manage')
+{{-- D15: browser upload --}}
+<div class="card mt" id="fm-upload">
+    <h3>@include('partials.icons', ['icon' => 'send', 'cls' => 'hico']) Upload file <span class="muted mono">~/{{ $path }}</span></h3>
+    <form method="post" action="{{ route('files.upload') }}" enctype="multipart/form-data">
+        @csrf
+        <input type="hidden" name="dir" value="{{ $path }}">
+        <div class="row" style="align-items:flex-end; flex-wrap:wrap; gap:12px">
+            <div>
+                <label for="fm-file">File (max 64 MB)</label>
+                <input id="fm-file" name="file" type="file" required>
+            </div>
+            <button class="btn" type="submit">⬆️ Upload</button>
+        </div>
+        @error('file')<p class="error">{{ $message }}</p>@enderror
+        <p class="help" style="margin:8px 0 0">File isi folder me aayegi (ownership account user ki). Archive ho to upload ke baad <strong>Extract</strong> dabao.</p>
+    </form>
+</div>
+
 <div class="grid cols-2 mt">
-    <div class="card">
+    <div class="card" id="fm-newfolder">
         <h3>@include('partials.icons', ['icon' => 'folder', 'cls' => 'hico']) New folder <span class="muted mono">~/{{ $path }}</span></h3>
         <form method="post" action="{{ route('files.mkdir') }}">
             @csrf
@@ -103,7 +157,7 @@
             </div>
         </form>
     </div>
-    <div class="card">
+    <div class="card" id="fm-rename">
         <h3>@include('partials.icons', ['icon' => 'wrench', 'cls' => 'hico']) Rename / move</h3>
         <form method="post" action="{{ route('files.rename') }}">
             @csrf
@@ -116,7 +170,7 @@
     </div>
 </div>
 
-<div class="card mt">
+<div class="card mt" id="fm-newfile">
     <h3>@include('partials.icons', ['icon' => 'file', 'cls' => 'hico']) New / edit file <span class="muted">(256 KiB max — text files)</span></h3>
     <form method="post" action="{{ route('files.write') }}">
         @csrf

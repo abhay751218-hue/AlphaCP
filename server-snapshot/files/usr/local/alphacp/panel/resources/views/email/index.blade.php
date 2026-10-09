@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Email Accounts')
-@section('subtitle', 'Create, manage and connect mailboxes — cPanel-style')
+@section('subtitle', 'Create, manage and connect mailboxes — AlphaCP Mail')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('webmail.index') }}">Check Email</a>
@@ -68,7 +68,13 @@
                             <span class="badge amber" title="agent sync pending">{{ $box->status }}</span>
                         @endif
                     </td>
-                    <td><span class="badge green">Unrestricted</span></td>
+                    <td>
+                        @if (str_starts_with((string) $box->password_hash, '!'))
+                            <span class="badge red">Suspended</span>
+                        @else
+                            <span class="badge green">Unrestricted</span>
+                        @endif
+                    </td>
                     <td>
                         @if ($used !== null)
                             <span class="mono">{{ $used }} MB</span>
@@ -84,6 +90,10 @@
                         <div class="row" style="justify-content:flex-end">
                             <a class="btn small secondary" href="{{ route('webmail.index') }}">Check Email</a>
                             @can('email.manage')
+                                <form method="post" action="{{ route('email.suspend', $box) }}">
+                                    @csrf
+                                    <button class="btn small secondary" type="submit">{{ str_starts_with((string) $box->password_hash, '!') ? 'Unsuspend' : 'Suspend' }}</button>
+                                </form>
                                 <form method="post" action="{{ route('email.destroy', $box) }}" onsubmit="return confirm('Remove {{ $box->address() }}? Maildir bhi delete hogi.')">
                                     @csrf
                                     @method('DELETE')

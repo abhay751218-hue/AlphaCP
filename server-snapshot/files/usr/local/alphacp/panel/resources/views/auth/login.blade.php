@@ -4,10 +4,10 @@
 
 @section('wordmark', config('acp.brand.name', 'AlphaCP'))
 
-@section('wordmark-sub', (($portFamily ?? null) === 'whm') ? 'WHM · Server Manager' : ((($portFamily ?? null) === 'cpanel') ? 'cPanel · Account Panel' : 'Control Panel'))
+@section('wordmark-sub', (($portFamily ?? null) === 'whm') ? 'Server Manager' : ((($portFamily ?? null) === 'cpanel') ? 'Account Panel' : 'Control Panel'))
 
 @section('content')
-    <h1>{{ ($portFamily ?? null) === 'whm' ? 'WHM Login' : (($portFamily ?? null) === 'cpanel' ? 'cPanel Login' : 'Panel Login') }}</h1>
+    <h1>{{ ($portFamily ?? null) === 'whm' ? 'Server Manager Login' : (($portFamily ?? null) === 'cpanel' ? 'Account Panel Login' : 'Panel Login') }}</h1>
     <p class="sub">@if(($portFamily ?? null) === 'whm')
             Root · Reseller — server management
         @elseif(($portFamily ?? null) === 'cpanel')

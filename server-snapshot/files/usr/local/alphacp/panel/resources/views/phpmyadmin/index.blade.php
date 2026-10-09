@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'phpMyAdmin')
-@section('subtitle', 'One-click database browser — cPanel jaisa SSO, password nahi poochta')
+@section('subtitle', 'One-click database browser — one-click SSO, password nahi poochta')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('mysql.index') }}">Databases</a>

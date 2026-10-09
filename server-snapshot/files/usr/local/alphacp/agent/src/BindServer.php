@@ -455,7 +455,14 @@ final class BindServer
             if ($type === 'TXT') {
                 $out[] = $name . ' IN TXT ' . self::quoteTxt($value);
             } elseif ($type === 'MX') {
-                $out[] = $name . ' IN MX ' . self::DEFAULT_MX_PREF . ' ' . rtrim($value, '.') . '.';
+                $pref = (string) self::DEFAULT_MX_PREF;
+                if (preg_match('/^(\d{1,5})\s+(.+)$/', $value, $mxm) === 1) {
+                    $pref = $mxm[1];
+                    $value = trim($mxm[2]);
+                }
+                $out[] = $name . ' IN MX ' . $pref . ' ' . rtrim($value, '.') . '.';
+            } elseif ($type === 'AAAA') {
+                $out[] = $name . ' IN AAAA ' . $value;
             } elseif ($type === 'CNAME') {
                 $out[] = $name . ' IN CNAME ' . rtrim($value, '.') . '.';
             } else {

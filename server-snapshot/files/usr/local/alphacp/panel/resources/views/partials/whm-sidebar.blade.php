@@ -1,5 +1,5 @@
 {{--
-  WHM left sidebar — cPanel WHM ke navigation tree jaisa: search box sabse
+  Admin left sidebar — navigation tree: search box sabse
   upar, collapsible category groups (ModuleCatalog ke whm-audience sections),
   har live module apni route par, baqi "soon" chip ke saath.
 --}}
@@ -7,7 +7,7 @@
     $whmSections = \App\Support\ModuleCatalog::sectionsFor(auth()->user());
 @endphp
 <nav class="whm-side" id="whm-side" aria-label="WHM navigation">
-  <input type="search" id="whm-search" class="whm-search" placeholder="Search WHM features…" autocomplete="off" aria-label="Search WHM features">
+  <input type="search" id="whm-search" class="whm-search" placeholder="Search features…" autocomplete="off" aria-label="Search features">
   <a class="whm-home" href="{{ route('dashboard') }}">@include('partials.icons', ['icon' => 'home', 'cls' => 'hico']) Home</a>
   <div class="whm-tree" id="whm-tree">
     <section class="whm-group" id="whm-favs" style="display:none">

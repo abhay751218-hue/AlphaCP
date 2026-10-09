@@ -10,7 +10,7 @@ namespace Alphacp\Agent;
 final class Dns
 {
     public const MAX = 50;
-    public const TYPES = ['A', 'CNAME', 'MX', 'TXT'];
+    public const TYPES = ['A', 'AAAA', 'CNAME', 'MX', 'TXT'];
 
     /**
      * @param  list<mixed> $raw
@@ -115,7 +115,32 @@ final class Dns
 
             return $value;
         }
-        if ($type === 'CNAME' || $type === 'MX') {
+        if ($type === 'AAAA') {
+            // IPv6 — ':' allowed yahan, generic checks upar pass ho chuke
+            if (filter_var($value, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) === false) {
+                throw new TaskRejectedException('invalid AAAA record value');
+            }
+
+            return strtolower($value);
+        }
+        if ($type === 'MX') {
+            // D14: optional priority prefix — "10 mail.example.com"
+            $prio = '';
+            if (preg_match('/^(\d{1,5})\s+(.+)$/', $value, $m) === 1) {
+                if ((int) $m[1] > 65535) {
+                    throw new TaskRejectedException('invalid MX priority (0-65535)');
+                }
+                $prio = $m[1] . ' ';
+                $value = trim($m[2]);
+            }
+            $err = AccountIdentity::domain(strtolower($value));
+            if ($err !== null) {
+                throw new TaskRejectedException('invalid dns value');
+            }
+
+            return $prio . strtolower($value);
+        }
+        if ($type === 'CNAME') {
             $err = AccountIdentity::domain(strtolower($value));
             if ($err !== null) {
                 throw new TaskRejectedException('invalid dns value');

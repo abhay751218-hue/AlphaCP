@@ -60,8 +60,7 @@
 </main>
 
 <footer class="wrap muted" style="padding-top:0; font-size:12.5px">
-    {{ config('acp.brand.name', 'AlphaCP') }} {{ config('acp.version') }} — {{ config('acp.brand.tagline', 'Hosting control panel') }} ·
-    parity checklist: <span class="mono">docs/09-cpanel-parity-checklist.md</span>
+    {{ config('acp.brand.name', 'AlphaCP') }} {{ config('acp.version') }} — {{ config('acp.brand.tagline', 'Hosting control panel') }}
 </footer>
 </div>
 

@@ -8,6 +8,7 @@ use App\Models\Account;
 use App\Models\MysqlDatabase;
 use App\Models\MysqlUser;
 use App\Support\Audit;
+use App\Support\AccountProvisioner;
 use App\Support\DatabaseProvisioner;
 use App\Support\ModuleCatalog;
 use App\Support\Mysql;
@@ -120,6 +121,39 @@ class MysqlUsersController extends Controller
         ]);
 
         return redirect()->route('mysql-users.index')->with('success', 'Privileges are queued.');
+    }
+
+    /** D14 — grant ka ulta: Revoke privileges on one database. */
+    public function revoke(Request $request): RedirectResponse
+    {
+        $account = $this->requireAccount($request);
+        if ($account->isTerminated() || $account->isSuspended()) {
+            return back()->withErrors(['database' => 'Cannot change privileges on a suspended/terminated account.']);
+        }
+        $data = $request->validate([
+            'mysql_user_id'     => ['required', 'integer'],
+            'mysql_database_id' => ['required', 'integer'],
+        ]);
+        $user = MysqlUser::query()->where('account_id', $account->id)->findOrFail($data['mysql_user_id']);
+        $database = MysqlDatabase::query()->where('account_id', $account->id)->findOrFail($data['mysql_database_id']);
+
+        if (! $user->databases()->whereKey($database->id)->exists()) {
+            return back()->withErrors(['database' => 'This user has no privileges on that database.']);
+        }
+        $user->databases()->detach($database->id);
+        AccountProvisioner::enqueue($account, 'db.user.revoke', [
+            'username' => $account->username,
+            'user'     => $user->name,
+            'host'     => $user->host,
+            'database' => $database->name,
+        ]);
+        $account->recordEvent('db.user.revoke.queued', $database->fullName($account->username));
+        Audit::log('db.user.revoke', 'warning', 'account', $account->id, [
+            'user'     => $user->fullName($account->username),
+            'database' => $database->fullName($account->username),
+        ]);
+
+        return redirect()->route('mysql-users.index')->with('success', 'Revoke is queued.');
     }
 
     /** cPanel "Change Password" — new password, shown once, never stored. */

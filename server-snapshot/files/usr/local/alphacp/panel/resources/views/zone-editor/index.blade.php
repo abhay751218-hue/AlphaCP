@@ -142,12 +142,14 @@
                        data-zonevalue
                        data-ph-a="203.0.113.10 (IPv4 address)"
                        data-ph-cname="target.example.com"
-                       data-ph-mx="mail.example.com"
+                       data-ph-aaaa="2001:db8::1 (IPv6 address)"
+                       data-ph-mx="10 mail.example.com (priority + host)"
                        data-ph-txt="v=spf1 a mx -all">
                 <button class="btn mt" type="submit">+ Add Record</button>
             </div>
         </div>
         @error('name')<p class="error">{{ $message }}</p>@enderror
+        <p class="help">MX value me priority optional hai — <span class="mono">10 mail.example.com</span>. AAAA = IPv6 (D14).</p>
     </form>
 </div>
 @endcan

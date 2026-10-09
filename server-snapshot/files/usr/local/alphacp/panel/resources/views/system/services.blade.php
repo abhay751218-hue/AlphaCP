@@ -1,7 +1,7 @@
 @extends('layouts.panel')
 
 @section('title', 'Service Status & Restart')
-@section('subtitle', 'WHM Restart Services — asli systemd state, one-click restart (root agent se)')
+@section('subtitle', 'Restart Services — asli systemd state, one-click restart (root agent se)')
 
 @section('actions')
     <a class="btn small secondary" href="{{ route('system.index') }}">System Information</a>
