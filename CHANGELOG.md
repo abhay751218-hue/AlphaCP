@@ -5,6 +5,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **theme-fix v1.2 live + depth audit (09 Oct)** — CSP `script-src 'self'` saara inline
+  JS block karta tha (menus/search kabhi nahi chale) → saara JS external `assets/panel.js`
+  me (security strict). cPanel(2083)=LIGHT vs WHM(2087)=DARK; 36 product-wise icons
+  (pehle sab folder the). `docs/10-feature-depth-audit.md`: andar-ke-options ka audit +
+  Depth Parity Waves D1–D5 process.
 - **theme-fix v1.0 — live panel (09 Oct)**: live server (0.75.x) ke UI errors fix —
   client dashboard ka extra-div layout bug, WHM sidebar white-box bug, aur 5 conflicting
   CSS layers ki jagah DESIGN-PARITY v3 (dark charcoal sidenav + orange #FF6C2C + white

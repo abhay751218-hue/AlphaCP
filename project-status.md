@@ -29,6 +29,8 @@
 | Step 2B-2 | First-login password change + 2FA login verification + RBAC/User Manager pages | ✅ **VERIFIED** |
 | 2B-UI | **Paper Lantern theme (cPanel-grade UI)** — `#FF6C2C` accent, 82-tool icon grid (9 sections), right-rail panels, live tool search, 51 SVG icons; demo: `demo/cpanel-theme-demo.html`; gate: `tools/sim/theme-check.py` 21/21 | ✅ **DONE (09 Oct)** |
 | 2B-WHM | **WHM admin + Reseller panels (sabhi panel cPanel company-grade)** — dark-sidebar WHM shell, 49-item admin menu + 13-item reseller menu (parity rows ke saath), `/admin` + `/reseller` routes, Server information + Accounts + Services on WHM home; client↔WHM↔reseller cross-links; demo me WHM+reseller mockups; gate: `theme-check.py` 42/42 | ✅ **DONE (09 Oct)** |
+| THEME-LIVE | **theme-fix v1.0→v1.2 live deploy** — CSP inline-JS block root-cause fix (external panel.js), cPanel LIGHT vs WHM DARK, product-wise 36 icons, hamburger/search/favorites ab chalte hain; 7 files, backup+auto-rollback, live verify 3×200 | ✅ **DONE (09 Oct)** |
+| DEPTH-AUDIT | **Feature-depth audit** — andar ke options ka cPanel-parity audit (`docs/10-feature-depth-audit.md`): breadth ~100 tools ✅, depth ~30-40% 🟡; Waves D1–D5 process defined | ✅ **DONE (09 Oct)** |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |
