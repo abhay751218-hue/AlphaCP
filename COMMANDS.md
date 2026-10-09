@@ -14,7 +14,23 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### d6b-files-security-fix v1.0 — Depth Wave D6b: Files+Security ke 14 pages cPanel-style (09 Oct 2026)
+### d6c-software-whm-fix v1.0 — Depth Wave D6c: Software/Advanced + WHM ke 15 pages cPanel-style (09 Oct 2026)
+Software/Advanced + WHM ke 15 tools ab company-jaisa look: **Optimize Website, Site Software,
+Error Pages, MultiPHP Manager, Database Wizard, Remote MySQL, MIME Types, Apache Handlers,
+Domain Forwarding, Dynamic DNS, User Manager, Reseller Center, Security Tools (WAF+ClamAV),
+Ports Control, License & Trial**. Har page par stats cards + SVG icons + badges + live search.
+15 files (SIRF views — koi controller/routes/JS/CSS/DB change NAHI). Backup + auto-rollback.
+```bash
+sudo alphacp-sync get f148f46c655c843a0cd1a2a87daad0cd35053723 installer/d6c-software-whm-fix.sh /tmp/d6c-software-whm-fix-v1.0.sh a946ed38b8f2c182f4460e201c989fbed020caf7efcbd239b7ab46f5e38a7bc9 && sudo bash /tmp/d6c-software-whm-fix-v1.0.sh
+```
+- sha256: `a946ed38b8f2c182f4460e201c989fbed020caf7efcbd239b7ab46f5e38a7bc9`
+- Expected: banner `v1.0` → pre-check 3×200 → 15× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D6c SOFTWARE+WHM UI FIX COMPLETE ✅`
+- Phir 2083 AUR 2087 dono hard-refresh (Ctrl+Shift+R) — User Manager/Resellers/Ports/License WHM side par hain
+- Rollback: `*.bak-d6csoft-<stamp>` files `/usr/local/alphacp/panel` me
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✅ DONE 09 Oct — d6b-files-security-fix v1.0 — Depth Wave D6b: Files+Security ke 14 pages cPanel-style (09 Oct 2026)
 Files + Security section ke 14 tools ab company-jaisa look: **Images, Directory Privacy,
 Disk Usage, FTP Accounts, Web Disk, Backup Wizard, Git Version Control, File Restoration,
 Trash, Indexes, SSH Access, IP Blocker, API Tokens, Audit Log**.
@@ -29,7 +45,6 @@ sudo alphacp-sync get 50295571b01b7fab973dec3b461c49e24c69fd7d installer/d6b-fil
 - Phir 2083 → Files/Security tools khol kar hard-refresh (Ctrl+Shift+R)
 - Rollback: `*.bak-d6bfiles-<stamp>` files `/usr/local/alphacp/panel` me
 
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✅ DONE 09 Oct — d6a-email-ui-fix v1.0 — Depth Wave D6a: Email group ke 14 pages cPanel-style (09 Oct 2026)
 > ⚠️ **NOTE:** 09 Oct ko chat me galat commit-id chali gayi thi ("GitHub se nahi mila" error). **Sirf neeche wali command chalao — ye verified hai.** Scrollback wali purani command mat chalao.
