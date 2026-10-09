@@ -582,6 +582,7 @@
 /usr/local/alphacp/panel/phpunit.xml
 /usr/local/alphacp/panel/public/assets/panel.css
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d17look-20261009174756
+/usr/local/alphacp/panel/public/assets/panel.css.bak-d18nav-20261009175830
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009073626
@@ -709,6 +710,7 @@
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d16brand-20261009174013
+/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d18nav-20261009175830
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009075354

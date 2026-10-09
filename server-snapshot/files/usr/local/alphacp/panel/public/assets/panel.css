@@ -620,3 +620,24 @@ body.theme-dark.mode-cpanel .sidenav .searchbox { background: var(--dk-2); color
 .atile:hover { border-color: var(--accent); }
 .atile .atico { width: 28px; height: 28px; color: var(--accent-3); }
 .atile .help { font-size: 12px; margin: 0; }
+
+/* ------------------------------------------------- D18: navbar menus */
+details.notif, details.user-menu { position: relative; }
+details.notif > summary, details.user-menu > summary {
+  list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; user-select: none; }
+details.notif > summary::-webkit-details-marker, details.user-menu > summary::-webkit-details-marker { display: none; }
+details.notif > summary { font-size: 17px; line-height: 1; padding: 6px; border-radius: 8px; }
+details.notif[open] > summary, details.user-menu[open] > summary { background: var(--panel-2); border-radius: 8px; }
+details.user-menu > summary { padding: 4px 8px; }
+details.user-menu .caret { font-size: 10px; color: var(--muted); }
+.menu-pop {
+  position: absolute; right: 0; top: calc(100% + 8px); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 8px 24px rgba(16, 24, 40, .16);
+  min-width: 215px; padding: 8px; z-index: 80; }
+.menu-pop a { display: block; padding: 8px 10px; border-radius: 6px; color: var(--ink); text-decoration: none; font-size: 13px; }
+.menu-pop a:hover { background: var(--panel-2); }
+.menu-pop form { margin: 4px 0 0; border-top: 1px solid var(--line); padding-top: 4px; }
+.menu-pop form button {
+  width: 100%; text-align: left; background: none; border: 0; padding: 8px 10px;
+  font-size: 13px; font-weight: 600; color: #b91c1c; border-radius: 6px; cursor: pointer; }
+.menu-pop form button:hover { background: #fdeaea; }
