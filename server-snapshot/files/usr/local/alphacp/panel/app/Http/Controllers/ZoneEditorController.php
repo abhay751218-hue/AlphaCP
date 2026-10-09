@@ -15,7 +15,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** cPanel Zone Editor — A/CNAME/MX/TXT via paneld dns.zone. No BIND rewrite. */
+/**
+ * cPanel Zone Editor — A/CNAME/MX/TXT via paneld dns.zone. No BIND rewrite.
+ * D2 (depth parity): record edit via update() — name/value change, same
+ * declarative sync. TTL/MX-priority/AAAA need an agent schema change (D2.5).
+ */
 class ZoneEditorController extends Controller
 {
     public function index(Request $request): View
@@ -76,6 +80,49 @@ class ZoneEditorController extends Controller
         Audit::log('dns.add', 'info', 'account', $account->id, ['name' => $name, 'domain' => $domain, 'type' => $type]);
 
         return redirect()->route('zone-editor.index')->with('success', 'DNS record is queued.');
+    }
+
+    /** D2: edit an existing record (name/value; type+domain fixed). */
+    public function update(Request $request, DnsRecord $dns_record): RedirectResponse
+    {
+        $account = $this->requireAccount($request);
+        if ($dns_record->account_id !== $account->id) {
+            abort(403);
+        }
+        if ($account->isTerminated() || $account->isSuspended()) {
+            return back()->withErrors(['name' => 'Cannot change DNS on a suspended/terminated account.']);
+        }
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:63'],
+            'value' => ['required', 'string', 'max:255'],
+        ]);
+        $name = Dns::tryName($data['name']);
+        $value = Dns::tryValue($dns_record->type, $data['value']);
+        if ($name === null || $value === null) {
+            return back()->withErrors(['name' => 'Invalid name/value for a ' . $dns_record->type . ' record. No pipe/path/newline.']);
+        }
+        $dup = DnsRecord::query()
+            ->where('account_id', $account->id)
+            ->where('domain', $dns_record->domain)
+            ->where('name', $name)
+            ->where('type', $dns_record->type)
+            ->where('id', '!=', $dns_record->id)
+            ->exists();
+        if ($dup) {
+            return back()->withErrors(['name' => 'Another record with this name/type already exists.']);
+        }
+        if ($dns_record->name === $name && $dns_record->value === $value) {
+            return redirect()->route('zone-editor.index')->with('info', 'No changes.');
+        }
+        $dns_record->name = $name;
+        $dns_record->value = $value;
+        $dns_record->save();
+        DnsProvisioner::enqueue($account);
+        DnsProvisioner::enqueueBindZone($account, $dns_record->domain);
+        $account->recordEvent('dns.zone.queued', $name . '.' . $dns_record->domain);
+        Audit::log('dns.update', 'info', 'account', $account->id, ['name' => $name, 'domain' => $dns_record->domain, 'type' => $dns_record->type]);
+
+        return redirect()->route('zone-editor.index')->with('success', 'DNS record update is queued.');
     }
 
     public function destroy(Request $request, DnsRecord $dns_record): RedirectResponse

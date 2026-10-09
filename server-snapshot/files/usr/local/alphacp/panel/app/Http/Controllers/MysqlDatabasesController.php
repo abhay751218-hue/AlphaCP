@@ -28,6 +28,7 @@ class MysqlDatabasesController extends Controller
         return view('mysql.index', [
             'account' => $account,
             'rows' => $account?->mysqlDatabases()->orderBy('id')->get() ?? collect(),
+            'users' => $account?->mysqlUsers()->with('databases')->orderBy('id')->get() ?? collect(),
             'maxSql' => $account?->package?->formatLimit('MAXSQL') ?? '—',
             'panelMode' => ModuleCatalog::modeFor($request->user()),
         ]);

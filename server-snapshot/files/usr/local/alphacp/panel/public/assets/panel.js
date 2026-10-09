@@ -162,8 +162,10 @@
     if (/[^A-Za-z0-9]/.test(v)) s++;
     return Math.min(3, Math.floor(s * 3 / 5));
   }
-  function genPassword(len) {
-    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^*_-+=';
+  function genPassword(len, alnumOnly) {
+    var chars = alnumOnly
+      ? 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+      : 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^*_-+=';
     var out = '';
     var buf = new Uint32Array(len);
     (window.crypto || window.msCrypto).getRandomValues(buf);
@@ -176,7 +178,7 @@
     var meter = group.nextElementSibling && group.nextElementSibling.classList.contains('pw-meter')
       ? group.nextElementSibling : null;
     var showBtn = group.querySelector('[data-pw-show]');
-    var genBtn = group.querySelector('[data-pw-gen]');
+    var genBtn = group.querySelector('[data-pw-gen], [data-pw-gen-alnum]');
     function paint() {
       if (!meter) return;
       var score = input.value ? pwScore(input.value) : -1;
@@ -190,7 +192,7 @@
       showBtn.textContent = vis ? 'Show' : 'Hide';
     });
     if (genBtn) genBtn.addEventListener('click', function () {
-      input.value = genPassword(16);
+      input.value = genPassword(16, genBtn.hasAttribute('data-pw-gen-alnum'));
       if (input.type === 'password' && showBtn) { input.type = 'text'; showBtn.textContent = 'Hide'; }
       paint();
       input.dispatchEvent(new Event('input'));
@@ -244,6 +246,78 @@
         try { document.execCommand('copy'); } catch (e) { /* noop */ }
         document.body.removeChild(ta); done();
       }
+    });
+  });
+})();
+
+/* ===== AlphaCP panel.js v1.2 additions (D2: domains + zone editor) ====== */
+(function () {
+  'use strict';
+
+  /* ---- Domains create: type radio -> hint text + redirect fields -------- */
+  var domRadios = document.querySelectorAll('[data-domtype]');
+  if (domRadios.length) {
+    var hintEl = document.querySelector('[data-domtype-hint]');
+    var redirectBox = document.querySelector('[data-redirect-fields]');
+    var domainInput = document.getElementById('domain');
+    var placeholders = {
+      addon: 'example.net',
+      sub: 'blog.' + ((domainInput && domainInput.getAttribute('data-main')) || 'yourdomain.com'),
+      parked: 'alias-domain.com',
+      redirect: 'old-domain.com'
+    };
+    function applyDomType() {
+      var sel = document.querySelector('[data-domtype]:checked');
+      if (!sel) return;
+      var t = sel.value;
+      if (hintEl) {
+        var hint = hintEl.getAttribute('data-hint-' + t);
+        if (hint) hintEl.textContent = hint;
+      }
+      if (redirectBox) {
+        redirectBox.hidden = (t !== 'redirect');
+        var url = redirectBox.querySelector('input[name="redirect_url"]');
+        if (url) url.required = (t === 'redirect');
+      }
+      if (domainInput && placeholders[t]) domainInput.placeholder = placeholders[t];
+    }
+    domRadios.forEach(function (r) { r.addEventListener('change', applyDomType); });
+    applyDomType();
+  }
+
+  /* ---- Zone Editor: record type -> value placeholder -------------------- */
+  var zoneType = document.querySelector('[data-zonetype]');
+  var zoneValue = document.querySelector('[data-zonevalue]');
+  if (zoneType && zoneValue) {
+    function applyZoneType() {
+      var ph = zoneValue.getAttribute('data-ph-' + zoneType.value.toLowerCase());
+      if (ph) zoneValue.placeholder = ph;
+    }
+    zoneType.addEventListener('change', applyZoneType);
+    applyZoneType();
+  }
+})();
+
+/* ===== AlphaCP panel.js v1.4 additions (D4: WHM create account) ========= */
+(function () {
+  'use strict';
+
+  /* WHM-style: typing the domain suggests a username (until user edits it) */
+  document.querySelectorAll('[data-autofill-username]').forEach(function (domainInput) {
+    var target = document.querySelector(domainInput.getAttribute('data-autofill-username'));
+    if (!target) return;
+    var touched = target.value !== '';
+    target.addEventListener('input', function () { touched = true; });
+    domainInput.addEventListener('input', function () {
+      if (touched) return;
+      var label = domainInput.value.trim().toLowerCase().split('.')[0] || '';
+      label = label.replace(/^www$/, '');
+      if (label === '') {
+        var parts = domainInput.value.trim().toLowerCase().split('.');
+        label = parts.length > 1 ? parts[1] : '';
+      }
+      label = label.replace(/[^a-z0-9]/g, '').replace(/^[0-9]+/, '');
+      target.value = label.slice(0, 16);
     });
   });
 })();

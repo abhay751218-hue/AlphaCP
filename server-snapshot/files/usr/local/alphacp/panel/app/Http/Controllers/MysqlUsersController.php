@@ -51,6 +51,7 @@ class MysqlUsersController extends Controller
         $data = $request->validate([
             'user'        => ['required', 'string', 'max:16'],
             'host'        => ['nullable', 'string', 'max:190'],
+            'password'    => ['nullable', 'string', 'regex:/^[A-Za-z0-9]{10,64}$/'],
             'databases'   => ['nullable', 'array', 'max:50'],
             'databases.*' => ['integer'],
         ]);
@@ -77,7 +78,9 @@ class MysqlUsersController extends Controller
             $user->databases()->attach($database->id);
         }
 
-        $password = Str::random(20); // alnum only: safe in SQL literals, no quote/backslash
+        // D3: user-chosen password allowed (alnum 10-64 only: safe in SQL literals,
+        // no quote/backslash) — blank = strong random, shown once either way.
+        $password = ($data['password'] ?? '') !== '' ? $data['password'] : Str::random(20);
         DatabaseProvisioner::enqueueUserCreate($account, $user, $password, $databases);
         $account->recordEvent('db.user.queued', $account->username . '_' . $name);
         Audit::log('db.user.add', 'info', 'account', $account->id, [
@@ -130,7 +133,10 @@ class MysqlUsersController extends Controller
             return back()->withErrors(['user' => 'Cannot change passwords on a suspended/terminated account.']);
         }
 
-        $password = Str::random(20);
+        $data = $request->validate([
+            'password' => ['nullable', 'string', 'regex:/^[A-Za-z0-9]{10,64}$/'],
+        ]);
+        $password = ($data['password'] ?? '') !== '' ? $data['password'] : Str::random(20);
         DatabaseProvisioner::enqueueUserPassword($account, $mysql_user, $password);
         Audit::log('db.user.password', 'info', 'account', $account->id, [
             'user' => $mysql_user->fullName($account->username) . '@' . $mysql_user->host,
