@@ -81,7 +81,7 @@ File Manager upload/zip/chmod (`files.set` me ops add karne honge)
 | **D7** | Metrics real: graphs (CSS/JS charts), Raw Access viewer, Visitors | views+JS | medium |
 | **D8** | ✅ BUILT: Mail Queue Manager + Security Policies (service restart = agent change, deferred) | panel-only | done |
 | **D9** | ✅ BUILT: Terminal v2 + Webmail per-mailbox SSO (phpMyAdmin app install = server-level, deferred) | panel-only | done |
-| **D10** | 1-click App Installer (WordPress) UI + 2FA + Branding/Customization | mixed | medium |
+| **D10** | ✅ BUILT: aakhri 3 tiles — Node.js Selector + PHP Composer + Updates (WP 1-click + 2FA pehle se live; branding = AlphaCP consistent) | panel-only | done |
 
 **Rule wahi:** har wave = sim-tested installer + commit-pinned COMMANDS.md row + rollback.
 
@@ -100,9 +100,9 @@ kuch me agent task) chahiye, isliye ye UI-wave me nahi, apni feature-wave me aay
 | Awstats (visitor graphs) | S11 | ✅ LIVE (D7, bars v1) |
 | Network Tools (dig/trace) | S11 | ✅ LIVE (D7, DNS lookup v1) |
 | Security Policies | S13 | ✅ D8 BUILT (posture page v1) — installer ready |
-| Node.js Selector | S14 | **D10** (software wave) |
-| PHP Composer | S14 | **D10** |
-| Updates (panel self-update UI) | S15 | **D10** |
+| Node.js Selector | S14 | ✅ D10 BUILT (runtime detect v1) — installer ready |
+| PHP Composer | S14 | ✅ D10 BUILT (composer.json live-read) |
+| Updates (panel self-update UI) | S15 | ✅ D10 BUILT (versions + wave history) |
 | PostgreSQL | post-v1 | optional addon — v1 ke baad |
 
 Baaki 94 tiles LIVE hain — unki kami "feature missing" nahi, "UI plain" thi,
