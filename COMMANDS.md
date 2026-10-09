@@ -14,6 +14,23 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### d6a-email-ui-fix v1.0 — Depth Wave D6a: Email group ke 14 pages cPanel-style (09 Oct 2026)
+Email section ke 14 tools ab company-jaisa look: **Default Address, Autoresponders, Email
+Routing, Email Filters, Global Filters, Mailing Lists, Spam Filters, BoxTrapper, Calendar,
+Encryption, Email Disk Usage, Track Delivery, Address Importer, Email Deliverability**.
+Har page par stats cards + SVG icons + colored badges + live search + related-tool links.
+14 files (SIRF views — koi controller/routes/JS/CSS/DB change NAHI; saare form fields/
+permissions same). Backup + auto-rollback.
+```bash
+sudo alphacp-sync get c48498fa658a1d887a8fbb89144b87022199de8c installer/d6a-email-ui-fix.sh /tmp/d6a-email-ui-fix-v1.0.sh b52519ce6cc52855dca1d0c9a20cf8b16788524fea13b0de0b5497a8b5d8c995 && sudo bash /tmp/d6a-email-ui-fix-v1.0.sh
+```
+- sha256: `b52519ce6cc52855dca1d0c9a20cf8b16788524fea13b0de0b5497a8b5d8c995`
+- Expected: banner `v1.0` → pre-check 3×200 → 14× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D6a EMAIL UI FIX COMPLETE ✅`
+- Phir 2083 → Email section ke tools khol kar hard-refresh (Ctrl+Shift+R)
+- Rollback: `*.bak-d6aemail-<stamp>` files `/usr/local/alphacp/panel` me
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
 ### d5-tools-fix v1.0 — Depth Wave D5 (FINAL): Cron presets + SSL + File Manager + DARK MODE (09 Oct 2026)
 Cron Jobs me cPanel "Common Settings" presets (Once Per Minute se Once Per Year tak — select
 karo, 5 fields khud bhar jati hain). SSL/TLS: secured/attention stats + expiry warning badges.
