@@ -14,7 +14,19 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### alphacp-sync v1.2 — private repo support (`get` mode). Repo PRIVATE karne se PEHLE chalao.
+### Abhi KOI deploy command nahi — sirf health/status check (09 Oct 2026)
+Server already aage hai: **panel 0.75.0 (Step 5)** + **alphacp-sync v1.5** + HTTP 200.
+Naya theme/demo kaam (PR #9 — WHM/reseller panels, demo images) **repo-side** hai; server pe
+chalane ke liye abhi kuch nahi. Status dekhna ho to:
+```bash
+sudo alphacp-sync --status                                        # sync setup/timer/last-sync
+curl -s -o /dev/null -w "panel HTTP %{http_code}\n" http://127.0.0.1:8090   # panel health
+sudo alphacp-sync                                                 # (optional) turant snapshot push
+```
+
+### ⛔ SUPERSEDED (09 Oct) — neeche wali 2 purani rows MAT chalao (downgrade ho jayega)
+
+### ~~alphacp-sync v1.2~~ — MAT chalao: server par already **v1.5** hai (STATE.md dekho). Repo PRIVATE karne se PEHLE chalao.
 ```bash
 curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f55927ee1fbf526037785dcdb82aea1/installer/alphacp-sync.sh -o /tmp/acp-sync-v1.2.sh && sudo bash /tmp/acp-sync-v1.2.sh
 ```
@@ -23,10 +35,10 @@ curl -fsSL https://raw.githubusercontent.com/abhay751218-hue/AlphaCP/4b4573f96f5
 - Test: `sudo bash tools/sim/sync-sim.sh` → 60/60 (Run 8 = get: sha verify, galat sha, traversal, PR-ref commit, no key).
   GitHub par SHA-fetch + `refs/pull/*` fetch asli repo par verify kiya (29 Sep).
 
-### Uske baad panel updates: panel-update 0.3.0 (private-ready) — agli panel release ke saath
+### ~~panel-update 0.3.0 (bundle 0.3.2)~~ — MAT chalao: server par **0.75.0** hai, ye DOWNGRADE karega
 - commit `0c90863a10e6c70984e627af1b819e66ae60b600`, sha256 `204b78af0b59b75614a61455df1ca96b5eb3c05f744b744647da1a33c4da8480`
 - artifact + sync tool pehle `alphacp-sync get` se, fallback public URL. update-sim **54/54** (U5 private+get, U6 private+purana sync → saaf error).
-- Abhi chalane ki zaroorat nahi (server already 0.3.2).
+- ⛔ Ab kabhi mat chalao — server 0.75.0 par hai (0.3.2 bundle = downgrade). Agli release ke saath NAYI commit-pinned row aayegi.
 
 ## ✔️ Ho chuka (dobara chalane ki zaroorat nahi)
 | Command | Kab | Result |
