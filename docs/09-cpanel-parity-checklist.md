@@ -38,7 +38,7 @@
 
 | # | cPanel tool | Kya karta hai | Humara step | Status |
 |---|---|---|---|---|
-| 1 | File Manager | Breadcrumbs/icons/filter/editor (upload/zip/chmod = later) | S6 | ✅ D5 LIVE |
+| 1 | File Manager | Breadcrumbs/icons/filter/editor + upload/compress/extract/chmod | S6 | ✅ D5+D15 (D15 BUILT) |
 | 2 | Images | Resize/convert images | S6 | ✅ D6b LIVE |
 | 3 | Directory Privacy | Password-protected folders | S6 | ✅ D6b LIVE |
 | 4 | Disk Usage | Folder-wise space | S6 | ✅ D6b LIVE |
@@ -55,7 +55,7 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 13 | Email Accounts | Mailboxes + quota + edit + suspend + usage + Connect Devices | S7 | 🟡 D14 suspend + edit-route fix (installer ready); baaki ✅ D1 LIVE |
+| 13 | Email Accounts | Mailboxes + quota + edit + suspend + usage + Connect Devices | S7 | ✅ D14 LIVE (suspend + edit fix, 09 Oct) |
 | 14 | Forwarders | Email forward (cPanel-style list/search/create) | S7 | ✅ D1 LIVE (09 Oct 2026) |
 | 15 | Email Routing | MX/local routing per domain | S7 | ✅ D6a LIVE |
 | 16 | Autoresponders | Vacation/auto reply | S7 | ✅ D6a LIVE |
@@ -82,14 +82,14 @@
 | 32 | Addon Domains | Extra domain, alag site | S5 | ⏳ S5 |
 | 33 | Aliases (Parked) | Domain aliases | S5 | ⏳ S5 |
 | 34 | Redirects | 301/302 redirect | S5 | ⏳ S5 |
-| 35 | Zone Editor | A/AAAA/CNAME/MX/TXT + MX priority + record EDIT | S9 | 🟡 D14 (AAAA + MX prio + edit-route fix — installer ready) |
+| 35 | Zone Editor | A/AAAA/CNAME/MX/TXT + MX priority + record EDIT | S9 | ✅ D14 LIVE (AAAA + MX prio + edit fix) |
 | 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 | ✅ D6c LIVE |
 
 ### 🗄️ Databases
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 37 | MySQL® Databases | DB + users + privileges + revoke + custom password | S8 | 🟡 D14 revoke (installer ready); baaki ✅ D3 LIVE |
+| 37 | MySQL® Databases | DB + users + privileges + revoke + custom password | S8 | ✅ D14 LIVE (revoke bhi) |
 | 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 | ✅ D6c LIVE |
 | 39 | phpMyAdmin | Asli app (port 2098) + one-click SSO | S8 | ✅ D12 DEPLOYED 09 Oct (click-test naye server par) |
 | 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 | ✅ D6c LIVE |
