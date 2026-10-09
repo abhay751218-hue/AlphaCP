@@ -14,22 +14,44 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### d11-restart-services v1.0 — Phase-2 Wave D11: WHM Restart Services (09 Oct 2026)
-**PEHLI agent-touching wave** — ab Service Status page par har service ke saath **↻ Restart button**:
-apache2, nginx, mariadb, redis, bind9, fail2ban, exim4, dovecot, clamav, opendkim, pure-ftpd (11 services,
-`paneld` jaan-bujh kar excluded). Agent me naya `service.restart` task + handler (double validation),
-har restart Audit Log me. **Extra safety:** paneld restart fail ho to FULL AUTO-ROLLBACK (agent files samet).
+### D12 — phpMyAdmin app + one-click SSO (v1.0)
+
+Ye command **asli phpMyAdmin** install karti hai (apt se, port **2098**) aur
+cPanel-jaisa **one-click login** jodti hai — Databases → phpMyAdmin → *Open
+phpMyAdmin* dabao, password nahi poochega, seedha apne databases khulenge.
+Access sirf apne DBs par (`pma_<account>` user, har click par password rotate,
+10-minute one-time token). Agent me `db.pmaSignon` task judta hai (paneld
+restart gate ke saath), nginx vhost `nginx -t` gate ke saath — kuch bhi fail
+to **full auto-rollback**.
+
 ```bash
-sudo alphacp-sync get 8242a1fc38fe01e407a450754391a87dd1ce950f installer/d11-restart-services.sh /tmp/d11-restart-services-v1.0.sh 2e0051fe2ee1c0bd3cdc1f5fd0261983c55f1e02688786fe4f001c5607f756ae && sudo bash /tmp/d11-restart-services-v1.0.sh
+sudo alphacp-sync get 67bb91085ee7aa17dccc60357dcc2d2251ded48a installer/d12-phpmyadmin-sso.sh /tmp/d12-phpmyadmin-sso-v1.0.sh 4589300155e4baf5890ad0618378eca2ccd5048dae98855ca40a2e2b1a260dfa && sudo bash /tmp/d12-phpmyadmin-sso-v1.0.sh
 ```
-- sha256: `2e0051fe2ee1c0bd3cdc1f5fd0261983c55f1e02688786fe4f001c5607f756ae`
-- Expected: pre-check 3×200 + `paneld active hai (restart gate ON)` → 5× `installed` → caches + php-fpm →
-  **Step 3b: `paneld restarted — service.restart task ab live`** → health 3×200 → `==> D11 RESTART SERVICES COMPLETE ✅`
-- Test: **2087** hard-refresh → Server Status → Service Status → kisi service par **↻ Restart** dabao
-  (jaise `dovecot`) → success message + state wapas `active` → Audit Log me entry
-- Rollback: `*.bak-d11restart-<stamp>` files panel AUR agent dono me
+
+Expected output (short):
+- `-- Step 1: pre-check --` → health 3×200, paneld active, nginx active (LIVE mode)
+- `-- Step 1b: phpMyAdmin app (apt) --` → `[OK] phpMyAdmin installed via apt` (ya "pehle se installed")
+- `-- Step 1c: secrets + pma config glue --` → pma-sso.secret + blowfish + conf.d include
+- `-- Step 2: install (9 files, backup ke saath) --` → 9× `[OK] installed` (backups `.bak-d12pma-<stamp>`)
+- `-- Step 3b: paneld restart --` → `[OK] paneld restarted — db.pmaSignon task ab live`
+- `-- Step 3c: nginx vhost (port 2098) + firewall --` → `[OK] nginx reloaded — phpMyAdmin :2098 live` + ufw 2098
+- `-- Step 4: health check --` → 3×200 + `[OK] health :2098 (phpMyAdmin SSO shim) -> HTTP 200`
+- `==> D12 PHPMYADMIN + SSO COMPLETE ✅`
+
+Test (browser, hard-refresh Ctrl+Shift+R):
+1. `https://13.207.123.177:2083` → Databases → **phpMyAdmin**
+2. Access preference **Enabled** + Save (agar off hai)
+3. **🗄️ Open phpMyAdmin** dabao → naya tab `:2098` par — **bina password** phpMyAdmin khulega, sirf tumhare databases dikhenge
+4. WHM → Audit Log me `db.pma.sso` entry
+
+Rollback kabhi bhi: `*.bak-d12pma-<stamp>` files apni jagah par hain; vhost disable = `sudo rm /etc/nginx/sites-enabled/alphacp-pma.conf && sudo nginx -t && sudo systemctl reload nginx`
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
+
+### D11 — WHM Restart Services v1.0 ✅ (09 Oct 2026 — DEPLOYED, user-confirmed)
+
+Commit `8242a1fc38fe01e407a450754391a87dd1ce950f` · sha256 `2e0051fe2ee1c0bd3cdc1f5fd0261983c55f1e02688786fe4f001c5607f756ae`
+5 files, backups `*.bak-d11restart-20261009160034`. service.restart live (11 allowlisted, paneld excluded), paneld restart OK, health 3×200.
 
 ### ✅ DONE 09 Oct — d10-final-tiles v1.0 — Depth Wave D10 (FINAL): aakhri 3 greyed tiles → 103/103 = 100% (09 Oct 2026)
 Dashboard ke AAKHRI 3 grey tiles ab LIVE: **Node.js Selector** (server ka Node runtime live detect),
