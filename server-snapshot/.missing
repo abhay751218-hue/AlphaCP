@@ -1,8 +1,11 @@
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlDatabasesController.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php.bak-d3mysql-20261009092025
+/usr/local/alphacp/panel/app/Http/Controllers/TerminalController.php.bak-d9termweb-20261009154216
+/usr/local/alphacp/panel/app/Http/Controllers/WebmailController.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneEditorController.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
+/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d10final-20261009154757
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d7metrics-20261009130206
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d8mailsec-20261009131452
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
@@ -78,11 +81,14 @@
 /usr/local/alphacp/panel/resources/views/spam-filters/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/ssh/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/ssl/index.blade.php.bak-d5tools-20261009094623
+/usr/local/alphacp/panel/resources/views/terminal/index.blade.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/trash/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/users/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/webdisk/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/webmail/index.blade.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d2domains-20261009083733
+/usr/local/alphacp/panel/routes/web.php.bak-d10final-20261009154757
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d7metrics-20261009130206

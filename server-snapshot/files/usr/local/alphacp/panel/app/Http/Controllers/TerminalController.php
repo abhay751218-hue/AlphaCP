@@ -13,10 +13,11 @@ use Illuminate\View\View;
  * cPanel/WHM "Terminal" (simplified, non-interactive) — whitelisted read-only
  * commands only. Chaining/redirects (`;|&\`$><`) blocked.
  *
- * B1: pehle command web-FPM me Process facade se chalta tha → proc_open
- * disabled → HTTP 500. Ab command root agent chalata hai (`terminal.run`), jo
- * whitelist DOBARA validate karta hai (defense in depth); panel sirf result
- * synchronous dikhata hai (Paneld::run).
+ * Command ROOT AGENT chalata hai (`terminal.run`), jo whitelist DOBARA
+ * validate karta hai (defense in depth); panel sirf result dikhata hai.
+ *
+ * D9: session-based command history (last 8, output trimmed) + quick
+ * commands — view me chips, rerun buttons. Whitelist SAME (agent-mirror).
  */
 final class TerminalController extends Controller
 {
@@ -25,12 +26,18 @@ final class TerminalController extends Controller
         'git status', 'php -v', 'node -v', 'cat ',
     ];
 
-    public function index(): View
+    private const HISTORY_MAX = 8;
+    private const HISTORY_OUTPUT_CAP = 4000;
+
+    public function index(Request $request): View
     {
         return view('terminal.index', [
-            'output' => session('term_output'),
-            'cmd'    => session('term_cmd'),
-            'error'  => session('term_error'),
+            'output'  => session('term_output'),
+            'cmd'     => session('term_cmd'),
+            'error'   => session('term_error'),
+            'history' => (array) $request->session()->get('term_history', []),
+            'allowed' => self::ALLOWED,
+            'agentOk' => in_array('terminal.run', Paneld::taskTypes(), true),
         ]);
     }
 
@@ -50,10 +57,22 @@ final class TerminalController extends Controller
             return redirect('/terminal')->with(['term_cmd' => $cmd, 'term_error' => 'Agent se jawab nahi mila (timeout).']);
         }
 
+        $output = (string) ($res['output'] ?? '');
+        $error  = ($res['status'] ?? 'ok') === 'ok' ? null : trim((string) ($res['error'] ?? ''));
+
+        $history = (array) $request->session()->get('term_history', []);
+        array_unshift($history, [
+            'cmd'    => $cmd,
+            'output' => mb_substr($output, 0, self::HISTORY_OUTPUT_CAP),
+            'error'  => $error,
+            'at'     => now()->format('H:i:s'),
+        ]);
+        $request->session()->put('term_history', array_slice($history, 0, self::HISTORY_MAX));
+
         return redirect('/terminal')->with([
             'term_cmd'    => $cmd,
-            'term_output' => (string) ($res['output'] ?? ''),
-            'term_error'  => ($res['status'] ?? 'ok') === 'ok' ? null : trim((string) ($res['error'] ?? '')),
+            'term_output' => $output,
+            'term_error'  => $error,
         ]);
     }
 

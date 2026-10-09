@@ -351,6 +351,7 @@ POST               /boxtrapper                                   boxtrapper.stor
 GET|HEAD           /calendar                                     calendar.index
 POST               /calendar                                     calendar.store
 DELETE             /calendar/{calendar_item}                     calendar.destroy
+GET|HEAD           /composer                                     composer.index
 GET|HEAD           /cron                                         cron.index
 POST               /cron                                         cron.store
 DELETE             /cron/{cron}                                  cron.destroy
@@ -475,6 +476,7 @@ GET|HEAD           /nameserver-selection                         nameserver-sele
 POST               /nameserver-selection                         nameserver-selection.store
 GET|HEAD           /network-tools                                network-tools.index
 POST               /network-tools                                network-tools.lookup
+GET|HEAD           /nodejs                                       nodejs.index
 GET|HEAD           /ns-report                                    ns-report.index
 POST               /ns-report                                    ns-report.store
 GET|HEAD           /optimize-website                             optimize.index
@@ -552,6 +554,7 @@ GET|HEAD           /trash                                        trash.index
 DELETE             /trash/{file}                                 trash.destroy
 GET|HEAD           /two-factor                                   twofactor.challenge
 POST               /two-factor                                   twofactor.verify
+GET|HEAD           /updates                                      updates.index
 GET|HEAD           /users                                        users.index
 POST               /users                                        users.store
 GET|HEAD           /users/create                                 users.create
@@ -620,12 +623,15 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (90) — repo se panel dobara banane par ye pages tootenge:
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (96) — repo se panel dobara banane par ye pages tootenge:
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlDatabasesController.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php.bak-d3mysql-20261009092025
+/usr/local/alphacp/panel/app/Http/Controllers/TerminalController.php.bak-d9termweb-20261009154216
+/usr/local/alphacp/panel/app/Http/Controllers/WebmailController.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneEditorController.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
+/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d10final-20261009154757
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d7metrics-20261009130206
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d8mailsec-20261009131452
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
@@ -701,11 +707,14 @@ PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (90) — repo se panel dobara banane
 /usr/local/alphacp/panel/resources/views/spam-filters/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/ssh/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/ssl/index.blade.php.bak-d5tools-20261009094623
+/usr/local/alphacp/panel/resources/views/terminal/index.blade.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/trash/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/users/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/webdisk/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/webmail/index.blade.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d2domains-20261009083733
+/usr/local/alphacp/panel/routes/web.php.bak-d10final-20261009154757
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d7metrics-20261009130206

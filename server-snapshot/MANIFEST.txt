@@ -250,6 +250,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/BackupWizardController.php
 /usr/local/alphacp/panel/app/Http/Controllers/BoxTrapperController.php
 /usr/local/alphacp/panel/app/Http/Controllers/CalendarController.php
+/usr/local/alphacp/panel/app/Http/Controllers/ComposerController.php
 /usr/local/alphacp/panel/app/Http/Controllers/Controller.php
 /usr/local/alphacp/panel/app/Http/Controllers/CronController.php
 /usr/local/alphacp/panel/app/Http/Controllers/DashboardController.php
@@ -298,6 +299,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlWizardController.php
 /usr/local/alphacp/panel/app/Http/Controllers/NameserverSelectionController.php
 /usr/local/alphacp/panel/app/Http/Controllers/NetworkToolsController.php
+/usr/local/alphacp/panel/app/Http/Controllers/NodejsSelectorController.php
 /usr/local/alphacp/panel/app/Http/Controllers/NsReportController.php
 /usr/local/alphacp/panel/app/Http/Controllers/OptimizeController.php
 /usr/local/alphacp/panel/app/Http/Controllers/PackagesController.php
@@ -319,15 +321,18 @@
 /usr/local/alphacp/panel/app/Http/Controllers/SslController.php
 /usr/local/alphacp/panel/app/Http/Controllers/SystemController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TerminalController.php
+/usr/local/alphacp/panel/app/Http/Controllers/TerminalController.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/app/Http/Controllers/TrackDeliveryController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TrackDnsController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TransferRestoreController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TransferReviewController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TransferToolController.php
 /usr/local/alphacp/panel/app/Http/Controllers/TrashController.php
+/usr/local/alphacp/panel/app/Http/Controllers/UpdatesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/UsersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/WebDiskController.php
 /usr/local/alphacp/panel/app/Http/Controllers/WebmailController.php
+/usr/local/alphacp/panel/app/Http/Controllers/WebmailController.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/app/Http/Controllers/WebmailSsoController.php
 /usr/local/alphacp/panel/app/Http/Controllers/WhmApiController.php
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneEditorController.php
@@ -433,6 +438,7 @@
 /usr/local/alphacp/panel/app/Support/Metrics.php
 /usr/local/alphacp/panel/app/Support/MimeTypes.php
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php
+/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d10final-20261009154757
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d7metrics-20261009130206
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d8mailsec-20261009131452
 /usr/local/alphacp/panel/app/Support/Mysql.php
@@ -589,6 +595,7 @@
 /usr/local/alphacp/panel/resources/views/boxtrapper/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/calendar/index.blade.php
 /usr/local/alphacp/panel/resources/views/calendar/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/composer/index.blade.php
 /usr/local/alphacp/panel/resources/views/cron/index.blade.php
 /usr/local/alphacp/panel/resources/views/cron/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php
@@ -681,6 +688,7 @@
 /usr/local/alphacp/panel/resources/views/mysql/index.blade.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/resources/views/nameserver-selection/index.blade.php
 /usr/local/alphacp/panel/resources/views/network-tools/index.blade.php
+/usr/local/alphacp/panel/resources/views/nodejs/index.blade.php
 /usr/local/alphacp/panel/resources/views/ns-report/index.blade.php
 /usr/local/alphacp/panel/resources/views/optimize/index.blade.php
 /usr/local/alphacp/panel/resources/views/optimize/index.blade.php.bak-d6csoft-20261009124856
@@ -731,6 +739,7 @@
 /usr/local/alphacp/panel/resources/views/system/services.blade.php
 /usr/local/alphacp/panel/resources/views/system/tasks.blade.php
 /usr/local/alphacp/panel/resources/views/terminal/index.blade.php
+/usr/local/alphacp/panel/resources/views/terminal/index.blade.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php
 /usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/track-dns/index.blade.php
@@ -739,6 +748,7 @@
 /usr/local/alphacp/panel/resources/views/transfer-tool/index.blade.php
 /usr/local/alphacp/panel/resources/views/trash/index.blade.php
 /usr/local/alphacp/panel/resources/views/trash/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/updates/index.blade.php
 /usr/local/alphacp/panel/resources/views/users/create.blade.php
 /usr/local/alphacp/panel/resources/views/users/edit.blade.php
 /usr/local/alphacp/panel/resources/views/users/index.blade.php
@@ -746,12 +756,14 @@
 /usr/local/alphacp/panel/resources/views/webdisk/index.blade.php
 /usr/local/alphacp/panel/resources/views/webdisk/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/webmail/index.blade.php
+/usr/local/alphacp/panel/resources/views/webmail/index.blade.php.bak-d9termweb-20261009154216
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/resources/views/zone-templates/index.blade.php
 /usr/local/alphacp/panel/resources/views/zone-ttl/index.blade.php
 /usr/local/alphacp/panel/routes/console.php
 /usr/local/alphacp/panel/routes/web.php
+/usr/local/alphacp/panel/routes/web.php.bak-d10final-20261009154757
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d7metrics-20261009130206

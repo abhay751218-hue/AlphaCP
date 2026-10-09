@@ -658,6 +658,16 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:system.view')->name('security-policies.index');
 });
 // ---- /D8 ----
+// ---- D10: Node.js Selector + PHP Composer + Updates (aakhri 3 tiles) ----
+Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
+    Route::get('/nodejs', [\App\Http\Controllers\NodejsSelectorController::class, 'index'])
+        ->middleware('perm:software.view')->name('nodejs.index');
+    Route::get('/composer', [\App\Http\Controllers\ComposerController::class, 'index'])
+        ->middleware('perm:software.view')->name('composer.index');
+    Route::get('/updates', [\App\Http\Controllers\UpdatesController::class, 'index'])
+        ->middleware('perm:system.view')->name('updates.index');
+});
+// ---- /D10 ----
 // ---- WHM API 1 compatible (billing integration, Bearer token) ----
 Route::prefix('json-api')->middleware([\App\Http\Middleware\EnsureApiToken::class])->group(function (): void {
     Route::get('/listaccts', [\App\Http\Controllers\WhmApiController::class, 'listaccts']);

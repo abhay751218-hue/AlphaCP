@@ -14,7 +14,12 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-/** cPanel Webmail — preferred client via paneld. No Roundcube/Horde install, no SSO. */
+/**
+ * cPanel Webmail — client preference + one-click SSO open (Roundcube :2096).
+ *
+ * D9: ab har mailbox ke saath apna "Open" button — jo mailbox chuno usi se
+ * Roundcube login hota hai (pehle sirf pehla mailbox khulta tha).
+ */
 class WebmailController extends Controller
 {
     public function index(Request $request): View
@@ -22,9 +27,9 @@ class WebmailController extends Controller
         $account = $this->accountFor($request);
         $row = $account?->webmailSetting;
 
-        $mailbox = null;
-        if ($account !== null && ($row?->enabled ?? false)) {
-            $mailbox = $account->mailboxes()->orderBy('id')->first()?->address();
+        $mailboxes = collect();
+        if ($account !== null) {
+            $mailboxes = $account->mailboxes()->orderBy('domain')->orderBy('localpart')->get();
         }
 
         return view('webmail.index', [
@@ -32,23 +37,34 @@ class WebmailController extends Controller
             'enabled' => (bool) ($row?->enabled ?? false),
             'client' => (string) ($row?->client ?? 'roundcube'),
             'panelMode' => ModuleCatalog::modeFor($request->user()),
-            'openMailbox' => $mailbox,
+            'mailboxes' => $mailboxes,
             'webmailPort' => (int) config('acp.webmail_port', 2096),
         ]);
     }
 
     /**
-     * cPanel-style "Open Webmail": one-time SSO token banao (10 min) aur
+     * cPanel-style "Open Webmail": one-time SSO token (10 min) banao aur
      * Roundcube (port webmail_port) par bhejo; plugin token verify kar ke
      * Dovecot master-user se seamless login karta hai.
      */
     public function open(Request $request): RedirectResponse
     {
         $account = $this->requireAccount($request);
-        $mailbox = $account->mailboxes()->orderBy('id')->first()?->address();
+
+        $data = $request->validate([
+            'mailbox_id' => ['nullable', 'integer'],
+        ]);
+
+        $query = $account->mailboxes()->orderBy('id');
+        if (! empty($data['mailbox_id'])) {
+            $query = $account->mailboxes()->whereKey((int) $data['mailbox_id']);
+        }
+        $mailbox = $query->first()?->address();
+
         if ($mailbox === null || $mailbox === '') {
             return back()->withErrors(['webmail' => 'Koi mailbox nahi mila — pehle Email Accounts me ek account banayein.']);
         }
+
         $token = bin2hex(random_bytes(32));
         \Illuminate\Support\Facades\DB::table('webmail_sso_tokens')->insert([
             'token'      => $token,
@@ -86,7 +102,7 @@ class WebmailController extends Controller
         $account->recordEvent('mail.webmail.queued', $row->enabled ? $client : 'off');
         Audit::log('mail.webmail', 'info', 'account', $account->id, ['enabled' => $row->enabled, 'client' => $client]);
 
-        return redirect()->route('webmail.index')->with('success', 'Webmail is queued.');
+        return redirect()->route('webmail.index')->with('success', 'Webmail preference saved.');
     }
 
     private function accountFor(Request $request): ?Account

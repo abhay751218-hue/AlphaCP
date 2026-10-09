@@ -132,9 +132,9 @@ final class ModuleCatalog
                     ['name' => 'WordPress Toolkit',  'step' => 'S14', 'status' => 'live', 'route' => 'apps.index'],
                     ['name' => 'MultiPHP Manager',   'step' => 'S5',  'status' => 'live', 'route' => 'php.index'],
                     ['name' => 'MultiPHP INI Editor', 'step' => 'S5', 'status' => 'live', 'route' => 'php.ini'],
-                    ['name' => 'Node.js Selector',   'step' => 'S14', 'status' => 'step'],
+                    ['name' => 'Node.js Selector',   'step' => 'S14', 'status' => 'live', 'route' => 'nodejs.index'],
                     ['name' => 'Optimize Website',   'step' => 'S14', 'status' => 'live', 'route' => 'optimize.index'],
-                    ['name' => 'PHP Composer',       'step' => 'S14', 'status' => 'step'],
+                    ['name' => 'PHP Composer',       'step' => 'S14', 'status' => 'live', 'route' => 'composer.index'],
                 ],
             ],
             'advanced' => [
@@ -245,7 +245,7 @@ final class ModuleCatalog
                 'audience' => 'whm',
                 'items' => [
                     ['name' => 'License & Trial', 'step' => 'S2C', 'status' => 'live', 'route' => 'license.index'],
-                    ['name' => 'Updates',         'step' => 'S15', 'status' => 'step'],
+                    ['name' => 'Updates',         'step' => 'S15', 'status' => 'live', 'route' => 'updates.index'],
                 ],
             ],
         ];
