@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
 ### Added
+- **WHM admin panel + Reseller panel (09 Oct)** — sabhi panels ab cPanel company-grade:
+  naye `layouts/whm.blade.php` shell (dark charcoal sidebar, categorized WHM menu,
+  sidebar search, WHM/RESELLER badge, orange #FF6C2C accents), `config/whm_menu.php`
+  (admin = 12 sections / 49 items, reseller = 5 sections / 13 items — har item parity
+  row + roadmap step ke saath), `AdminController` + `PanelAdmin`/`PanelReseller`
+  middleware, routes `/admin` + `/reseller`. WHM home = Server information (hostname,
+  OS, kernel, uptime, load — parity #182) + Accounts table (parity #105) + Service
+  status (#171) + task queue + quick links + audit. accounts/packages tables Step 3/4
+  me aati hain — `Schema::hasTable()` guard panel ko green rakhta hai. Client panel
+  topbar se WHM/Reseller cross-links (real cPanel companies jaisa navigation).
+  Demo me WHM + Reseller live mockups add. Gate: `tools/sim/theme-check.py` **42/42**.
 - **Paper Lantern theme (09 Oct)** — panel UI ab cPanel company-grade look me hai:
   cPanel signature orange `#FF6C2C` accent, light canvas, thin orange left-edge stripe
   (Jupiter signature), top tool-search (press `/`), left sidebar nav with per-section

@@ -28,6 +28,7 @@
 | Step 2B-1 | **Panel LIVE on dev-srv1** — https://13.207.123.177:8090 (Laravel 13 v0.3.0: login, dashboard w/ live paneld data, User Manager, RBAC, 2FA, audit) | ✅ **INSTALLED & VERIFIED on dev-srv1** (29 Sep 00:02) |
 | Step 2B-2 | First-login password change + 2FA login verification + RBAC/User Manager pages | ✅ **VERIFIED** |
 | 2B-UI | **Paper Lantern theme (cPanel-grade UI)** — `#FF6C2C` accent, 82-tool icon grid (9 sections), right-rail panels, live tool search, 51 SVG icons; demo: `demo/cpanel-theme-demo.html`; gate: `tools/sim/theme-check.py` 21/21 | ✅ **DONE (09 Oct)** |
+| 2B-WHM | **WHM admin + Reseller panels (sabhi panel cPanel company-grade)** — dark-sidebar WHM shell, 49-item admin menu + 13-item reseller menu (parity rows ke saath), `/admin` + `/reseller` routes, Server information + Accounts + Services on WHM home; client↔WHM↔reseller cross-links; demo me WHM+reseller mockups; gate: `theme-check.py` 42/42 | ✅ **DONE (09 Oct)** |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |

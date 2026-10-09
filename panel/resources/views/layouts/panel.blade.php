@@ -27,6 +27,18 @@
   <span class="chip hide-sm"><span class="dot {{ ($queue['failed'] ?? 0) > 0 ? 'warn' : '' }}"></span> agent <b>{{ ($queue['running'] ?? 0) > 0 ? 'busy' : 'idle' }}</b></span>
   <span class="chip hide-sm">queued <b>{{ $queue['queued'] ?? 0 }}</b></span>
 
+  @if (auth()->user()->isAdmin())
+    <a class="btn" href="{{ route('admin.dashboard') }}" title="WHM — admin panel">
+      @include('partials.icon', ['name' => 'server', 'size' => 14])
+      <span class="hide-sm">WHM</span>
+    </a>
+  @elseif (auth()->user()->roleSlug() === 'reseller')
+    <a class="btn" href="{{ route('reseller.dashboard') }}" title="Reseller panel">
+      @include('partials.icon', ['name' => 'users', 'size' => 14])
+      <span class="hide-sm">Reseller</span>
+    </a>
+  @endif
+
   <div class="userbox">
     <span class="avatar">{{ strtoupper(substr(auth()->user()->username ?? 'A', 0, 1)) }}</span>
     <span>

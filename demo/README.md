@@ -26,8 +26,10 @@ python3 -m http.server 8000
 |---|---|
 | **Palette** | Theme ke sab colors with hex values (cPanel Orange `#FF6C2C` first) |
 | **Icon set** | 51 inline SVG stroke icons (no emoji, no icon font) |
-| **Login page** | Light login card, orange accent button |
-| **Dashboard** | Statistics cards + 9 sections / 82 tools icon grid + right rail (General information, Services, Recent activity) |
+| **cPanel login** | Light login card, orange accent button |
+| **cPanel (client)** | Statistics cards + 9 sections / 82 tools icon grid + right rail (General information, Services, Recent activity) |
+| **WHM (admin)** | Dark sidebar + categorized menu (49 items, parity rows) + Server information + Accounts + Services |
+| **Reseller** | Reseller-scoped WHM shell (teal accent, 13-item menu) + My accounts + Usage overview |
 
 Top search box live hai — type karo ya `/` press karo (cPanel Jupiter jaisa).
 

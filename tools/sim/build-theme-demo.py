@@ -20,8 +20,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 CSS_PATH = ROOT / "panel/public/css/panel.css"
+WHM_CSS_PATH = ROOT / "panel/public/css/whm.css"
 SPRITE_PATH = ROOT / "panel/resources/views/partials/icons.blade.php"
 CONFIG_PATH = ROOT / "panel/config/panel_modules.php"
+WHM_MENU_PATH = ROOT / "panel/config/whm_menu.php"
 OUT_PATH = ROOT / "demo/cpanel-theme-demo.html"
 
 DEMO_CSS = """
@@ -105,6 +107,80 @@ def parse_config(text: str):
     return sections
 
 
+def parse_whm_menu(text: str):
+    """Parse whm_menu.php into {'admin': [sections], 'reseller': [sections]}."""
+    def parse_items(chunk: str):
+        items = []
+        for im in re.finditer(
+            r"\[\s*'name' => '((?:[^'\\]|\\.)*)'"
+            r"(?:,\s*'route' => '([\w.]+)')?"
+            r"(?:,\s*'step' => '(S\d+B?)')?"
+            r"(?:,\s*'parity' => (\d+))?"
+            r",\s*'icon' => '([\w-]+)'"
+            r"(\s*,\s*'live' => true)?\s*\]",
+            chunk,
+        ):
+            name, route, step, parity, micon, live = im.groups()
+            items.append({
+                "name": name.replace("\\'", "'"),
+                "route": route,
+                "step": step,
+                "parity": int(parity) if parity else None,
+                "icon": micon,
+                "live": bool(live),
+            })
+        return items
+
+    def parse_sections(chunk: str):
+        sections = []
+        for sm in re.finditer(
+            r"'key' => '([\w-]+)',\s*'name' => '((?:[^'\\]|\\.)*)',\s*'icon' => '([\w-]+)',\s*'items' => \[",
+            chunk,
+        ):
+            key, name, micon = sm.groups()
+            items_chunk = chunk[sm.end():]
+            close = items_chunk.find("\n            ],")
+            if close == -1:
+                close = items_chunk.find("\n        ],")
+            items = parse_items(items_chunk[:close if close != -1 else len(items_chunk)])
+            sections.append({
+                "key": key,
+                "name": name.replace("\\'", "'"),
+                "icon": micon,
+                "items": items,
+            })
+        return sections
+
+    admin_part, _, reseller_part = text.partition("'reseller' =>")
+    return {
+        "admin": parse_sections(admin_part),
+        "reseller": parse_sections(reseller_part),
+    }
+
+
+def build_whm_sidebar(menu, active_route: str) -> str:
+    out = [
+        '<div class="whm-search">' + icon("search", 15)
+        + '<input type="search" placeholder="Search WHM…" autocomplete="off"></div>'
+    ]
+    for s in menu:
+        out.append(f'<h4>{icon(s["icon"], 13)} {html.escape(s["name"])}</h4>')
+        for it in s["items"]:
+            href = "#whm-demo" if it["route"] == "admin.dashboard" else (
+                "#reseller-demo" if it["route"] == "reseller.dashboard" else "#whm-demo"
+            )
+            active = "active" if it["route"] == active_route else ""
+            if it["live"]:
+                marker = '<span class="live-dot" title="Live"><span class="dot"></span></span>'
+            else:
+                marker = f'<span class="parity">#{it["parity"] or it["step"]}</span>'
+            out.append(
+                f'<a href="{href}" class="{active}" data-nav>{icon(it["icon"], 16)} '
+                f'{html.escape(it["name"])} {marker}</a>'
+            )
+    return "\n      ".join(out)
+
+
 def icon(name: str, size: int = 18) -> str:
     return (
         f'<svg class="ic" width="{size}" height="{size}" viewBox="0 0 24 24" '
@@ -167,6 +243,114 @@ def build_icon_grid(sprite: str) -> str:
     return "\n      ".join(out), len(ids)
 
 
+def build_whm_mock(kind: str, menu) -> str:
+    """A scoped WHM/reseller shell mockup for the demo page."""
+    badge = "RESELLER" if kind == "reseller" else "WHM"
+    scope = "whm reseller" if kind == "reseller" else "whm"
+    active_route = "admin.dashboard" if kind == "admin" else "reseller.dashboard"
+    sidebar = build_whm_sidebar(menu, active_route)
+    accounts_rows = "".join(
+        f"<tr><td><code>{u}</code></td><td>{d}</td><td class='muted'>{p}</td>"
+        f"<td class='muted'>{m} MB</td><td><span class='pill {c}'>{s}</span></td></tr>"
+        for u, d, p, m, s, c in [
+            ("abhay", "abhaykumar.in", "Business", 2458, "active", "on"),
+            ("priya", "priyashop.com", "Starter", 612, "active", "on"),
+            ("rahul", "rahulblog.in", "Starter", 1893, "suspended", "err"),
+            ("meena", "meenadesigns.in", "Business", 84, "pending", "off"),
+        ]
+    )
+    mem_bar = "teal" if kind == "reseller" else "blue"
+    stats = f"""
+        <div class="grid cols-4">
+          <div class="card"><h3><span class="stat-ico">{icon('users', 15)}</span> {"My accounts" if kind == "reseller" else "Accounts"}</h3>
+            <div class="big">3<span class="sub" style="font-size:14px"> / 4</span></div>
+            <div class="sub">1 suspended · 1 pending</div></div>
+          <div class="card"><h3><span class="stat-ico blue">{icon('box', 15)}</span> Packages</h3>
+            <div class="big">2</div><div class="sub">{"plans available to you" if kind == "reseller" else "hosting plans"}</div></div>
+          <div class="card"><h3><span class="stat-ico teal">{icon('memory', 15)}</span> Memory</h3>
+            <div class="big">62%</div><div class="sub">2458 / 3948 MB</div>
+            <div class="bar {mem_bar} warn" style="margin-top:10px"><span style="width:62%"></span></div></div>
+          <div class="card"><h3><span class="stat-ico blue">{icon('hdd', 15)}</span> Disk (/)</h3>
+            <div class="big">41%</div><div class="sub">32 / 78 GB</div>
+            <div class="bar {mem_bar}" style="margin-top:10px"><span style="width:41%"></span></div></div>
+        </div>"""
+    accounts_title = "My accounts" if kind == "reseller" else "Accounts"
+
+    server_info = "" if kind == "reseller" else f"""
+      <div class="section">{icon('server', 20)}<h2>Server information</h2><span class="rule"></span>
+        <span class="small muted">parity #182 · live from paneld</span></div>
+      <div class="card">
+        <div class="kv"><span class="k">Hostname</span><span class="v">dev-srv1</span></div>
+        <div class="kv"><span class="k">Operating system</span><span class="v">Ubuntu 24.04 LTS (x86_64)</span></div>
+        <div class="kv"><span class="k">Panel version</span><span class="v">AlphaCP 0.3.2 · PHP 8.3</span></div>
+        <div class="kv"><span class="k">CPU</span><span class="v">2 cores · load 0.42 / 0.51 / 0.38</span></div>
+        <div class="kv"><span class="k">Uptime</span><span class="v">11 days, 4 hours, 12 min</span></div>
+      </div>"""
+
+    services = "" if kind == "reseller" else f"""
+      <div class="section">{icon('gauge', 20)}<h2>Service status</h2><span class="rule"></span>
+        <span class="small muted">parity #171</span></div>
+      <div class="card" style="padding:8px 10px">
+        <table class="svc">
+          <thead><tr><th>Service</th><th>State</th><th>Boot</th></tr></thead>
+          <tbody>
+            <tr><td><code>nginx</code></td><td><span class="pill on">active</span></td><td class="muted small">enabled</td></tr>
+            <tr><td><code>php-fpm</code></td><td><span class="pill on">active</span></td><td class="muted small">enabled</td></tr>
+            <tr><td><code>mysql</code></td><td><span class="pill on">active</span></td><td class="muted small">enabled</td></tr>
+            <tr><td><code>paneld</code></td><td><span class="pill on">active</span></td><td class="muted small">enabled</td></tr>
+          </tbody>
+        </table>
+      </div>"""
+
+    usage = "" if kind != "reseller" else f"""
+      <div class="section">{icon('chart', 20)}<h2>Usage overview</h2><span class="rule"></span>
+        <span class="small muted">parity #120–121</span></div>
+      <div class="card">
+        <div class="kv"><span class="k">Disk used (listed accounts)</span><span class="v">5,047 MB</span></div>
+        <div class="kv"><span class="k">Bandwidth used (listed accounts)</span><span class="v">18,204 MB</span></div>
+      </div>"""
+
+    return f"""
+    <div class="{scope}" style="border:1px solid var(--line-2);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)">
+      <header class="topbar">
+        <div class="brand"><div class="mark">A</div>
+          <div class="bname">AlphaCP<small>dev-srv1 · demo</small></div></div>
+        <span class="badge-whm">{badge}</span>
+        <div class="spacer"></div>
+        <span class="chip hide-sm"><span class="dot"></span> agent <b>idle</b></span>
+        <div class="userbox"><span class="avatar">A</span>
+          <span><span class="uname">admin</span><br><span class="urole">{'reseller' if kind == 'reseller' else 'superadmin'}</span></span>
+          <button class="btn" type="button">{icon('logout', 15)}<span class="hide-sm">Logout</span></button>
+        </div>
+      </header>
+      <div class="shell">
+        <nav class="sidebar">{sidebar}</nav>
+        <main class="content" style="padding:16px">
+          <div class="page-head"><h1>Dashboard</h1><span class="badge-whm">{badge}</span>
+            <span class="sub">server-level view · demo values</span></div>
+          {stats}
+          {server_info}
+          <div class="section">{icon('users', 20)}<h2>{accounts_title}</h2><span class="rule"></span>
+            <span class="small muted">parity #105 · List Accounts</span></div>
+          <div class="card" style="padding:8px 10px">
+            <div class="stat-chips">
+              <span class="chip">total <b>4</b></span>
+              <span class="chip"><span class="dot"></span> active <b>3</b></span>
+              <span class="chip"><span class="dot warn"></span> suspended <b>1</b></span>
+              <span class="chip"><span class="dot dim"></span> pending <b>1</b></span>
+            </div>
+            <table class="acct">
+              <thead><tr><th>Username</th><th>Domain</th><th>Package</th><th>Disk</th><th>Status</th></tr></thead>
+              <tbody>{accounts_rows}</tbody>
+            </table>
+          </div>
+          {usage}
+          {services}
+        </main>
+      </div>
+    </div>"""
+
+
 TEMPLATE = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -175,6 +359,7 @@ TEMPLATE = """<!DOCTYPE html>
 <title>AlphaCP — Paper Lantern Theme Demo (cPanel-style)</title>
 <style>
 /*__PANEL_CSS__*/
+/*__WHM_CSS__*/
 /*__DEMO_CSS__*/
 </style>
 </head>
@@ -187,8 +372,10 @@ TEMPLATE = """<!DOCTYPE html>
   <span class="spacer"></span>
   <a href="#palette">Palette</a>
   <a href="#iconset">Icons</a>
-  <a href="#logindemo">Login</a>
-  <a href="#dash-demo">Dashboard</a>
+  <a href="#logindemo">cPanel login</a>
+  <a href="#dash-demo">cPanel (client)</a>
+  <a href="#whm-demo">WHM (admin)</a>
+  <a href="#reseller-demo">Reseller</a>
 </div>
 
 <header class="topbar">
@@ -342,6 +529,20 @@ TEMPLATE = """<!DOCTYPE html>
       </aside>
     </div>
 
+    <div class="section" id="whm-demo" style="--sec: #1f2733">
+      <span class="sec-ico" style="background:#1f2733">{icon_server}</span>
+      <h2>WHM — admin panel</h2><span class="rule"></span>
+      <span class="small muted">dark sidebar · categorized menu · server information · accounts · services</span>
+    </div>
+    __WHM_MOCK__
+
+    <div class="section" id="reseller-demo" style="--sec: #0d9488">
+      <span class="sec-ico" style="background:#0d9488">{icon_users}</span>
+      <h2>Reseller panel</h2><span class="rule"></span>
+      <span class="small muted">reseller-scoped WHM shell · teal accent · my accounts · usage</span>
+    </div>
+    __RESELLER_MOCK__
+
     <p class="mock-note" style="margin-top:26px">Demo generated by <code>tools/sim/build-theme-demo.py</code> — open this file directly in a browser, or serve it: <code>python3 -m http.server 8000</code> → <code>http://localhost:8000/demo/cpanel-theme-demo.html</code></p>
   </main>
 </div>
@@ -388,6 +589,7 @@ TEMPLATE = """<!DOCTYPE html>
 
 def main() -> int:
     css = CSS_PATH.read_text(encoding="utf-8")
+    whm_css = WHM_CSS_PATH.read_text(encoding="utf-8")
     sprite_m = re.search(r"<svg xmlns.*?</svg>", SPRITE_PATH.read_text(encoding="utf-8"), re.S)
     if not sprite_m:
         raise SystemExit("could not extract SVG sprite from partials/icons.blade.php")
@@ -395,14 +597,23 @@ def main() -> int:
     sections = parse_config(CONFIG_PATH.read_text(encoding="utf-8"))
     if not sections:
         raise SystemExit("no sections parsed from panel_modules.php")
+    whm_menu = parse_whm_menu(WHM_MENU_PATH.read_text(encoding="utf-8"))
+    if not whm_menu["admin"] or not whm_menu["reseller"]:
+        raise SystemExit("no WHM menu sections parsed from whm_menu.php")
 
     igrid, n_icons = build_icon_grid(sprite)
+    n_whm = sum(len(s["items"]) for s in whm_menu["admin"])
+    n_res = sum(len(s["items"]) for s in whm_menu["reseller"])
     n_tiles = sum(len(s["tiles"]) for s in sections)
 
     page = (TEMPLATE
             .replace("/*__PANEL_CSS__*/", css)
+            .replace("/*__WHM_CSS__*/", whm_css)
             .replace("/*__DEMO_CSS__*/", DEMO_CSS)
             .replace("<!--__SPRITE__-->", sprite)
+            .replace("__WHM_MOCK__", build_whm_mock("admin", whm_menu["admin"]))
+            .replace("__RESELLER_MOCK__", build_whm_mock("reseller", whm_menu["reseller"]))
+            .replace("{icon_users}", icon("users", 15))
             .replace("{icon_search}", icon("search", 15))
             .replace("{icon_logout}", icon("logout", 15))
             .replace("{icon_star}", icon("star", 15))
@@ -426,12 +637,14 @@ def main() -> int:
             .replace("__TILES__", build_tiles(sections))
             .replace("__N_SECTIONS__", str(len(sections)))
             .replace("__N_TILES__", str(n_tiles))
-            .replace("__N_ICONS__", str(n_icons)))
+            .replace("__N_ICONS__", str(n_icons))
+            .replace("__N_WHM__", f"{n_whm} WHM + {n_res} reseller"))
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(page, encoding="utf-8")
     print(f"demo written: {OUT_PATH.relative_to(ROOT)} "
-          f"({len(page) / 1024:.0f} KB · {len(sections)} sections · {n_tiles} tiles · {n_icons} icons)")
+          f"({len(page) / 1024:.0f} KB · {len(sections)} sections · {n_tiles} tiles · "
+          f"{n_icons} icons · WHM {n_whm} items · reseller {n_res} items)")
     return 0
 
 

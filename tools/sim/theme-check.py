@@ -63,6 +63,8 @@ ok(len(icon_ids) >= 40, f"icon count >= 40 (have {len(icon_ids)})")
 print("== icon references ==")
 config_src = (PANEL / "config/panel_modules.php").read_text(encoding="utf-8")
 config_icons = set(re.findall(r"'icon' => '([\w-]+)'", config_src))
+whm_menu_src = (PANEL / "config/whm_menu.php").read_text(encoding="utf-8")
+config_icons |= set(re.findall(r"'icon' => '([\w-]+)'", whm_menu_src))
 blade_icons: set[str] = set()
 blade_files = sorted((PANEL / "resources/views").rglob("*.blade.php"))
 for bf in blade_files:
@@ -164,6 +166,44 @@ n_sections = len(re.findall(r"'key' => '", config_src))
 n_tiles = len(re.findall(r"'icon' => '", config_src)) - n_sections  # tiles have icon, sections have icon too
 ok(n_sections == 9, f"9 sections (have {n_sections})")
 ok(n_tiles >= 70, f"tile count >= 70 (have {n_tiles})")
+
+print("== whm_menu sanity ==")
+n_whm_sections = len(re.findall(r"'key' => '", whm_menu_src))
+n_whm_items = len(re.findall(r"'name' => '", whm_menu_src))
+parities = [int(p) for p in re.findall(r"'parity' => (\d+)", whm_menu_src)]
+bad_parity = [p for p in parities if not (89 <= p <= 182)]
+ok(n_whm_sections == 17, f"WHM menu sections == 17 admin+reseller (have {n_whm_sections})")
+ok(n_whm_items >= 45, f"WHM menu items >= 45 (have {n_whm_items})")
+ok(not bad_parity, "parity rows within 89–182", str(bad_parity))
+routes = set(re.findall(r"'route' => '([\w.]+)'", whm_menu_src))
+bad_routes = sorted(routes - {"admin.dashboard", "reseller.dashboard"})
+ok(not bad_routes, "menu routes are real named routes", str(bad_routes))
+
+# ---------------------------------------------------------------- 7. php sanity
+print("== php files (touched) ==")
+PHP_FILES = [
+    "config/panel_modules.php",
+    "config/whm_menu.php",
+    "routes/web.php",
+    "bootstrap/app.php",
+    "app/Http/Controllers/AdminController.php",
+    "app/Http/Middleware/PanelAdmin.php",
+    "app/Http/Middleware/PanelReseller.php",
+]
+for rel in PHP_FILES:
+    src = (PANEL / rel).read_text(encoding="utf-8")
+    # strip comments first (they may contain apostrophes), then strings,
+    # so braces/parens inside them don't count
+    stripped = re.sub(r"/\*.*?\*/", "", src, flags=re.S)
+    stripped = re.sub(r"//[^\n]*", "", stripped)
+    stripped = re.sub(r"'(?:[^'\\]|\\.)*'", "''", stripped)
+    stripped = re.sub(r'"(?:[^"\\]|\\.)*"', '""', stripped)
+    ok(stripped.count("{") == stripped.count("}"),
+       f"{rel} braces balanced",
+       f"{stripped.count('{')} vs {stripped.count('}')}")
+    ok(stripped.count("(") == stripped.count(")"),
+       f"{rel} parens balanced",
+       f"{stripped.count('(')} vs {stripped.count(')')}")
 
 # ---------------------------------------------------------------- summary
 print()

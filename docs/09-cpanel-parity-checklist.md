@@ -193,7 +193,7 @@
 | # | WHM tool | Step | Status |
 |---|---|---|---|
 | 104 | Create a New Account | S3 | ⏳ S3 |
-| 105 | List Accounts | S3 | ⏳ S3 |
+| 105 | List Accounts | S3 | 🟡 WHM home pe accounts table live (09 Oct); full page S3 |
 | 106 | Modify an Account | S3 | ⏳ S3 |
 | 107 | Suspend / Unsuspend (Manage Account Suspension) | S3 | ⏳ S3 |
 | 108 | Terminate Accounts | S3 | ⏳ S3 |
@@ -370,3 +370,4 @@
 | cPanel ke andar ka closed-source code | Available nahi hai + legal nahi. Hum har feature **khud** bana rahe hain (behaviour same). |
 | LiteSpeed/Imunify jaise paid third-party add-ons | 🔵 Chahein to baad me integrate kar sakte hain (inme alag license lagta hai) — customer ki marzi. |
 | Purane mar chuke tools (Analog/Webalizer bina support) | 🔵 Rakh sakte hain compatibility ke liye, par by default Awstats + apna stats engine chalega. |
+ + apna stats engine chalega. |

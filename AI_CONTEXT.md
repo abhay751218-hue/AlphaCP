@@ -29,7 +29,7 @@ reseller/OEM deals).
 | Phase | **Step 2C — license client/trial deployed** 🟡 |
 | Next task | S3 account provisioning foundation; then license-server API/paid activation |
 | Dev server | AWS Lightsail `dev-srv1` · Ubuntu 24.04 · 4 GB/2 vCPU/80 GB · Mumbai · IP `13.207.123.177` |
-| Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor + license client/trial + Paper Lantern theme UI (cPanel `#FF6C2C`, 82-tool icon grid, `demo/cpanel-theme-demo.html`) |
+| Code written so far | paneld agent + Laravel 13 panel bundle + Step 2B installer/doctor + license client/trial + Paper Lantern theme UI (cPanel `#FF6C2C`, 82-tool icon grid) + WHM admin & reseller panels (dark-sidebar shell, `/admin` + `/reseller`, `demo/cpanel-theme-demo.html`) |
 | Blocking issues | PHP/Laravel test execution still needs a PHP 8.3+ build environment; server acceptance of new S2C bundle pending |
 
 Progress tracker: `project-status.md` · Roadmap: `ROADMAP.md`

@@ -328,6 +328,118 @@ input:focus { outline: 0; border-color: var(--cp-orange); box-shadow: 0 0 0 3px 
   .chip.hide-sm { display: none; }
 }
 
+/* ==========================================================================
+   AlphaCP WHM theme — admin & reseller shell (cPanel-company grade).
+   Load AFTER panel.css (components reused: .card, .tiles, .pill, .bar, …).
+   Real-WHM layout: dark charcoal sidebar with categorized menus + sidebar
+   search, dark top bar, light content canvas, cPanel orange #FF6C2C accents.
+   Scoped under `.whm` (set on <body> in layouts/whm.blade.php) so the same
+   rules also render the WHM/reseller mockups inside demo/cpanel-theme-demo.html.
+   ========================================================================== */
+
+/* ---------- top bar (dark) ---------- */
+.whm .topbar {
+  background: #1b2330;
+  border-bottom-color: #2a3444;
+}
+.whm .brand { color: #f1f5f9; }
+.whm .brand small { color: #8b98ab; }
+.badge-whm {
+  background: linear-gradient(135deg, var(--cp-orange), var(--cp-orange-2));
+  color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: .1em;
+  padding: 3px 10px; border-radius: 6px; white-space: nowrap;
+  box-shadow: 0 4px 12px -4px rgba(255,108,44,.55);
+}
+.whm .chip { background: #232d3d; border-color: #33405a; color: #9fb0c6; }
+.whm .chip b { color: #e6edf7; }
+.whm .btn { background: #232d3d; border-color: #33405a; color: #e6edf7; }
+.whm .btn:hover { background: #2c3849; text-decoration: none; }
+.whm .userbox .uname { color: #e6edf7; }
+.whm .userbox .urole { color: #8b98ab; }
+.whm .tsearch { background: #232d3d; border-color: #33405a; color: #7f8ea3; }
+.whm .tsearch input { color: #e6edf7; }
+.whm .tsearch:focus-within { border-color: var(--cp-orange); }
+
+/* ---------- sidebar (dark, categorized) ---------- */
+.whm .shell { grid-template-columns: 268px minmax(0, 1fr); }
+.whm .sidebar { background: #1f2733; border-right-color: #2a3444; padding-top: 12px; }
+
+.whm-search {
+  display: flex; align-items: center; gap: 8px; margin: 2px 8px 10px;
+  background: #171e28; border: 1px solid #33405a; border-radius: 9px;
+  padding: 7px 11px; color: #7f8ea3;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.whm-search:focus-within { border-color: var(--cp-orange); box-shadow: 0 0 0 3px rgba(255,108,44,.18); color: var(--cp-orange); }
+.whm-search input {
+  border: 0; outline: 0; background: transparent; width: 100%;
+  font: inherit; font-size: 13px; color: #e6edf7;
+}
+.whm-search input::placeholder { color: #6d7c90; }
+
+.whm .sidebar h4 {
+  color: #6d7c90;
+  display: flex; align-items: center; gap: 7px;
+}
+.whm .sidebar h4 .ic { color: #55637a; }
+.whm .sidebar a { color: #c7d0dc; font-size: 13px; }
+.whm .sidebar a .ic { color: #7f8ea3; }
+.whm .sidebar a:hover { background: #2a3442; color: #fff; text-decoration: none; }
+.whm .sidebar a:hover .ic { color: #c7d0dc; }
+.whm .sidebar a.active {
+  background: rgba(255,108,44,.15);
+  border-left-color: var(--cp-orange);
+  color: #fff; font-weight: 700;
+}
+.whm .sidebar a.active .ic { color: var(--cp-orange); }
+
+/* parity / live markers on nav items */
+.sidebar .parity {
+  margin-left: auto; font-family: var(--mono); font-size: 10px;
+  color: #6d7c90; border: 1px solid #33405a; border-radius: 5px; padding: 0 5px;
+}
+.whm .sidebar a:hover .parity { color: #9fb0c6; }
+.sidebar a .live-dot { margin-left: auto; }
+.sidebar a .live-dot .dot { box-shadow: 0 0 0 3px rgba(22,163,74,.2); }
+
+/* ---------- WHM dashboard bits ---------- */
+.kv .v .pill { vertical-align: 1px; }
+
+table.acct { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.acct th {
+  text-align: left; color: var(--muted); font-weight: 700; font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: .08em; padding: 4px 8px;
+}
+table.acct td { padding: 7px 8px; border-top: 1px solid var(--line); }
+table.acct tr:hover td { background: #fafbff; }
+
+.stat-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.stat-chips .chip b { font-size: 13px; }
+
+.quick-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 9px; }
+.quick-links a {
+  display: flex; align-items: center; gap: 9px; text-decoration: none;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px;
+  padding: 9px 11px; color: var(--ink); font-size: 12.5px; font-weight: 650;
+  transition: border-color .12s ease, transform .1s ease;
+}
+.quick-links a:hover { border-color: var(--cp-orange); transform: translateY(-1px); text-decoration: none; }
+.quick-links a .ic { color: var(--cp-orange-dark); }
+
+/* reseller flavour: teal badge instead of orange WHM badge */
+.whm.reseller .badge-whm {
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  box-shadow: 0 4px 12px -4px rgba(13,148,136,.55);
+}
+.whm.reseller .sidebar a.active { background: rgba(13,148,136,.16); border-left-color: #0d9488; }
+.whm.reseller .sidebar a.active .ic { color: #0d9488; }
+.whm.reseller .whm-search:focus-within { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.18); }
+
+@media (max-width: 900px) {
+  .whm .shell { grid-template-columns: 1fr; }
+  .whm .sidebar { border-right: 0; border-bottom: 1px solid #2a3444; }
+}
+
 
 /* ---------- demo-only additions (not part of panel.css) ---------- */
 .demo-banner {
@@ -422,8 +534,10 @@ input:focus { outline: 0; border-color: var(--cp-orange); box-shadow: 0 0 0 3px 
   <span class="spacer"></span>
   <a href="#palette">Palette</a>
   <a href="#iconset">Icons</a>
-  <a href="#logindemo">Login</a>
-  <a href="#dash-demo">Dashboard</a>
+  <a href="#logindemo">cPanel login</a>
+  <a href="#dash-demo">cPanel (client)</a>
+  <a href="#whm-demo">WHM (admin)</a>
+  <a href="#reseller-demo">Reseller</a>
 </div>
 
 <header class="topbar">
@@ -726,6 +840,229 @@ input:focus { outline: 0; border-color: var(--cp-orange); box-shadow: 0 0 0 3px 
           <p class="sub muted small" style="margin:10px 0 0">Immutable audit trail · <code>docs/03-security-matrix.md</code></p>
         </div>
       </aside>
+    </div>
+
+    <div class="section" id="whm-demo" style="--sec: #1f2733">
+      <span class="sec-ico" style="background:#1f2733"><svg class="ic" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-server"/></svg></span>
+      <h2>WHM — admin panel</h2><span class="rule"></span>
+      <span class="small muted">dark sidebar · categorized menu · server information · accounts · services</span>
+    </div>
+    
+    <div class="whm" style="border:1px solid var(--line-2);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)">
+      <header class="topbar">
+        <div class="brand"><div class="mark">A</div>
+          <div class="bname">AlphaCP<small>dev-srv1 · demo</small></div></div>
+        <span class="badge-whm">WHM</span>
+        <div class="spacer"></div>
+        <span class="chip hide-sm"><span class="dot"></span> agent <b>idle</b></span>
+        <div class="userbox"><span class="avatar">A</span>
+          <span><span class="uname">admin</span><br><span class="urole">superadmin</span></span>
+          <button class="btn" type="button"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-logout"/></svg><span class="hide-sm">Logout</span></button>
+        </div>
+      </header>
+      <div class="shell">
+        <nav class="sidebar"><div class="whm-search"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg><input type="search" placeholder="Search WHM…" autocomplete="off"></div>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg> Main</h4>
+      <a href="#whm-demo" class="active" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg> Home <span class="live-dot" title="Live"><span class="dot"></span></span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gauge"/></svg> Server Status <span class="parity">#182</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg> Account Functions</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg> Create a New Account <span class="parity">#104</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-list"/></svg> List Accounts <span class="live-dot" title="Live"><span class="dot"></span></span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg> Suspend / Unsuspend <span class="parity">#107</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-trash"/></svg> Terminate Accounts <span class="parity">#108</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-refresh"/></svg> Upgrade / Downgrade <span class="parity">#109</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-hdd"/></svg> Quota Modification <span class="parity">#110</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-key"/></svg> Password Modification <span class="parity">#111</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-terminal"/></svg> Manage Shell Access <span class="parity">#115</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-info"/></svg> Account Information</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-alert"/></svg> List Suspended / Over Quota <span class="parity">#120</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chart"/></svg> View Bandwidth Usage <span class="parity">#121</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-send"/></svg> Email All Users <span class="parity">#117</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-box"/></svg> Packages &amp; Features</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-box"/></svg> Add / Edit / Delete Package <span class="parity">#123</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sliders"/></svg> Feature Manager <span class="parity">#124</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-star"/></svg> Feature Showcase <span class="parity">#125</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg> Reseller Center <span class="parity">#126</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-image"/></svg> Themes / Theme Manager <span class="parity">#127</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-globe"/></svg> DNS Functions</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-globe"/></svg> DNS Zone Manager <span class="parity">#128</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg> Add / Delete DNS Zone <span class="parity">#129</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-file"/></svg> Edit Zone Templates <span class="parity">#131</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cloud"/></svg> DNS Cluster <span class="parity">#140</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mail"/></svg> Email (server-wide)</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-list"/></svg> Mail Queue Manager <span class="parity">#141</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg> Mail Delivery Reports <span class="parity">#142</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cog"/></svg> Exim Configuration Manager <span class="parity">#143</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-server"/></svg> Mailserver Configuration <span class="parity">#144</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-database"/></svg> SQL / Databases</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg> Manage DB Users <span class="parity">#149</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-wrench"/></svg> Repair / Optimize DB <span class="parity">#150</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-globe"/></svg> phpMyAdmin Config <span class="parity">#151</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cloud"/></svg> Remote MySQL <span class="parity">#152</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield"/></svg> Security Center</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield"/></svg> cPHulk Brute Force Protection <span class="parity">#153</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg> Host Access Control <span class="parity">#154</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-check"/></svg> Security Advisor <span class="parity">#157</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-key"/></svg> Two-Factor Authentication <span class="parity">#159</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-key"/></svg> Manage API Tokens <span class="parity">#170</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-shield-check"/></svg> ModSecurity Config <span class="parity">#162</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-server"/></svg> Service Configuration</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-server"/></svg> Service Manager <span class="live-dot" title="Live"><span class="dot"></span></span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-refresh"/></svg> Restart Services <span class="parity">#172</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg> Manage Service SSL Certificates <span class="parity">#174</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-cog"/></svg> Server Configuration</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-info"/></svg> Basic Setup <span class="parity">#94</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-sliders"/></svg> Tweak Settings <span class="parity">#95</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clock"/></svg> Server Time (NTP) <span class="parity">#100</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-terminal"/></svg> Terminal (root, audited) <span class="parity">#102</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-download"/></svg> Update Preferences <span class="parity">#103</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-archive"/></svg> Backup / Clusters / Reboot</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-archive"/></svg> Backup Configuration <span class="parity">#176</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-refresh"/></svg> Graceful / Forceful Reboot <span class="parity">#181</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-info"/></svg> Server Information <span class="live-dot" title="Live"><span class="dot"></span></span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-star"/></svg> cPanel (branding)</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-image"/></svg> Customization / Branding <span class="parity">#127</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-star"/></svg> Change Style (client theme) <span class="parity">#89</span></a></nav>
+        <main class="content" style="padding:16px">
+          <div class="page-head"><h1>Dashboard</h1><span class="badge-whm">WHM</span>
+            <span class="sub">server-level view · demo values</span></div>
+          
+        <div class="grid cols-4">
+          <div class="card"><h3><span class="stat-ico"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg></span> Accounts</h3>
+            <div class="big">3<span class="sub" style="font-size:14px"> / 4</span></div>
+            <div class="sub">1 suspended · 1 pending</div></div>
+          <div class="card"><h3><span class="stat-ico blue"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-box"/></svg></span> Packages</h3>
+            <div class="big">2</div><div class="sub">hosting plans</div></div>
+          <div class="card"><h3><span class="stat-ico teal"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-memory"/></svg></span> Memory</h3>
+            <div class="big">62%</div><div class="sub">2458 / 3948 MB</div>
+            <div class="bar blue warn" style="margin-top:10px"><span style="width:62%"></span></div></div>
+          <div class="card"><h3><span class="stat-ico blue"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-hdd"/></svg></span> Disk (/)</h3>
+            <div class="big">41%</div><div class="sub">32 / 78 GB</div>
+            <div class="bar blue" style="margin-top:10px"><span style="width:41%"></span></div></div>
+        </div>
+          
+      <div class="section"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-server"/></svg><h2>Server information</h2><span class="rule"></span>
+        <span class="small muted">parity #182 · live from paneld</span></div>
+      <div class="card">
+        <div class="kv"><span class="k">Hostname</span><span class="v">dev-srv1</span></div>
+        <div class="kv"><span class="k">Operating system</span><span class="v">Ubuntu 24.04 LTS (x86_64)</span></div>
+        <div class="kv"><span class="k">Panel version</span><span class="v">AlphaCP 0.3.2 · PHP 8.3</span></div>
+        <div class="kv"><span class="k">CPU</span><span class="v">2 cores · load 0.42 / 0.51 / 0.38</span></div>
+        <div class="kv"><span class="k">Uptime</span><span class="v">11 days, 4 hours, 12 min</span></div>
+      </div>
+          <div class="section"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg><h2>Accounts</h2><span class="rule"></span>
+            <span class="small muted">parity #105 · List Accounts</span></div>
+          <div class="card" style="padding:8px 10px">
+            <div class="stat-chips">
+              <span class="chip">total <b>4</b></span>
+              <span class="chip"><span class="dot"></span> active <b>3</b></span>
+              <span class="chip"><span class="dot warn"></span> suspended <b>1</b></span>
+              <span class="chip"><span class="dot dim"></span> pending <b>1</b></span>
+            </div>
+            <table class="acct">
+              <thead><tr><th>Username</th><th>Domain</th><th>Package</th><th>Disk</th><th>Status</th></tr></thead>
+              <tbody><tr><td><code>abhay</code></td><td>abhaykumar.in</td><td class='muted'>Business</td><td class='muted'>2458 MB</td><td><span class='pill on'>active</span></td></tr><tr><td><code>priya</code></td><td>priyashop.com</td><td class='muted'>Starter</td><td class='muted'>612 MB</td><td><span class='pill on'>active</span></td></tr><tr><td><code>rahul</code></td><td>rahulblog.in</td><td class='muted'>Starter</td><td class='muted'>1893 MB</td><td><span class='pill err'>suspended</span></td></tr><tr><td><code>meena</code></td><td>meenadesigns.in</td><td class='muted'>Business</td><td class='muted'>84 MB</td><td><span class='pill off'>pending</span></td></tr></tbody>
+            </table>
+          </div>
+          
+          
+      <div class="section"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gauge"/></svg><h2>Service status</h2><span class="rule"></span>
+        <span class="small muted">parity #171</span></div>
+      <div class="card" style="padding:8px 10px">
+        <table class="svc">
+          <thead><tr><th>Service</th><th>State</th><th>Boot</th></tr></thead>
+          <tbody>
+            <tr><td><code>nginx</code></td><td><span class="pill on">active</span></td><td class="muted small">enabled</td></tr>
+            <tr><td><code>php-fpm</code></td><td><span class="pill on">active</span></td><td class="muted small">enabled</td></tr>
+            <tr><td><code>mysql</code></td><td><span class="pill on">active</span></td><td class="muted small">enabled</td></tr>
+            <tr><td><code>paneld</code></td><td><span class="pill on">active</span></td><td class="muted small">enabled</td></tr>
+          </tbody>
+        </table>
+      </div>
+        </main>
+      </div>
+    </div>
+
+    <div class="section" id="reseller-demo" style="--sec: #0d9488">
+      <span class="sec-ico" style="background:#0d9488"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg></span>
+      <h2>Reseller panel</h2><span class="rule"></span>
+      <span class="small muted">reseller-scoped WHM shell · teal accent · my accounts · usage</span>
+    </div>
+    
+    <div class="whm reseller" style="border:1px solid var(--line-2);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)">
+      <header class="topbar">
+        <div class="brand"><div class="mark">A</div>
+          <div class="bname">AlphaCP<small>dev-srv1 · demo</small></div></div>
+        <span class="badge-whm">RESELLER</span>
+        <div class="spacer"></div>
+        <span class="chip hide-sm"><span class="dot"></span> agent <b>idle</b></span>
+        <div class="userbox"><span class="avatar">A</span>
+          <span><span class="uname">admin</span><br><span class="urole">reseller</span></span>
+          <button class="btn" type="button"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-logout"/></svg><span class="hide-sm">Logout</span></button>
+        </div>
+      </header>
+      <div class="shell">
+        <nav class="sidebar"><div class="whm-search"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg><input type="search" placeholder="Search WHM…" autocomplete="off"></div>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg> Main</h4>
+      <a href="#reseller-demo" class="active" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg> Home <span class="live-dot" title="Live"><span class="dot"></span></span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gauge"/></svg> Server Status <span class="parity">#182</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg> Account Functions</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-plus"/></svg> Create a New Account <span class="parity">#104</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-list"/></svg> List Accounts <span class="live-dot" title="Live"><span class="dot"></span></span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-lock"/></svg> Suspend / Unsuspend <span class="parity">#107</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-trash"/></svg> Terminate Accounts <span class="parity">#108</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-key"/></svg> Password Modification <span class="parity">#111</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-info"/></svg> Account Information</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-alert"/></svg> List Suspended / Over Quota <span class="parity">#120</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chart"/></svg> View Bandwidth Usage <span class="parity">#121</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-box"/></svg> Packages</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-box"/></svg> Packages (my allocations) <span class="parity">#123</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg> Reseller Center <span class="parity">#126</span></a>
+      <h4><svg class="ic" width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-bell"/></svg> Support</h4>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-send"/></svg> Email All Users <span class="parity">#117</span></a>
+      <a href="#whm-demo" class="" data-nav><svg class="ic" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-list"/></svg> Audit Logs (my actions) <span class="parity">#170</span></a></nav>
+        <main class="content" style="padding:16px">
+          <div class="page-head"><h1>Dashboard</h1><span class="badge-whm">RESELLER</span>
+            <span class="sub">server-level view · demo values</span></div>
+          
+        <div class="grid cols-4">
+          <div class="card"><h3><span class="stat-ico"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg></span> My accounts</h3>
+            <div class="big">3<span class="sub" style="font-size:14px"> / 4</span></div>
+            <div class="sub">1 suspended · 1 pending</div></div>
+          <div class="card"><h3><span class="stat-ico blue"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-box"/></svg></span> Packages</h3>
+            <div class="big">2</div><div class="sub">plans available to you</div></div>
+          <div class="card"><h3><span class="stat-ico teal"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-memory"/></svg></span> Memory</h3>
+            <div class="big">62%</div><div class="sub">2458 / 3948 MB</div>
+            <div class="bar teal warn" style="margin-top:10px"><span style="width:62%"></span></div></div>
+          <div class="card"><h3><span class="stat-ico blue"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-hdd"/></svg></span> Disk (/)</h3>
+            <div class="big">41%</div><div class="sub">32 / 78 GB</div>
+            <div class="bar teal" style="margin-top:10px"><span style="width:41%"></span></div></div>
+        </div>
+          
+          <div class="section"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-users"/></svg><h2>My accounts</h2><span class="rule"></span>
+            <span class="small muted">parity #105 · List Accounts</span></div>
+          <div class="card" style="padding:8px 10px">
+            <div class="stat-chips">
+              <span class="chip">total <b>4</b></span>
+              <span class="chip"><span class="dot"></span> active <b>3</b></span>
+              <span class="chip"><span class="dot warn"></span> suspended <b>1</b></span>
+              <span class="chip"><span class="dot dim"></span> pending <b>1</b></span>
+            </div>
+            <table class="acct">
+              <thead><tr><th>Username</th><th>Domain</th><th>Package</th><th>Disk</th><th>Status</th></tr></thead>
+              <tbody><tr><td><code>abhay</code></td><td>abhaykumar.in</td><td class='muted'>Business</td><td class='muted'>2458 MB</td><td><span class='pill on'>active</span></td></tr><tr><td><code>priya</code></td><td>priyashop.com</td><td class='muted'>Starter</td><td class='muted'>612 MB</td><td><span class='pill on'>active</span></td></tr><tr><td><code>rahul</code></td><td>rahulblog.in</td><td class='muted'>Starter</td><td class='muted'>1893 MB</td><td><span class='pill err'>suspended</span></td></tr><tr><td><code>meena</code></td><td>meenadesigns.in</td><td class='muted'>Business</td><td class='muted'>84 MB</td><td><span class='pill off'>pending</span></td></tr></tbody>
+            </table>
+          </div>
+          
+      <div class="section"><svg class="ic" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-chart"/></svg><h2>Usage overview</h2><span class="rule"></span>
+        <span class="small muted">parity #120–121</span></div>
+      <div class="card">
+        <div class="kv"><span class="k">Disk used (listed accounts)</span><span class="v">5,047 MB</span></div>
+        <div class="kv"><span class="k">Bandwidth used (listed accounts)</span><span class="v">18,204 MB</span></div>
+      </div>
+          
+        </main>
+      </div>
     </div>
 
     <p class="mock-note" style="margin-top:26px">Demo generated by <code>tools/sim/build-theme-demo.py</code> — open this file directly in a browser, or serve it: <code>python3 -m http.server 8000</code> → <code>http://localhost:8000/demo/cpanel-theme-demo.html</code></p>
