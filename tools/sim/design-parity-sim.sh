@@ -31,6 +31,8 @@ t "tile emoji-free"        bash -c "! grep -q '✅' '$V/partials/tile.blade.php'
 t "tile svg icon"          grep -q 'partials.icons' "$V/partials/tile.blade.php"
 t "whm dashboard emoji-free" bash -c "! grep -q '🧠\\|💾\\|⚙' '$V/dashboard-whm.blade.php'"
 t "cpanel sidebar partial" grep -q 'ModuleCatalog::sectionsFor' "$V/partials/cpanel-sidebar.blade.php"
+t "icons blade double-brace" grep -qF 'class="{{ $cls' "$V/partials/icons.blade.php"
+t "brand light-visible"        grep -q '.brand { color: var(--ink); }' "$FAKE/home/panel/public/assets/panel.css"
 
 B="$(ls -dt "$FAKE/home"/releases/design-parity-* | head -1)"
 sleep 1
