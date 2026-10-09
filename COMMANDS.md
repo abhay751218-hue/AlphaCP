@@ -14,7 +14,24 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### d6a-email-ui-fix v1.0 — Depth Wave D6a: Email group ke 14 pages cPanel-style (09 Oct 2026)
+### d6b-files-security-fix v1.0 — Depth Wave D6b: Files+Security ke 14 pages cPanel-style (09 Oct 2026)
+Files + Security section ke 14 tools ab company-jaisa look: **Images, Directory Privacy,
+Disk Usage, FTP Accounts, Web Disk, Backup Wizard, Git Version Control, File Restoration,
+Trash, Indexes, SSH Access, IP Blocker, API Tokens, Audit Log**.
+Har page par stats cards + SVG icons + colored badges + live search + related-tool links.
+14 files (SIRF views — koi controller/routes/JS/CSS/DB change NAHI; saare form fields/
+permissions same). Backup + auto-rollback.
+```bash
+sudo alphacp-sync get 50295571b01b7fab973dec3b461c49e24c69fd7d installer/d6b-files-security-fix.sh /tmp/d6b-files-security-fix-v1.0.sh 5aae5f020d27f37b98e3429837aefb2a4985bc60a3b82227bff9dbfce9d7daa4 && sudo bash /tmp/d6b-files-security-fix-v1.0.sh
+```
+- sha256: `5aae5f020d27f37b98e3429837aefb2a4985bc60a3b82227bff9dbfce9d7daa4`
+- Expected: banner `v1.0` → pre-check 3×200 → 14× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D6b FILES+SECURITY UI FIX COMPLETE ✅`
+- Phir 2083 → Files/Security tools khol kar hard-refresh (Ctrl+Shift+R)
+- Rollback: `*.bak-d6bfiles-<stamp>` files `/usr/local/alphacp/panel` me
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✅ DONE 09 Oct — d6a-email-ui-fix v1.0 — Depth Wave D6a: Email group ke 14 pages cPanel-style (09 Oct 2026)
 > ⚠️ **NOTE:** 09 Oct ko chat me galat commit-id chali gayi thi ("GitHub se nahi mila" error). **Sirf neeche wali command chalao — ye verified hai.** Scrollback wali purani command mat chalao.
 Email section ke 14 tools ab company-jaisa look: **Default Address, Autoresponders, Email
 Routing, Email Filters, Global Filters, Mailing Lists, Spam Filters, BoxTrapper, Calendar,
@@ -30,7 +47,6 @@ sudo alphacp-sync get c48498fa658a1d887a8fbb89144b87022199de8c installer/d6a-ema
 - Phir 2083 → Email section ke tools khol kar hard-refresh (Ctrl+Shift+R)
 - Rollback: `*.bak-d6aemail-<stamp>` files `/usr/local/alphacp/panel` me
 
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### d5-tools-fix v1.0 — Depth Wave D5 (FINAL): Cron presets + SSL + File Manager + DARK MODE (09 Oct 2026)
 Cron Jobs me cPanel "Common Settings" presets (Once Per Minute se Once Per Year tak — select
