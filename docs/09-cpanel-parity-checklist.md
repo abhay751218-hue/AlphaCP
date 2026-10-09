@@ -71,7 +71,7 @@
 | 26 | BoxTrapper | Challenge-response anti-spam | S7 | ✅ D6a LIVE |
 | 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ✅ D6a LIVE |
 | 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ✅ D6a LIVE |
-| 29 | Webmail | Roundcube/Horde link | S7 | ⏳ S7 |
+| 29 | Webmail | Roundcube/Horde link | S7 | 🟡 D9 (per-mailbox SSO open) |
 
 ### 🌐 Domains
 
@@ -155,7 +155,7 @@
 | 80 | MIME Types | Custom MIME | S5 | ⏳ S5 | ✅ D6c LIVE |
 | 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 | ✅ D6c LIVE |
 | 82 | Network Tools | Ping/traceroute/lookup | S11 | ✅ LIVE (D7, DNS lookup v1) |
-| 83 | Terminal | Browser SSH (jailed) | S6 | ⏳ S6 |
+| 83 | Terminal | Browser SSH (jailed) | S6 | 🟡 D9 (history + quick cmds, read-only) |
 | 84 | Hotlink Protection | Image hotlink block | S13 | ⏳ S13 |
 | 85 | Site IP Address | Account IP info | S3 | ⏳ S3 |
 
@@ -186,7 +186,7 @@
 | 99 | Server Profile | S15 | ⏳ S15 |
 | 100 | Server Time (NTP) | S11 | ⏳ S11 |
 | 101 | Statistics Software Configuration | S11 | ⏳ S11 |
-| 102 | Terminal (root, audited) | S6 | ⏳ S6 |
+| 102 | Terminal (root, audited) | S6 | 🟡 D9 (read-only whitelist, agent-audited) |
 | 103 | Update Preferences (panel updates) | S15 | ⏳ S15 |
 
 ### Account Functions / Information
@@ -241,7 +241,7 @@
 ### Email (server-wide)
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 141 | Mail Queue Manager | S7 | 🟡 D8 (installer ready) |
+| 141 | Mail Queue Manager | S7 | ✅ LIVE (D8) |
 | 142 | Mail Delivery Reports | S7 | ⏳ S7 |
 | 143 | Exim Configuration Manager | S7 | ⏳ S7 |
 | 144 | Mailserver Configuration (Dovecot) | S7 | ⏳ S7 |
@@ -263,7 +263,7 @@
 |---|---|---|---|
 | 153 | **cPHulk Brute Force Protection** | S13 | ⏳ S13 |
 | 154 | Host Access Control | S13 | ⏳ S13 |
-| 155 | Configure Security Policies | S13 | 🟡 D8 (posture page v1) |
+| 155 | Configure Security Policies | S13 | ✅ LIVE (D8, posture v1) |
 | 156 | Password Strength Configuration | S13 | ⏳ S13 |
 | 157 | Security Advisor | S13 | ⏳ S13 |
 | 158 | Security Questions | S13 | ⏳ S13 |

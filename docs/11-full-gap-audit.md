@@ -80,7 +80,7 @@ File Manager upload/zip/chmod (`files.set` me ops add karne honge)
 | **D6c** | UI pass 3: Software/Advanced + WHM pages | views-only | ✅ DEPLOYED LIVE 09 Oct |
 | **D7** | Metrics real: graphs (CSS/JS charts), Raw Access viewer, Visitors | views+JS | medium |
 | **D8** | ✅ BUILT: Mail Queue Manager + Security Policies (service restart = agent change, deferred) | panel-only | done |
-| **D9** | Webmail (Roundcube+SSO) + phpMyAdmin app + Terminal interactive | bada — server install | high |
+| **D9** | ✅ BUILT: Terminal v2 + Webmail per-mailbox SSO (phpMyAdmin app install = server-level, deferred) | panel-only | done |
 | **D10** | 1-click App Installer (WordPress) UI + 2FA + Branding/Customization | mixed | medium |
 
 **Rule wahi:** har wave = sim-tested installer + commit-pinned COMMANDS.md row + rollback.

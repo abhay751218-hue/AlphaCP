@@ -41,7 +41,8 @@
 | D6B-FILES-SEC | Files+Security 14 pages (Images, Privacy, Disk, FTP, WebDisk, BackupWiz, Git, FileRest, Trash, Indexes, SSH, IP Blocker, API Tokens, Audit) → cPanel-style UI, views-only | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
 | D6C-SOFT-WHM | Software/Advanced+WHM 15 pages (Optimize, Apps, ErrorPages, MultiPHP, DB Wizard, RemoteMySQL, MIME, Handlers, DomainFwd, DynDNS, Users, Resellers, SecurityTools, Ports, License) → cPanel-style UI, views-only | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
 | D7-METRICS | Errors + Raw Access + Awstats + Network Tools LIVE (4 controllers + 4 views + 5 routes + catalog 94→98) | ✅ DEPLOYED 09 Oct — user-confirmed |
-| D8-MAILQ-SECPOL | Mail Queue Manager (exim deliver/freeze/thaw/remove/flush) + Security Policies posture page (catalog 98→100) | 🟡 INSTALLER READY — deploy pending (COMMANDS.md) |
+| D8-MAILQ-SECPOL | Mail Queue Manager (exim deliver/freeze/thaw/remove/flush) + Security Policies posture page (catalog 98→100) | ✅ DEPLOYED 09 Oct — user-confirmed |
+| D9-TERM-WEBMAIL | Terminal v2 (quick cmds + session history) + Webmail v2 (per-mailbox one-click Roundcube SSO) | 🟡 INSTALLER READY — deploy pending (COMMANDS.md) |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |
