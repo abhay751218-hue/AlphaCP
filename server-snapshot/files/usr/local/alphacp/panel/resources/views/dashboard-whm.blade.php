@@ -25,7 +25,7 @@
 </div>
 <div class="grid cols-4">
     <div class="card">
-        <h3>🧠 Memory</h3>
+        <h3>@include('partials.icons', ['icon' => 'chip', 'cls' => 'hico']) Memory</h3>
         @if ($system)
             <div class="stat"><span class="num">{{ $system['memory']['used_pct'] }}%</span>
                 <span class="unit">used · {{ $system['memory']['used_mb'] }} / {{ $system['memory']['total_mb'] }} MB</span></div>
@@ -36,7 +36,7 @@
     </div>
 
     <div class="card">
-        <h3>💾 Disk (/)</h3>
+        <h3>@include('partials.icons', ['icon' => 'disk', 'cls' => 'hico']) Disk (/)</h3>
         @if ($system)
             <div class="stat"><span class="num">{{ $system['disk']['used_pct'] }}%</span>
                 <span class="unit">{{ $system['disk']['used_gb'] }} / {{ $system['disk']['total_gb'] }} GB</span></div>
@@ -47,7 +47,7 @@
     </div>
 
     <div class="card">
-        <h3>⚙️ Load · CPU</h3>
+        <h3>@include('partials.icons', ['icon' => 'gauge', 'cls' => 'hico']) Load · CPU</h3>
         @if ($system)
             <div class="stat"><span class="num">{{ $system['load'][0] }}</span>
                 <span class="unit">1-min · {{ $system['cpu_cores'] }} cores</span></div>
@@ -58,7 +58,7 @@
     </div>
 
     <div class="card">
-        <h3>📋 Agent queue</h3>
+        <h3>@include('partials.icons', ['icon' => 'queue', 'cls' => 'hico']) Agent queue</h3>
         <div class="stat"><span class="num">{{ $queue['queued'] + $queue['running'] }}</span>
             <span class="unit">pending · {{ $queue['success'] }} done · {{ $queue['failed'] }} failed</span></div>
         <p class="help">paneld v{{ $versions['agent'] }} · {{ $config_server ?? '' }}
@@ -68,7 +68,7 @@
 
 <div class="grid cols-2 mt">
     <div class="card">
-        <h3>🧩 Services</h3>
+        <h3>@include('partials.icons', ['icon' => 'services', 'cls' => 'hico']) Services</h3>
         @if ($services)
             <div class="table-wrap">
                 <table>
@@ -92,7 +92,7 @@
     </div>
 
     <div class="card">
-        <h3>📝 Recent activity (audit)</h3>
+        <h3>@include('partials.icons', ['icon' => 'audit', 'cls' => 'hico']) Recent activity (audit)</h3>
         @if ($audit->isEmpty())
             <p class="empty">No activity yet.</p>
         @else

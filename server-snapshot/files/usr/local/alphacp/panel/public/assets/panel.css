@@ -293,3 +293,70 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .searchbox { order: 11; width: 100%; }
   .topbar .meta { display: none; }
 }
+
+/* ============================================================================
+   DESIGN-PARITY v1.0 — cPanel Jupiter-jaisa look: light header, clean SVG
+   icons, left sidebar tree, emoji-free cards/tiles.
+   ========================================================================== */
+:root { --line: #dfe5ea; --ink: #1c2733; --ink-2: #5b6b7b; --surf: #ffffff; }
+
+/* light topbar (Jupiter header) */
+.topbar {
+  background: var(--surf); color: var(--ink);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 2px 0 var(--accent);
+}
+.topnav a { color: #33475b; }
+.topnav a:hover, .topnav a.active { background: #eef2f6; color: #101828; border-color: var(--line); }
+.topbar .meta { color: var(--ink-2); }
+.topbar .user { color: var(--ink); }
+.avatar { background: #e8edf2; border-color: #cfd8e0; color: var(--ink); }
+.searchbox { background: #f1f4f7; border: 1px solid var(--line); color: var(--ink); }
+.nav-toggle { background: var(--surf); border: 1px solid #cfd8e0; color: var(--ink); }
+.btn.secondary { background: #fff; color: #33475b; border-color: #cfd8e0; }
+.btn.secondary:hover { background: #eef2f6; }
+
+/* shell: left sidebar + content (dono panels) */
+.shell {
+  display: grid; grid-template-columns: 272px minmax(0, 1fr);
+  gap: 18px; max-width: 1500px; margin: 0 auto; padding: 18px 18px 0;
+}
+.shell .main-col { min-width: 0; }
+.side { position: sticky; top: 74px; align-self: start; max-height: calc(100vh - 96px); overflow: auto; scrollbar-width: thin; }
+.side-card, .whm-sidebar { 
+  background: var(--surf); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 10px; font-size: 13px;
+}
+.side-head { font-weight: 700; font-size: 13px; padding: 4px 8px 8px; border-bottom: 1px solid var(--line); margin-bottom: 6px; }
+.side-card h4, .whm-sidebar h4 {
+  margin: 10px 8px 4px; font-size: 11px; letter-spacing: .6px; text-transform: uppercase;
+  color: var(--ink-2); font-weight: 700;
+}
+.side-card a, .whm-sidebar a {
+  display: block; padding: 6px 8px; border-radius: 6px; color: #33475b; text-decoration: none;
+}
+.side-card a:hover, .whm-sidebar a:hover { background: #eef2f6; color: #101828; }
+
+/* card headers: Jupiter small-caps */
+.card h3 {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--ink-2); font-weight: 700; margin: 0 0 10px;
+}
+.hico { width: 15px; height: 15px; color: var(--accent); flex: none; }
+
+/* tiles: clean rows with stroke icon (emoji nahi) */
+.tile { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; }
+.tile .tico { width: 18px; height: 18px; margin-top: 2px; color: var(--accent); flex: none; }
+.tile.disabled .tico, .tile.disabled .tico { color: #9aa7b4; }
+.tile .name { font-weight: 600; color: var(--ink); }
+.tile .sub { color: var(--ink-2); }
+
+/* section titles */
+.section-title h2 { font-size: 15px; color: var(--ink); }
+.section-title .count { color: var(--ink-2); }
+
+@media (max-width: 980px) {
+  .shell { grid-template-columns: 1fr; }
+  .side { position: static; max-height: none; }
+}

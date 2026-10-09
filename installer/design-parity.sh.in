@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+# ============================================================================
+# AlphaCP design-parity v1.0 — cPanel Jupiter-jaisa look (sab panels)
+#   light header + left sidebar tree (WHM & cPanel) + stroke-SVG icon set +
+#   emoji-free tiles/cards + asset cache-bust. SIM=1 safe.
+# ============================================================================
+set -euo pipefail
+VERSION="1.0"
+SIM="${SIM:-0}"
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+PANEL="${ACP_HOME}/panel"
+LOGD="${ACP_HOME}/logs"; mkdir -p "$LOGD"
+LOG="${LOGD}/design-parity-$(date +%Y%m%d%H%M%S).txt"
+exec > >(tee -a "$LOG") 2>&1
+C_G=$'\033[0;32m'; C_R=$'\033[0;31m'; C_Y=$'\033[0;33m'; C_0=$'\033[0m'
+ok()   { printf '  %s✔%s %s\n' "$C_G" "$C_0" "$*"; }
+warn() { printf '  %s!%s %s\n' "$C_Y" "$C_0" "$*"; }
+die()  { printf '  %s✖%s %s\n' "$C_R" "$C_0" "$*"; exit 1; }
+hdr()  { printf '\n== %s ==\n' "$*"; }
+info() { printf '  · %s\n' "$*"; }
+TS="$(date +%Y%m%d%H%M%S)"
+BACKUP="${ACP_HOME}/releases/design-parity-${TS}"
+mkdir -p "$BACKUP"
+backup() { local f; for f in "$@"; do [[ -f "$f" ]] || continue; mkdir -p "${BACKUP}/$(dirname "$f")"; cp -a "$f" "${BACKUP}/$f"; done; }
+if [[ "${1:-}" == "--rollback" ]]; then
+  B="${2:?usage: --rollback <backup-dir>}"
+  hdr "ROLLBACK — design-parity v${VERSION}"
+  ( cd "$B" && find . -type f | sed 's|^\./||' | while read -r rel; do mkdir -p "/$(dirname "$rel")" && cp -a "$B/$rel" "/$rel"; done )
+  ok "rollback complete"; exit 0
+fi
+printf '\n== DESIGN-PARITY v%s (cPanel Jupiter look) ==\n' "$VERSION"
+info "backup: ${BACKUP}"
+hdr "panel view payloads (layout/css/dashboards/partials/icons)"
+backup "${PANEL}/resources/views/layouts/panel.blade.php"
+backup "${PANEL}/public/assets/panel.css"
+backup "${PANEL}/resources/views/dashboard-whm.blade.php"
+backup "${PANEL}/resources/views/dashboard-cpanel.blade.php"
+backup "${PANEL}/resources/views/partials/tile.blade.php"
+backup "${PANEL}/resources/views/partials/dash-sections.blade.php"
+backup "${PANEL}/resources/views/partials/whm-sidebar.blade.php"
+backup "${PANEL}/resources/views/partials/icons.blade.php"
+backup "${PANEL}/resources/views/partials/cpanel-sidebar.blade.php"
+mkdir -p "${PANEL}/resources/views/layouts" "${PANEL}/resources/views/partials" "${PANEL}/public/assets"
+cat > "${PANEL}/resources/views/layouts/panel.blade.php" <<'PEOF'
+@@P_LAYOUT@@
+PEOF
+cat > "${PANEL}/public/assets/panel.css" <<'PEOF'
+@@P_CSS@@
+PEOF
+cat > "${PANEL}/resources/views/dashboard-whm.blade.php" <<'PEOF'
+@@P_DWHM@@
+PEOF
+cat > "${PANEL}/resources/views/dashboard-cpanel.blade.php" <<'PEOF'
+@@P_DCP@@
+PEOF
+cat > "${PANEL}/resources/views/partials/tile.blade.php" <<'PEOF'
+@@P_TILE@@
+PEOF
+cat > "${PANEL}/resources/views/partials/dash-sections.blade.php" <<'PEOF'
+@@P_DSECT@@
+PEOF
+cat > "${PANEL}/resources/views/partials/whm-sidebar.blade.php" <<'PEOF'
+@@P_WSIDE@@
+PEOF
+cat > "${PANEL}/resources/views/partials/icons.blade.php" <<'PEOF'
+@@P_ICONS@@
+PEOF
+cat > "${PANEL}/resources/views/partials/cpanel-sidebar.blade.php" <<'PEOF'
+@@P_CSIDE@@
+PEOF
+grep -q 'class="shell' "${PANEL}/resources/views/layouts/panel.blade.php" \
+  || { die "layout me shell grid nahi"; }
+grep -q 'cpanel-sidebar' "${PANEL}/resources/views/layouts/panel.blade.php" \
+  || { die "layout me cpanel sidebar nahi"; }
+grep -q 'DESIGN-PARITY v1.0' "${PANEL}/public/assets/panel.css" \
+  || { die "css me design-parity block nahi"; }
+grep -q 'filemtime' "${PANEL}/resources/views/layouts/panel.blade.php" \
+  || { die "css cache-bust nahi"; }
+grep -q '✅' "${PANEL}/resources/views/partials/tile.blade.php" \
+  && { die "tile me abhi bhi emoji hai"; }
+grep -q '@switch' "${PANEL}/resources/views/partials/icons.blade.php" \
+  || { die "icons partial nahi"; }
+ok "9 view payloads likhi + asserts pass"
+hdr "alphacp-sync"
+if [[ "$SIM" == "1" ]]; then info "SIM: sync skip"; else alphacp-sync >/dev/null 2>&1 && ok "sync complete" || warn "sync skip/fail"; fi
+hdr "FINAL VERDICT"
+ok "Jupiter-parity: light header, left sidebar (WHM+cPanel), SVG icons, emoji-free"
+info "backup : ${BACKUP}"
+info "rollback: sudo bash /tmp/design-parity-v1.0.sh --rollback ${BACKUP}"
+printf '\n  design-parity v%s APPLY ho gaya.\n\n' "$VERSION"

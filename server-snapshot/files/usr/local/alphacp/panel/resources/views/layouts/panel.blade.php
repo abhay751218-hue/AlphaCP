@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
     <title>@yield('title', 'Dashboard') · {{ config('acp.brand.name', 'AlphaCP') }}</title>
-    <link rel="stylesheet" href="{{ asset('assets/panel.css') }}?v={{ config('acp.version') }}">
+    <link rel="stylesheet" href="{{ asset('assets/panel.css') }}?v={{ @filemtime(public_path('assets/panel.css')) ?: config('acp.version') }}">
 </head>
 <body>
 
@@ -59,11 +59,17 @@
 </header>
 
 @if (($panelMode ?? 'cpanel') === 'whm')
-<div class="whm-shell">
-    @include('partials.whm-sidebar', [])
-    <main class="wrap whm-main">
+<div class="shell whm-shell">
+    <aside class="side">
+        @include('partials.whm-sidebar', [])
+    </aside>
+    <main class="wrap main-col">
 @else
-<main class="wrap">
+<div class="shell">
+    <aside class="side">
+        @include('partials.cpanel-sidebar', [])
+    </aside>
+    <main class="wrap main-col">
 @endif
     @include('partials.flash', [])
 
@@ -79,9 +85,7 @@
 
     @yield('content')
 </main>
-@if (($panelMode ?? 'cpanel') === 'whm')
 </div>
-@endif
 
 <footer class="wrap muted" style="padding-top:0; font-size:12.5px">
     {{ config('acp.brand.name', 'AlphaCP') }} {{ config('acp.version') }} — {{ config('acp.brand.tagline', 'Hosting control panel') }} ·
