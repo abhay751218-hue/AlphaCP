@@ -360,3 +360,13 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
   .shell { grid-template-columns: 1fr; }
   .side { position: static; max-height: none; }
 }
+
+/* design-parity hotfix: brand text light header me visible */
+.brand { color: var(--ink); }
+.brand small { color: var(--ink-2); }
+/* svg icons kabhi bhi giant na hon: default size jab class miss ho */
+svg.ico, svg.tico, svg.hico { width: 18px; height: 18px; flex: none; }
+svg.hico { width: 15px; height: 15px; }
+.card h3 svg { width: 15px; height: 15px; }
+.tile svg { width: 18px; height: 18px; }
+.side svg, .side-card svg { width: 15px; height: 15px; }
