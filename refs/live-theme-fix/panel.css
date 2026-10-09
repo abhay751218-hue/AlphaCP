@@ -492,3 +492,46 @@ svg.hico { width: 15px; height: 15px; }
 .row-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .checkbox, label.check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); margin: 8px 0 0; }
 .checkbox input[type=checkbox], label.check input[type=checkbox] { width: auto; }
+
+/* ==========================================================================
+   v3.1 — DISTINCT PANEL LOOKS (09 Oct 2026)
+   body.mode-cpanel  -> LIGHT client panel (Paper Lantern demo look):
+                        white sidebar, colored labels, orange active state
+   body.mode-whm     -> dark charcoal sidenav (upar wala base = WHM look)
+   (guest/login pages me body class nahi hoti — dark login hi theek hai)
+   ========================================================================== */
+body.mode-cpanel .sidenav {
+  background: #ffffff; color: var(--ink);
+  border-right: 1px solid var(--line);
+}
+body.mode-cpanel .side-brand { color: var(--ink); border-bottom-color: var(--line); }
+body.mode-cpanel .side-brand small { color: var(--ink-2); }
+body.mode-cpanel .side-tree h4, body.mode-cpanel .sidenav h4 { color: #9aa7b4; }
+body.mode-cpanel .sidenav a { color: #33475b; }
+body.mode-cpanel .sidenav a:hover { background: var(--panel-2); color: #101828; }
+body.mode-cpanel .sidenav a.active,
+body.mode-cpanel .sidenav a[aria-current="page"] {
+  background: var(--tint); color: var(--accent-3);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+body.mode-cpanel .sidenav input[type="search"],
+body.mode-cpanel .sidenav .searchbox {
+  background: var(--panel-2); border-color: #cbd5df; color: var(--ink);
+}
+body.mode-cpanel .sidenav input::placeholder { color: #8fa1b3; }
+body.mode-cpanel .mainbar { border-bottom: 1px solid var(--line); box-shadow: 0 2px 0 var(--accent); }
+body.mode-cpanel .dash-side .card h3 { background: linear-gradient(135deg, var(--accent), var(--accent-3)); border-bottom: 0; }
+body.mode-cpanel .dash-side .card h3 .hico,
+body.mode-cpanel .dash-side .card h3 svg { color: #fff; }
+
+/* mobile: cPanel-mode header LIGHT hi rahe (dark sirf WHM me) */
+@media (max-width: 980px) {
+  body.mode-cpanel .mainbar { background: #fff; border-bottom-color: var(--line); }
+  body.mode-cpanel .nav-toggle { background: #fff; border-color: #cbd5df; color: var(--ink); }
+  body.mode-cpanel .mainbar .searchbox { background: var(--panel-2); border-color: #cbd5df; color: var(--ink); }
+  body.mode-cpanel .mainbar .searchbox::placeholder { color: #8fa1b3; }
+  body.mode-cpanel .mainbar .btn.secondary { background: #fff; border-color: #cbd5df; color: #33475b; }
+  body.mode-cpanel .mainbar .avatar { background: linear-gradient(135deg, var(--accent-2), var(--accent-3)); }
+  body.mode-cpanel .sidenav { box-shadow: none; }
+  body.mode-cpanel.nav-open .sidenav { box-shadow: 0 10px 40px rgba(16, 24, 40, .25); }
+}

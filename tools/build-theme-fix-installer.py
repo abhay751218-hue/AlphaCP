@@ -19,10 +19,11 @@ import subprocess
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "refs" / "live-theme-fix"
 OUT = ROOT / "installer" / "theme-fix.sh"
-VERSION = "1.0"
+VERSION = "1.1"
 
 FILES = [
     ("panel.css", "public/assets/panel.css"),
+    ("panel-layout.blade.php", "resources/views/layouts/panel.blade.php"),
     ("dashboard-cpanel.blade.php", "resources/views/dashboard-cpanel.blade.php"),
     ("whm-sidebar.blade.php", "resources/views/partials/whm-sidebar.blade.php"),
 ]
@@ -44,7 +45,7 @@ script = r'''#!/usr/bin/env bash
 # =============================================================================
 # AlphaCP — THEME FIX v{VER}  (live panel 0.75.x line · 09 Oct 2026)
 #
-# Kya karta hai (sirf 3 files — koi DB/composer/migration NAHI):
+# Kya karta hai (sirf 4 files — koi DB/composer/migration NAHI):
 #   1. public/assets/panel.css                    -> DESIGN-PARITY v3 (clean cPanel-company theme:
 #                                                    dark charcoal sidenav + orange #FF6C2C + white cards;
 #                                                    5 purani conflicting CSS layers ki jagah EK coherent file)
@@ -53,6 +54,9 @@ script = r'''#!/usr/bin/env bash
 #   3. resources/views/partials/whm-sidebar.blade.php -> galat outer <nav class="side-tree"> wrapper remove
 #                                                    (WHM sidebar dark panel me white box dikhta tha)
 #
+#   4. resources/views/layouts/panel.blade.php  -> body.mode-cpanel/mode-whm class (cPanel=LIGHT,
+#                                                    WHM=DARK — ab dono alag dikhte hain) + hamburger
+#                                                    menu JS capture-phase rewrite (ab pakka chalega)
 # Safety: har file ka backup (.bak-themefix-<stamp>) -> install -> view:clear ->
 #         health check https 8090/2083/2087 == 200 -> fail par AUTO-ROLLBACK.
 # =============================================================================
@@ -95,7 +99,7 @@ install_one() {{
 rollback() {{
   warn "ROLLBACK shuru..."
   local rel dst
-  for rel in "${{F0_PATH}}" "${{F1_PATH}}" "${{F2_PATH}}"; do
+  for rel in "${{F0_PATH}}" "${{F1_PATH}}" "${{F2_PATH}}" "${{F3_PATH}}"; do
     dst="${{PANEL_ROOT}}/${{rel}}"
     if [[ -f "${{dst}}.bak-themefix-${{STAMP}}" ]]; then
       mv -f "${{dst}}.bak-themefix-${{STAMP}}" "${{dst}}"
@@ -135,10 +139,11 @@ say "${{C_B}}-- Step 1: pre-check --${{C_0}}"
 health || die "panel pehle se unhealthy hai — pehle panel-doctor chalao, phir theme fix"
 
 say ""
-say "${{C_B}}-- Step 2: install (3 files, backup ke saath) --${{C_0}}"
+say "${{C_B}}-- Step 2: install (4 files, backup ke saath) --${{C_0}}"
 install_one "${{F0_PATH}}" "${{F0_SHA}}" "${{F0_B64}}"
 install_one "${{F1_PATH}}" "${{F1_SHA}}" "${{F1_B64}}"
 install_one "${{F2_PATH}}" "${{F2_SHA}}" "${{F2_B64}}"
+install_one "${{F3_PATH}}" "${{F3_SHA}}" "${{F3_B64}}"
 
 say ""
 say "${{C_B}}-- Step 3: view cache clear --${{C_0}}"
