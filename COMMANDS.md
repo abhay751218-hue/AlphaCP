@@ -14,7 +14,11 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D18 — cPanel-style navbar: bell + user dropdown + search placeholder
+**Koi pending command NAHI — theme v1.2 + D1–D18 sab LIVE. 🎉**
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✔️ D18 (DEPLOYED 09 Oct 2026 — backups bak-d18nav-20261009175830) — cPanel-style navbar: bell + user dropdown + search placeholder
 
 SSH se `sudo -i` karke root prompt par:
 
@@ -28,7 +32,6 @@ Kya milega:
 - Sidebar-top ki aakhri "cPanel/WHM" naming line fix (ab Server Manager / Account Panel)
 - Rollback stamp: `bak-d18nav-…`
 
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✔️ D17 (DEPLOYED 09 Oct 2026 — backups bak-d17look-20261009174756) — Look parity: WHM-style tiles + File Manager toolbar + Apps grid
 
