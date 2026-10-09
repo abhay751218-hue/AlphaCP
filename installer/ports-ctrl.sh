@@ -1329,7 +1329,6 @@ declare(strict_types=1);
 namespace Alphacp\Agent\Tasks;
 
 use Alphacp\Agent\PortsNginx;
-use Alphacp\Agent\TaskContext;
 use Alphacp\Agent\TaskRejectedException;
 
 /**
