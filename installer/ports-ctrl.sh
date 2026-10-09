@@ -1112,6 +1112,19 @@ final class PortsNginx
      *
      * @return array{applied:bool, ports:array<string,int|bool>, nginx:string}
      */
+    /**
+     * nginx binary ka absolute path (CommandRunner realpath() use karta hai,
+     * PATH lookup NAHI — isliye bare name kabhi nahi chalega).
+     */
+    private function nginxBin(): string
+    {
+        foreach (['/usr/sbin/nginx', '/usr/bin/nginx', '/usr/local/sbin/nginx', '/usr/local/bin/nginx'] as $c) {
+            if (is_executable($c)) {
+                return $c;
+            }
+        }
+        throw new TaskRejectedException('nginx binary nahi mila (allowlist paths check kiye)');
+    }
     public function apply(): array
     {
         $avail = $this->ngxSys . '/sites-available';
@@ -1185,7 +1198,7 @@ final class PortsNginx
             file_put_contents($pc, $cs);
         }
 
-        $t = $this->cmd->run(['nginx', '-t'], 30);
+        $t = $this->cmd->run([$this->nginxBin(), '-t'], 30);
         if (! $t->ok()) {
             foreach ($touched as $f) {
                 if (is_file("$bak/$f")) {
@@ -1197,7 +1210,7 @@ final class PortsNginx
 
             return ['applied' => false, 'ports' => $this->map, 'nginx' => $msg];
         }
-        $r = $this->cmd->run(['nginx', '-s', 'reload'], 30);
+        $r = $this->cmd->run([$this->nginxBin(), '-s', 'reload'], 30);
         if (!$r->ok()) {
             $r = $this->cmd->run(['systemctl', 'reload', 'nginx'], 30);
         }
@@ -1211,7 +1224,7 @@ final class PortsNginx
     /** @return array<string,mixed> */
     public function status(): array
     {
-        $v = $this->cmd->run(['nginx', '-v'], 10);
+        $v = $this->cmd->run([$this->nginxBin(), '-v'], 10);
 
         return [
             'ports'    => $this->map,
@@ -1315,7 +1328,7 @@ final class PortsNginx
 
     private function http2Standalone(): bool
     {
-        $v = $this->cmd->run(['nginx', '-v'], 10);
+        $v = $this->cmd->run([$this->nginxBin(), '-v'], 10);
         if (preg_match('/nginx\/([\d.]+)/', $v->stdout . $v->stderr, $m) !== 1) {
             return false;
         }
@@ -1445,6 +1458,13 @@ fi
 
 # ---- 5) agent apply (live only; sim me harness) ----
 hdr "nginx vhosts regen (ports.apply)"
+if [[ "$SIM" == "0" ]]; then
+  # paneld daemon purana code memory me rakhta hai — naya tasks/allowlist load ho
+  systemctl restart paneld.service >/dev/null 2>&1 \
+    || { rollback; die "paneld restart fail"; }
+  sleep 2
+  info "paneld restart ho gaya (naya code load)"
+fi
 if [[ "$SIM" == "1" ]]; then
   info "SIM: agent apply harness sim me chalta hai"
 else

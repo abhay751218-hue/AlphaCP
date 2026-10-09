@@ -224,6 +224,13 @@ fi
 
 # ---- 5) agent apply (live only; sim me harness) ----
 hdr "nginx vhosts regen (ports.apply)"
+if [[ "$SIM" == "0" ]]; then
+  # paneld daemon purana code memory me rakhta hai — naya tasks/allowlist load ho
+  systemctl restart paneld.service >/dev/null 2>&1 \
+    || { rollback; die "paneld restart fail"; }
+  sleep 2
+  info "paneld restart ho gaya (naya code load)"
+fi
 if [[ "$SIM" == "1" ]]; then
   info "SIM: agent apply harness sim me chalta hai"
 else
