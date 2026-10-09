@@ -235,7 +235,7 @@ if [[ "$SIM" == "1" ]]; then
   info "SIM: agent apply harness sim me chalta hai"
 else
   if "${AGENT}/bin/paneld" --run ports.apply '{"action":"apply"}' >"${LOGD}/ports-apply-last.txt" 2>&1; then
-    grep -q '"applied":true' "${LOGD}/ports-apply-last.txt" \
+    grep -Eq '"applied":[[:space:]]*true' "${LOGD}/ports-apply-last.txt" \
       && ok "ports.apply: vhosts regen + reload" \
       || { rollback; die "ports.apply ne applied:true nahi diya (nginx -t fail?)"; }
   else
