@@ -1,0 +1,32 @@
+; AlphaCP panel PHP-FPM pool — written by installer/step2b-install.sh
+; Dedicated socket + user (alphacp), so panel code can never read root-only
+; files (etc/database.env) and can never be executed as another site's user.
+[alphacp]
+user  = @@PANEL_USER@@
+group = @@PANEL_USER@@
+
+listen       = /run/php/alphacp-fpm.sock
+listen.owner = www-data
+listen.group = www-data
+listen.mode  = 0660
+
+pm                   = dynamic
+pm.max_children      = 10
+pm.start_servers     = 2
+pm.min_spare_servers = 1
+pm.max_spare_servers = 3
+pm.max_requests      = 500
+
+; open_basedir keeps the panel inside its own tree. The agent's config dir is
+; included read-only so the panel can list the task allowlist (root-owned, 0644
+; — the panel user cannot write there, so this is not a privilege escalation).
+php_admin_value[open_basedir]     = @@PANEL_ROOT@@:@@ACP_HOME@@/etc:@@ACP_HOME@@/agent/config:@@ACP_HOME@@/backups:/tmp
+php_admin_value[upload_tmp_dir]   = /tmp
+php_admin_value[session.save_path] = @@PANEL_ROOT@@/storage/framework/sessions
+php_admin_value[disable_functions] = exec,passthru,shell_exec,system,proc_open,popen,pcntl_exec
+php_admin_flag[expose_php]        = off
+php_admin_flag[display_errors]    = off
+php_admin_value[error_log]        = /var/log/php/alphacp-fpm-error.log
+
+; The panel talks to the agent only through the `tasks` table, so it needs no
+; shell. Everything dangerous happens in paneld (root) via the allowlist.

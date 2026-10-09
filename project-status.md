@@ -52,6 +52,8 @@
 | D16-BRANDING | AlphaCP-only branding sweep + progress-card removal | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed (bak-d16brand-20261009174013) |
 | D17-LOOK | WHM-style tiles + FM toolbar + apps grid | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed (bak-d17look-20261009174756) |
 | D18-NAVBAR | navbar: bell + user dropdown + find-functions search + sidebar branding fix | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed (bak-d18nav-20261009175830) |
+| **PHASE-3 BUSINESS** | B1 license-server · B2 website · B3 billing · B4 one-line install · B5 update channels · B6 release/hardening | 🚀 STARTED 09 Oct 2026 |
+| B6a-RELEASE | release/tree (691 files, snapshot+21 waves, MANIFEST sha256) — repo ab single source of truth; 548 php 0 errors, 125 blades balanced, 177/177 @csrf | ✅ BUILT 09 Oct 2026 |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |

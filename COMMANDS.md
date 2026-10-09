@@ -14,7 +14,10 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-**Koi pending command NAHI — theme v1.2 + D1–D18 sab LIVE. 🎉**
+**Server par abhi kuch NahI chalana** — Phase-3 (business) chal raha hai:
+B6a release-bundle repo me ban gaya (`release/tree`, v1.0.0-rc1). Agla: B4
+one-line installer (tumhare SECOND server par fresh-install test hoga — wahi
+D12 SSO click-test bhi niptega). Uski command yahan aayegi.
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 
