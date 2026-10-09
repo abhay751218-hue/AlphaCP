@@ -55,7 +55,7 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 13 | Email Accounts | Mailboxes + quota + edit/password + usage + Connect Devices | S7 | ✅ D1 LIVE (09 Oct 2026) |
+| 13 | Email Accounts | Mailboxes + quota + edit + suspend + usage + Connect Devices | S7 | 🟡 D14 suspend + edit-route fix (installer ready); baaki ✅ D1 LIVE |
 | 14 | Forwarders | Email forward (cPanel-style list/search/create) | S7 | ✅ D1 LIVE (09 Oct 2026) |
 | 15 | Email Routing | MX/local routing per domain | S7 | ✅ D6a LIVE |
 | 16 | Autoresponders | Vacation/auto reply | S7 | ✅ D6a LIVE |

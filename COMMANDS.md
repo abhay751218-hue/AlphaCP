@@ -14,36 +14,36 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D13 — Node.js App Manager, PM2-style (v1.0)
+### D14 — Parity Gaps: suspend + AAAA/MX-prio + revoke + 2 ROUTE FIX (v1.0)
 
-cPanel ka **"Setup Node.js App"**: app banao (naam + port), wo turant systemd
-unit ke roop me chalti hai — **crash par auto-restart, boot par auto-start**
-(PM2-style), output `~/nodeapps/<app>/app.log` me. Panel se start/stop/restart/
-remove + log tail. Har unit `alphacp-node-<user>-<app>` prefix ke saath —
-system services kabhi touch nahi ho saktin. D12 ka PHP guard isme bhi hai.
+Deferred items ("ek bhi nahi chutna chahiye") + ek **important bug fix**:
+- **Email Accounts**: har mailbox par **Suspend/Unsuspend** (login band, data/mail safe — cPanel style)
+- **Zone Editor**: **AAAA** (IPv6) record type + **MX priority** (`10 mail.example.com`)
+- **MySQL Users**: **Revoke User From Database** card (grant ka ulta)
+- **FIX**: `email.update` + `zone-editor.update` routes D7 rebase me gir gaye the —
+  Email Accounts ka "Update mailbox" aur Zone Editor ka record-edit **500 de raha tha**, ab wapas theek
 
 ```bash
-sudo alphacp-sync get d0271e0a43c42dcc94697b12c252b8e7c6e1c88f installer/d13-nodejs-apps.sh /tmp/d13-nodejs-apps-v1.0.sh 40a650b2203c60ec79f7c5d7f5ca3cc050ea7013d5fc63747c17b49c4810e37d && sudo bash /tmp/d13-nodejs-apps-v1.0.sh
+sudo alphacp-sync get e218ab49e1caabde921bd2d072b2e33d31b661de installer/d14-parity-gaps.sh /tmp/d14-parity-gaps-v1.0.sh 5c41b2b13cba309ad36ff9925c55c20a93c531ab649d7ac3f20dfe742fb95da2 && sudo bash /tmp/d14-parity-gaps-v1.0.sh
 ```
 
 Expected output (short):
-- `-- Step 1: pre-check --` → health 3×200, paneld active, nginx active
-- `-- Step 1b: Node.js ensure + PHP guard --` → `[OK] Node.js ... installed` + `[OK] php CLI pdo_mysql OK`
-- `-- Step 2: install (8 files, backup ke saath) --` → 8× `[OK] installed` (backups `.bak-d13node-<stamp>`)
-- `-- Step 3b: paneld restart --` → `[OK] paneld restarted — node.list/node.setup/node.control ab live`
-- `-- Step 4: health check --` → 3×200 → `==> D13 NODE.JS APP MANAGER COMPLETE ✅`
+- `-- Step 1b: PHP guard + paneld check --` → `[OK] php CLI pdo_mysql OK`
+- `-- Step 2: install (12 files, backup ke saath) --` → 12× `[OK] installed` (backups `.bak-d14parity-<stamp>`)
+- `-- Step 3b: paneld restart --` → `[OK] paneld restarted — db.user.revoke + AAAA/MX-prio + mail suspend ab live`
+- `-- Step 4: health check --` → 3×200 → `==> D14 PARITY GAPS COMPLETE ✅`
 
 Test (browser, hard-refresh):
-1. `https://13.207.123.177:2083` → Software → **Node.js Selector / Setup Node.js App**
-2. App name `demo`, port `3000` → **Create & Start** → status `active` + PID dikhega
-3. Log tail kholo — "AlphaCP node app listening on 3000"
-4. Stop/Restart/Remove buttons try karo — Audit Log me entries
-
-Note (naye server par bhi yaad rakhna): node.* / db.* tasks ke liye account ka
-ASLI Linux user hona chahiye (GECOS me `AlphaCP` marker). Demo account ke liye:
-`sudo useradd -m -d /home/democust -c "AlphaCP demo" -s /usr/sbin/nologin democust 2>/dev/null; sudo usermod -c "AlphaCP demo" democust`
+1. Email Accounts → mailbox par **Suspend** → badge red "Suspended" → **Unsuspend** wapas green; Manage → Update mailbox ab 500 nahi dega
+2. Zone Editor → type dropdown me **AAAA**; MX add karo value `10 mail.<domain>` se
+3. MySQL Users → **Revoke User From Database** → user ka access us DB se hat jayega (Task Queue me db.user.revoke)
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
+
+### D13 — Node.js App Manager v1.0 ✅ (09 Oct 2026 — DEPLOYED, user-confirmed)
+
+Commit `d0271e0a43c42dcc94697b12c252b8e7c6e1c88f` · sha256 `40a650b2203c60ec79f7c5d7f5ca3cc050ea7013d5fc63747c17b49c4810e37d`
+8 files, backups `*.bak-d13node-20261009164655`. node.list/setup/control live (PM2-style systemd units), Node v20.20.2, health 3×200.
 
 ### D12 — phpMyAdmin + One-Click SSO v1.1 ✅ (09 Oct 2026 — DEPLOYED)
 
