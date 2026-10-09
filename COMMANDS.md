@@ -15,9 +15,9 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 ## ✅ Abhi chalani hai (NEXT STEP)
 
 ### theme-fix v1.2 — ASLI ROOT CAUSE: CSP inline-JS block + product icons (09 Oct 2026)
-MILA: security header CSP \`script-src 'self'\` SAARA inline JavaScript block karta tha —
+MILA: security header CSP `script-src 'self'` SAARA inline JavaScript block karta tha —
 isliye hamburger/menu/search KABHI nahi chalte the (v1.0/v1.1 me bhi). Fix: saara JS ab
-external \`assets/panel.js\` me (CSP-safe, security strict hi rehti hai). Saath me: har tool
+external `assets/panel.js` me (CSP-safe, security strict hi rehti hai). Saath me: har tool
 ka apna icon (FTP/Git/Backup/SSL/DB/Cron/Terminal... — pehle sab folder the).
 7 files (css + js + layout + 4 views). Backup + auto-rollback. v1.0/v1.1 ke baad bhi safe.
 ```bash
