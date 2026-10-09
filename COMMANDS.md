@@ -18,11 +18,11 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 v1.0 ke upar: cPanel(2083)=LIGHT client panel (demo jaisa), WHM(2087)=DARK charcoal — ab alag
 dikhte hain; mobile 3-line (hamburger) menu capture-phase JS se ab pakka chalta hai.
 4 files badalti hain (css + layout + 2 views) — DB/composer kuch NahI. Backup + auto-rollback.
-\`\`\`bash
+```bash
 sudo alphacp-sync get cdcdf901fcf7f6d0437a33a3b442ad0d529bc71f installer/theme-fix.sh /tmp/theme-fix-v1.1.sh 5362f3e8edb0a9abf610b16631658d1b2537ebda3a6e57030a1a25082a25309e && sudo bash /tmp/theme-fix-v1.1.sh
-\`\`\`
-- sha256: \`5362f3e8edb0a9abf610b16631658d1b2537ebda3a6e57030a1a25082a25309e\`
-- Expected: banner \`v1.1\` → pre-check 3×200 → 4× \`installed\` → \`view cache cleared\` → health 3×200 → \`==> THEME FIX COMPLETE ✅\`
+```
+- sha256: `5362f3e8edb0a9abf610b16631658d1b2537ebda3a6e57030a1a25082a25309e`
+- Expected: banner `v1.1` → pre-check 3×200 → 4× `installed` → `view cache cleared` → health 3×200 → `==> THEME FIX COMPLETE ✅`
 - Phir browser **hard refresh** (cache clear): 2083 = light cPanel, 2087 = dark WHM
 - v1.0 chal chuka hai to bhi ye chalana safe hai (fresh backups banengi)
 
