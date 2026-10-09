@@ -59,6 +59,7 @@
 </header>
 
 @if (($panelMode ?? 'cpanel') === 'whm')
+<div class="nav-backdrop" aria-hidden="true"></div>
 <div class="shell whm-shell">
     <aside class="side">
         @include('partials.whm-sidebar', [])
@@ -116,14 +117,21 @@
 })();
 </script>
 <script>
-/* P-UI-5: mobile hamburger — topnav ko stack karta hai chhoti screens par. */
+/* P-UI-5.1: mobile hamburger — body.nav-open toggle karta hai; CSS chhoti
+   screens par sidebar ko off-canvas drawer + topnav ko stack banata hai
+   (real WHM/cPanel mobile-jaisa), desktop par kuch nahi badalta. */
 (function () {
     var b = document.getElementById('acp-nav-toggle');
-    var n = document.getElementById('acp-topnav');
-    if (!b || !n) { return; }
+    if (!b) { return; }
     b.addEventListener('click', function () {
-        var open = n.classList.toggle('open');
+        var open = document.body.classList.toggle('nav-open');
         b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', function (e) {
+        if (!document.body.classList.contains('nav-open')) { return; }
+        if (e.target.closest && e.target.closest('.side, .topbar')) { return; }
+        document.body.classList.remove('nav-open');
+        b.setAttribute('aria-expanded', 'false');
     });
 })();
 </script>
