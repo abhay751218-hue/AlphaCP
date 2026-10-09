@@ -91,7 +91,7 @@
 |---|---|---|---|---|
 | 37 | MySQL® Databases | DB + users + privileges + Users column + custom password | S8 | ✅ D3 LIVE (09 Oct 2026; revoke = D3.5) |
 | 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 | ✅ D6c LIVE |
-| 39 | phpMyAdmin | Asli app (port 2098) + one-click SSO | S8 | 🟡 D12 (installer ready — deploy pending) |
+| 39 | phpMyAdmin | Asli app (port 2098) + one-click SSO | S8 | ✅ D12 DEPLOYED 09 Oct (click-test naye server par) |
 | 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 | ✅ D6c LIVE |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
 | 42 | PostgreSQL Wizard | 🔵 optional module | post-v1 | 🔵 |
@@ -133,7 +133,7 @@
 | 63 | **Softaculous-style App Installer** | 50+ apps one-click (WordPress…) | S14 | ⏳ S14 |
 | 64 | WordPress Toolkit | Staging/clone/scan/update | S14 | ⏳ S14 |
 | 65 | WP Guardian-style security | Malware scan + vuln patch | S14 | ⏳ S14 |
-| 66 | Node.js® Selector | Node apps + npm | S14 | ✅ LIVE (D10, detect v1) |
+| 66 | Node.js® Selector | Node apps + npm | S14 | 🟡 D13 app manager (installer ready) |
 | 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 | ✅ D6c LIVE |
 | 68 | MultiPHP Manager | Per-domain PHP version | S5 | ⏳ S5 | ✅ D6c LIVE |
 | 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ⏳ S5 |
@@ -142,7 +142,7 @@
 | 72 | Ruby Gems | 🔵 legacy | post-v1 | 🔵 |
 | 73 | Perl Modules | 🔵 legacy | post-v1 | 🔵 |
 | 74 | Python Selector | 🔵 optional module | post-v1 | 🔵 |
-| 75 | Application Manager | Node/Python app manager | S14 | ⏳ S14 |
+| 75 | Application Manager | Node/Python app manager | S14 | 🟡 D13 Node apps (PM2-style, systemd); Python baad me |
 
 ### ⚙️ Advanced
 
@@ -255,7 +255,7 @@
 |---|---|---|---|
 | 149 | Manage DB users / reset password | S8 | ⏳ S8 |
 | 150 | Repair / optimize DB, upgrade server | S8 | ⏳ S8 |
-| 151 | phpMyAdmin config + phpPgAdmin(🔵) | S8 | 🟡 D12 pma config (signon auth); phpPgAdmin 🔵 optional |
+| 151 | phpMyAdmin config + phpPgAdmin(🔵) | S8 | ✅ D12 pma signon config LIVE; phpPgAdmin 🔵 optional |
 | 152 | Remote MySQL (server config) | S8 | ⏳ S8 |
 
 ### Security Center
@@ -334,7 +334,7 @@
 |---|---|---|---|
 | 203 | Meridian task-based layout | S2B me wahi 6-area layout (Websites/Email/Files/Databases/Security/Performance) + classic grid toggle |S2B|🟡 2B-1| 204 | Guided Setup wizard | Onboarding wizard (domain→site→email) | ⏳ S2B |
 | 205 | AI Assistant (panel ke andar) | 🔵 Optional — apna AI assistant (customer ke apne API key se) | 🔵 post-v1 |
-| 206 | Node.js AI Toolkit | Node.js selector + app manager | ⏳ S14 |
+| 206 | Node.js AI Toolkit | Node.js selector + app manager | 🟡 D13 (selector + app manager installer ready) |
 | 207 | MCP support (AI agents se cPanel control) | 🔵 AlphaCP MCP server (panel ko AI se chalane ke liye) | 🔵 post-v1 |
 | 208 | Nova AI website builder | 🔵 Optional website builder module | 🔵 post-v1 |
 
