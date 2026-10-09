@@ -14,7 +14,19 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-_D18 research + build chal raha hai._
+### D18 — cPanel-style navbar: bell + user dropdown + search placeholder
+
+SSH se `sudo -i` karke root prompt par:
+
+```bash
+cd /root && rm -rf AlphaCP-d18 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d18 && cd AlphaCP-d18 && echo "3a4136911e897084f2c981835371af0db0b7be4384e57fe16cc045929abec1f0  installer/d18-navbar-parity.sh" | sha256sum -c - && bash installer/d18-navbar-parity.sh
+```
+
+Kya milega:
+- Topbar me 🔔 bell + user par click → dropdown: Password & Security / 2FA / Sessions / Log out (cPanel navbar jaisa)
+- Search: "Find functions quickly by typing here (/)" — dashboard tiles live filter hote hain
+- Sidebar-top ki aakhri "cPanel/WHM" naming line fix (ab Server Manager / Account Panel)
+- Rollback stamp: `bak-d18nav-…`
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 
