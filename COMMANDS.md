@@ -14,7 +14,24 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### d8-mailqueue-secpol v1.0 — Depth Wave D8: Mail Queue Manager + Security Policies (09 Oct 2026)
+### d9-terminal-webmail v1.0 — Depth Wave D9: Terminal v2 + Webmail one-click SSO (09 Oct 2026)
+**Terminal** ab asli console jaisa: quick-command buttons (uptime, df -h, free -m…), is session ki
+history (Run again button ke saath), dark output box, allowed-commands list. **Webmail** ab cPanel
+jaisa: har mailbox ki table me apna **📬 Open Webmail** button — jo mailbox chuno USI se Roundcube
+one-click login (pehle sirf pehla mailbox khulta tha). 4 files (2 controllers + 2 views), routes/DB
+same. Backup + auto-rollback.
+```bash
+sudo alphacp-sync get 3e8b067000db0390a11f1de00587e68a5e8ce70e installer/d9-terminal-webmail.sh /tmp/d9-terminal-webmail-v1.0.sh a80e187ef99dfc8e06b8abbd96f6cfbf7ce09ca53b1852104dd3c95c3005275a && sudo bash /tmp/d9-terminal-webmail-v1.0.sh
+```
+- sha256: `a80e187ef99dfc8e06b8abbd96f6cfbf7ce09ca53b1852104dd3c95c3005275a`
+- Expected: banner `v1.0` → pre-check 3×200 → 4× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D9 TERMINAL + WEBMAIL COMPLETE ✅`
+- Test: **2087** → Advanced → Terminal (quick buttons dabao, history dekho) · **2083** → Email → Webmail
+  (mailbox table me Open Webmail dabao — Roundcube bina password khulega)
+- Rollback: `*.bak-d9termweb-<stamp>` files `/usr/local/alphacp/panel` me
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✅ DONE 09 Oct — d8-mailqueue-secpol v1.0 — Depth Wave D8: Mail Queue Manager + Security Policies (09 Oct 2026)
 WHM ke 2 naye tools LIVE: **Mail Queue Manager** (exim queue — har message deliver/freeze/thaw/remove,
 poori queue flush) aur **Security Policies** (2FA adoption har user ka, shield services ka asli state,
 enforced policies table). Dashboard counter 98→100. 6 files (2 controllers + 2 views + routes + catalog).
@@ -28,8 +45,6 @@ sudo alphacp-sync get 4b55c0a72612b0a6b94c0bd0bd83745cdf2445ba installer/d8-mail
   **Security Center** me Security Policies ab GREY nahi
 - Test: Security Policies kholo (2FA table + shield services), Mail Queue me "Deliver All Now"
 - Rollback: `*.bak-d8mailsec-<stamp>` files `/usr/local/alphacp/panel` me
-
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✅ DONE 09 Oct — d7-metrics-tools v1.0 — Depth Wave D7: Errors + Raw Access + Awstats + Network Tools AB KAAM KARTE HAIN (09 Oct 2026)
 Metrics ke 4 naye tools LIVE: **Errors** (error log last 40 lines), **Raw Access** (access log
