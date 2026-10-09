@@ -14,7 +14,11 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D17 — Look parity: WHM-style tiles + File Manager toolbar + Apps grid
+_D18 research + build chal raha hai._
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✔️ D17 (DEPLOYED 09 Oct 2026 — backups bak-d17look-20261009174756) — Look parity: WHM-style tiles + File Manager toolbar + Apps grid
 
 SSH se `sudo -i` karke root prompt par:
 
@@ -28,7 +32,6 @@ Kya milega:
 - 2083 Site Software: **app tiles grid** (Softaculous jaisa)
 - Rollback stamp: `bak-d17look-…`
 
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✔️ D16 (DEPLOYED 09 Oct 2026 — backups bak-d16brand-20261009174013) — AlphaCP-only branding + progress-card removal
 
