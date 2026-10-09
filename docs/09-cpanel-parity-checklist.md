@@ -38,7 +38,7 @@
 
 | # | cPanel tool | Kya karta hai | Humara step | Status |
 |---|---|---|---|---|
-| 1 | File Manager | Breadcrumbs/icons/filter/editor + upload/compress/extract/chmod | S6 | ✅ D5+D15 (D15 BUILT) |
+| 1 | File Manager | Breadcrumbs/icons/filter/editor + upload/compress/extract/chmod | S6 | ✅ D5+D15 LIVE |
 | 2 | Images | Resize/convert images | S6 | ✅ D6b LIVE |
 | 3 | Directory Privacy | Password-protected folders | S6 | ✅ D6b LIVE |
 | 4 | Disk Usage | Folder-wise space | S6 | ✅ D6b LIVE |

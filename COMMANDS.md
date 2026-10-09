@@ -14,7 +14,12 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D15 — File Manager plus: Upload + Compress/Extract + chmod (FINAL parity wave)
+**Koi pending command NAHI hai — project ke sare waves (theme v1.2 + D1–D15) LIVE hain. 🎉**
+Dashboard: 103/103 tools. File Manager: upload/compress/extract/chmod live.
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✔️ D15 (DEPLOYED 09 Oct 2026 — backups bak-d15fm-20261009171411; FINAL wave) — File Manager plus: Upload + Compress/Extract + chmod (FINAL parity wave)
 
 SSH se root banke ye chalao:
 
@@ -30,7 +35,8 @@ Kya milega:
 
 Check: 2083 panel hard-refresh → Files → File Manager.
 
-## ✔️ Ho chuki hai (dobara mat chalao)
+
+> Note: repo ab PUBLIC hai; shallow clone me purane commit ka `git checkout` fail hota hai — sha256sum check hi kaafi hai.
 
 ### ✔️ D14 (DEPLOYED 09 Oct 2026 — backups bak-d14parity-20261009165725) — Parity Gaps: suspend + AAAA/MX-prio + revoke + 2 ROUTE FIX (v1.0)
 
