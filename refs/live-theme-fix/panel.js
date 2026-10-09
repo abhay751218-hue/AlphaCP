@@ -147,3 +147,103 @@
     render();
   }
 })();
+
+/* ===== AlphaCP panel.js v1.1 additions (D1: email depth) ================ */
+(function () {
+  'use strict';
+
+  /* ---- password generator + show/hide + strength meter (data-pw groups) */
+  function pwScore(v) {
+    var s = 0;
+    if (v.length >= 8) s++;
+    if (v.length >= 14) s++;
+    if (/[a-z]/.test(v) && /[A-Z]/.test(v)) s++;
+    if (/[0-9]/.test(v)) s++;
+    if (/[^A-Za-z0-9]/.test(v)) s++;
+    return Math.min(3, Math.floor(s * 3 / 5));
+  }
+  function genPassword(len) {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^*_-+=';
+    var out = '';
+    var buf = new Uint32Array(len);
+    (window.crypto || window.msCrypto).getRandomValues(buf);
+    for (var i = 0; i < len; i++) out += chars[buf[i] % chars.length];
+    return out;
+  }
+  document.querySelectorAll('[data-pw]').forEach(function (group) {
+    var input = group.querySelector('input[type="password"], input[type="text"]');
+    if (!input) return;
+    var meter = group.nextElementSibling && group.nextElementSibling.classList.contains('pw-meter')
+      ? group.nextElementSibling : null;
+    var showBtn = group.querySelector('[data-pw-show]');
+    var genBtn = group.querySelector('[data-pw-gen]');
+    function paint() {
+      if (!meter) return;
+      var score = input.value ? pwScore(input.value) : -1;
+      meter.querySelectorAll('span').forEach(function (bar, i) {
+        bar.className = i <= score ? ('on s' + score) : '';
+      });
+    }
+    if (showBtn) showBtn.addEventListener('click', function () {
+      var vis = input.type === 'text';
+      input.type = vis ? 'password' : 'text';
+      showBtn.textContent = vis ? 'Show' : 'Hide';
+    });
+    if (genBtn) genBtn.addEventListener('click', function () {
+      input.value = genPassword(16);
+      if (input.type === 'password' && showBtn) { input.type = 'text'; showBtn.textContent = 'Hide'; }
+      paint();
+      input.dispatchEvent(new Event('input'));
+    });
+    input.addEventListener('input', paint);
+    paint();
+  });
+
+  /* ---- generic row filter: <input data-filter-rows="selector"> --------- */
+  document.querySelectorAll('[data-filter-rows]').forEach(function (box) {
+    var sel = box.getAttribute('data-filter-rows');
+    box.addEventListener('input', function () {
+      var q = box.value.trim().toLowerCase();
+      var rows = document.querySelectorAll(sel);
+      rows.forEach(function (tr) {
+        if (tr.classList.contains('acp-subrow')) return; // follows its main row
+        var hit = q === '' || tr.textContent.toLowerCase().indexOf(q) !== -1;
+        tr.style.display = hit ? '' : 'none';
+        var next = tr.nextElementSibling;
+        if (next && next.classList.contains('acp-subrow')) next.style.display = hit ? '' : 'none';
+      });
+    });
+  });
+
+  /* ---- quota radio: enable MB input only for "limited" ----------------- */
+  document.querySelectorAll('[data-quota-radio]').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      var form = radio.closest('form');
+      if (!form) return;
+      var mb = form.querySelector('input[name="quota_mb"]');
+      if (!mb) return;
+      var mode = form.querySelector('[data-quota-radio]:checked');
+      mb.disabled = !!(mode && mode.value === 'unlimited');
+    });
+  });
+
+  /* ---- copy chips: <button data-copy="text"> ---------------------------- */
+  document.querySelectorAll('[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var text = btn.getAttribute('data-copy') || '';
+      function done() {
+        var old = btn.textContent;
+        btn.textContent = 'copied!';
+        setTimeout(function () { btn.textContent = old; }, 1200);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done, done);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) { /* noop */ }
+        document.body.removeChild(ta); done();
+      }
+    });
+  });
+})();

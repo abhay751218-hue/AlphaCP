@@ -535,3 +535,34 @@ body.mode-cpanel .dash-side .card h3 svg { color: #fff; }
   body.mode-cpanel .sidenav { box-shadow: none; }
   body.mode-cpanel.nav-open .sidenav { box-shadow: 0 10px 40px rgba(16, 24, 40, .25); }
 }
+
+/* ===== v3.2 additions (D1: email depth) ================================= */
+.pw-meter { display: flex; gap: 4px; margin-top: 6px; max-width: 280px; }
+.pw-meter span { flex: 1; height: 5px; border-radius: 3px; background: #e3e8ee; transition: background .2s; }
+.pw-meter span.on.s0 { background: #dc2626; }
+.pw-meter span.on.s1 { background: var(--amber, #d97706); }
+.pw-meter span.on.s2 { background: #65a30d; }
+.pw-meter span.on.s3 { background: #15803d; }
+
+tr.acp-subrow > td { background: #f7f9fb; border-top: 0; padding-top: 4px; }
+.mode-whm tr.acp-subrow > td { background: rgba(255, 255, 255, .02); }
+
+details.acp-exp { min-width: 260px; flex: 1; }
+details.acp-exp > summary {
+  cursor: pointer; list-style: none; user-select: none;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--brand-dark, #e85a1a);
+  padding: 4px 8px; border-radius: 6px;
+}
+details.acp-exp > summary::-webkit-details-marker { display: none; }
+details.acp-exp > summary::before { content: "▸"; font-size: 11px; transition: transform .15s; }
+details.acp-exp[open] > summary::before { transform: rotate(90deg); }
+details.acp-exp > summary:hover { background: var(--brand-tint, #fff1e8); }
+.acp-exp-body {
+  margin: 8px 0 10px; padding: 12px 14px; border: 1px solid var(--line);
+  border-radius: 8px; background: var(--card, #fff); max-width: 560px;
+}
+.acp-exp-body label { display: block; margin: 10px 0 4px; font-size: 12.5px; font-weight: 600; }
+.acp-exp-body label:first-child { margin-top: 0; }
+
+label.check input[type=radio] { width: auto; margin: 0; }

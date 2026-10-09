@@ -4,6 +4,15 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+
+### Added — Depth Wave D1: Email Accounts + Forwarders (09 Oct 2026)
+- `installer/d1-email-fix.sh` v1.0 (builder: `tools/build-d1-email-installer.py`) — live 0.75.x hotfix, 6 files, backup + auto-rollback + route:clear + php-fpm reload; install & rollback sims green.
+- MailController: NEW `update()` (quota edit + password change via declarative `mail.set`), per-box disk usage via readonly `mail.usage` (guarded — page never breaks), Connect Devices data.
+- `routes/web.php`: `PUT /email/{mailbox}` → `email.update` (perm:email.manage).
+- Email Accounts view: cPanel-style rebuild — stats strip, search, usage bars, Manage + Connect Devices (IMAP 993 / POP3 995 / SMTP 465 + copy chips), create form with password generator + strength meter, quota MB-or-Unlimited, default account card.
+- Forwarders view: cPanel-style list + search + stats + 2-col create.
+- `panel.js` v1.1: pw generator/meter/show-hide, generic row filter, quota radio, copy chips (CSP-safe external). `panel.css` v3.2: pw-meter, expanders, subrows.
+- Out of D1 scope (needs agent schema + migration): mailbox suspend incoming/login — noted for D1.5.
 ### Added
 - **theme-fix v1.2 live + depth audit (09 Oct)** — CSP `script-src 'self'` saara inline
   JS block karta tha (menus/search kabhi nahi chale) → saara JS external `assets/panel.js`
