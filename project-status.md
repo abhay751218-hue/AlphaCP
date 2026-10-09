@@ -44,7 +44,8 @@
 | D8-MAILQ-SECPOL | Mail Queue Manager (exim deliver/freeze/thaw/remove/flush) + Security Policies posture page (catalog 98→100) | ✅ DEPLOYED 09 Oct — user-confirmed |
 | D9-TERM-WEBMAIL | Terminal v2 (quick cmds + session history) + Webmail v2 (per-mailbox one-click Roundcube SSO) | ✅ DEPLOYED 09 Oct — user-confirmed |
 | D10-FINAL-TILES | Node.js Selector + PHP Composer + Updates — AAKHRI 3 greyed tiles (counter 100→103 = 103/103, 100%) | ✅ DEPLOYED 09 Oct — user-confirmed, ROADMAP COMPLETE 🏆 |
-| D11-RESTART-SVCS | Phase-2: WHM Restart Services — agent task service.restart (11 allowlisted, paneld excluded) + panel Restart buttons + audit | 🟡 INSTALLER READY — deploy pending (COMMANDS.md) |
+| D11-RESTART-SVCS | Phase-2: WHM Restart Services — agent task service.restart (11 allowlisted, paneld excluded) + panel Restart buttons + audit | ✅ DEPLOYED 09 Oct (user-confirmed, backups bak-d11restart-20261009160034) |
+| D12-PHPMYADMIN-SSO | Phase-2: asli phpMyAdmin (apt, port 2098) + cPanel-style one-click SSO — agent db.pmaSignon (pma_<account> rotate, grants sirf apne DBs) + one-time 10-min token + signon shim + nginx vhost | 🟡 INSTALLER READY — deploy pending (COMMANDS.md) |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |

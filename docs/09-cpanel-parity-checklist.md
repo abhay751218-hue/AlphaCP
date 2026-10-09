@@ -91,7 +91,7 @@
 |---|---|---|---|---|
 | 37 | MySQL® Databases | DB + users + privileges + Users column + custom password | S8 | ✅ D3 LIVE (09 Oct 2026; revoke = D3.5) |
 | 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 | ✅ D6c LIVE |
-| 39 | phpMyAdmin | Preference + client-connect card | S8 | ✅ D3 LIVE (09 Oct 2026; app/SSO later) |
+| 39 | phpMyAdmin | Asli app (port 2098) + one-click SSO | S8 | 🟡 D12 (installer ready — deploy pending) |
 | 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 | ✅ D6c LIVE |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
 | 42 | PostgreSQL Wizard | 🔵 optional module | post-v1 | 🔵 |
@@ -255,7 +255,7 @@
 |---|---|---|---|
 | 149 | Manage DB users / reset password | S8 | ⏳ S8 |
 | 150 | Repair / optimize DB, upgrade server | S8 | ⏳ S8 |
-| 151 | phpMyAdmin config + phpPgAdmin(🔵) | S8 | ⏳ S8 |
+| 151 | phpMyAdmin config + phpPgAdmin(🔵) | S8 | 🟡 D12 pma config (signon auth); phpPgAdmin 🔵 optional |
 | 152 | Remote MySQL (server config) | S8 | ⏳ S8 |
 
 ### Security Center
@@ -283,8 +283,8 @@
 ### Service Configuration / Restart Services
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 171 | Service Manager (start/stop/enable) | S2B | 🟡 D11 (restart live; start/stop baad me) |
-| 172 | Restart: DNS / HTTP / IMAP / Mail / SQL / SSH / PHP-FPM | S2B | 🟡 D11 (one-click restart, allowlist 11 services) |
+| 171 | Service Manager (start/stop/enable) | S2B | ✅ D11 LIVE (restart one-click; start/stop baad me) |
+| 172 | Restart: DNS / HTTP / IMAP / Mail / SQL / SSH / PHP-FPM | S2B | ✅ D11 LIVE (allowlist 11 services, audit) |
 | 173 | Exim / FTP Server Selection / Mailserver / Nameserver Selection | S7·S9 | ⏳ |
 | 174 | Manage Service SSL Certificates | S5 | ⏳ S5 |
 | 175 | cPanel Web Disk & Web Services Configuration | S6 | ⏳ S6 |
