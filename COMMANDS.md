@@ -14,8 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-**Koi pending command NAHI hai — project ke sare waves (theme v1.2 + D1–D15) LIVE hain. 🎉**
-Dashboard: 103/103 tools. File Manager: upload/compress/extract/chmod live.
+### D16 — AlphaCP-only branding + progress-card removal
+
+SSH se `sudo -i` karke root prompt par:
+
+```bash
+cd /root && rm -rf AlphaCP-d16 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d16 && cd AlphaCP-d16 && echo "183cb620657cb2d7b1df9f102a26abe536ac2fdca0261150d985c08278d564ac  installer/d16-branding-sweep.sh" | sha256sum -c - && bash installer/d16-branding-sweep.sh
+```
+
+Kya milega (15 views):
+- Login pages: "cPanel/WHM Login" → "Account Panel / Server Manager Login"
+- Dashboard: "feature progress — 103 tools" card GONE; titles/Theme AlphaCP
+- Footer checklist line gone; sidebar search, Ports page, 9 subtitles AlphaCP wording
+- Rollback stamp: `bak-d16brand-…`
+
+(Note: agar sha256 FAIL bole to pehle `git log -1 --format=%H` se commit 13f4c30df9c6148fe46b10b4075afdd2a363daf6 confirm karo.)
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 
