@@ -14,6 +14,19 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
+### d4-whm-fix v1.0 — Depth Wave D4: WHM Create Account + List Accounts + Packages (09 Oct 2026)
+WHM side ab real WHM jaisa: Create a New Account me Domain pehle (username auto-suggest),
+password Generate + strength meter, package select me limits summary. List Accounts: stats
+strip, search, quick Suspend/Unsuspend. Packages: stats, search, feature badges. 4 files
+(3 views + panel.js v1.4) — koi controller/routes/DB change NAHI (extra-safe). Backup + auto-rollback.
+```bash
+sudo alphacp-sync get 7a2e025d4cdca3618b5f8991f7aef23de3ca62d9 installer/d4-whm-fix.sh /tmp/d4-whm-fix-v1.0.sh 3c85a02777d5318bf2e25c5bfd3544dce2589cfbd06af44b4713eaf03d0afa75 && sudo bash /tmp/d4-whm-fix-v1.0.sh
+```
+- sha256: `3c85a02777d5318bf2e25c5bfd3544dce2589cfbd06af44b4713eaf03d0afa75`
+- Expected: banner `v1.0` → pre-check 3×200 → 4× `installed` → caches cleared + php-fpm reload → health 3×200 → `==> D4 WHM DEPTH FIX COMPLETE ✅`
+- Phir WHM :2087 → Create a New Account / List Accounts / Packages hard-refresh
+- Rollback: `*.bak-d4whm-<stamp>` files `/usr/local/alphacp/panel` me
+
 ### d3-mysql-fix v1.0 — Depth Wave D3: MySQL Databases + Users + phpMyAdmin cPanel-depth (09 Oct 2026)
 MySQL Users: APNA password choose karo (ya Generate — SQL-safe alnum 10–64), create aur
 change-password dono me; password sirf ek baar dikhega + copy chips. Databases page:
