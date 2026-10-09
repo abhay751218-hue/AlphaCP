@@ -161,9 +161,28 @@ PEOF
 cat > "${AGENT}/src/Tasks/PortsApply.php" <<'PEOF'
 @@AGENT_PORTSTASK@@
 PEOF
-cat > "${AGENT}/config/tasks.php" <<'PEOF'
-@@AGENT_TASKSCFG@@
+# tasks.php MERGE-mode: live ki doosri entries (ftp.add etc.) preserve;
+# ports.apply entry marker-block me insert/replace (idempotent).
+cat > "${RB}/ports-apply.entry.php" <<'PEOF'
+@@AGENT_TASKS_ENTRY@@
 PEOF
+"$PHP_BIN" -r '
+$f = $argv[1]; $e = file_get_contents($argv[2]);
+$src = file_get_contents($f);
+$bs = "// ACP-PORTS-CTRL-START"; $be = "// ACP-PORTS-CTRL-END";
+$block = "    " . $bs . "\n" . rtrim($e) . "\n    " . $be;
+if (strpos($src, $bs) !== false) {
+    $a = strpos($src, $bs); $b = strpos($src, $be);
+    if ($b === false) { fwrite(STDERR, "marker end missing\n"); exit(1); }
+    $src = substr($src, 0, $a) . $block . substr($src, $b + strlen($be));
+} else {
+    $pos = strrpos($src, "];");
+    if ($pos === false) { fwrite(STDERR, "tasks.php closing ]; nahi mila\n"); exit(1); }
+    $src = substr($src, 0, $pos) . $block . "\n" . substr($src, $pos);
+}
+file_put_contents($f, $src);
+' "${AGENT}/config/tasks.php" "${RB}/ports-apply.entry.php" \
+  || { rollback; die "tasks.php merge fail"; }
 for f in src/PortsNginx.php src/Tasks/PortsApply.php config/tasks.php; do
   "$PHP_BIN" -l "${AGENT}/${f}" >/dev/null || { rollback; die "lint fail: agent/${f}"; }
 done
@@ -257,11 +276,12 @@ fi
 # ---- 8) agent suite ----
 hdr "AGENT SUITE — full run (current era)"
 set +e
-SUITE_OUT="$(cd "${AGENT}" && "$PHP_BIN" tests/run-tests.php 2>&1 | tail -6)"
+SUITE_FULL="$(cd "${AGENT}" && "$PHP_BIN" tests/run-tests.php 2>&1)"
 SUITE_RC=$?
 set -e
-echo "$SUITE_OUT" | sed 's/^/  · /'
-{ [[ "$SUITE_RC" -eq 0 ]] && echo "$SUITE_OUT" | grep -q "failed: 0"; } || { rollback; die "agent suite fail (rc=${SUITE_RC}, output upar)"; }
+echo "$SUITE_FULL" | tail -4 | sed 's/^/  · /'
+echo "$SUITE_FULL" | grep -a -A2 "^  FAIL" | head -24 | sed 's/^/  ! /'
+{ [[ "$SUITE_RC" -eq 0 ]] && echo "$SUITE_FULL" | grep -q "failed: 0"; } || { rollback; die "agent suite fail (rc=${SUITE_RC}, FAIL lines upar)"; }
 ok "agent suite GREEN"
 cd - >/dev/null 2>&1 || true
 

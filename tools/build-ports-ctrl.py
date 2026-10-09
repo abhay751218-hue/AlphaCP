@@ -20,7 +20,7 @@ PAYLOADS = [
     ('PANEL_DASHCTRL',     'server-snapshot/files/usr/local/alphacp/panel/app/Http/Controllers/DashboardController.php'),
     ('AGENT_PORTSNGINX',   'server-snapshot/files/usr/local/alphacp/agent/src/PortsNginx.php'),
     ('AGENT_PORTSTASK',    'server-snapshot/files/usr/local/alphacp/agent/src/Tasks/PortsApply.php'),
-    ('AGENT_TASKSCFG',     'server-snapshot/files/usr/local/alphacp/agent/config/tasks.php'),
+    ('AGENT_TASKS_ENTRY',  'installer/payloads/ports-apply.task.php'),
 ]
 
 def main() -> int:
