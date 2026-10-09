@@ -14,7 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### theme-fix v1.1 — cPanel LIGHT vs WHM DARK (alag looks) + hamburger menu fix (09 Oct 2026)
+### theme-fix v1.2 — ASLI ROOT CAUSE: CSP inline-JS block + product icons (09 Oct 2026)
+MILA: security header CSP \`script-src 'self'\` SAARA inline JavaScript block karta tha —
+isliye hamburger/menu/search KABHI nahi chalte the (v1.0/v1.1 me bhi). Fix: saara JS ab
+external \`assets/panel.js\` me (CSP-safe, security strict hi rehti hai). Saath me: har tool
+ka apna icon (FTP/Git/Backup/SSL/DB/Cron/Terminal... — pehle sab folder the).
+7 files (css + js + layout + 4 views). Backup + auto-rollback. v1.0/v1.1 ke baad bhi safe.
+```bash
+sudo alphacp-sync get 79a272eee208cd00bf4ac7079ab9979df240a752 installer/theme-fix.sh /tmp/theme-fix-v1.2.sh ed79d8f1d27b1fc05bf9af04c0d2a2795f3fbd23862b6c61505840f97ce0a40b && sudo bash /tmp/theme-fix-v1.2.sh
+```
+- sha256: `ed79d8f1d27b1fc05bf9af04c0d2a2795f3fbd23862b6c61505840f97ce0a40b`
+- Expected: banner `v1.2` → pre-check 3×200 → 6× `installed` + 1× `installed (NEW): panel.js` → `view cache cleared` → health 3×200 → `==> THEME FIX COMPLETE ✅`
+- Phir browser hard-refresh / incognito: 2083 = light cPanel (alag icons), 2087 = dark WHM; ☰ menu ab chalega
+
+### ~~theme-fix v1.1~~ — SUPERSEDED (v1.2 chalao — CSP root-cause isi me fix hai)
 v1.0 ke upar: cPanel(2083)=LIGHT client panel (demo jaisa), WHM(2087)=DARK charcoal — ab alag
 dikhte hain; mobile 3-line (hamburger) menu capture-phase JS se ab pakka chalta hai.
 4 files badalti hain (css + layout + 2 views) — DB/composer kuch NahI. Backup + auto-rollback.
