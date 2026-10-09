@@ -16,7 +16,7 @@
     <div>
         <div class="grid cols-4">
     <div class="card">
-        <h3>🌐 Primary domain</h3>
+        <h3>@include('partials.icons', ['icon' => 'globe', 'cls' => 'hico']) Primary domain</h3>
         @if ($account)
             <div class="stat"><span class="num" style="font-size:18px">{{ $account->main_domain }}</span></div>
             <p class="help">user <span class="mono">{{ $account->username }}</span> · {{ $account->status }}</p>
@@ -25,7 +25,7 @@
         @endif
     </div>
     <div class="card">
-        <h3>💾 Disk quota</h3>
+        <h3>@include('partials.icons', ['icon' => 'disk', 'cls' => 'hico']) Disk quota</h3>
         @if ($account)
             <div class="stat"><span class="num">{{ $account->disk_used_mb }}</span>
                 <span class="unit">MB used · {{ $account->quota_mb < 0 ? 'unlimited' : $account->quota_mb . ' MB' }}</span></div>
@@ -34,7 +34,7 @@
         @endif
     </div>
     <div class="card">
-        <h3>📦 Package</h3>
+        <h3>@include('partials.icons', ['icon' => 'box', 'cls' => 'hico']) Package</h3>
         @if ($account)
             <div class="stat"><span class="num" style="font-size:18px">{{ $account->package?->name ?? '—' }}</span></div>
             <p class="help">PHP {{ $account->php_version }}</p>
@@ -43,7 +43,7 @@
         @endif
     </div>
     <div class="card">
-        <h3>🌍 Domains</h3>
+        <h3>@include('partials.icons', ['icon' => 'globe', 'cls' => 'hico']) Domains</h3>
         @if ($account)
             <div class="stat"><span class="num">{{ $account->domains->count() }}</span>
                 <span class="unit">on this account</span></div>
@@ -93,4 +93,3 @@
 </div>
 
 @endsection
-

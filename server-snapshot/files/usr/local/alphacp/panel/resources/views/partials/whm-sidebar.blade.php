@@ -8,7 +8,7 @@
 @endphp
 <nav class="whm-side" id="whm-side" aria-label="WHM navigation">
   <input type="search" id="whm-search" class="whm-search" placeholder="Search WHM features…" autocomplete="off" aria-label="Search WHM features">
-  <a class="whm-home" href="{{ route('dashboard') }}">⌂ Home</a>
+  <a class="whm-home" href="{{ route('dashboard') }}">@include('partials.icons', ['icon' => 'home', 'cls' => 'hico']) Home</a>
   <div class="whm-tree" id="whm-tree">
     <section class="whm-group" id="whm-favs" style="display:none">
       <button type="button" class="whm-groupbtn" aria-expanded="true">Favorites</button>

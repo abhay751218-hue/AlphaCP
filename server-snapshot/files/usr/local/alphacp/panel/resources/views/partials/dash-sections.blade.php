@@ -1,5 +1,5 @@
 <div class="card mt">
-    <h3>🎯 AlphaCP feature progress</h3>
+    <h3>@include('partials.icons', ['icon' => 'target', 'cls' => 'hico']) AlphaCP feature progress</h3>
     <div class="stat">
         <span class="num">{{ $progress['live'] }}</span>
         <span class="unit">tools live · {{ $progress['planned'] }} planned · {{ $progress['addon'] }} optional · total {{ $progress['total'] }}</span>
