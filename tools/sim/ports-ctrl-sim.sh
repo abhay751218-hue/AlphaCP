@@ -68,6 +68,7 @@ export SIM=1 ACP_HOME="$FAKE" ACP_NGX_ROOT="$FAKE/ngx" ACP_RC_PLUGINS="$FAKE/rcp
 echo "== apply #1 (SIM) =="
 A1="$(bash "$FIX" 2>&1)"; A1_RC=$?
 printf '%s\n' "$A1" > "$FAKE/.a1"
+if [[ "$A1_RC" -ne 0 ]]; then echo "----- A1 tail (debug) -----"; tail -30 "$FAKE/.a1"; echo "---------------------------"; fi
 t "installer exit 0"               test "$A1_RC" -eq 0
 t "ports.json default bana"        bash -c "grep -q '\"whm\": 2087' '$FAKE/etc/ports.json'"
 t "PortMap payload likhi"          test -f "$FAKE/panel/app/Support/PortMap.php"
@@ -122,7 +123,7 @@ t "template bana"                  test -f "$FAKE/etc/panel-vhost.template"
 
 echo "== harness: nginx -t fail → restore =="
 printf 'CANARY-OLD-WHM\n' > "$AV/alphacp-whm.conf"
-FAIL_NGINX_T=1 H2="$(run_harness)"
+H2="$(FAIL_NGINX_T=1 run_harness)"
 t "applied false on nginx -t fail" bash -c "echo '$H2' | grep -q '\"applied\":false'"
 t "whm conf CANARY wapas (restore)" grep -q 'CANARY-OLD-WHM' "$AV/alphacp-whm.conf"
 
@@ -134,6 +135,7 @@ t "link conf removed (owner off)"  bash -c "test ! -f '$AV/alphacp-link.conf'"
 
 echo "== apply #2 (SIM, idempotent) =="
 A2="$(bash "$FIX" 2>&1)"; A2_RC=$?
+if [[ "$A2_RC" -ne 0 ]]; then echo "----- A2 tail (debug) -----"; printf '%s\n' "$A2" | tail -30; echo "---------------------------"; fi
 t "re-apply exit 0"                test "$A2_RC" -eq 0
 t "re-apply suite GREEN"           bash -c "echo '$A2' | grep -q 'failed: 0'"
 
