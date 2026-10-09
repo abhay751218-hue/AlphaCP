@@ -326,6 +326,7 @@ GET|HEAD           /audit                                        audit.index
 GET|HEAD           /autoresponders                               autoresponders.index
 POST               /autoresponders                               autoresponders.store
 DELETE             /autoresponders/{autoresponder}               autoresponders.destroy
+GET|HEAD           /awstats                                      awstats.index
 GET|HEAD           /backup                                       backup.index
 POST               /backup                                       backup.store
 GET|HEAD           /backup-config                                backup-config.index
@@ -389,12 +390,12 @@ DELETE             /email-filters/{filter}                       email-filters.d
 GET|HEAD           /email-routing                                email-routing.index
 POST               /email-routing                                email-routing.store
 DELETE             /email/{mailbox}                              email.destroy
-PUT                /email/{mailbox}                              email.update
 GET|HEAD           /encryption                                   encryption.index
 POST               /encryption                                   encryption.store
 DELETE             /encryption/{encryption_key}                  encryption.destroy
 GET|HEAD           /errorpages                                   errorpages.index
 POST               /errorpages                                   errorpages.update
+GET|HEAD           /errors-log                                   errors-log.index
 GET|HEAD           /file-directory-restoration                   file-directory-restoration.index
 POST               /file-directory-restoration                   file-directory-restoration.store
 GET|HEAD           /file-restoration                             file-restoration.index
@@ -449,6 +450,8 @@ POST               /license/activate                             license.activat
 GET|HEAD           /login                                        login.page
 POST               /login                                        login.attempt
 POST               /logout                                       logout
+GET|HEAD           /mail-queue                                   mail-queue.index
+POST               /mail-queue                                   mail-queue.action
 GET|HEAD           /mailing-lists                                mailing-lists.index
 POST               /mailing-lists                                mailing-lists.store
 PATCH              /mailing-lists/{mailing_list}                 mailing-lists.update
@@ -470,6 +473,8 @@ POST               /mysql-wizard                                 mysql-wizard.st
 DELETE             /mysql/{mysql_database}                       mysql.destroy
 GET|HEAD           /nameserver-selection                         nameserver-selection.index
 POST               /nameserver-selection                         nameserver-selection.store
+GET|HEAD           /network-tools                                network-tools.index
+POST               /network-tools                                network-tools.lookup
 GET|HEAD           /ns-report                                    ns-report.index
 POST               /ns-report                                    ns-report.store
 GET|HEAD           /optimize-website                             optimize.index
@@ -493,6 +498,7 @@ POST               /ports                                        ports.store
 GET|HEAD           /privacy                                      privacy.index
 POST               /privacy                                      privacy.store
 POST               /privacy/delete                               privacy.destroy
+GET|HEAD           /raw-access                                   raw-access.index
 GET|HEAD           /remote-mysql                                 remote-mysql.index
 POST               /remote-mysql                                 remote-mysql.store
 DELETE             /remote-mysql/{mysql_remote_host}             remote-mysql.destroy
@@ -502,6 +508,7 @@ POST               /resellers/privileges                         resellers.privi
 DELETE             /resellers/{user}                             resellers.destroy
 GET|HEAD           /security                                     security.index
 POST               /security-extras                              secextra.store
+GET|HEAD           /security-policies                            security-policies.index
 GET|HEAD           /security-tools                               security-tools.index
 POST               /security-tools/modsec                        security-tools.modsec
 POST               /security-tools/scan                          security-tools.scan
@@ -560,7 +567,6 @@ POST               /webmail/open                                 webmail.open
 GET|HEAD           /zone-editor                                  zone-editor.index
 POST               /zone-editor                                  zone-editor.store
 DELETE             /zone-editor/{dns_record}                     zone-editor.destroy
-PUT                /zone-editor/{dns_record}                     zone-editor.update
 GET|HEAD           /zone-templates                               zone-templates.index
 POST               /zone-templates                               zone-templates.store
 DELETE             /zone-templates/{dns_template}                zone-templates.destroy
@@ -614,12 +620,14 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (71) — repo se panel dobara banane par ye pages tootenge:
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (90) — repo se panel dobara banane par ye pages tootenge:
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlDatabasesController.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php.bak-d3mysql-20261009092025
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneEditorController.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
+/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d7metrics-20261009130206
+/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d8mailsec-20261009131452
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009073626
@@ -634,6 +642,7 @@ PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (71) — repo se panel dobara banane
 /usr/local/alphacp/panel/resources/views/accounts/index.blade.php.bak-d4whm-20261009092933
 /usr/local/alphacp/panel/resources/views/address-importer/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/api-tokens/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/apps/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/audit/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/autoresponders/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/backup-wizard/index.blade.php.bak-d6bfiles-20261009104956
@@ -646,18 +655,22 @@ PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (71) — repo se panel dobara banane
 /usr/local/alphacp/panel/resources/views/default-address/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/deliverability/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/disk/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/domain-forward/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/domains/index.blade.php.bak-d2domains-20261009083733
+/usr/local/alphacp/panel/resources/views/dynamic-dns/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/email-disk/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/email-filters/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/email-routing/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/resources/views/encryption/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/errorpages/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/file-restoration/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/forwarders/index.blade.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/resources/views/ftp/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/git/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/global-filters/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/handlers/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/images/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/indexes/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/ip-blocker/index.blade.php.bak-d6bfiles-20261009104956
@@ -665,25 +678,37 @@ PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (71) — repo se panel dobara banane
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009075354
+/usr/local/alphacp/panel/resources/views/license/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/mailing-lists/index.blade.php.bak-d6aemail-20261009103449
+/usr/local/alphacp/panel/resources/views/mime/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php.bak-d3mysql-20261009092025
+/usr/local/alphacp/panel/resources/views/mysql-wizard/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/mysql/index.blade.php.bak-d3mysql-20261009092025
+/usr/local/alphacp/panel/resources/views/optimize/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/packages/index.blade.php.bak-d4whm-20261009092933
 /usr/local/alphacp/panel/resources/views/partials/icons.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/partials/tile.blade.php.bak-themefix-20261009075354
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009073626
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009074336
 /usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009075354
+/usr/local/alphacp/panel/resources/views/php/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d3mysql-20261009092025
+/usr/local/alphacp/panel/resources/views/ports/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/privacy/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/remote-mysql/index.blade.php.bak-d6csoft-20261009124856
+/usr/local/alphacp/panel/resources/views/resellers/index.blade.php.bak-d6csoft-20261009124856
+/usr/local/alphacp/panel/resources/views/security-tools/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/spam-filters/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/ssh/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/ssl/index.blade.php.bak-d5tools-20261009094623
 /usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php.bak-d6aemail-20261009103449
 /usr/local/alphacp/panel/resources/views/trash/index.blade.php.bak-d6bfiles-20261009104956
+/usr/local/alphacp/panel/resources/views/users/index.blade.php.bak-d6csoft-20261009124856
 /usr/local/alphacp/panel/resources/views/webdisk/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
+/usr/local/alphacp/panel/routes/web.php.bak-d7metrics-20261009130206
+/usr/local/alphacp/panel/routes/web.php.bak-d8mailsec-20261009131452
 /usr/local/alphacp/panel/routes/web.php.bak.entry
 ```

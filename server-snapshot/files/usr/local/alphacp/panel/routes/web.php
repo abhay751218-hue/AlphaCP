@@ -202,8 +202,6 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:email.manage')->name('email.store');
     Route::delete('/email/{mailbox}', [MailController::class, 'destroy'])
         ->middleware('perm:email.manage')->name('email.destroy');
-    Route::put('/email/{mailbox}', [MailController::class, 'update'])
-        ->middleware('perm:email.manage')->name('email.update');
 
     Route::get('/forwarders', [ForwardersController::class, 'index'])
         ->middleware('perm:email.view')->name('forwarders.index');
@@ -344,8 +342,6 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:dns.manage')->name('zone-editor.store');
     Route::delete('/zone-editor/{dns_record}', [ZoneEditorController::class, 'destroy'])
         ->middleware('perm:dns.manage')->name('zone-editor.destroy');
-    Route::put('/zone-editor/{dns_record}', [ZoneEditorController::class, 'update'])
-        ->middleware('perm:dns.manage')->name('zone-editor.update');
 
     Route::get('/dynamic-dns', [DynamicDnsController::class, 'index'])
         ->middleware('perm:dns.view')->name('dynamic-dns.index');
@@ -638,6 +634,30 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:metrics.view')->name('monitoring.index');
 });
 // ---- /Monitoring ----
+// ---- D7: Metrics tools — Errors / Raw Access / Awstats / Network Tools ----
+Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
+    Route::get('/errors-log', [\App\Http\Controllers\ErrorsLogController::class, 'index'])
+        ->middleware('perm:metrics.view')->name('errors-log.index');
+    Route::get('/raw-access', [\App\Http\Controllers\RawAccessController::class, 'index'])
+        ->middleware('perm:metrics.view')->name('raw-access.index');
+    Route::get('/awstats', [\App\Http\Controllers\AwstatsController::class, 'index'])
+        ->middleware('perm:metrics.view')->name('awstats.index');
+    Route::get('/network-tools', [\App\Http\Controllers\NetworkToolsController::class, 'index'])
+        ->middleware('perm:metrics.view')->name('network-tools.index');
+    Route::post('/network-tools', [\App\Http\Controllers\NetworkToolsController::class, 'lookup'])
+        ->middleware('perm:metrics.view')->name('network-tools.lookup');
+});
+// ---- /D7 Metrics tools ----
+// ---- D8: Mail Queue Manager + Security Policies (WHM) ----
+Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
+    Route::get('/mail-queue', [\App\Http\Controllers\MailQueueController::class, 'index'])
+        ->middleware('perm:system.view')->name('mail-queue.index');
+    Route::post('/mail-queue', [\App\Http\Controllers\MailQueueController::class, 'action'])
+        ->middleware('perm:system.manage')->name('mail-queue.action');
+    Route::get('/security-policies', [\App\Http\Controllers\SecurityPoliciesController::class, 'index'])
+        ->middleware('perm:system.view')->name('security-policies.index');
+});
+// ---- /D8 ----
 // ---- WHM API 1 compatible (billing integration, Bearer token) ----
 Route::prefix('json-api')->middleware([\App\Http\Middleware\EnsureApiToken::class])->group(function (): void {
     Route::get('/listaccts', [\App\Http\Controllers\WhmApiController::class, 'listaccts']);

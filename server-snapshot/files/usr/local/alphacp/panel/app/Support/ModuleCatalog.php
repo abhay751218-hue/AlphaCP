@@ -100,10 +100,10 @@ final class ModuleCatalog
                 'audience' => 'cpanel',
                 'items' => [
                     ['name' => 'Visitors',        'step' => 'S11', 'status' => 'live', 'route' => 'metrics.index'],
-                    ['name' => 'Errors',          'step' => 'S11', 'status' => 'step'],
+                    ['name' => 'Errors',          'step' => 'S11', 'status' => 'live', 'route' => 'errors-log.index'],
                     ['name' => 'Bandwidth',       'step' => 'S11', 'status' => 'live', 'route' => 'metrics.index'],
-                    ['name' => 'Raw Access',      'step' => 'S11', 'status' => 'step'],
-                    ['name' => 'Awstats',         'step' => 'S11', 'status' => 'step'],
+                    ['name' => 'Raw Access',      'step' => 'S11', 'status' => 'live', 'route' => 'raw-access.index'],
+                    ['name' => 'Awstats',         'step' => 'S11', 'status' => 'live', 'route' => 'awstats.index'],
                     ['name' => 'Resource Usage',  'step' => 'S11', 'status' => 'live', 'route' => 'monitoring.index'],
                 ],
             ],
@@ -149,7 +149,7 @@ final class ModuleCatalog
                     ['name' => 'MIME Types',     'step' => 'S5',  'status' => 'live', 'route' => 'mime.index'],
                     ['name' => 'Apache Handlers','step' => 'S5',  'status' => 'live', 'route' => 'handlers.index'],
                     ['name' => 'Terminal',       'step' => 'S6',  'status' => 'live', 'route' => 'terminal.index'],
-                    ['name' => 'Network Tools',  'step' => 'S11', 'status' => 'step'],
+                    ['name' => 'Network Tools',  'step' => 'S11', 'status' => 'live', 'route' => 'network-tools.index'],
                 ],
             ],
             'whm-accounts' => [
@@ -216,9 +216,17 @@ final class ModuleCatalog
                 'icon'  => 'shield',
                 'audience' => 'whm',
                 'items' => [
-                    ['name' => 'Security Policies', 'step' => 'S13', 'status' => 'step'],
+                    ['name' => 'Security Policies', 'step' => 'S13', 'status' => 'live', 'route' => 'security-policies.index'],
                     ['name' => 'Audit Log',         'step' => 'S2B', 'status' => 'live', 'route' => 'audit.index'],
                     ['name' => 'Manage API Tokens', 'step' => 'S12', 'status' => 'live', 'route' => 'api-tokens.index'],
+                ],
+            ],
+            'whm-email' => [
+                'label' => 'Email (Server)',
+                'icon'  => 'send',
+                'audience' => 'whm',
+                'items' => [
+                    ['name' => 'Mail Queue Manager', 'step' => 'S7', 'status' => 'live', 'route' => 'mail-queue.index'],
                 ],
             ],
             'whm-status' => [

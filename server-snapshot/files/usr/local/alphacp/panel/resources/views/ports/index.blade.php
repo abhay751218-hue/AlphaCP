@@ -4,63 +4,70 @@
 @section('subtitle', 'Owner control — kaun sa panel kis port par khule (ek panel = ek port)')
 
 @section('actions')
-    <a class="btn small secondary" href="{{ route('dashboard') }}">← Dashboard</a>
+    <a class="btn small secondary" href="{{ route('audit.index') }}">Audit Log</a>
 @endsection
 
 @section('content')
 @if (session('success'))
-<div class="card" style="border:2px solid #2a2"><p>{{ session('success') }}</p></div>
+<div class="card" style="border:2px solid #1d8a3a"><p>{{ session('success') }}</p></div>
 @endif
 @if (session('warning'))
-<div class="card" style="border:2px solid #a2"><p>{{ session('warning') }}</p></div>
+<div class="card" style="border:2px solid #b8860b"><p>{{ session('warning') }}</p></div>
 @endif
 @if ($errors->any())
 <div class="card" style="border:2px solid #a22"><p>{{ $errors->first() }}</p></div>
 @endif
 
-<div class="card">
-    <h3>Abhi live links</h3>
-    <p>
-        <strong>WHM (root/reseller):</strong> https://{{ request()->getHost() }}:{{ $cfg['whm'] }}/<br>
-        <strong>cPanel (customer):</strong> https://{{ request()->getHost() }}:{{ $cfg['cpanel'] }}/<br>
-        <strong>Webmail (Roundcube):</strong> https://{{ request()->getHost() }}:{{ $cfg['webmail'] }}/<br>
-        <strong>Link-page:</strong>
-        @if ($cfg['link_enabled'])
-            https://{{ request()->getHost() }}:{{ $cfg['link'] }}/
-        @else
-            — band hai
+<div class="grid cols-2">
+    <div class="card">
+        <h3>@include('partials.icons', ['icon' => 'plug', 'cls' => 'hico']) Abhi live links</h3>
+        <div class="table-wrap mt">
+            <table>
+                <tbody>
+                <tr><td><span class="badge red">WHM</span> root/reseller</td><td class="mono">https://{{ request()->getHost() }}:{{ $cfg['whm'] }}/</td></tr>
+                <tr><td><span class="badge blue">cPanel</span> customer</td><td class="mono">https://{{ request()->getHost() }}:{{ $cfg['cpanel'] }}/</td></tr>
+                <tr><td><span class="badge green">Webmail</span> Roundcube</td><td class="mono">https://{{ request()->getHost() }}:{{ $cfg['webmail'] }}/</td></tr>
+                <tr><td><span class="badge gray">Link-page</span></td><td class="mono">@if ($cfg['link_enabled'])https://{{ request()->getHost() }}:{{ $cfg['link'] }}/@else — band hai @endif</td></tr>
+                </tbody>
+            </table>
+        </div>
+        @if ($applied !== null)
+            <p class="help mt">Agent status: nginx <span class="badge blue">{{ $applied['nginx'] ?? '?' }}</span> ·
+                template <span class="badge {{ ($applied['template'] ?? false) ? 'green' : 'amber' }}">{{ ($applied['template'] ?? false) ? 'ready' : 'pending' }}</span></p>
         @endif
-    </p>
-    @if ($applied !== null)
-        <p class="sub">Agent status: nginx {{ $applied['nginx'] ?? '?' }} · template {{ ($applied['template'] ?? false) ? 'ready' : 'pending' }}</p>
-    @endif
+    </div>
+    <div class="card">
+        <h3>@include('partials.icons', ['icon' => 'alert', 'cls' => 'hico']) Dhyan rahe</h3>
+        <p class="help" style="margin:6px 0 0">Save par DB + <span class="mono">etc/ports.json</span> update hota hai aur
+            agent <span class="mono">ports.apply</span> nginx vhosts regen + reload karta hai
+            (nginx -t fail = purani vhosts wapas). Naya port <strong>AWS security group + ufw</strong> me kholna
+            zaroori hai — warna panel bahar se nahi khulega.</p>
+    </div>
 </div>
 
-<div class="card">
-    <h3>Port ↔ panel mapping</h3>
+<div class="card mt">
+    <h3>@include('partials.icons', ['icon' => 'cog', 'cls' => 'hico']) Port &harr; Panel Mapping</h3>
     <form method="POST" action="{{ route('ports.store') }}">
         @csrf
-        <label>WHM port (root / reseller)
-            <input type="number" name="whm" min="1024" max="65535" value="{{ old('whm', $cfg['whm']) }}" required>
-        </label>
-        <label>cPanel port (customers)
-            <input type="number" name="cpanel" min="1024" max="65535" value="{{ old('cpanel', $cfg['cpanel']) }}" required>
-        </label>
-        <label>Webmail port (Roundcube)
-            <input type="number" name="webmail" min="1024" max="65535" value="{{ old('webmail', $cfg['webmail']) }}" required>
-        </label>
-        <label>Link-page port (static directory page, PHP nahi)
-            <input type="number" name="link" min="1024" max="65535" value="{{ old('link', $cfg['link']) }}" required>
-        </label>
-        <label style="display:flex;gap:8px;align-items:center">
+        <div class="grid cols-2">
+            <div>
+                <label for="pt-whm">WHM port (root / reseller)</label>
+                <input id="pt-whm" type="number" name="whm" min="1024" max="65535" value="{{ old('whm', $cfg['whm']) }}" required>
+                <label for="pt-cpanel">cPanel port (customers)</label>
+                <input id="pt-cpanel" type="number" name="cpanel" min="1024" max="65535" value="{{ old('cpanel', $cfg['cpanel']) }}" required>
+            </div>
+            <div>
+                <label for="pt-webmail">Webmail port (Roundcube)</label>
+                <input id="pt-webmail" type="number" name="webmail" min="1024" max="65535" value="{{ old('webmail', $cfg['webmail']) }}" required>
+                <label for="pt-link">Link-page port (static, PHP nahi)</label>
+                <input id="pt-link" type="number" name="link" min="1024" max="65535" value="{{ old('link', $cfg['link']) }}" required>
+            </div>
+        </div>
+        <label style="display:flex;gap:8px;align-items:center" class="mt">
             <input type="checkbox" name="link_enabled" value="1" @checked(old('link_enabled', $cfg['link_enabled']))>
             Link-page chalu rakhein (band karne par purana port bilkul band ho jata hai)
         </label>
         <button class="btn mt" type="submit">Save + nginx par apply karo</button>
     </form>
-    <p class="help mt">Save par DB + etc/ports.json update hota hai aur agent `ports.apply` nginx vhosts
-       regen + reload karta hai (nginx -t fail = purani vhosts wapas). Naye port ko AWS security group +
-       ufw me kholna zaroori hai — warn panel bahar se nahi khulega.</p>
 </div>
 @endsection
-

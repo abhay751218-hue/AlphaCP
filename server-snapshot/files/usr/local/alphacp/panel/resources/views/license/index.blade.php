@@ -17,7 +17,7 @@
 <div class="card">
     <div class="row" style="align-items:center; justify-content:space-between; gap:16px">
         <div>
-            <h3>Current status</h3>
+            <h3>@include('partials.icons', ['icon' => 'key', 'cls' => 'hico']) Current status</h3>
             <p class="help">{{ $status['message'] ?? 'Status unavailable.' }}</p>
         </div>
         <span class="badge {{ $badge }}" style="font-size:14px">{{ $status['label'] ?? 'UNKNOWN' }}</span>
@@ -38,7 +38,7 @@
 </div>
 
 <div class="card mt">
-    <h3>Activate a paid license</h3>
+    <h3>@include('partials.icons', ['icon' => 'key', 'cls' => 'hico']) Activate a Paid License</h3>
     <p class="help">If the license server is not configured, local trial stays active. Do not share the key in chat, logs, or screenshots.</p>
     <form method="post" action="{{ route('license.activate') }}" class="row mt" style="align-items:end; gap:12px">
         @csrf
@@ -53,7 +53,7 @@
 </div>
 
 <div class="card mt">
-    <h3>Golden rule</h3>
+    <h3>@include('partials.icons', ['icon' => 'shield-check', 'cls' => 'hico']) Golden Rule</h3>
     <p class="help">License expiry or a license-server outage will not stop customer websites, email, DNS, or backups. Only privileged panel actions degrade.</p>
 </div>
 @endsection
