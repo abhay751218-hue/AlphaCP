@@ -154,6 +154,7 @@ ok "11 panel payloads likhi + lint clean"
 # ---- 2) agent payloads ----
 hdr "agent payloads (PortsNginx + ports.apply task)"
 backup "${AGENT}/config/tasks.php"
+backup "${AGENT}/src/CommandRunner.php"
 mkdir -p "${AGENT}/src/Tasks" "${AGENT}/config"
 cat > "${AGENT}/src/PortsNginx.php" <<'PEOF'
 @@AGENT_PORTSNGINX@@
@@ -187,6 +188,15 @@ for f in src/PortsNginx.php src/Tasks/PortsApply.php config/tasks.php; do
   "$PHP_BIN" -l "${AGENT}/${f}" >/dev/null || { rollback; die "lint fail: agent/${f}"; }
 done
 grep -q "'ports.apply'" "${AGENT}/config/tasks.php" || { rollback; die "tasks.php me ports.apply entry nahi"; }
+# CommandRunner BIN_ALLOWLIST me nginx binaries (idempotent merge) — live par
+# PortsNginx ke argv calls ko CommandRunner tabhi chalata hai.
+if ! grep -qF "'/usr/sbin/nginx'," "${AGENT}/src/CommandRunner.php"; then
+  sed -i "s|private const BIN_ALLOWLIST = \[|private const BIN_ALLOWLIST = [\n        '/usr/sbin/nginx',\n        '/usr/bin/nginx',\n        '/usr/local/sbin/nginx',\n        '/usr/local/bin/nginx',|" "${AGENT}/src/CommandRunner.php" \
+    || { rollback; die "CommandRunner allowlist merge fail"; }
+fi
+grep -qF "'/usr/sbin/nginx'," "${AGENT}/src/CommandRunner.php" \
+  || { rollback; die "nginx allowlist merge verify fail"; }
+"$PHP_BIN" -l "${AGENT}/src/CommandRunner.php" >/dev/null 2>&1 || { rollback; die "CommandRunner lint fail"; }
 ok "3 agent payloads likhi + lint clean + allowlist entry"
 
 # ---- 3) ports.json default ----
