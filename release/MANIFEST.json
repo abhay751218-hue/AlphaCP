@@ -131,9 +131,13 @@
   {
    "wave": "d31-ssl-symlink",
    "files": 1
+  },
+  {
+   "wave": "d32-panel-hardening",
+   "files": 1
   }
  ],
- "overlay_count": 180,
+ "overlay_count": 181,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1214,6 +1218,12 @@
    "src": "d31-AccountOs.php",
    "path": "agent/src/AccountOs.php",
    "sha256": "36444ee8a191fa0571f55b5ca6e3ff01c5e51481dda493e912e3a7615ab62d93"
+  },
+  {
+   "wave": "d32-panel-hardening",
+   "src": "d32-panel.js",
+   "path": "panel/public/assets/panel.js",
+   "sha256": "1bd3230546d49d71f2f955297e6786e30d6f8cc032782ebd698cf789cb549bac"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1719,7 +1729,7 @@
   "panel/deploy/php-fpm-alphacp.conf.in": "0562e43def8cdfe106dcf42198d0476e2d2ab671944e4aea7e5783cb0c7d599c",
   "panel/phpunit.xml": "cc28be2f2845b0386c816e06384b27d798afed7adcea1cc32711f55d5de35d14",
   "panel/public/assets/panel.css": "52ee9f600c6fbb0b445258ef4f732d73f04f070ff0f9777d45069886a8be14d7",
-  "panel/public/assets/panel.js": "468c617f0042e357eccc1620df6acd43d23eee9aa856d37415f47e126acb3264",
+  "panel/public/assets/panel.js": "1bd3230546d49d71f2f955297e6786e30d6f8cc032782ebd698cf789cb549bac",
   "panel/public/favicon.ico": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
   "panel/public/index.php": "2e6e91ea1efa086f0545521c822f67e37b2800f8f3623ce4a2fbbc4915d63a68",
   "panel/public/robots.txt": "e5c4b84484ee4216e9373be99380320c25dd94805f99f0a805846f087636553f",

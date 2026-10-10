@@ -333,6 +333,12 @@ EB="${STAGE}/etc-bundle"
 apply_sso_bundle "${EB}/sso"
 ensure_mail_stack
 install -m 644 "${EB}/pool.d/alphacp.conf" "${ETC_POOL}/alphacp.conf" || die "fpm pool install fail"
+# D32: 502-proofing — AutoSSL/certbot jaisi lambi requests ke liye zyada workers + timeout
+POOLF="${ETC_POOL}/alphacp.conf"
+sed -i -E 's/^pm\.max_children.*/pm.max_children      = 24/' "${POOLF}"
+sed -i -E 's/^pm\.start_servers.*/pm.start_servers     = 4/' "${POOLF}"
+sed -i -E 's/^pm\.max_spare_servers.*/pm.max_spare_servers = 8/' "${POOLF}"
+grep -q '^request_terminate_timeout' "${POOLF}" || printf 'request_terminate_timeout = 300\n' >> "${POOLF}"
 [[ -d "${EB}/systemd/php8.4-fpm.service.d" ]] && cp -r "${EB}/systemd/php8.4-fpm.service.d" "${ETC_SYSD}/"
 systemctl daemon-reload >>"${LOG_FILE}" 2>&1 || true
 systemctl restart "php${PHP_V}-fpm" >>"${LOG_FILE}" 2>&1 || die "php-fpm restart fail"
@@ -349,6 +355,12 @@ for f in "${EB}"/nginx/alphacp-*.conf; do
   [[ -f "$f" ]] || continue
   b="$(basename "$f")"
   install -m 644 "$f" "${ETC_NGX_AVAIL}/${b}"
+  # D32: lambi panel requests (AutoSSL/backup) par 502/504 na aaye
+  if grep -q 'fastcgi_read_timeout' "${ETC_NGX_AVAIL}/${b}"; then
+    sed -i -E 's/fastcgi_read_timeout[^;]*;/fastcgi_read_timeout 300s;/' "${ETC_NGX_AVAIL}/${b}"
+  else
+    sed -i '0,/server {/s//server {\n    fastcgi_read_timeout 300s;/' "${ETC_NGX_AVAIL}/${b}"
+  fi
   ln -sf "${ETC_NGX_AVAIL}/${b}" "${ETC_NGX_ENABLED}/${b}"
   ADDED+=("${b}")
 done
