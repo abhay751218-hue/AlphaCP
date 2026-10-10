@@ -139,9 +139,13 @@
   {
    "wave": "d33-fm-pro",
    "files": 4
+  },
+  {
+   "wave": "d34-fm-rebuild",
+   "files": 6
   }
  ],
- "overlay_count": 185,
+ "overlay_count": 191,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1252,6 +1256,42 @@
    "src": "d33-FilesSet.php",
    "path": "agent/src/Tasks/FilesSet.php",
    "sha256": "4f4f02c5e1d4804fdb556d8cc0aa8918ca126f9fe01cf8b9dfce7f26f76c4cce"
+  },
+  {
+   "wave": "d34-fm-rebuild",
+   "src": "d34-files-index.blade.php",
+   "path": "panel/resources/views/files/index.blade.php",
+   "sha256": "2f6224f19fe5f9dfbb52154a33f42145b1656c7412aeb8282cc2d30a67f9ead0"
+  },
+  {
+   "wave": "d34-fm-rebuild",
+   "src": "d34-fm.js",
+   "path": "panel/public/assets/fm.js",
+   "sha256": "b03dfc15c6754c7967e412552b8aedd3df1278ca2af7bde954dc7ff5a4428dae"
+  },
+  {
+   "wave": "d34-fm-rebuild",
+   "src": "d34-FilesController.php",
+   "path": "panel/app/Http/Controllers/FilesController.php",
+   "sha256": "716d891c8ed33b9cd0d3b4d483759f98123056625d635d17e6c410b5199ff0c6"
+  },
+  {
+   "wave": "d34-fm-rebuild",
+   "src": "d34-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "6a11e5698adb2446013e5c1d0631e27802dfb1a5689f7cf849cbb5e9af9e4fc6"
+  },
+  {
+   "wave": "d34-fm-rebuild",
+   "src": "d34-Files.php",
+   "path": "agent/src/Files.php",
+   "sha256": "0bebe5ca7e1d0ffbf78600a4e13009a670e026cd21edb21588d1f267f966d483"
+  },
+  {
+   "wave": "d34-fm-rebuild",
+   "src": "d34-FilesSet.php",
+   "path": "agent/src/Tasks/FilesSet.php",
+   "sha256": "ecfa0c04add355155d79e81c09d0d7b8ee9967bb1ac1a0acef9078a6f1c17b29"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1294,7 +1334,7 @@
   "agent/src/Db.php": "2b1b797e7ecf869f019baf4f820187eaf2d17a33a5a7a6a1a569e9fe657fbb84",
   "agent/src/Dns.php": "ffdaf175120e596fdb98c10876999d2ffbbacf871df0d4d9211737a1e48e31ab",
   "agent/src/ErrorPages.php": "7c9a3bf7f914d4ac31beb630c0d368bdd12b5cdec0187b914e899a22d4209ba1",
-  "agent/src/Files.php": "fac5b20a85591b4c69ca8a14904476acdedadb841014fd04a9d4a9f57fcd2f15",
+  "agent/src/Files.php": "0bebe5ca7e1d0ffbf78600a4e13009a670e026cd21edb21588d1f267f966d483",
   "agent/src/Ftp.php": "0d74ba32dd34aa31845b3f19fed808741461ac2dfc45c5822a850630d882f7a0",
   "agent/src/Git.php": "20d0037ad4fa2c357b9738573d681b31bbbc2c385cc3bc1ab3e87fa4f6b34842",
   "agent/src/Handlers.php": "1f6971594938160ce4f7ee0ebfda6243018c24f40c8da37a0b5eaa4f4248cde4",
@@ -1357,7 +1397,7 @@
   "agent/src/Tasks/DynamicSet.php": "8f95e6727a1c78904761e04abe1af43bcb1c4be632cca7e027a604ebc461a2dc",
   "agent/src/Tasks/ErrorPagesSet.php": "c69d3af37292f321c60a3870d76116ef1e622f007eb6917ec124a4e3ee277a6b",
   "agent/src/Tasks/FilesList.php": "d7e275b5b6c4e306412f6c6a042c13f3098a17b06439635539ffb0cbaf83e948",
-  "agent/src/Tasks/FilesSet.php": "4f4f02c5e1d4804fdb556d8cc0aa8918ca126f9fe01cf8b9dfce7f26f76c4cce",
+  "agent/src/Tasks/FilesSet.php": "ecfa0c04add355155d79e81c09d0d7b8ee9967bb1ac1a0acef9078a6f1c17b29",
   "agent/src/Tasks/FilesUsage.php": "d126fbcc3845c8f9b803828035d68e5074bc1aae01fe77a89cde8ec82119e0c3",
   "agent/src/Tasks/ForwardSet.php": "b1667778b95ea4ea6d78e9abc45144176cbf0d6ba2c0d60e24f610c45f488081",
   "agent/src/Tasks/FtpAdd.php": "c45a6b69cedd524da62cfdd93ef77adfae09d9ef341beb5d642a320ece340746",
@@ -1484,7 +1524,7 @@
   "panel/app/Http/Controllers/ErrorsLogController.php": "41109bcefa0c18c598a0216c14b47202466a2474f2d63b6a089feb841044f27b",
   "panel/app/Http/Controllers/FileDirectoryRestorationController.php": "d2c3045638fbeccd6d9e0c38b5dca922c6d84284f57609a436f52741f6bb8997",
   "panel/app/Http/Controllers/FileRestorationController.php": "895299d4741c7bc9e69ecf08f532b5e321f99592d7ca5540525caf05631d817a",
-  "panel/app/Http/Controllers/FilesController.php": "b8a7012c69993fb5d99dbeeb36196313dcab54929cfc864fffdd446554aeb652",
+  "panel/app/Http/Controllers/FilesController.php": "716d891c8ed33b9cd0d3b4d483759f98123056625d635d17e6c410b5199ff0c6",
   "panel/app/Http/Controllers/ForwardersController.php": "db4d1566310ce141449ed314453466d1aab4b575a086020f906017384b8bc874",
   "panel/app/Http/Controllers/FtpController.php": "1b0982079d896dc3418f7900fb789d4f6a862415eb882cf90a388d012764c9e1",
   "panel/app/Http/Controllers/GitController.php": "134542b0055698e4c0bfc4cdd5a7afefb30c518ea3ced34df62de280acf0f045",
@@ -1756,7 +1796,7 @@
   "panel/deploy/nginx-alphacp.conf.in": "e8fd485cd071cbc97b3a80cb938f50af34e30bfd9463e84ffc72f56e9fffb4f2",
   "panel/deploy/php-fpm-alphacp.conf.in": "0562e43def8cdfe106dcf42198d0476e2d2ab671944e4aea7e5783cb0c7d599c",
   "panel/phpunit.xml": "cc28be2f2845b0386c816e06384b27d798afed7adcea1cc32711f55d5de35d14",
-  "panel/public/assets/fm.js": "8d1256a2b4871510598e637bd37f4c99dbfda80b70dc87c72effeba7bf1790e7",
+  "panel/public/assets/fm.js": "b03dfc15c6754c7967e412552b8aedd3df1278ca2af7bde954dc7ff5a4428dae",
   "panel/public/assets/panel.css": "52ee9f600c6fbb0b445258ef4f732d73f04f070ff0f9777d45069886a8be14d7",
   "panel/public/assets/panel.js": "1bd3230546d49d71f2f955297e6786e30d6f8cc032782ebd698cf789cb549bac",
   "panel/public/favicon.ico": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -1812,7 +1852,7 @@
   "panel/resources/views/errors-log/index.blade.php": "49b2903dbccb1601f3fbc9008908e74c402bbf8784058f8e89ae5bd0adeccf8f",
   "panel/resources/views/file-directory-restoration/index.blade.php": "a111d47210af60bce4a0cd5e227510cf8fa1169099990510c4369b3e752dc89e",
   "panel/resources/views/file-restoration/index.blade.php": "2cbed6e8d5430c53f9b484b06f5ab4de1068d11ae9d9dd7f0d76a49187686b57",
-  "panel/resources/views/files/index.blade.php": "aef6a4d0bb446b2cec168569ebcbb7d8831ae5890aa2a7f5a6de92a4a61ab898",
+  "panel/resources/views/files/index.blade.php": "2f6224f19fe5f9dfbb52154a33f42145b1656c7412aeb8282cc2d30a67f9ead0",
   "panel/resources/views/forwarders/index.blade.php": "36553e88546213aeb1586316c3e27ab6535681b7e5754b8183a01032e4bab61c",
   "panel/resources/views/ftp/index.blade.php": "c8870f5b8c3ca65f36e0da09411d345727dcbbc18ac05f02baab3718d136139f",
   "panel/resources/views/git/index.blade.php": "2359feeee1a5aa01c4fac78423cbe6f9460e5660c1e7858bdbc9d2d7b4c90da5",
@@ -1888,7 +1928,7 @@
   "panel/resources/views/zone-templates/index.blade.php": "3577f60547a7413163a7756224bc8cbf132b22d46119da65d053c9d5fb663587",
   "panel/resources/views/zone-ttl/index.blade.php": "b210afa2aafecbc42ee6263cfb551b2b4bc39e9166270ac2e5bef8f4e976c744",
   "panel/routes/console.php": "3a8cc7d3cb62d1722d1191470d033546706d486a1ce28ec5596068149e7c30de",
-  "panel/routes/web.php": "36ed2ae05be730a43467f0d951d2ef08641742f40f48d3588109de6e810d5510",
+  "panel/routes/web.php": "6a11e5698adb2446013e5c1d0631e27802dfb1a5689f7cf849cbb5e9af9e4fc6",
   "panel/tests/Feature/AccountsTest.php": "a360a4a288bf2358be8ac4d530dbc36394949584439c3273c747db6895d3fafa",
   "panel/tests/Feature/AddressImporterTest.php": "e39c977f984438035adad3aac3e5c1d6d2c8460148ea40159bb2f68ec1e6cb4e",
   "panel/tests/Feature/AdminPasswordCommandTest.php": "1fd9fc244d0a503751d4be74d0934bcdaec0181dad0c3d80fa3afff7a7cfe280",
