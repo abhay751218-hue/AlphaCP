@@ -57,6 +57,7 @@
 | B2-WEBSITE-v1 | Company landing page (hero/features/pricing/install/docs) — website/ + single-file demo | ✅ BUILT 09 Oct 2026 |
 | B1-LICENSE-API (D19) | /api/v1 activate+verify + fingerprint binding + throttle | ✅ DEPLOYED LIVE 10 Oct 2026 — user confirmed (bak-d19lic-20261010034737) |
 | B5-UPDATER | alphacp-update.sh — cPanel-style channel updater (stable/edge), manifest-sha256 diff, backup+rollback+health gate; CHANNELS.json | ✅ BUILT 10 Oct — SIM1/SIM2 green |
+| B2b-PREVIEW (D20) | Website private preview :2096 (basic-auth owner) + alphacp-go-live.sh (domain+LetsEncrypt — baad me ek command se public) | 🟡 BUILT — sims green |
 | **STANDING REQ** | **PORTABILITY: pura AlphaCP system baad me NAYE server par aasani se transfer hona chahiye** — B4 installer + migration script (DB dump + /home + DNS/SSL re-point) isi liye mandatory | 📌 NOTED 09 Oct 2026 |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |

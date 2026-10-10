@@ -14,17 +14,17 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### B5 — Update-system check (SAFE, kuch apply nahi hota)
+### D20 (B2b) — Website private preview (sirf tumhare liye, port 2096)
 
-Ye READ-ONLY command hai — batayegi live server release-bundle se kitna match karta hai:
+SSH se `sudo -i` karke:
 
 ```bash
-cd /root && rm -rf AlphaCP-upd && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-upd && cd AlphaCP-upd && bash installer/alphacp-update.sh --check
+cd /root && rm -rf AlphaCP-d20 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d20 && cd AlphaCP-d20 && echo "__SHA__  installer/d20-website-preview.sh" | sha256sum -c - && bash installer/d20-website-preview.sh
 ```
 
-- "sab up-to-date" aaye = live ↔ repo 100% sync ✅
-- Files list aaye = drift hai; `--check` hata ke chalaoge to backup+rollback-gate ke saath sync ho jayega
-- Aaj ke baad naye updates ka tarika yahi hoga: `bash installer/alphacp-update.sh` (cPanel jaisa)
+- End me URL + **owner password** milega (note kar lena — ek hi baar dikhta hai)
+- `https://<server-ip>:2096/` kholo → login `owner` + wo password → website
+- Customer ko kuch nahi dikhta (401) — **domain aane par** `alphacp-go-live.sh --domain tumhara.com --email tum@mail.com` chalana, public ho jayegi (asli SSL ke saath)
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 
