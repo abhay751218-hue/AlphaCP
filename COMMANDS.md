@@ -14,19 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D21 (B4) — AWS ko "get server" banao (cPanel-style install distribution)
+### B4 STEP 2 — BADE SERVER par AlphaCP install (one-line, AWS se)
 
-**Pehle:** AWS Lightsail console → Networking → IPv4 Firewall → **Add rule: Custom TCP 2096**
-
-**Phir AWS par (sudo -i):**
+Bade server par (root / `sudo -i`), license key ke saath:
 
 ```bash
-cd /root && rm -rf AlphaCP-d21 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d21 && cd AlphaCP-d21 && echo "c8978f36f612c99569b37c22bec23d4ed57ac29da77d8497987fdee9d5a12b7f  installer/d21-get-server.sh" | sha256sum -c - && bash installer/d21-get-server.sh
+ACP_LICENSE_KEY=ACP-xxxxxxxxxxxx bash <(curl -fsSLk https://13.207.123.177:2096/234d862e0727891142b25372/install)
 ```
 
-End me **bade server ke liye one-line install command** milegi (secret URL ke saath) — wahi bade server par chalani hai. Pehle AWS :2087 License Server page se **owner plan** ki key bana lena aur command me `ACP_LICENSE_KEY=ACP-xxxx` laga dena.
+(key ke bina bhi chalega — 15-din trial). 10–20 min. End me admin password EK BAAR dikhega — note karo.
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✔️ D21 get-server (AWS, 10 Oct) — DEPLOYED
+Secret URL: `https://13.207.123.177:2096/234d862e0727891142b25372/` — dobara `d21-get-server.sh` chalana SAFE hai (pack refresh, secret same).
 
 ### ✔️ D19 (DEPLOYED 10 Oct 2026 — backups bak-d19lic-20261010034737) (B1) — License API sell-ready (fingerprint binding + rate-limit)
 
