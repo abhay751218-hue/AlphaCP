@@ -140,7 +140,58 @@ apply_sso_bundle() {
   ok "SSO bundle applied (pma shim + roundcube plugin + secrets)"
 }
 
+# ---- Mail stack (exim4 + dovecot) install + agent setup ----
+ensure_mail_stack() {
+  local need=0 p
+  for p in exim4-daemon-heavy dovecot-imapd dovecot-pop3d dovecot-lmtpd dovecot-sieve; do
+    dpkg -s "$p" >/dev/null 2>&1 || need=1
+  done
+  if [[ "$need" == "1" ]]; then
+    DEBIAN_FRONTEND=noninteractive apt-get install -y exim4 exim4-daemon-heavy \
+      dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd dovecot-sieve \
+      dovecot-managesieved >>"${LOG_FILE}" 2>&1 \
+      && ok "mail stack installed (exim4 + dovecot)" \
+      || warn "mail packages install fail — log dekho: ${LOG_FILE}"
+  fi
+  # webmail SSO master creds (Roundcube acp_sso -> dovecot master passdb)
+  if [[ ! -f /usr/local/alphacp/etc/webmail-master.plain || ! -f /usr/local/alphacp/etc/webmail-master.pw ]]; then
+    MPW=$(openssl rand -hex 24)
+    printf '%s\n' "$MPW" > /usr/local/alphacp/etc/webmail-master.plain
+    MHASH=$(php8.4 -r 'echo password_hash($argv[1], PASSWORD_BCRYPT);' "$MPW")
+    printf 'acpmaster:{BLF-CRYPT}%s\n' "$MHASH" > /usr/local/alphacp/etc/webmail-master.pw
+    chown root:www-data /usr/local/alphacp/etc/webmail-master.plain 2>/dev/null || true
+    # .pw DOVECOT padhta hai (auth process euid=dovecot) — www-data nahi!
+    chown root:dovecot /usr/local/alphacp/etc/webmail-master.pw 2>/dev/null \
+      || chown root:www-data /usr/local/alphacp/etc/webmail-master.pw 2>/dev/null || true
+    chmod 0640 /usr/local/alphacp/etc/webmail-master.plain /usr/local/alphacp/etc/webmail-master.pw
+    ok "webmail master creds generated (acpmaster)"
+  fi
+  # doveadm --version is build me nahi chalta — env override (code ka designed escape hatch)
+  mkdir -p /etc/systemd/system/paneld.service.d
+  printf '[Service]\nEnvironment=ACP_MAIL_DOVEADM=/usr/bin/doveadm\n' > /etc/systemd/system/paneld.service.d/mail.conf
+  systemctl daemon-reload >>"${LOG_FILE}" 2>&1 || true
+  systemctl restart paneld >>"${LOG_FILE}" 2>&1 || true
+  # agent se exim+dovecot ki AlphaCP config lagao (idempotent)
+  if [[ -x /usr/local/alphacp/agent/bin/paneld || -f /usr/local/alphacp/agent/bin/paneld ]]; then
+    if ACP_MAIL_DOVEADM=/usr/bin/doveadm php8.4 /usr/local/alphacp/agent/bin/paneld --run mail.server '{"action":"setup"}' >>"${LOG_FILE}" 2>&1; then
+      ok "mail.server setup applied (exim+dovecot AlphaCP config)"
+    else
+      warn "mail.server setup fail — log: ${LOG_FILE} (WHM se dobara chala sakte ho)"
+    fi
+  fi
+  # purane installs par bhi .pw ka group dovecot ensure karo
+  [[ -f /usr/local/alphacp/etc/webmail-master.pw ]] && chgrp dovecot /usr/local/alphacp/etc/webmail-master.pw 2>/dev/null || true
+  # master-login separator (* ) — iske bina mailbox*acpmaster parse hi nahi hota
+  if [[ -d /etc/dovecot/conf.d ]]; then
+    printf 'auth_master_user_separator = *\n' > /etc/dovecot/conf.d/99-alphacp-master.conf
+  fi
+  systemctl enable --now dovecot exim4 >>"${LOG_FILE}" 2>&1 || true
+  systemctl restart dovecot >>"${LOG_FILE}" 2>&1 || true
+  systemctl restart exim4 >>"${LOG_FILE}" 2>&1 || true
+}
+
 apply_sso_bundle "${STAGE}/etc-bundle/sso"
+ensure_mail_stack
 
 
 # ---- 4. version sync in .env ----------------------------------------------------

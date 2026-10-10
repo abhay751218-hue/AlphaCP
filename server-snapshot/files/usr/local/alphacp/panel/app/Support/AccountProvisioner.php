@@ -81,6 +81,8 @@ final class AccountProvisioner
                 'suspended_at' => null,
             ])->save(),
             'account.terminate' => self::markTerminated($account),
+            // D26: mail.set success -> pending mailboxes active (badge kabhi flip nahi hota tha)
+            'mail.set' => $account->mailboxes()->where('status', 'pending')->update(['status' => 'active']),
             default => null,
         };
     }

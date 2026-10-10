@@ -1266,6 +1266,7 @@
 /usr/local/alphacp/panel/app/Providers/ResellerScopeProvider.php
 /usr/local/alphacp/panel/app/Support/AccountIdentity.php
 /usr/local/alphacp/panel/app/Support/AccountProvisioner.php
+/usr/local/alphacp/panel/app/Support/AccountProvisioner.php.bak-update-20261010121811
 /usr/local/alphacp/panel/app/Support/AppInstaller.php
 /usr/local/alphacp/panel/app/Support/Audit.php
 /usr/local/alphacp/panel/app/Support/Backup.php
