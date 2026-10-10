@@ -90,6 +90,24 @@ cp "${ETC_CRON}"/alphacp-* "${STAGE}/etc-bundle/cron.d/" 2>>"${LOG_FILE}" || war
 [[ -d "${DEF_WWW}" ]] && cp -r "${DEF_WWW}/." "${STAGE}/etc-bundle/default-www/"
 ok "/etc configs staged"
 
+# License PUBLIC key -> pack (customer panels isi se signature verify karte hain;
+# private signer kabhi pack me nahi jata)
+SIGNER_JSON="${ACP_HOME}/panel/storage/app/private/license_signer.json"
+if [[ -f "${SIGNER_JSON}" ]]; then
+  python3 - "${SIGNER_JSON}" "${STAGE}/alphacp/panel/config/license_public.pem" <<'PYPEM' || die "license public key export fail"
+import json, base64, sys
+kp = json.load(open(sys.argv[1]))
+raw = base64.b64decode(kp['public'])
+assert len(raw) == 32, 'public key 32 bytes nahi'
+der = bytes.fromhex('302a300506032b6570032100') + raw
+b64 = base64.b64encode(der).decode()
+open(sys.argv[2], 'w').write('-----BEGIN PUBLIC KEY-----\n' + b64 + '\n-----END PUBLIC KEY-----\n')
+PYPEM
+  ok "license PUBLIC key pack me shamil (config/license_public.pem)"
+else
+  warn "license_signer.json nahi mila — pack bina public key ke (activate verify fail hoga)"
+fi
+
 # AWS live version -> pack (naye installs/updates isi se version dikhate hain)
 AWSV="$(grep -m1 '^ACP_VERSION=' "${ACP_HOME}/panel/.env" 2>/dev/null | cut -d= -f2- || true)"
 mkdir -p "${STAGE}/alphacp/share"
