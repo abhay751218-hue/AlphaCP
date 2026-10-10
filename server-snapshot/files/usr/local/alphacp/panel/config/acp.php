@@ -60,6 +60,7 @@ return [
     // customer websites/email because a license server is unavailable.
     'license' => [
         'api_url' => (string) env('ACP_LICENSE_API_URL', ''),
+        'insecure' => (bool) env('ACP_LICENSE_INSECURE', false),
         'timeout' => (int) env('ACP_LICENSE_TIMEOUT', 8),
         'store_path' => (string) env('ACP_LICENSE_STORE_PATH', storage_path('app/private/license.json')),
         'public_key' => (string) env('ACP_LICENSE_PUBLIC_KEY', ''),

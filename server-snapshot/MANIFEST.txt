@@ -306,6 +306,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/IpBlockerController.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseServerController.php
+/usr/local/alphacp/panel/app/Http/Controllers/LicenseServerController.php.bak-d19lic-20261010034737
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d14parity-20261009165725
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
@@ -461,6 +462,7 @@
 /usr/local/alphacp/panel/app/Support/Indexes.php
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
+/usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak-d19lic-20261010034737
 /usr/local/alphacp/panel/app/Support/LicenseSigner.php
 /usr/local/alphacp/panel/app/Support/Mail.php
 /usr/local/alphacp/panel/app/Support/MailProvisioner.php
@@ -488,10 +490,12 @@
 /usr/local/alphacp/panel/app/Support/Waf.php
 /usr/local/alphacp/panel/artisan
 /usr/local/alphacp/panel/bootstrap/app.php
+/usr/local/alphacp/panel/bootstrap/app.php.bak-d19lic-20261010034737
 /usr/local/alphacp/panel/bootstrap/providers.php
 /usr/local/alphacp/panel/composer.json
 /usr/local/alphacp/panel/composer.lock
 /usr/local/alphacp/panel/config/acp.php
+/usr/local/alphacp/panel/config/acp.php.bak-d19lic-20261010034737
 /usr/local/alphacp/panel/config/app.php
 /usr/local/alphacp/panel/config/auth.php
 /usr/local/alphacp/panel/config/cache.php
@@ -826,6 +830,7 @@
 /usr/local/alphacp/panel/routes/web.php.bak-d13node-20261009164655
 /usr/local/alphacp/panel/routes/web.php.bak-d14parity-20261009165725
 /usr/local/alphacp/panel/routes/web.php.bak-d15fm-20261009171411
+/usr/local/alphacp/panel/routes/web.php.bak-d19lic-20261010034737
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d7metrics-20261009130206

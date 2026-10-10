@@ -777,7 +777,15 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
 });
 // Customer panel ka online verify (public, read-only)
 Route::post('/license-server/verify', [\App\Http\Controllers\LicenseServerController::class, 'verify'])
-    ->name('license-server.verify');
+    ->middleware('throttle:30,1')->name('license-server.verify');
+
+// ---- D19 (B1): public License API — remote customer panels ke liye ----
+// CSRF exempt (bootstrap/app.php) + strict rate-limit. Signature = asli auth.
+Route::post('/api/v1/activate', [\App\Http\Controllers\LicenseServerController::class, 'activate'])
+    ->middleware('throttle:10,1')->name('license-api.activate');
+Route::post('/api/v1/verify', [\App\Http\Controllers\LicenseServerController::class, 'verify'])
+    ->middleware('throttle:30,1')->name('license-api.verify');
+// ---- /D19 ----
 // ---- /License Server ----
 
 // ---- Security extras: Hotlink + Leech Protection ----

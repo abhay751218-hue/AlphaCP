@@ -251,6 +251,8 @@ POST               /address-importer                             address-importe
 GET|HEAD           /api-tokens                                   api-tokens.index
 POST               /api-tokens                                   api-tokens.store
 DELETE             /api-tokens/{apiToken}                        api-tokens.destroy
+POST               /api/v1/activate                              license-api.activate
+POST               /api/v1/verify                                license-api.verify
 GET|HEAD           /apps                                         apps.index
 POST               /apps                                         apps.store
 GET|HEAD           /audit                                        audit.index
@@ -569,8 +571,9 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (137) — repo se panel dobara banane par ye pages tootenge:
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (142) — repo se panel dobara banane par ye pages tootenge:
 /usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-d15fm-20261009171411
+/usr/local/alphacp/panel/app/Http/Controllers/LicenseServerController.php.bak-d19lic-20261010034737
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d14parity-20261009165725
 /usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/app/Http/Controllers/MysqlDatabasesController.php.bak-d3mysql-20261009092025
@@ -585,9 +588,12 @@ PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (137) — repo se panel dobara banan
 /usr/local/alphacp/panel/app/Http/Controllers/ZoneEditorController.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/app/Support/Dns.php.bak-d14parity-20261009165725
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
+/usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak-d19lic-20261010034737
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d10final-20261009154757
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d7metrics-20261009130206
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d8mailsec-20261009131452
+/usr/local/alphacp/panel/bootstrap/app.php.bak-d19lic-20261010034737
+/usr/local/alphacp/panel/config/acp.php.bak-d19lic-20261010034737
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d17look-20261009174756
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d18nav-20261009175830
 /usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
@@ -702,6 +708,7 @@ PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (137) — repo se panel dobara banan
 /usr/local/alphacp/panel/routes/web.php.bak-d13node-20261009164655
 /usr/local/alphacp/panel/routes/web.php.bak-d14parity-20261009165725
 /usr/local/alphacp/panel/routes/web.php.bak-d15fm-20261009171411
+/usr/local/alphacp/panel/routes/web.php.bak-d19lic-20261010034737
 /usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
 /usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
 /usr/local/alphacp/panel/routes/web.php.bak-d7metrics-20261009130206

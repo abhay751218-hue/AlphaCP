@@ -101,13 +101,51 @@ final class LicenseServerController extends Controller
      */
     public function activate(Request $request): JsonResponse
     {
-        $key = trim((string) $request->input('license_key', ''));
+        $data = $request->validate([
+            'license_key'   => ['required', 'string', 'max:160'],
+            'fingerprint'   => ['required', 'string', 'regex:/^[A-Za-z0-9_-]{8,128}$/'],
+            'hostname'      => ['nullable', 'string', 'max:160'],
+            'panel_version' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        $key = trim((string) $data['license_key']);
+        $fp  = (string) $data['fingerprint'];
 
         $record = LicenseKey::query()->where('key_hash', hash('sha256', $key))->first();
 
-        if ($key === '' || $record === null || $record->revoked) {
+        if ($record === null || $record->revoked) {
             return response()->json(['message' => 'License key invalid ya revoked hai.'], 422);
         }
+
+        if ($record->expires_at !== null && $record->expires_at->isPast()) {
+            return response()->json(['message' => 'License expire ho chuki hai — renew karo.'], 422);
+        }
+
+        // Fingerprint binding (anti key-sharing): pehli activation server se
+        // bind hoti hai; doosre server par wahi key reject (owner plan chhod ke).
+        $slot = trim((string) $record->server_id);
+        $unbound = $slot === '' || in_array(strtolower($slot), ['auto', 'unbound', 'any'], true);
+
+        if ($record->plan !== 'owner') {
+            if ($unbound) {
+                $record->update(['server_id' => $fp]);
+            } elseif (! hash_equals($slot, $fp)) {
+                \App\Support\Audit::log('license.activation_blocked', 'warning', 'license', null, [
+                    'license_uid' => (string) $record->license_uid,
+                    'reason'      => 'fingerprint_mismatch',
+                ]);
+
+                return response()->json([
+                    'message' => 'Ye license kisi aur server par already active hai. Transfer ke liye support se contact karo.',
+                ], 423);
+            }
+        }
+
+        \App\Support\Audit::log('license.remote_activation', 'info', 'license', null, [
+            'license_uid'   => (string) $record->license_uid,
+            'hostname'      => (string) ($data['hostname'] ?? ''),
+            'panel_version' => (string) ($data['panel_version'] ?? ''),
+        ]);
 
         return response()->json([
             'payload'   => $record->payload,

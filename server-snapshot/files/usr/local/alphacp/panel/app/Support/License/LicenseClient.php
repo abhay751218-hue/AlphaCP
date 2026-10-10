@@ -157,9 +157,13 @@ final class LicenseClient
         }
 
         try {
-            $response = Http::acceptJson()
-                ->timeout((int) config('acp.license.timeout', 8))
-                ->post($api . '/api/v1/activate', [
+            $http = Http::acceptJson()->timeout((int) config('acp.license.timeout', 8));
+            if ((bool) config('acp.license.insecure', false)) {
+                // Self-signed license server (apna hi master panel) — TLS verify off,
+                // security signature-verify se aati hai (Ed25519 public key pinned).
+                $http = $http->withoutVerifying();
+            }
+            $response = $http->post($api . '/api/v1/activate', [
                     'license_key' => $licenseKey,
                     'fingerprint' => $this->fingerprint(),
                     'hostname' => gethostname() ?: 'unknown',

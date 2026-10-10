@@ -28,6 +28,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->throttleWithRedis(false);
 
+        // License API: remote customer panels POST yahan bina session ke —
+        // CSRF exempt (rate-limit routes par hai; signature hi asli auth hai).
+        $middleware->validateCsrfTokens(except: [
+            'api/v1/*',
+            'license-server/verify',
+        ]);
+
         // Trust the local reverse proxy / tunnel so $request->ip() is honest.
         $middleware->trustProxies(at: '*');
 
