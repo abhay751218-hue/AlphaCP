@@ -236,7 +236,8 @@ for f in "${EB}"/nginx/alphacp-*.conf; do
 done
 [[ "${#ADDED[@]}" -gt 0 ]] || die "pack me nginx vhosts nahi"
 if nginx -t >>"${LOG_FILE}" 2>&1; then
-  systemctl reload nginx >>"${LOG_FILE}" 2>&1 || die "nginx reload fail"
+  systemctl enable nginx >>"${LOG_FILE}" 2>&1 || true
+  systemctl restart nginx >>"${LOG_FILE}" 2>&1 || die "nginx start fail — systemctl status nginx dekho"
   ok "nginx vhosts live: ${ADDED[*]}"
 else
   for b in "${ADDED[@]}"; do rm -f "${ETC_NGX_ENABLED}/${b}" "${ETC_NGX_AVAIL}/${b}"; done
