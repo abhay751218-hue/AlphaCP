@@ -894,6 +894,8 @@ final class AccountOs
                 'type' => $isDir ? 'dir' : 'file',
                 'size' => $isDir ? 0 : (int) (@filesize($full) ?: 0),
                 'mode' => sprintf('%04o', (@fileperms($full) ?: 0) & 0777),
+                // D28: cPanel-parity Last Modified column
+                'mtime' => (int) (@filemtime($full) ?: 0),
             ];
         }
 
@@ -1351,6 +1353,19 @@ final class AccountOs
 
         $liveCert = $le . '/live/' . $domain . '/fullchain.pem';
         $liveKey = $le . '/live/' . $domain . '/privkey.pem';
+        // D31: certbot live/ me SYMLINKS hote hain (-> ../../archive/...) — PathGuard
+        // symlink reject karta hai, isliye pehle realpath nikaalo aur verify karo ki
+        // target letsencrypt dir ke ANDAR hi hai (escape nahi) — phir real file padho.
+        $leReal = realpath($le);
+        $resolveLive = static function (string $pth) use ($leReal): string {
+            $rp = realpath($pth);
+            if ($rp === false || $leReal === false || !str_starts_with($rp, $leReal . '/')) {
+                throw new RuntimeException('cert path resolve fail (letsencrypt dir ke bahar): ' . $pth);
+            }
+            return $rp;
+        };
+        $liveCert = $resolveLive($liveCert);
+        $liveKey = $resolveLive($liveKey);
         if (!$this->fs->isFile($liveCert) || !$this->fs->isFile($liveKey)) {
             throw new RuntimeException('certbot succeeded but live cert missing');
         }

@@ -13,11 +13,13 @@
 
 <aside class="sidenav" id="acp-side">
     <div class="side-brand">
+        <a href="{{ route('dashboard') }}" title="Home" style="display:flex;align-items:center;gap:10px;color:inherit;text-decoration:none">
         <span class="logo">A</span>
         <span>
             {{ config('acp.brand.name', 'AlphaCP') }}
             <small>{{ ($panelMode ?? 'cpanel') === 'whm' ? 'Server Manager' : 'Account Panel' }} · {{ config('acp.version') }}</small>
         </span>
+        </a>
     </div>
     @if (($panelMode ?? 'cpanel') === 'whm')
         @include('partials.whm-sidebar', [])
@@ -29,6 +31,7 @@
 <div class="main-col">
 <header class="mainbar">
     <button class="nav-toggle" id="acp-nav-toggle" type="button" aria-label="Menu" aria-expanded="false">☰</button>
+    <a class="crumb" href="{{ route('dashboard') }}" title="Home — dashboard par wapas" style="text-decoration:none;flex:0 0 auto">🏠</a>
     <span class="crumb">@yield('title', 'Dashboard')</span>
     <span class="spacer"></span>
     <input type="search" id="acp-search" class="searchbox" placeholder="Find functions quickly by typing here (/)" autocomplete="off" aria-label="Search tools">

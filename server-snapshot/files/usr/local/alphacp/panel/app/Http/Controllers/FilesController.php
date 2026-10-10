@@ -25,12 +25,24 @@ class FilesController extends Controller
             $path = 'public_html';
         }
         $entries = [];
+        $rootDirs = [];
         if ($account !== null && ! app()->environment('testing')) {
             $result = Paneld::run('files.list', [
                 'username' => $account->username,
                 'path' => $path,
             ], 8);
             $entries = is_array($result['entries'] ?? null) ? $result['entries'] : [];
+            // D29: left directory tree (cPanel-parity) — home-level folders
+            if ($path === '') {
+                $rootDirs = $entries;
+            } else {
+                $rootRes = Paneld::run('files.list', [
+                    'username' => $account->username,
+                    'path' => '',
+                ], 8);
+                $rootDirs = is_array($rootRes['entries'] ?? null) ? $rootRes['entries'] : [];
+            }
+            $rootDirs = array_values(array_filter($rootDirs, static fn ($e) => ($e['type'] ?? '') === 'dir'));
         }
 
         return view('files.index', [
@@ -38,6 +50,7 @@ class FilesController extends Controller
             'path' => $path,
             'parent' => Files::parent($path),
             'entries' => $entries,
+            'rootDirs' => $rootDirs,
             'panelMode' => ModuleCatalog::modeFor($request->user()),
         ]);
     }

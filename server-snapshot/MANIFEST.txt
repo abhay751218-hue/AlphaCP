@@ -176,6 +176,8 @@
 /usr/local/alphacp/agent/src/AccountIdentity.php
 /usr/local/alphacp/agent/src/AccountOs.php
 /usr/local/alphacp/agent/src/AccountOs.php.bak-update-20261010113145
+/usr/local/alphacp/agent/src/AccountOs.php.bak-update-20261010124113
+/usr/local/alphacp/agent/src/AccountOs.php.bak-update-20261010133236
 /usr/local/alphacp/agent/src/AccountPaths.php
 /usr/local/alphacp/agent/src/AccountTemplates.php
 /usr/local/alphacp/agent/src/Backup.php
@@ -1134,6 +1136,7 @@
 /usr/local/alphacp/panel/app/Http/Controllers/FileDirectoryRestorationController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FileRestorationController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FilesController.php
+/usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010125702
 /usr/local/alphacp/panel/app/Http/Controllers/ForwardersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FtpController.php
 /usr/local/alphacp/panel/app/Http/Controllers/GitController.php
@@ -1464,6 +1467,9 @@
 /usr/local/alphacp/panel/resources/views/file-directory-restoration/index.blade.php
 /usr/local/alphacp/panel/resources/views/file-restoration/index.blade.php
 /usr/local/alphacp/panel/resources/views/files/index.blade.php
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010124113
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010125702
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010131303
 /usr/local/alphacp/panel/resources/views/forwarders/index.blade.php
 /usr/local/alphacp/panel/resources/views/ftp/index.blade.php
 /usr/local/alphacp/panel/resources/views/git/index.blade.php
@@ -1478,6 +1484,7 @@
 /usr/local/alphacp/panel/resources/views/layouts/guest.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
+/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-update-20261010123549
 /usr/local/alphacp/panel/resources/views/license-server/index.blade.php
 /usr/local/alphacp/panel/resources/views/license/index.blade.php
 /usr/local/alphacp/panel/resources/views/mail-queue/index.blade.php
