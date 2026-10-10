@@ -24,7 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'panel.auth' => App\Http\Middleware\PanelAuth::class,
+            'panel.auth'     => App\Http\Middleware\PanelAuth::class,
+            'panel.admin'    => App\Http\Middleware\PanelAdmin::class,
+            'panel.reseller' => App\Http\Middleware\PanelReseller::class,
         ]);
         $middleware->redirectGuestsTo('/login');
         $middleware->append(App\Http\Middleware\SecurityHeaders::class);

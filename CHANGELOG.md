@@ -4,7 +4,81 @@ All notable changes to AlphaCP are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/) · Versioning: SemVer.
 
 ## [Unreleased]
+
+### Added — Depth Wave D5 (final planned wave): Cron + SSL + File Manager + Dark Mode (09 Oct 2026)
+- `installer/d5-tools-fix.sh` v1.0 (builder: `tools/build-d5-tools-installer.py`) — 6 files, views+JS+CSS only; install & rollback sims green.
+- Cron Jobs: cPanel "Common Settings" presets (Once Per Minute → Once Per Year) that fill the 5 fields, stats vs MAXCRON, search, output-redirect tip.
+- SSL/TLS Status: stats strip (secured/attention/AutoSSL), expiry badges (≤21 days amber, ≤7 red), search.
+- File Manager: breadcrumbs, folder/file icons, human sizes, per-folder filter, 2-col folder/rename cards, monospace file editor.
+- DARK MODE: topbar moon/sun toggle (both panels), full dark token set in `panel.css` v3.3, persisted via localStorage (`panel.js` v1.5).
+
+### Added — Depth Wave D4: WHM Create Account + List Accounts + Packages (09 Oct 2026)
+- `installer/d4-whm-fix.sh` v1.0 (builder: `tools/build-d4-whm-installer.py`) — 4 files, views+JS only (no controllers/routes/DB); install & rollback sims green.
+- Create a New Account: WHM field-order (Domain → Username auto-suggest), password Generate + strength meter + Show, package select with limits summary, provisioning/policy info cards.
+- List Accounts: stats strip (total/active/suspended/live), search, quick Suspend/Unsuspend actions, Manage button, domain links.
+- Packages: stats strip, search, Addon/Sub column, feature-list badges, "Add a Package".
+- `panel.js` v1.4: WHM-style domain → username autofill (`data-autofill-username`).
+
+### Added — Depth Wave D3: MySQL Databases + Users + phpMyAdmin (09 Oct 2026)
+- `installer/d3-mysql-fix.sh` v1.0 (builder: `tools/build-d3-mysql-installer.py`) — 6 files, no routes/migrations; install & rollback sims green.
+- MysqlUsersController: optional USER-CHOSEN password (alnum 10–64, SQL-literal safe) on create + change-password; blank = strong random; shown once either way.
+- MysqlDatabasesController: index passes users map → "Privileged users" column.
+- MySQL Databases view: cPanel-style — stats vs MAXSQL, search, Users column, Create New Database, connection-settings card.
+- MySQL Users view: show-once password card + copy chips, per-user Change-password expander with alnum generator, Add New User (generator + db checkboxes), Add User To Database (grant) card.
+- phpMyAdmin view: status badge + client-connect card + preference form.
+- `panel.js` v1.3: alnum-only password generator (`data-pw-gen-alnum`).
+- Out of D3 scope: privilege revoke (no `db.user.revoke` agent task) + phpMyAdmin app/SSO — noted for D3.5.
+
+### Added — Depth Wave D2: Domains + Zone Editor (09 Oct 2026)
+- `installer/d2-domains-fix.sh` v1.0 (builder: `tools/build-d2-domains-installer.py`) — 5 files, backup + auto-rollback + route:clear; install & rollback sims green.
+- ZoneEditorController: NEW `update()` — record name/value edit (type/zone fixed), dup check, declarative `dns.zone` + BIND zone enqueue.
+- `routes/web.php`: `PUT /zone-editor/{dns_record}` → `zone-editor.update` (perm:dns.manage).
+- Domains view: cPanel-style — stats (addon/sub/alias vs MAXADDON/MAXSUB/MAXPARK), search, type badges, Visit link, Create a New Domain with type radios + live hints + conditional redirect fields.
+- Zone Editor view: cPanel-style — stats, search, per-record Edit expander (PUT), Add Record with type-aware value placeholders (TXT placeholder validator-safe).
+- `panel.js` v1.2: domain-type toggle/hints + zone-type placeholder switcher (CSP-safe external).
+- Out of D2 scope (agent `dns.zone` schema `additionalProperties:false`): TTL, MX priority, AAAA — noted for D2.5.
+
+### Added — Depth Wave D1: Email Accounts + Forwarders (09 Oct 2026)
+- `installer/d1-email-fix.sh` v1.0 (builder: `tools/build-d1-email-installer.py`) — live 0.75.x hotfix, 6 files, backup + auto-rollback + route:clear + php-fpm reload; install & rollback sims green.
+- MailController: NEW `update()` (quota edit + password change via declarative `mail.set`), per-box disk usage via readonly `mail.usage` (guarded — page never breaks), Connect Devices data.
+- `routes/web.php`: `PUT /email/{mailbox}` → `email.update` (perm:email.manage).
+- Email Accounts view: cPanel-style rebuild — stats strip, search, usage bars, Manage + Connect Devices (IMAP 993 / POP3 995 / SMTP 465 + copy chips), create form with password generator + strength meter, quota MB-or-Unlimited, default account card.
+- Forwarders view: cPanel-style list + search + stats + 2-col create.
+- `panel.js` v1.1: pw generator/meter/show-hide, generic row filter, quota radio, copy chips (CSP-safe external). `panel.css` v3.2: pw-meter, expanders, subrows.
+- Out of D1 scope (needs agent schema + migration): mailbox suspend incoming/login — noted for D1.5.
 ### Added
+- **theme-fix v1.2 live + depth audit (09 Oct)** — CSP `script-src 'self'` saara inline
+  JS block karta tha (menus/search kabhi nahi chale) → saara JS external `assets/panel.js`
+  me (security strict). cPanel(2083)=LIGHT vs WHM(2087)=DARK; 36 product-wise icons
+  (pehle sab folder the). `docs/10-feature-depth-audit.md`: andar-ke-options ka audit +
+  Depth Parity Waves D1–D5 process.
+- **theme-fix v1.0 — live panel (09 Oct)**: live server (0.75.x) ke UI errors fix —
+  client dashboard ka extra-div layout bug, WHM sidebar white-box bug, aur 5 conflicting
+  CSS layers ki jagah DESIGN-PARITY v3 (dark charcoal sidenav + orange #FF6C2C + white
+  cards). Self-contained installer (`installer/theme-fix.sh`): backup → install →
+  view:clear → health 8090/2083/2087 → auto-rollback. Deploy row: COMMANDS.md.
+- **WHM admin panel + Reseller panel (09 Oct)** — sabhi panels ab cPanel company-grade:
+  naye `layouts/whm.blade.php` shell (dark charcoal sidebar, categorized WHM menu,
+  sidebar search, WHM/RESELLER badge, orange #FF6C2C accents), `config/whm_menu.php`
+  (admin = 12 sections / 49 items, reseller = 5 sections / 13 items — har item parity
+  row + roadmap step ke saath), `AdminController` + `PanelAdmin`/`PanelReseller`
+  middleware, routes `/admin` + `/reseller`. WHM home = Server information (hostname,
+  OS, kernel, uptime, load — parity #182) + Accounts table (parity #105) + Service
+  status (#171) + task queue + quick links + audit. accounts/packages tables Step 3/4
+  me aati hain — `Schema::hasTable()` guard panel ko green rakhta hai. Client panel
+  topbar se WHM/Reseller cross-links (real cPanel companies jaisa navigation).
+  Demo me WHM + Reseller live mockups add. Gate: `tools/sim/theme-check.py` **42/42**.
+- **Paper Lantern theme (09 Oct)** — panel UI ab cPanel company-grade look me hai:
+  cPanel signature orange `#FF6C2C` accent, light canvas, thin orange left-edge stripe
+  (Jupiter signature), top tool-search (press `/`), left sidebar nav with per-section
+  colours, dashboard = Statistics cards + cPanel icon grid (9 sections · 82 tools, har
+  tool ka apna inline SVG icon), right rail = General information + Services +
+  Recent activity. 51 hand-drawn SVG stroke icons (`partials/icons.blade.php`) — no
+  emoji, no icon font. Files: `panel/public/css/panel.css` (rewrite),
+  `layouts/panel.blade.php`, `dashboard.blade.php`, `auth/login.blade.php`,
+  `config/panel_modules.php` (+ per-section `color`, per-tile `icon`).
+  Demo: `demo/cpanel-theme-demo.html` (self-contained; `tools/sim/build-theme-demo.py`
+  se generate hota hai). No-error gate: `tools/sim/theme-check.py` **21/21 green**.
 - **Private repo support (29 Sep)** — `alphacp-sync v1.2`: `sudo alphacp-sync get <commit> <path> <out> [sha256]`
   deploy key se file laata hai (raw.githubusercontent private repo par 404 deta hai). Squash-merge ke baad bhi
   PR refs se commit milta hai. sync-sim **60/60**. `panel-update 0.3.0`: artifact/sync-tool pehle `get` se,
