@@ -21,7 +21,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 **Phir AWS par (sudo -i):**
 
 ```bash
-cd /root && rm -rf AlphaCP-d21 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d21 && cd AlphaCP-d21 && echo "__SHA__  installer/d21-get-server.sh" | sha256sum -c - && bash installer/d21-get-server.sh
+cd /root && rm -rf AlphaCP-d21 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d21 && cd AlphaCP-d21 && echo "c8978f36f612c99569b37c22bec23d4ed57ac29da77d8497987fdee9d5a12b7f  installer/d21-get-server.sh" | sha256sum -c - && bash installer/d21-get-server.sh
 ```
 
 End me **bade server ke liye one-line install command** milegi (secret URL ke saath) — wahi bade server par chalani hai. Pehle AWS :2087 License Server page se **owner plan** ki key bana lena aur command me `ACP_LICENSE_KEY=ACP-xxxx` laga dena.
