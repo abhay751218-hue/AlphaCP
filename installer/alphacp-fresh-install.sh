@@ -256,6 +256,10 @@ apply_sso_bundle() {
   if [[ -f "${RC_CFG}" ]] && ! grep -q "acp_sso" "${RC_CFG}"; then
     printf '\n$config["plugins"][] = "acp_sso"; // AlphaCP webmail one-click SSO\n' >> "${RC_CFG}"
   fi
+  # panel user ko www-data group me daalo (secrets root:www-data 0640 — dono readers cover)
+  if id -u "${PANEL_USER:-alphacp}" >/dev/null 2>&1; then
+    id -nG "${PANEL_USER:-alphacp}" | grep -qw www-data || usermod -aG www-data "${PANEL_USER:-alphacp}" 2>/dev/null || true
+  fi
   local sf f
   for sf in pma-sso.secret webmail-sso.secret; do
     f="${ACP_HOME}/etc/${sf}"
