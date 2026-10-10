@@ -115,9 +115,13 @@
   {
    "wave": "d27-home-nav",
    "files": 1
+  },
+  {
+   "wave": "d28-filemanager-parity",
+   "files": 2
   }
  ],
- "overlay_count": 174,
+ "overlay_count": 176,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1162,6 +1166,18 @@
    "src": "d27-panel-layout.blade.php",
    "path": "panel/resources/views/layouts/panel.blade.php",
    "sha256": "ad2ac422890238c3983392889116acb2150b39dceb4c28a6ebaba37229facd37"
+  },
+  {
+   "wave": "d28-filemanager-parity",
+   "src": "d28-files-index.blade.php",
+   "path": "panel/resources/views/files/index.blade.php",
+   "sha256": "d004755b4b50438c43c74a7a32461b6fc4bfc1a9392d5e327858e806640b4eff"
+  },
+  {
+   "wave": "d28-filemanager-parity",
+   "src": "d28-AccountOs.php",
+   "path": "agent/src/AccountOs.php",
+   "sha256": "223e38f7340e9c766f3c4ca658b8e9536fc01b2d398cd1967539a282ddc439d4"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1187,7 +1203,7 @@
   "agent/bin/paneld": "e89fac605b33decdcebe243b6ddf3c42ddc7313db620cfc4bec1b5f4a5cece1f",
   "agent/config/tasks.php": "1594eef21715a14f780f22dd1fa6d538afbbf8330009d256f8330f30531381cd",
   "agent/src/AccountIdentity.php": "2175d17ed940c393d23044c2fefe3ea3b7c4b3ec6790c0f2848dde3339767560",
-  "agent/src/AccountOs.php": "ed6b63f9a91005315b8b5db6aca8db16673ae36490972120cf383822d73e81ca",
+  "agent/src/AccountOs.php": "223e38f7340e9c766f3c4ca658b8e9536fc01b2d398cd1967539a282ddc439d4",
   "agent/src/AccountPaths.php": "dafe328e1881cc76ec98d27f557cd261ba1acea71d831a5faccef9a91dc92c03",
   "agent/src/AccountTemplates.php": "030c6d11a47744bed3b471f269ddfa7eff400f5e6dd2a615695d0406c5d7601b",
   "agent/src/Backup.php": "f5ac713b88e3356b012130eabba8b642dc8ecb6048109f6cb9580ceb4c9a9c7f",
@@ -1721,7 +1737,7 @@
   "panel/resources/views/errors-log/index.blade.php": "49b2903dbccb1601f3fbc9008908e74c402bbf8784058f8e89ae5bd0adeccf8f",
   "panel/resources/views/file-directory-restoration/index.blade.php": "a111d47210af60bce4a0cd5e227510cf8fa1169099990510c4369b3e752dc89e",
   "panel/resources/views/file-restoration/index.blade.php": "2cbed6e8d5430c53f9b484b06f5ab4de1068d11ae9d9dd7f0d76a49187686b57",
-  "panel/resources/views/files/index.blade.php": "f28e367b7e96dbcee06224e454b2d34bcab05bb9f76f0aeff88bc37ecd2d66d4",
+  "panel/resources/views/files/index.blade.php": "d004755b4b50438c43c74a7a32461b6fc4bfc1a9392d5e327858e806640b4eff",
   "panel/resources/views/forwarders/index.blade.php": "36553e88546213aeb1586316c3e27ab6535681b7e5754b8183a01032e4bab61c",
   "panel/resources/views/ftp/index.blade.php": "c8870f5b8c3ca65f36e0da09411d345727dcbbc18ac05f02baab3718d136139f",
   "panel/resources/views/git/index.blade.php": "2359feeee1a5aa01c4fac78423cbe6f9460e5660c1e7858bdbc9d2d7b4c90da5",
