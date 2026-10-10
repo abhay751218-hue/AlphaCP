@@ -99,9 +99,13 @@
   {
    "wave": "d23-license-expiry",
    "files": 1
+  },
+  {
+   "wave": "d24-webmail-sso-table",
+   "files": 1
   }
  ],
- "overlay_count": 170,
+ "overlay_count": 171,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1122,6 +1126,12 @@
    "src": "d23-migration-expires-datetime.php",
    "path": "panel/database/migrations/2026_10_10_000001_license_keys_expires_datetime.php",
    "sha256": "15bc312eb492ed0127162785cec1eaee506057cb01344a87551cddfda22f9578"
+  },
+  {
+   "wave": "d24-webmail-sso-table",
+   "src": "d24-migration-webmail-sso-tokens.php",
+   "path": "panel/database/migrations/2026_10_10_000002_webmail_sso_tokens.php",
+   "sha256": "ececb3437a1e16f046b314017b388fc9623c92a280812f1101422920960a5ab3"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1141,7 +1151,7 @@
    "target": "NGX:alphacp-pma.conf"
   }
  ],
- "total_files": 692,
+ "total_files": 693,
  "tree_sha256": {
   "agent/README.md": "943bca52f0c0bbe38be6fbe3824a7a6112379207b88769470f18de2dcaf89fcf",
   "agent/bin/paneld": "e89fac605b33decdcebe243b6ddf3c42ddc7313db620cfc4bec1b5f4a5cece1f",
@@ -1618,6 +1628,7 @@
   "panel/database/migrations/2026_10_07_000010_create_port_configs_table.php": "d0cdc8302a335b22f75275171bbbdc8037a377f474a810b288282905f948c34a",
   "panel/database/migrations/2026_10_07_000011_add_payload_to_license_keys.php": "2f21b6e08adc742949e7b3f4aec2c31eef7dd54cd5fe16a8abbabebf5caf7b75",
   "panel/database/migrations/2026_10_10_000001_license_keys_expires_datetime.php": "15bc312eb492ed0127162785cec1eaee506057cb01344a87551cddfda22f9578",
+  "panel/database/migrations/2026_10_10_000002_webmail_sso_tokens.php": "ececb3437a1e16f046b314017b388fc9623c92a280812f1101422920960a5ab3",
   "panel/database/seeders/AdminUserSeeder.php": "a24580809beec3f430677a524a9eb0b154340526ebd2a84ba77ad0886932b86d",
   "panel/database/seeders/DatabaseSeeder.php": "a564653893c9f9ebf30205b06fde373b4803f7b6ce5020fd01d0278a0ba1e3f9",
   "panel/database/seeders/RolesAndPermissionsSeeder.php": "cb4b22ad72bd4f2da2aa90da144e3c6a9bb41c040f3042a5f8b9bc14705c2440",

@@ -235,6 +235,43 @@ echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect" | debconf-set-sel
 apt-get install -y roundcube roundcube-mysql phpmyadmin >>"${LOG_FILE}" 2>&1 \
   && ok "roundcube + phpmyadmin installed" \
   || warn "roundcube/phpmyadmin install warning (log: ${LOG_FILE}) — webmail/pma baad me install ho sakte hain"
+
+# ---- SSO bundle apply (pma shim + roundcube plugin + secrets) ----
+apply_sso_bundle() {
+  local SSOB="$1"
+  [[ -d "${SSOB}" ]] || return 0
+  if [[ -f "${SSOB}/pma/acp-signon.php" && -d /usr/share/phpmyadmin ]]; then
+    install -m 0644 "${SSOB}/pma/acp-signon.php" /usr/share/phpmyadmin/acp-signon.php
+  fi
+  if [[ -f "${SSOB}/pma/conf.d-acp-signon.php" && -d /etc/phpmyadmin ]]; then
+    mkdir -p /etc/phpmyadmin/conf.d
+    install -m 0644 "${SSOB}/pma/conf.d-acp-signon.php" /etc/phpmyadmin/conf.d/acp-signon.php
+  fi
+  if [[ -d "${SSOB}/roundcube/acp_sso" && -d /usr/share/roundcube/plugins ]]; then
+    rm -rf /usr/share/roundcube/plugins/acp_sso
+    cp -r "${SSOB}/roundcube/acp_sso" /usr/share/roundcube/plugins/acp_sso
+    chmod -R a+rX /usr/share/roundcube/plugins/acp_sso
+  fi
+  local RC_CFG=/etc/roundcube/config.inc.php
+  if [[ -f "${RC_CFG}" ]] && ! grep -q "acp_sso" "${RC_CFG}"; then
+    printf '\n$config["plugins"][] = "acp_sso"; // AlphaCP webmail one-click SSO\n' >> "${RC_CFG}"
+  fi
+  local sf f
+  for sf in pma-sso.secret webmail-sso.secret; do
+    f="${ACP_HOME}/etc/${sf}"
+    if [[ ! -s "${f}" ]]; then openssl rand -hex 32 > "${f}"; fi
+    chown root:www-data "${f}" 2>/dev/null || true; chmod 0640 "${f}"
+  done
+  if [[ -d /etc/phpmyadmin && ! -s /etc/phpmyadmin/acp-blowfish.secret ]]; then
+    openssl rand -hex 16 > /etc/phpmyadmin/acp-blowfish.secret
+    chown root:www-data /etc/phpmyadmin/acp-blowfish.secret 2>/dev/null || true
+    chmod 0640 /etc/phpmyadmin/acp-blowfish.secret
+  fi
+  ok "SSO bundle applied (pma shim + roundcube plugin + secrets)"
+}
+
+apply_sso_bundle "${EB}/sso"
+
 EB="${STAGE}/etc-bundle"
 install -m 644 "${EB}/pool.d/alphacp.conf" "${ETC_POOL}/alphacp.conf" || die "fpm pool install fail"
 [[ -d "${EB}/systemd/php8.4-fpm.service.d" ]] && cp -r "${EB}/systemd/php8.4-fpm.service.d" "${ETC_SYSD}/"

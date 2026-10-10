@@ -91,6 +91,12 @@ cp "${ETC_CRON}"/alphacp-* "${STAGE}/etc-bundle/cron.d/" 2>>"${LOG_FILE}" || war
 [[ -d "${DEF_WWW}" ]] && cp -r "${DEF_WWW}/." "${STAGE}/etc-bundle/default-www/"
 ok "/etc configs staged"
 
+# SSO files -> pack (pma shim + roundcube plugin — AWS live se)
+mkdir -p "${STAGE}/etc-bundle/sso/pma" "${STAGE}/etc-bundle/sso/roundcube"
+[[ -f /usr/share/phpmyadmin/acp-signon.php ]] && cp /usr/share/phpmyadmin/acp-signon.php "${STAGE}/etc-bundle/sso/pma/acp-signon.php" || warn "pma shim live par nahi mila"
+[[ -f /etc/phpmyadmin/conf.d/acp-signon.php ]] && cp /etc/phpmyadmin/conf.d/acp-signon.php "${STAGE}/etc-bundle/sso/pma/conf.d-acp-signon.php" || warn "pma conf.d live par nahi mila"
+[[ -d /usr/share/roundcube/plugins/acp_sso ]] && cp -r /usr/share/roundcube/plugins/acp_sso "${STAGE}/etc-bundle/sso/roundcube/acp_sso" || warn "roundcube acp_sso plugin live par nahi mila"
+
 # License PUBLIC key -> pack (customer panels isi se signature verify karte hain;
 # private signer kabhi pack me nahi jata)
 SIGNER_JSON="${ACP_HOME}/panel/storage/app/private/license_signer.json"
