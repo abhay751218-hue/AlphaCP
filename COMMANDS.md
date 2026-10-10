@@ -14,10 +14,20 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-**Server par abhi kuch NahI chalana** — Phase-3 (business) chal raha hai:
-B6a release-bundle repo me ban gaya (`release/tree`, v1.0.0-rc1). Agla: B4
-one-line installer (tumhare SECOND server par fresh-install test hoga — wahi
-D12 SSO click-test bhi niptega). Uski command yahan aayegi.
+### D19 (B1) — License API sell-ready (fingerprint binding + rate-limit)
+
+SSH se `sudo -i` karke root prompt par:
+
+```bash
+cd /root && rm -rf AlphaCP-d19 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d19 && cd AlphaCP-d19 && echo "bd8d3f91ba83d563dec1e6f96e015235d7f6a9ab91a79daec3ffc69164cc321b  installer/d19-license-api.sh" | sha256sum -c - && bash installer/d19-license-api.sh
+```
+
+Kya milega:
+- `POST /api/v1/activate` + `/api/v1/verify` — remote customer panels ke liye (rate-limit 10/min, 30/min)
+- **Ek key = ek server** (fingerprint binding; dusre server par wahi key reject + audit log)
+- Expired key activation reject; har remote activation audit me
+- Key issue/revoke pehle jaisa: 2087 → License Server page
+- Rollback stamp: `bak-d19lic-…`
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 
