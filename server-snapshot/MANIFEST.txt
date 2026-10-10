@@ -175,6 +175,7 @@
 /usr/local/alphacp/agent/config/tasks.php
 /usr/local/alphacp/agent/src/AccountIdentity.php
 /usr/local/alphacp/agent/src/AccountOs.php
+/usr/local/alphacp/agent/src/AccountOs.php.bak-update-20261010113145
 /usr/local/alphacp/agent/src/AccountPaths.php
 /usr/local/alphacp/agent/src/AccountTemplates.php
 /usr/local/alphacp/agent/src/Backup.php
@@ -1398,6 +1399,7 @@
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000010_create_port_configs_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000011_add_payload_to_license_keys.php
 /usr/local/alphacp/panel/database/migrations/2026_10_10_000001_license_keys_expires_datetime.php
+/usr/local/alphacp/panel/database/migrations/2026_10_10_000002_webmail_sso_tokens.php
 /usr/local/alphacp/panel/database/seeders/AdminUserSeeder.php
 /usr/local/alphacp/panel/database/seeders/DatabaseSeeder.php
 /usr/local/alphacp/panel/database/seeders/RolesAndPermissionsSeeder.php

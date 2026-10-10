@@ -205,6 +205,16 @@ final class AccountOs
             if (is_link($boxHome)) {
                 throw new RuntimeException('maildir is a symlink: ' . $rel);
             }
+            // D25: beech ke folders (mail/, mail/<domain>/, maildir) bhi account-owned
+            // warna dovecot account-uid se traverse nahi kar pata (root 0700 block).
+            foreach (['mail', 'mail/' . $row['domain'], $rel] as $mid) {
+                $mp = Files::resolve($home, $mid);
+                if (is_link($mp)) {
+                    throw new RuntimeException('maildir path is a symlink: ' . $mid);
+                }
+                $this->fs->mkdir($mp, 0750);
+                $this->fs->chownName($mp, $username);
+            }
             foreach (['cur', 'new', 'tmp'] as $leaf) {
                 $p = Files::resolve($home, $rel . '/' . $leaf);
                 if (is_link($p)) {
