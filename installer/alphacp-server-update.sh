@@ -176,6 +176,10 @@ ensure_mail_stack() {
       warn "mail.server setup fail — log: ${LOG_FILE} (WHM se dobara chala sakte ho)"
     fi
   fi
+  # master-login separator (* ) — iske bina mailbox*acpmaster parse hi nahi hota
+  if [[ -d /etc/dovecot/conf.d ]]; then
+    printf 'auth_master_user_separator = *\n' > /etc/dovecot/conf.d/99-alphacp-master.conf
+  fi
   systemctl enable --now dovecot exim4 >>"${LOG_FILE}" 2>&1 || true
   systemctl restart dovecot >>"${LOG_FILE}" 2>&1 || true
   systemctl restart exim4 >>"${LOG_FILE}" 2>&1 || true
