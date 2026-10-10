@@ -110,6 +110,9 @@ mkdir -p "${PANEL_ROOT}/storage/framework/cache/data" "${PANEL_ROOT}/storage/fra
          "${PANEL_ROOT}/storage/app/private" "${PANEL_ROOT}/bootstrap/cache"
 chown -R root:root "${ACP_HOME}/agent" "${ACP_HOME}/bin" "${ACP_HOME}/share" 2>/dev/null || true
 chmod +x "${ACP_HOME}"/bin/* "${ACP_HOME}/agent/bin/paneld" 2>/dev/null || true
+if [[ -f "${ACP_HOME}/bin/alphacp" ]]; then
+  install -m 0755 "${ACP_HOME}/bin/alphacp" /usr/local/bin/alphacp 2>/dev/null || true
+fi
 chown -R "${PANEL_USER}:${PANEL_USER}" "${PANEL_ROOT}/storage" "${PANEL_ROOT}/bootstrap/cache"
 find "${PANEL_ROOT}/storage" "${PANEL_ROOT}/bootstrap/cache" -type d -exec chmod 0770 {} \; 2>/dev/null || true
 find "${PANEL_ROOT}/storage" "${PANEL_ROOT}/bootstrap/cache" -type f -exec chmod 0660 {} \; 2>/dev/null || true
@@ -199,6 +202,10 @@ ACP_LICENSE_KEY=${LIC_KEY}
 ACP_LICENSE_API_URL=${LIC_URL}
 ACP_LICENSE_INSECURE=true
 EOF
+PACK_VER="$(tr -d '[:space:]' < "${ACP_HOME}/share/VERSION" 2>/dev/null || true)"
+if [[ -n "${PACK_VER}" ]]; then
+  printf 'ACP_VERSION=%s\nACP_AGENT_VERSION=%s\n' "${PACK_VER}" "${PACK_VER}" >> "${PANEL_ROOT}/.env"
+fi
 chown "${PANEL_USER}:${PANEL_USER}" "${PANEL_ROOT}/.env" && chmod 0640 "${PANEL_ROOT}/.env"
 if [[ -z "${OLD_KEY}" ]]; then
   run_artisan key:generate --force || die "APP_KEY generate fail"

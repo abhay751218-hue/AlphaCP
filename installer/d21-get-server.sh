@@ -90,6 +90,10 @@ cp "${ETC_CRON}"/alphacp-* "${STAGE}/etc-bundle/cron.d/" 2>>"${LOG_FILE}" || war
 [[ -d "${DEF_WWW}" ]] && cp -r "${DEF_WWW}/." "${STAGE}/etc-bundle/default-www/"
 ok "/etc configs staged"
 
+# AWS live version -> pack (naye installs/updates isi se version dikhate hain)
+AWSV="$(grep -m1 '^ACP_VERSION=' "${ACP_HOME}/panel/.env" 2>/dev/null | cut -d= -f2- || true)"
+mkdir -p "${STAGE}/alphacp/share"
+printf '%s\n' "${AWSV:-0.83.0}" > "${STAGE}/alphacp/share/VERSION"
 tar -C "${STAGE}" -czf "${PKG}/alphacp-server.tar.gz" alphacp etc-bundle || die "pack tar fail"
 PACK_SZ="$(du -h "${PKG}/alphacp-server.tar.gz" | cut -f1)"
 ok "pack ready: alphacp-server.tar.gz (${PACK_SZ})"
@@ -99,6 +103,8 @@ say ""
 say "-- Step 3: install scripts + bootstrap --"
 cp "${SRC}/installer/install.sh" "${PKG}/alphacp-step1.sh"
 cp "${SRC}/installer/alphacp-fresh-install.sh" "${PKG}/alphacp-fresh-install.sh"
+[[ -f "${SRC}/installer/alphacp-server-update.sh" ]] || die "repo installer/alphacp-server-update.sh nahi mila"
+cp "${SRC}/installer/alphacp-server-update.sh" "${PKG}/alphacp-server-update.sh"
 
 MYIP="$(curl -s --max-time 5 https://checkip.amazonaws.com 2>/dev/null | tr -d '\n' || true)"
 [[ -n "${MYIP}" ]] || MYIP="$(hostname -I 2>/dev/null | awk '{print $1}')"
@@ -116,7 +122,7 @@ for f in SHA256SUMS alphacp-step1.sh alphacp-fresh-install.sh alphacp-server.tar
   echo "  -> \$f"
   curl -fsSLk "\${BASE}/\$f" -o "\$f" || { echo "[FAIL] \$f download fail"; exit 1; }
 done
-grep -v ' install\$' SHA256SUMS | sha256sum -c - || { echo "[FAIL] checksum mismatch — dobara try karo"; exit 1; }
+grep -E ' (alphacp-step1\\.sh|alphacp-fresh-install\\.sh|alphacp-server\\.tar\\.gz)\$' SHA256SUMS | sha256sum -c - || { echo "[FAIL] checksum mismatch — dobara try karo"; exit 1; }
 echo "[OK] sab files verified"
 echo ""
 echo "== Phase 1: base hosting stack (10-20 min lag sakte hain) =="
@@ -127,9 +133,26 @@ ACP_LICENSE_API_URL="\${ACP_LICENSE_API_URL:-https://${MYIP}:2083/api/v1}" \
 ACP_LICENSE_KEY="\${ACP_LICENSE_KEY:-}" \
 bash alphacp-fresh-install.sh --pack "\$W/alphacp-server.tar.gz" --yes
 BOOTSTRAP
-chmod 644 "${PKG}/install" "${PKG}"/*.sh "${PKG}/alphacp-server.tar.gz"
+cat > "${PKG}/update" <<BOOTSTRAP2
+#!/usr/bin/env bash
+# AlphaCP server update — get-server se (GitHub se NAHI). Code-only, auto-rollback.
+set -u -o pipefail
+BASE="${BASE_URL}"
+[[ "\$(id -u)" -eq 0 ]] || { echo "root chahiye: sudo -i karke chalao"; exit 1; }
+W="/root/alphacp-update"; mkdir -p "\$W"; cd "\$W"
+echo "== AlphaCP update download (\${BASE}) =="
+for f in SHA256SUMS alphacp-server-update.sh alphacp-server.tar.gz; do
+  echo "  -> \$f"
+  curl -fsSLk "\${BASE}/\$f" -o "\$f" || { echo "[FAIL] \$f download fail"; exit 1; }
+done
+grep -E ' (alphacp-server-update\.sh|alphacp-server\.tar\.gz)\$' SHA256SUMS | sha256sum -c - || { echo "[FAIL] checksum mismatch — dobara try karo"; exit 1; }
+echo "[OK] sab files verified"
+bash alphacp-server-update.sh --pack "\$W/alphacp-server.tar.gz"
+BOOTSTRAP2
 
-( cd "${PKG}" && sha256sum alphacp-step1.sh alphacp-fresh-install.sh alphacp-server.tar.gz install > SHA256SUMS )
+chmod 644 "${PKG}/install" "${PKG}/update" "${PKG}"/*.sh "${PKG}/alphacp-server.tar.gz"
+
+( cd "${PKG}" && sha256sum alphacp-step1.sh alphacp-fresh-install.sh alphacp-server.tar.gz alphacp-server-update.sh install update > SHA256SUMS )
 ok "bootstrap + SHA256SUMS ready"
 
 # ---- Step 4: nginx vhost :2096 ----------------------------------------------
@@ -178,6 +201,10 @@ say ""
 say "   BADE SERVER par (root / sudo -i) ye ONE-LINE command:"
 say ""
 say "   ${C_B}bash <(curl -fsSLk ${BASE_URL}/install)${C_0}"
+say ""
+say "   KISI BHI INSTALLED SERVER ko UPDATE karne ke liye (root):"
+say ""
+say "   ${C_B}bash <(curl -fsSLk ${BASE_URL}/update)${C_0}"
 say ""
 say "   License key ke saath (AWS :2087 License Server page se banao):"
 say "   ${C_B}ACP_LICENSE_KEY=ACP-xxxxxxxxxxxx bash <(curl -fsSLk ${BASE_URL}/install)${C_0}"
