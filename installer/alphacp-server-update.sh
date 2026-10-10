@@ -159,7 +159,10 @@ ensure_mail_stack() {
     printf '%s\n' "$MPW" > /usr/local/alphacp/etc/webmail-master.plain
     MHASH=$(php8.4 -r 'echo password_hash($argv[1], PASSWORD_BCRYPT);' "$MPW")
     printf 'acpmaster:{BLF-CRYPT}%s\n' "$MHASH" > /usr/local/alphacp/etc/webmail-master.pw
-    chown root:www-data /usr/local/alphacp/etc/webmail-master.plain /usr/local/alphacp/etc/webmail-master.pw 2>/dev/null || true
+    chown root:www-data /usr/local/alphacp/etc/webmail-master.plain 2>/dev/null || true
+    # .pw DOVECOT padhta hai (auth process euid=dovecot) — www-data nahi!
+    chown root:dovecot /usr/local/alphacp/etc/webmail-master.pw 2>/dev/null \
+      || chown root:www-data /usr/local/alphacp/etc/webmail-master.pw 2>/dev/null || true
     chmod 0640 /usr/local/alphacp/etc/webmail-master.plain /usr/local/alphacp/etc/webmail-master.pw
     ok "webmail master creds generated (acpmaster)"
   fi
@@ -176,6 +179,8 @@ ensure_mail_stack() {
       warn "mail.server setup fail — log: ${LOG_FILE} (WHM se dobara chala sakte ho)"
     fi
   fi
+  # purane installs par bhi .pw ka group dovecot ensure karo
+  [[ -f /usr/local/alphacp/etc/webmail-master.pw ]] && chgrp dovecot /usr/local/alphacp/etc/webmail-master.pw 2>/dev/null || true
   # master-login separator (* ) — iske bina mailbox*acpmaster parse hi nahi hota
   if [[ -d /etc/dovecot/conf.d ]]; then
     printf 'auth_master_user_separator = *\n' > /etc/dovecot/conf.d/99-alphacp-master.conf
