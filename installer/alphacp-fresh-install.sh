@@ -251,6 +251,10 @@ apply_sso_bundle() {
     rm -rf /usr/share/roundcube/plugins/acp_sso
     cp -r "${SSOB}/roundcube/acp_sso" /usr/share/roundcube/plugins/acp_sso
     chmod -R a+rX /usr/share/roundcube/plugins/acp_sso
+    # Debian: roundcube web-root /var/lib/roundcube — plugin symlink zaroori
+    if [[ -d /var/lib/roundcube/plugins && ! -e /var/lib/roundcube/plugins/acp_sso ]]; then
+      ln -s /usr/share/roundcube/plugins/acp_sso /var/lib/roundcube/plugins/acp_sso
+    fi
   fi
   local RC_CFG=/etc/roundcube/config.inc.php
   if [[ -f "${RC_CFG}" ]] && ! grep -q "acp_sso" "${RC_CFG}"; then
