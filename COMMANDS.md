@@ -14,16 +14,17 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D22 — License Server 500-fix + nav link (AWS par, updater se)
+### Abhi koi command pending nahi ✅
 
-```bash
-cd /root && rm -rf AlphaCP-upd && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-upd && cd AlphaCP-upd && bash installer/alphacp-update.sh
-```
-
-Phir :2087 → Server Configuration me "License Server (Sell Keys)" link + key issue karke dekho.
-(Bade server ki one-line install uske BAAD: COMMANDS done-section me D21 entry dekho.)
+Agla kaam (commands jab tum bolo):
+1. Bade server par login test + pehla hosting account banana
+2. hostplux domain ko bade server se connect karna (DNS guide)
+3. AWS par agla update (D23 Y2038 fix auto aa jayega): `bash installer/alphacp-update.sh`
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✔️ B4 fresh install (10 Oct) — BADA SERVER LIVE
+`https://130.210.30.170:2087` — install one-liner (secret URL) COMMANDS history me. Naya server future me isi se: `ACP_LICENSE_KEY=... bash <(curl -fsSLk https://13.207.123.177:2096/234d862e0727891142b25372/install)`
 
 ### ✔️ D21 get-server (AWS, 10 Oct) — DEPLOYED
 Secret URL: `https://13.207.123.177:2096/234d862e0727891142b25372/` — dobara `d21-get-server.sh` chalana SAFE hai (pack refresh, secret same).
