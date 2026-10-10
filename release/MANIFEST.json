@@ -123,9 +123,13 @@
   {
    "wave": "d29-fm-look-parity",
    "files": 2
+  },
+  {
+   "wave": "d30-fm-cpanel-exact",
+   "files": 1
   }
  ],
- "overlay_count": 178,
+ "overlay_count": 179,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1194,6 +1198,12 @@
    "src": "d29-FilesController.php",
    "path": "panel/app/Http/Controllers/FilesController.php",
    "sha256": "e7c2ab05061194e503e2985874a8126efaeb0e24efb510a4a87a6cb9145f610d"
+  },
+  {
+   "wave": "d30-fm-cpanel-exact",
+   "src": "d30-files-index.blade.php",
+   "path": "panel/resources/views/files/index.blade.php",
+   "sha256": "cb6513c773de698659f7c3c913a852d1c7ca206931ee7a57ae1114c4d73843fe"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1753,7 +1763,7 @@
   "panel/resources/views/errors-log/index.blade.php": "49b2903dbccb1601f3fbc9008908e74c402bbf8784058f8e89ae5bd0adeccf8f",
   "panel/resources/views/file-directory-restoration/index.blade.php": "a111d47210af60bce4a0cd5e227510cf8fa1169099990510c4369b3e752dc89e",
   "panel/resources/views/file-restoration/index.blade.php": "2cbed6e8d5430c53f9b484b06f5ab4de1068d11ae9d9dd7f0d76a49187686b57",
-  "panel/resources/views/files/index.blade.php": "d03d807dff9cde01af3de3fedd501b72447f119e642b3d4879e10a4a9e982af9",
+  "panel/resources/views/files/index.blade.php": "cb6513c773de698659f7c3c913a852d1c7ca206931ee7a57ae1114c4d73843fe",
   "panel/resources/views/forwarders/index.blade.php": "36553e88546213aeb1586316c3e27ab6535681b7e5754b8183a01032e4bab61c",
   "panel/resources/views/ftp/index.blade.php": "c8870f5b8c3ca65f36e0da09411d345727dcbbc18ac05f02baab3718d136139f",
   "panel/resources/views/git/index.blade.php": "2359feeee1a5aa01c4fac78423cbe6f9460e5660c1e7858bdbc9d2d7b4c90da5",
