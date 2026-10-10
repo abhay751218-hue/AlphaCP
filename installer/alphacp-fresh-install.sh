@@ -270,9 +270,9 @@ apply_sso_bundle() {
   ok "SSO bundle applied (pma shim + roundcube plugin + secrets)"
 }
 
-apply_sso_bundle "${EB}/sso"
 
 EB="${STAGE}/etc-bundle"
+apply_sso_bundle "${EB}/sso"
 install -m 644 "${EB}/pool.d/alphacp.conf" "${ETC_POOL}/alphacp.conf" || die "fpm pool install fail"
 [[ -d "${EB}/systemd/php8.4-fpm.service.d" ]] && cp -r "${EB}/systemd/php8.4-fpm.service.d" "${ETC_SYSD}/"
 systemctl daemon-reload >>"${LOG_FILE}" 2>&1 || true
