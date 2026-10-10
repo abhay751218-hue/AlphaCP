@@ -22,17 +22,17 @@ cd /root && rm -rf AlphaCP-d21 && git clone --depth 1 --branch arena/009c72b2-al
 ```
 2. **BADA server** (`root@server`) — AWS se update (GitHub se NAHI):
 ```bash
-bash <(curl -fsSLk https://13.207.123.177:2096/234d862e0727891142b25372/update)
+bash <(curl -fsSLk https://13.207.123.177:2099/234d862e0727891142b25372/update)
 ```
 3. License activate (browser, /license): key `ACP-DEBBE089AB02` → Activate.
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✔️ B4 fresh install (10 Oct) — BADA SERVER LIVE
-`https://130.210.30.170:2087` — install one-liner (secret URL) COMMANDS history me. Naya server future me isi se: `ACP_LICENSE_KEY=... bash <(curl -fsSLk https://13.207.123.177:2096/234d862e0727891142b25372/install)`
+`https://130.210.30.170:2087` — install one-liner (secret URL) COMMANDS history me. Naya server future me isi se: `ACP_LICENSE_KEY=... bash <(curl -fsSLk https://13.207.123.177:2099/234d862e0727891142b25372/install)`
 
 ### ✔️ D21 get-server (AWS, 10 Oct) — DEPLOYED
-Secret URL: `https://13.207.123.177:2096/234d862e0727891142b25372/` — dobara `d21-get-server.sh` chalana SAFE hai (pack refresh, secret same).
+Secret URL: `https://13.207.123.177:2099/234d862e0727891142b25372/` — dobara `d21-get-server.sh` chalana SAFE hai (pack refresh, secret same).
 
 ### ✔️ D19 (DEPLOYED 10 Oct 2026 — backups bak-d19lic-20261010034737) (B1) — License API sell-ready (fingerprint binding + rate-limit)
 
@@ -429,3 +429,11 @@ Har naye feature/fix ke saath yahan ek nayi row aayegi:
 | paste.rs/G72oK (doctor v1.6) | v1.7 me cwd bug fix + security step |
 | paste.rs/pnV7U, LxbJT, vbVD9, wsPmr (doctor v1.5–v1.1) | superseded |
 | paste.rs/0r1Mi, VD0Px, vVdFC, EPW3b (installer v0.3.3–v0.3.6) | panel install ho chuka hai; v0.3.7 aayega |
+
+## Current state (10 Oct 2026, v0.83.0 + D30)
+- BADA server LIVE: https://130.210.30.170 (:2087 WHM / :2083 cPanel / :2096 Webmail / :2098 phpMyAdmin)
+- Ports FINAL: get-server AWS = :2099 (webmail ne :2096 le liya — cPanel parity)
+- Update chain: GitHub push -> AWS `cd /root/AlphaCP-d21 && git pull -q && bash installer/alphacp-update.sh && bash installer/d21-get-server.sh` -> BADE par `/update` one-liner
+- SSO: phpMyAdmin one-click WORKING; webmail dovecot `auth succeeded` (master passdb + separator + chgrp dovecot sab baked)
+- Mail stack: exim4+dovecot auto-install + `mail.server` setup (ACP_MAIL_DOVEADM override) installers me baked
+- D-waves: D24 webmail-sso table, D25 maildir chown, D26 mailbox badge, D27 home-nav, D28/29/30 File Manager cPanel-parity
