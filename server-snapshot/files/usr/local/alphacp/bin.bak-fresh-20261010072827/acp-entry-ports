@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  acp-entry-ports v1.0 — nginx ABHI kin panel ports par sun raha hai, uski
+#  "truth file" banata hai:  /usr/local/alphacp/etc/entry-ports.json
+#
+#  Kyun: EntryLoginController (root/reseller vs customer entry separation) pehle
+#  owner ki /ports screen ki ichha (ports.json) padhta tha. Ichha aur haqiqat
+#  alag ho sakti hai — nginx par 2083 ka listener bana hi na ho — aur tab
+#  customer login hamesha ke liye lock ho jata tha. Ab gate sirf isi file ko
+#  maanta hai, aur ye file sirf sach me LISTENING ports se banti hai.
+#
+#  Teen chhanni (intersection), teeno pass honi chahiye:
+#    1. nginx config me `listen <port> ssl;` ho        (nginx -T)
+#    2. port sach me bound ho                          (ss -Hltn / netstat)
+#    3. port AlphaCP ki jaani-pehchani entry list me ho (8090/2087/2086 | 2083/2096/2082/2095)
+#
+#  Root chalata hai (cron + login-fix script). Kabhi bhi exit 1 nahi karta —
+#  file na ban sakti ho to purani file waisi hi rehti hai (gate fail-open hai).
+#
+#  Usage:  acp-entry-ports [--print] [--quiet]
+# =============================================================================
+set -uo pipefail
+
+VERSION="1.0"
+ACP_HOME="${ACP_HOME:-/usr/local/alphacp}"
+OUT="${ACP_ENTRY_PORTS_FILE:-${ACP_HOME}/etc/entry-ports.json}"
+
+MANAGER_CANDIDATES="8090 2087 2086"
+CUSTOMER_CANDIDATES="2083 2096 2082 2095"
+
+PRINT=0; QUIET=0
+for a in "$@"; do
+  case "$a" in
+    --print) PRINT=1 ;;
+    --quiet) QUIET=1 ;;
+    --version) echo "acp-entry-ports v${VERSION}"; exit 0 ;;
+    *) echo "unknown option: $a" >&2; exit 0 ;;
+  esac
+done
+
+log() { [[ ${QUIET} -eq 1 ]] || printf '%s\n' "$*"; }
+
+# --------------------------------------------------------------- 1. nginx config
+nginx_ssl_ports() {
+  local dump=""
+  if command -v nginx >/dev/null 2>&1; then
+    dump="$(nginx -T 2>/dev/null || true)"
+  fi
+  if [[ -z "${dump}" ]]; then
+    # nginx binary nahi/chala nahi — config files se hi padh lo
+    for d in /etc/nginx /usr/local/nginx/conf; do
+      [[ -d "${d}" ]] && dump+="$(grep -rhn '' "${d}" 2>/dev/null || true)"$'\n'
+    done
+  fi
+  printf '%s\n' "${dump}" \
+    | grep -E '^[[:space:]]*listen[[:space:]]' \
+    | grep -Ei '[[:space:]]ssl([[:space:]]*;|;|$)' \
+    | sed -E 's/^[[:space:]]*listen[[:space:]]+//; s/^\[::\]://' \
+    | sed -E 's/[[:space:]]*ssl.*$//; s/;.*$//' \
+    | grep -E '^[0-9]{1,5}$' \
+    | sort -un
+}
+
+# --------------------------------------------------------------- 2. bound ports
+listening_ports() {
+  if command -v ss >/dev/null 2>&1; then
+    ss -Hltn 2>/dev/null | awk '{print $4}' | grep -oE '[0-9]+$' | sort -un; return
+  fi
+  if command -v netstat >/dev/null 2>&1; then
+    netstat -ltn 2>/dev/null | awk 'NR>2 {print $4}' | grep -oE '[0-9]+$' | sort -un; return
+  fi
+  # /proc fallback (state 0A = LISTEN)
+  awk 'NR>1 && $4=="0A" {split($2,a,":"); print strtonum("0x" a[2])}' /proc/net/tcp 2>/dev/null | sort -un
+}
+
+in_list() { local n="$1"; shift; for c in $*; do [[ "${n}" == "${c}" ]] && return 0; done; return 1; }
+
+NGINX_PORTS="$(nginx_ssl_ports)"
+BOUND_PORTS="$(listening_ports)"
+
+pick() { # pick <candidates...>
+  local out="" p
+  for p in $*; do
+    if grep -qx "${p}" <<<"${NGINX_PORTS}" && grep -qx "${p}" <<<"${BOUND_PORTS}"; then
+      out+="${out:+,}${p}"
+    fi
+  done
+  printf '%s' "${out}"
+}
+
+# shellcheck disable=SC2086
+MANAGER="$(pick ${MANAGER_CANDIDATES})"
+# shellcheck disable=SC2086
+CUSTOMER="$(pick ${CUSTOMER_CANDIDATES})"
+
+to_json_array() { local s="$1"; [[ -z "${s}" ]] && { printf '[]'; return; }; printf '[%s]' "${s}"; }
+
+TMP="$(mktemp "${OUT}.tmp.XXXXXX" 2>/dev/null || mktemp)"
+cat > "${TMP}" <<JSON
+{
+  "manager": $(to_json_array "${MANAGER}"),
+  "customer": $(to_json_array "${CUSTOMER}"),
+  "generated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "generated_by": "acp-entry-ports v${VERSION}",
+  "note": "nginx -T + ss -Hltn se sach me LISTENING panel ports. EntryLoginController sirf isi ko maanta hai. Haath se edit mat karo."
+}
+JSON
+
+if mkdir -p "$(dirname "${OUT}")" 2>/dev/null && mv -f "${TMP}" "${OUT}" 2>/dev/null; then
+  chmod 0644 "${OUT}" 2>/dev/null || true
+  chown root:root "${OUT}" 2>/dev/null || true
+  rm -f "${TMP}" 2>/dev/null || true
+  log "acp-entry-ports v${VERSION}: manager=[${MANAGER}] customer=[${CUSTOMER}] -> ${OUT}"
+else
+  rm -f "${TMP}" 2>/dev/null || true
+  log "acp-entry-ports v${VERSION}: ${OUT} likha nahi ja saka (purani file barkaraar) — gate fail-open rahega"
+fi
+
+if [[ ${PRINT} -eq 1 ]]; then
+  echo "--- nginx ssl listen ports ---"; printf '%s\n' "${NGINX_PORTS:-(none)}"
+  echo "--- bound tcp ports ---";        printf '%s\n' "${BOUND_PORTS:-(none)}"
+  echo "--- ${OUT} ---"; cat "${OUT}" 2>/dev/null || echo "(nahi bana)"
+fi
+exit 0

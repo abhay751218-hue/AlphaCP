@@ -1,0 +1,19 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+
+/**
+ * paneld — AlphaCP privileged task agent.
+ *
+ * Usage:
+ *   paneld --daemon            run forever (systemd runs this)
+ *   paneld --once              claim & run at most one task, then exit (tests)
+ *   paneld --status            JSON health snapshot (used by `alphacp status`)
+ *   paneld --selftest          verify env/db/registry without touching the queue
+ *   paneld --run TYPE [JSON]   run a task immediately, verbose (debugging)
+ *   paneld --version
+ */
+
+require __DIR__ . '/../src/Bootstrap.php';
+
+exit(\Alphacp\Agent\Cli::main($argv));

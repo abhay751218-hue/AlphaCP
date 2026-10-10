@@ -18,19 +18,15 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ```
 laravel       : Laravel Framework 13.33.0
 panel code    : 0.75.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   : 0.83.0   (.env)
-AGENT_VERSION : 0.83.0
+ACP_VERSION   :    (.env)
+AGENT_VERSION : 
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
 
 ## License / trial (sirf state + dates; fingerprint/signature nahi)
 ```
-store      : /usr/local/alphacp/panel/storage/app/private/license.json
-source     : owner_local   tier: owner   max_accounts: -1
-issued_at  : 2026-10-07T07:19:35+00:00
-expires_at : ?   -> ?
-signed     : no (local trial)
+license store nahi mila (/usr/local/alphacp/panel/storage/app/private/license.json) — panel ka /license page khulte hi trial shuru hota hai
 ```
 
 ## Releases (/usr/local/alphacp/releases — sirf naam, code snapshot me nahi)
@@ -526,6 +522,21 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## License / trial se jude files (naam se)
 ```
+/usr/local/alphacp/panel.bak-fresh-20261010072827/app/Console/Commands/LicenseRenewCommand.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/app/Console/Commands/OwnerLicenseCommand.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/app/Http/Controllers/LicenseController.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/app/Http/Controllers/LicenseServerController.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/app/Models/LicenseKey.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/app/Support/License/LicenseClient.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/app/Support/LicenseSigner.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/config/license_public.pem.example
+/usr/local/alphacp/panel.bak-fresh-20261010072827/database/migrations/2026_10_07_000004_create_license_keys_table.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/database/migrations/2026_10_07_000011_add_payload_to_license_keys.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/resources/views/license-server/index.blade.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/resources/views/license/index.blade.php
+/usr/local/alphacp/panel.bak-fresh-20261010072827/storage/app/private/license.json
+/usr/local/alphacp/panel.bak-fresh-20261010072827/storage/app/private/license_signer.json
+/usr/local/alphacp/panel.bak-fresh-20261010072827/tests/Unit/LicenseClientTest.php
 /usr/local/alphacp/panel/app/Console/Commands/LicenseRenewCommand.php
 /usr/local/alphacp/panel/app/Console/Commands/OwnerLicenseCommand.php
 /usr/local/alphacp/panel/app/Http/Controllers/LicenseController.php
@@ -550,7 +561,7 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/etc/mail-server-configured  
 /usr/local/alphacp/etc/my.cnf  keys: user password host port database 
 /usr/local/alphacp/etc/panel-vhost.template  
-/usr/local/alphacp/etc/panel.env  keys: ACP_DB_HOST ACP_DB_PORT ACP_DB_NAME ACP_DB_USER ACP_DB_PASS ACP_SERVER_ID ACP_HOME 
+/usr/local/alphacp/etc/panel.env  keys: ACP_DB_HOST ACP_DB_PORT ACP_DB_NAME ACP_DB_USER ACP_DB_PASS 
 /usr/local/alphacp/etc/pma-sso-internal.url  
 /usr/local/alphacp/etc/pma-sso.secret  
 /usr/local/alphacp/etc/ports.json  
@@ -561,11 +572,12 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/var/install.state  keys: preflight packages services 
 /usr/local/alphacp/var/panel-admin.txt  keys: panel_user panel_pass panel_port updated_at 
 /usr/local/alphacp/var/panel-appkey.txt  
-/usr/local/alphacp/panel/.env  keys: APP_NAME APP_ENV APP_KEY APP_DEBUG APP_URL APP_TIMEZONE APP_LOCALE APP_FALLBACK_LOCALE LOG_CHANNEL LOG_LEVEL LOG_DAILY_DAYS DB_CONNECTION SESSION_DRIVER SESSION_LIFETIME SESSION_ENCRYPT SESSION_SECURE_COOKIE SESSION_SAME_SITE CACHE_STORE QUEUE_CONNECTION ACP_VERSION ACP_AGENT_VERSION ACP_HOME ACP_SERVER_ID ACP_ADMIN_USER ACP_ADMIN_PASSWORD ACP_ADMIN_EMAIL ACP_ADMIN_FORCE_CHANGE ACP_FRAME_OPTIONS 
+/usr/local/alphacp/panel/.env  keys: APP_NAME APP_ENV APP_KEY APP_DEBUG APP_URL APP_TIMEZONE APP_LOCALE APP_FALLBACK_LOCALE LOG_CHANNEL LOG_LEVEL LOG_DAILY_DAYS DB_CONNECTION SESSION_DRIVER SESSION_LIFETIME SESSION_ENCRYPT SESSION_SECURE_COOKIE SESSION_SAME_SITE CACHE_STORE QUEUE_CONNECTION ACP_HOME ACP_SERVER_ID ACP_ADMIN_USER ACP_ADMIN_PASSWORD ACP_ADMIN_EMAIL ACP_ADMIN_FORCE_CHANGE ACP_FRAME_OPTIONS ACP_LICENSE_KEY ACP_LICENSE_API_URL ACP_LICENSE_INSECURE 
 ```
 
 ## Snapshot se skip hui files (secret/binary)
 ```
+/usr/local/alphacp/bin.bak-fresh-20261010072827/alphacp-sync  (secret jaisa pattern)
 /usr/local/alphacp/bin/alphacp-sync  (secret jaisa pattern)
 /var/www/alphacp-get/234d862e0727891142b25372/alphacp-fresh-install.sh  (secret jaisa pattern)
 /var/www/alphacp-get/234d862e0727891142b25372/alphacp-step1.sh  (secret jaisa pattern)
@@ -573,148 +585,8 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (143) — repo se panel dobara banane par ye pages tootenge:
-/usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-d15fm-20261009171411
-/usr/local/alphacp/panel/app/Http/Controllers/LicenseServerController.php.bak-d19lic-20261010034737
-/usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d14parity-20261009165725
-/usr/local/alphacp/panel/app/Http/Controllers/MailController.php.bak-d1email-20261009081330
-/usr/local/alphacp/panel/app/Http/Controllers/MysqlDatabasesController.php.bak-d3mysql-20261009092025
-/usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php.bak-d14parity-20261009165725
-/usr/local/alphacp/panel/app/Http/Controllers/MysqlUsersController.php.bak-d3mysql-20261009092025
-/usr/local/alphacp/panel/app/Http/Controllers/NodejsSelectorController.php.bak-d13node-20261009164655
-/usr/local/alphacp/panel/app/Http/Controllers/PhpmyadminController.php.bak-d12pma-20261009162458
-/usr/local/alphacp/panel/app/Http/Controllers/PmaSsoController.php.bak-d12pma-20261009162458
-/usr/local/alphacp/panel/app/Http/Controllers/SystemController.php.bak-d11restart-20261009160034
-/usr/local/alphacp/panel/app/Http/Controllers/TerminalController.php.bak-d9termweb-20261009154216
-/usr/local/alphacp/panel/app/Http/Controllers/WebmailController.php.bak-d9termweb-20261009154216
-/usr/local/alphacp/panel/app/Http/Controllers/ZoneEditorController.php.bak-d2domains-20261009083733
-/usr/local/alphacp/panel/app/Support/Dns.php.bak-d14parity-20261009165725
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (3) — repo se panel dobara banane par ye pages tootenge:
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
-/usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak-d19lic-20261010034737
-/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d10final-20261009154757
-/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d7metrics-20261009130206
-/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d8mailsec-20261009131452
-/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-update-20261010062351
-/usr/local/alphacp/panel/bootstrap/app.php.bak-d19lic-20261010034737
-/usr/local/alphacp/panel/config/acp.php.bak-d19lic-20261010034737
-/usr/local/alphacp/panel/public/assets/panel.css.bak-d17look-20261009174756
-/usr/local/alphacp/panel/public/assets/panel.css.bak-d18nav-20261009175830
-/usr/local/alphacp/panel/public/assets/panel.css.bak-d1email-20261009081330
-/usr/local/alphacp/panel/public/assets/panel.css.bak-d5tools-20261009094623
-/usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009073626
-/usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009074336
-/usr/local/alphacp/panel/public/assets/panel.css.bak-themefix-20261009075354
-/usr/local/alphacp/panel/public/assets/panel.js.bak-d1email-20261009081330
-/usr/local/alphacp/panel/public/assets/panel.js.bak-d2domains-20261009083733
-/usr/local/alphacp/panel/public/assets/panel.js.bak-d3mysql-20261009092025
-/usr/local/alphacp/panel/public/assets/panel.js.bak-d4whm-20261009092933
-/usr/local/alphacp/panel/public/assets/panel.js.bak-d5tools-20261009094623
-/usr/local/alphacp/panel/resources/views/accounts/create.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/accounts/create.blade.php.bak-d4whm-20261009092933
-/usr/local/alphacp/panel/resources/views/accounts/index.blade.php.bak-d4whm-20261009092933
-/usr/local/alphacp/panel/resources/views/address-importer/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/api-tokens/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/apps/index.blade.php.bak-d17look-20261009174756
-/usr/local/alphacp/panel/resources/views/apps/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/audit/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/auth/login.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/autoresponders/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/backup-wizard/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/boxtrapper/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/calendar/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/cron/index.blade.php.bak-d5tools-20261009094623
-/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009073626
-/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009074336
-/usr/local/alphacp/panel/resources/views/dashboard-cpanel.blade.php.bak-themefix-20261009075354
-/usr/local/alphacp/panel/resources/views/dashboard-whm.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/dashboard-whm.blade.php.bak-d17look-20261009174756
-/usr/local/alphacp/panel/resources/views/default-address/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/deliverability/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/disk/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/domain-forward/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/domains/index.blade.php.bak-d2domains-20261009083733
-/usr/local/alphacp/panel/resources/views/dynamic-dns/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/email-disk/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/email-filters/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/email-routing/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d14parity-20261009165725
-/usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/email/index.blade.php.bak-d1email-20261009081330
-/usr/local/alphacp/panel/resources/views/encryption/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/errorpages/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/file-restoration/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-d15fm-20261009171411
-/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-d17look-20261009174756
-/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-d5tools-20261009094623
-/usr/local/alphacp/panel/resources/views/forwarders/index.blade.php.bak-d1email-20261009081330
-/usr/local/alphacp/panel/resources/views/ftp/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/git/index.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/git/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/global-filters/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/handlers/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/images/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/indexes/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/ip-blocker/index.blade.php.bak-d6bfiles-20261009104956
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
-/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d18nav-20261009175830
-/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-d5tools-20261009094623
-/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009074336
-/usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-themefix-20261009075354
-/usr/local/alphacp/panel/resources/views/license/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/mailing-lists/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/mime/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php.bak-d14parity-20261009165725
-/usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/mysql-users/index.blade.php.bak-d3mysql-20261009092025
-/usr/local/alphacp/panel/resources/views/mysql-wizard/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/mysql/index.blade.php.bak-d3mysql-20261009092025
-/usr/local/alphacp/panel/resources/views/nodejs/index.blade.php.bak-d13node-20261009164655
-/usr/local/alphacp/panel/resources/views/optimize/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/packages/index.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/packages/index.blade.php.bak-d4whm-20261009092933
-/usr/local/alphacp/panel/resources/views/partials/dash-sections.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/partials/icons.blade.php.bak-themefix-20261009075354
-/usr/local/alphacp/panel/resources/views/partials/tile.blade.php.bak-themefix-20261009075354
-/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009073626
-/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009074336
-/usr/local/alphacp/panel/resources/views/partials/whm-sidebar.blade.php.bak-themefix-20261009075354
-/usr/local/alphacp/panel/resources/views/php/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d12pma-20261009162458
-/usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/phpmyadmin/index.blade.php.bak-d3mysql-20261009092025
-/usr/local/alphacp/panel/resources/views/ports/index.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/ports/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/privacy/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/remote-mysql/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/resellers/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/security-tools/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/spam-filters/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/ssh/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/ssl/index.blade.php.bak-d5tools-20261009094623
-/usr/local/alphacp/panel/resources/views/system/services.blade.php.bak-d11restart-20261009160034
-/usr/local/alphacp/panel/resources/views/system/services.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/terminal/index.blade.php.bak-d16brand-20261009174013
-/usr/local/alphacp/panel/resources/views/terminal/index.blade.php.bak-d9termweb-20261009154216
-/usr/local/alphacp/panel/resources/views/track-delivery/index.blade.php.bak-d6aemail-20261009103449
-/usr/local/alphacp/panel/resources/views/trash/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/users/index.blade.php.bak-d6csoft-20261009124856
-/usr/local/alphacp/panel/resources/views/webdisk/index.blade.php.bak-d6bfiles-20261009104956
-/usr/local/alphacp/panel/resources/views/webmail/index.blade.php.bak-d9termweb-20261009154216
-/usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d14parity-20261009165725
-/usr/local/alphacp/panel/resources/views/zone-editor/index.blade.php.bak-d2domains-20261009083733
-/usr/local/alphacp/panel/routes/web.php.bak-d10final-20261009154757
-/usr/local/alphacp/panel/routes/web.php.bak-d11restart-20261009160034
-/usr/local/alphacp/panel/routes/web.php.bak-d12pma-20261009162458
-/usr/local/alphacp/panel/routes/web.php.bak-d13node-20261009164655
-/usr/local/alphacp/panel/routes/web.php.bak-d14parity-20261009165725
-/usr/local/alphacp/panel/routes/web.php.bak-d15fm-20261009171411
-/usr/local/alphacp/panel/routes/web.php.bak-d19lic-20261010034737
-/usr/local/alphacp/panel/routes/web.php.bak-d1email-20261009081330
-/usr/local/alphacp/panel/routes/web.php.bak-d2domains-20261009083733
-/usr/local/alphacp/panel/routes/web.php.bak-d7metrics-20261009130206
-/usr/local/alphacp/panel/routes/web.php.bak-d8mailsec-20261009131452
 /usr/local/alphacp/panel/routes/web.php.bak.entry
 ```
