@@ -23,7 +23,7 @@ ORDER = ['theme-fix','d1-email','d2-domains','d3-mysql','d4-whm','d5-tools',
          'd14-parity-gaps','d15-filemanager-plus','d16-branding-sweep',
          'd17-look-parity','d18-navbar-parity','d19-license-api',
          'd22-license-nav','d23-license-expiry','d24-webmail-sso-table',
-         'd25-maildir-owner','d26-mailbox-status','d27-home-nav','d28-filemanager-parity','d29-fm-look-parity','d30-fm-cpanel-exact','d31-ssl-symlink','d32-panel-hardening','d33-fm-pro','d34-fm-rebuild']
+         'd25-maildir-owner','d26-mailbox-status','d27-home-nav','d28-filemanager-parity','d29-fm-look-parity','d30-fm-cpanel-exact','d31-ssl-symlink','d32-panel-hardening','d33-fm-pro','d34-fm-rebuild','d35-fm-polish']
 
 def sha(p):
     return hashlib.sha256(p.read_bytes()).hexdigest()
