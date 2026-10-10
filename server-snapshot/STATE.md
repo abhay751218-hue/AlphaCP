@@ -18,15 +18,19 @@ mariadb  : mariadb  Ver 15.1 Distrib 10.11.14-MariaDB, for debian-linux-gnu (x86
 ```
 laravel       : Laravel Framework 13.33.0
 panel code    : 0.75.0   (MANIFEST.json = asli deployed code version)
-ACP_VERSION   :    (.env)
-AGENT_VERSION : 
+ACP_VERSION   : 0.83.0   (.env)
+AGENT_VERSION : 0.83.0
 APP_ENV       : production   APP_DEBUG: false
 panel http    : 200
 ```
 
 ## License / trial (sirf state + dates; fingerprint/signature nahi)
 ```
-license store nahi mila (/usr/local/alphacp/panel/storage/app/private/license.json) — panel ka /license page khulte hi trial shuru hota hai
+store      : /usr/local/alphacp/panel/storage/app/private/license.json
+source     : owner_local   tier: owner   max_accounts: -1
+issued_at  : 2026-10-07T07:19:35+00:00
+expires_at : ?   -> ?
+signed     : no (local trial)
 ```
 
 ## Releases (/usr/local/alphacp/releases — sirf naam, code snapshot me nahi)
@@ -572,7 +576,7 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/var/install.state  keys: preflight packages services 
 /usr/local/alphacp/var/panel-admin.txt  keys: panel_user panel_pass panel_port updated_at 
 /usr/local/alphacp/var/panel-appkey.txt  
-/usr/local/alphacp/panel/.env  keys: APP_NAME APP_ENV APP_KEY APP_DEBUG APP_URL APP_TIMEZONE APP_LOCALE APP_FALLBACK_LOCALE LOG_CHANNEL LOG_LEVEL LOG_DAILY_DAYS DB_CONNECTION SESSION_DRIVER SESSION_LIFETIME SESSION_ENCRYPT SESSION_SECURE_COOKIE SESSION_SAME_SITE CACHE_STORE QUEUE_CONNECTION ACP_HOME ACP_SERVER_ID ACP_ADMIN_USER ACP_ADMIN_PASSWORD ACP_ADMIN_EMAIL ACP_ADMIN_FORCE_CHANGE ACP_FRAME_OPTIONS ACP_LICENSE_KEY ACP_LICENSE_API_URL ACP_LICENSE_INSECURE 
+/usr/local/alphacp/panel/.env  keys: APP_NAME APP_ENV APP_KEY APP_DEBUG APP_URL APP_TIMEZONE APP_LOCALE APP_FALLBACK_LOCALE LOG_CHANNEL LOG_LEVEL LOG_DAILY_DAYS DB_CONNECTION SESSION_DRIVER SESSION_LIFETIME SESSION_ENCRYPT SESSION_SECURE_COOKIE SESSION_SAME_SITE CACHE_STORE QUEUE_CONNECTION ACP_VERSION ACP_AGENT_VERSION ACP_HOME ACP_SERVER_ID ACP_ADMIN_USER ACP_ADMIN_PASSWORD ACP_ADMIN_EMAIL ACP_ADMIN_FORCE_CHANGE ACP_FRAME_OPTIONS 
 ```
 
 ## Snapshot se skip hui files (secret/binary)
