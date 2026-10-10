@@ -361,7 +361,7 @@ phase_packages() {
 
   info "Composer..."
   if command -v composer >/dev/null 2>&1; then
-    ok "composer already installed: $(composer --version 2>/dev/null | head -1)"
+    ok "composer already installed: $(COMPOSER_ALLOW_SUPERUSER=1 timeout 10 composer --version --no-interaction --no-ansi 2>/dev/null | head -1)"
   elif (( DRY_RUN )); then
     say "    ${C_DIM}(dry-run)${C_RESET} install composer"
   else
@@ -407,8 +407,8 @@ phase_packages() {
   svc_ver=$(mariadb --version 2>/dev/null || true);                 say "  MariaDB  : ${svc_ver:-?}"
   svc_ver=$(redis-server -v 2>/dev/null || true);                   say "  Redis    : ${svc_ver:-?}"
   svc_ver=$(named -v 2>/dev/null || true);                          say "  BIND     : ${svc_ver:-?}"
-  svc_ver=$(composer --version 2>/dev/null | head -1 || true);      say "  Composer : ${svc_ver:-not installed}"
-  svc_ver=$(node --version 2>/dev/null || true);                    say "  Node     : ${svc_ver:-not installed}"
+  svc_ver=$(COMPOSER_ALLOW_SUPERUSER=1 timeout 10 composer --version --no-interaction --no-ansi 2>/dev/null | head -1 || true); say "  Composer : ${svc_ver:-not installed}"
+  svc_ver=$(timeout 10 node --version 2>/dev/null || true);         say "  Node     : ${svc_ver:-not installed}"
 
   mark_phase packages
 }
