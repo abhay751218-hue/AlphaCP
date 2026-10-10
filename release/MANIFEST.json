@@ -147,9 +147,13 @@
   {
    "wave": "d35-fm-polish",
    "files": 4
+  },
+  {
+   "wave": "d36-fm-fullpage",
+   "files": 2
   }
  ],
- "overlay_count": 195,
+ "overlay_count": 197,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1320,6 +1324,18 @@
    "src": "d35-FilesSet.php",
    "path": "agent/src/Tasks/FilesSet.php",
    "sha256": "fdd78dbb8b8a527f87e94cc775b259818c0eefb77e41dabea6d6c3b3b6a26eaf"
+  },
+  {
+   "wave": "d36-fm-fullpage",
+   "src": "d36-files-index.blade.php",
+   "path": "panel/resources/views/files/index.blade.php",
+   "sha256": "ef52a9d41cf8cd2ba3bda5f8b30062f60ad2514d1a2e492f55062589f85241c2"
+  },
+  {
+   "wave": "d36-fm-fullpage",
+   "src": "d36-fm.js",
+   "path": "panel/public/assets/fm.js",
+   "sha256": "5d34eb38b9af09d82aa85fbf37668c58c6cdc5c41715f5bfca58b7712e09b58e"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1824,7 +1840,7 @@
   "panel/deploy/nginx-alphacp.conf.in": "e8fd485cd071cbc97b3a80cb938f50af34e30bfd9463e84ffc72f56e9fffb4f2",
   "panel/deploy/php-fpm-alphacp.conf.in": "0562e43def8cdfe106dcf42198d0476e2d2ab671944e4aea7e5783cb0c7d599c",
   "panel/phpunit.xml": "cc28be2f2845b0386c816e06384b27d798afed7adcea1cc32711f55d5de35d14",
-  "panel/public/assets/fm.js": "1be2592e2bcc1e1b8bc4c5d4ec45b856c15222ef44bd42315b821d33cba8fb9c",
+  "panel/public/assets/fm.js": "5d34eb38b9af09d82aa85fbf37668c58c6cdc5c41715f5bfca58b7712e09b58e",
   "panel/public/assets/panel.css": "52ee9f600c6fbb0b445258ef4f732d73f04f070ff0f9777d45069886a8be14d7",
   "panel/public/assets/panel.js": "1bd3230546d49d71f2f955297e6786e30d6f8cc032782ebd698cf789cb549bac",
   "panel/public/favicon.ico": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
@@ -1880,7 +1896,7 @@
   "panel/resources/views/errors-log/index.blade.php": "49b2903dbccb1601f3fbc9008908e74c402bbf8784058f8e89ae5bd0adeccf8f",
   "panel/resources/views/file-directory-restoration/index.blade.php": "a111d47210af60bce4a0cd5e227510cf8fa1169099990510c4369b3e752dc89e",
   "panel/resources/views/file-restoration/index.blade.php": "2cbed6e8d5430c53f9b484b06f5ab4de1068d11ae9d9dd7f0d76a49187686b57",
-  "panel/resources/views/files/index.blade.php": "c39e9217b3e69b67e32ca64f1dda430f008ec5aa793e4e88b895c50405bdc794",
+  "panel/resources/views/files/index.blade.php": "ef52a9d41cf8cd2ba3bda5f8b30062f60ad2514d1a2e492f55062589f85241c2",
   "panel/resources/views/forwarders/index.blade.php": "36553e88546213aeb1586316c3e27ab6535681b7e5754b8183a01032e4bab61c",
   "panel/resources/views/ftp/index.blade.php": "c8870f5b8c3ca65f36e0da09411d345727dcbbc18ac05f02baab3718d136139f",
   "panel/resources/views/git/index.blade.php": "2359feeee1a5aa01c4fac78423cbe6f9460e5660c1e7858bdbc9d2d7b4c90da5",
