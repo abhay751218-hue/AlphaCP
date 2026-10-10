@@ -59,7 +59,8 @@
 | B5-UPDATER | alphacp-update.sh — cPanel-style channel updater (stable/edge), manifest-sha256 diff, backup+rollback+health gate; CHANNELS.json | ✅ BUILT 10 Oct — SIM1/SIM2 green |
 | B2b-PREVIEW (D20) | Website private preview :2096 (basic-auth owner) + alphacp-go-live.sh (domain+LetsEncrypt — baad me ek command se public) | 🟡 BUILT — sims green |
 | B4-INSTALLER (D21) | get-server :2096 DEPLOYED on AWS 10 Oct (secret 234d862e0727891142b25372, pack 5.5M) + alphacp-fresh-install.sh ready | ✅ AWS LIVE — bade server install pending |
-| D22-LICENSE-NAV | License Server nav link (ModuleCatalog) + live DB migrate (license_keys payload cols — 500 fix) via updater | 🟡 PUSHED — updater apply pending |
+| D22-LICENSE-NAV | License Server nav link + migrate — ✅ DEPLOYED 10 Oct (update 2 files, health 200) |
+| D23-LICENSE-EXPIRY | license_keys.expires_at TIMESTAMP→DATETIME (Y2038 fix); owner lifetime = Days 0 workaround live | 🟡 PUSHED — next update me |
 | **STANDING REQ** | **PORTABILITY: pura AlphaCP system baad me NAYE server par aasani se transfer hona chahiye** — B4 installer + migration script (DB dump + /home + DNS/SSL re-point) isi liye mandatory | 📌 NOTED 09 Oct 2026 |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
