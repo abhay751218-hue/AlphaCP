@@ -14,17 +14,17 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D20 (B2b) — Website private preview (sirf tumhare liye, port 2096)
+### D21 (B4) — AWS ko "get server" banao (cPanel-style install distribution)
 
-SSH se `sudo -i` karke:
+**Pehle:** AWS Lightsail console → Networking → IPv4 Firewall → **Add rule: Custom TCP 2096**
+
+**Phir AWS par (sudo -i):**
 
 ```bash
-cd /root && rm -rf AlphaCP-d20 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d20 && cd AlphaCP-d20 && echo "51a35312967d4fdde76f10367227963ba8e23e7462e3a28b5f63afb41eb1875a  installer/d20-website-preview.sh" | sha256sum -c - && bash installer/d20-website-preview.sh
+cd /root && rm -rf AlphaCP-d21 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d21 && cd AlphaCP-d21 && echo "__SHA__  installer/d21-get-server.sh" | sha256sum -c - && bash installer/d21-get-server.sh
 ```
 
-- End me URL + **owner password** milega (note kar lena — ek hi baar dikhta hai)
-- `https://<server-ip>:2096/` kholo → login `owner` + wo password → website
-- Customer ko kuch nahi dikhta (401) — **domain aane par** `alphacp-go-live.sh --domain tumhara.com --email tum@mail.com` chalana, public ho jayegi (asli SSL ke saath)
+End me **bade server ke liye one-line install command** milegi (secret URL ke saath) — wahi bade server par chalani hai. Pehle AWS :2087 License Server page se **owner plan** ki key bana lena aur command me `ACP_LICENSE_KEY=ACP-xxxx` laga dena.
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 
