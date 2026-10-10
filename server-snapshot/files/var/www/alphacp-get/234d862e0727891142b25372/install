@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# AlphaCP bootstrap — naya server install (AlphaCP get-server se, GitHub se NAHI)
+set -u -o pipefail
+BASE="https://13.207.123.177:2096/234d862e0727891142b25372"
+[[ "$(id -u)" -eq 0 ]] || { echo "root chahiye: sudo -i karke chalao"; exit 1; }
+W="/root/alphacp-install"; mkdir -p "$W"; cd "$W"
+echo "== AlphaCP installer download (${BASE}) =="
+for f in SHA256SUMS alphacp-step1.sh alphacp-fresh-install.sh alphacp-server.tar.gz; do
+  echo "  -> $f"
+  curl -fsSLk "${BASE}/$f" -o "$f" || { echo "[FAIL] $f download fail"; exit 1; }
+done
+grep -v ' install$' SHA256SUMS | sha256sum -c - || { echo "[FAIL] checksum mismatch — dobara try karo"; exit 1; }
+echo "[OK] sab files verified"
+echo ""
+echo "== Phase 1: base hosting stack (10-20 min lag sakte hain) =="
+bash alphacp-step1.sh --yes --profile=prod || bash alphacp-step1.sh --yes || { echo "[FAIL] step1 fail — /var/log/alphacp-install.log dekho"; exit 1; }
+echo ""
+echo "== Phase 2: AlphaCP panel + agent + license =="
+ACP_LICENSE_API_URL="${ACP_LICENSE_API_URL:-https://13.207.123.177:2083/api/v1}" ACP_LICENSE_KEY="${ACP_LICENSE_KEY:-}" bash alphacp-fresh-install.sh --pack "$W/alphacp-server.tar.gz" --yes

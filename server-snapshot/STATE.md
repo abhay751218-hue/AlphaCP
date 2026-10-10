@@ -567,6 +567,8 @@ GET|HEAD           /{fallbackPlaceholder}
 ## Snapshot se skip hui files (secret/binary)
 ```
 /usr/local/alphacp/bin/alphacp-sync  (secret jaisa pattern)
+/var/www/alphacp-get/234d862e0727891142b25372/alphacp-fresh-install.sh  (secret jaisa pattern)
+/var/www/alphacp-get/234d862e0727891142b25372/alphacp-step1.sh  (secret jaisa pattern)
 ```
 
 ## Snapshot completeness (v1.3)

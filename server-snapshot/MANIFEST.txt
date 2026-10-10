@@ -10097,3 +10097,9 @@
 /var/www/alphacp-default/check.php
 /var/www/alphacp-default/index.html
 /var/www/alphacp-default/robots.txt
+/var/www/alphacp-get/.secret
+/var/www/alphacp-get/234d862e0727891142b25372/SHA256SUMS
+/var/www/alphacp-get/234d862e0727891142b25372/alphacp-fresh-install.sh
+/var/www/alphacp-get/234d862e0727891142b25372/alphacp-server.tar.gz
+/var/www/alphacp-get/234d862e0727891142b25372/alphacp-step1.sh
+/var/www/alphacp-get/234d862e0727891142b25372/install
