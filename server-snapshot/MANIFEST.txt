@@ -243,6 +243,7 @@
 /usr/local/alphacp/logs/webmail-fix-20261008170024.txt
 /usr/local/alphacp/logs/webmail-fix-20261008171717.txt
 /usr/local/alphacp/panel/.env
+/usr/local/alphacp/panel/.env.example
 /usr/local/alphacp/panel/MANIFEST.json
 /usr/local/alphacp/panel/README.md
 /usr/local/alphacp/panel/app/Console/Commands/AdminPasswordCommand.php
@@ -472,6 +473,7 @@
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d10final-20261009154757
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d7metrics-20261009130206
 /usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-d8mailsec-20261009131452
+/usr/local/alphacp/panel/app/Support/ModuleCatalog.php.bak-update-20261010062351
 /usr/local/alphacp/panel/app/Support/Mysql.php
 /usr/local/alphacp/panel/app/Support/PackageLimits.php
 /usr/local/alphacp/panel/app/Support/Panel.php

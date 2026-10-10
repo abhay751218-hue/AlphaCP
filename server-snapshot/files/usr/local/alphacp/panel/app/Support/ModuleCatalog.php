@@ -245,6 +245,7 @@ final class ModuleCatalog
                 'audience' => 'whm',
                 'items' => [
                     ['name' => 'License & Trial', 'step' => 'S2C', 'status' => 'live', 'route' => 'license.index'],
+                    ['name' => 'License Server (Sell Keys)', 'step' => 'S2C', 'status' => 'live', 'route' => 'license-server.index'],
                     ['name' => 'Updates',         'step' => 'S15', 'status' => 'live', 'route' => 'updates.index'],
                 ],
             ],
