@@ -107,9 +107,13 @@
   {
    "wave": "d25-maildir-owner",
    "files": 1
+  },
+  {
+   "wave": "d26-mailbox-status",
+   "files": 1
   }
  ],
- "overlay_count": 172,
+ "overlay_count": 173,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1142,6 +1146,12 @@
    "src": "d25-AccountOs.php",
    "path": "agent/src/AccountOs.php",
    "sha256": "ed6b63f9a91005315b8b5db6aca8db16673ae36490972120cf383822d73e81ca"
+  },
+  {
+   "wave": "d26-mailbox-status",
+   "src": "d26-AccountProvisioner.php",
+   "path": "panel/app/Support/AccountProvisioner.php",
+   "sha256": "294b22f3d58ac6b938c33fc33d5370b16c1ccf2ffde9abd494618cb3a8e7a56f"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1506,7 +1516,7 @@
   "panel/app/Providers/AppServiceProvider.php": "81b46005db2e93c4ec11c82e7e550a6cb3cfe91fd9947b6c1a6b76b3ecb7a645",
   "panel/app/Providers/ResellerScopeProvider.php": "5d967d9cf522d06363755956ba8234d73858807abc13f5f016a7a239291b5576",
   "panel/app/Support/AccountIdentity.php": "44d90a5464815fc68b83b24a3da295b9cd6df046fc0ff757c5b774f2196888a5",
-  "panel/app/Support/AccountProvisioner.php": "535f3568cec57526b2db4eb5a654b55b791f613ef996c616313fbcfde85e5173",
+  "panel/app/Support/AccountProvisioner.php": "294b22f3d58ac6b938c33fc33d5370b16c1ccf2ffde9abd494618cb3a8e7a56f",
   "panel/app/Support/AppInstaller.php": "19c9983249c484844b122f3f96777d1baebc2f3aae04b427d71dbeb03c7a47d0",
   "panel/app/Support/Audit.php": "47a437ebe4033f9ff0560085fc91f62727e6c2202d5a7e146bd8a3be07e918d6",
   "panel/app/Support/Backup.php": "075c82cf6190a033f58a24cdb62fa52189ee34897d59cf3f0f5984820a4fa80c",
