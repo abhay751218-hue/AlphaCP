@@ -103,9 +103,13 @@
   {
    "wave": "d24-webmail-sso-table",
    "files": 1
+  },
+  {
+   "wave": "d25-maildir-owner",
+   "files": 1
   }
  ],
- "overlay_count": 171,
+ "overlay_count": 172,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1132,6 +1136,12 @@
    "src": "d24-migration-webmail-sso-tokens.php",
    "path": "panel/database/migrations/2026_10_10_000002_webmail_sso_tokens.php",
    "sha256": "ececb3437a1e16f046b314017b388fc9623c92a280812f1101422920960a5ab3"
+  },
+  {
+   "wave": "d25-maildir-owner",
+   "src": "d25-AccountOs.php",
+   "path": "agent/src/AccountOs.php",
+   "sha256": "ed6b63f9a91005315b8b5db6aca8db16673ae36490972120cf383822d73e81ca"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1157,7 +1167,7 @@
   "agent/bin/paneld": "e89fac605b33decdcebe243b6ddf3c42ddc7313db620cfc4bec1b5f4a5cece1f",
   "agent/config/tasks.php": "1594eef21715a14f780f22dd1fa6d538afbbf8330009d256f8330f30531381cd",
   "agent/src/AccountIdentity.php": "2175d17ed940c393d23044c2fefe3ea3b7c4b3ec6790c0f2848dde3339767560",
-  "agent/src/AccountOs.php": "9367c5d62d76c096cf8751fb7dc1132dad0fa570ff854eb148584aa5c05d63b1",
+  "agent/src/AccountOs.php": "ed6b63f9a91005315b8b5db6aca8db16673ae36490972120cf383822d73e81ca",
   "agent/src/AccountPaths.php": "dafe328e1881cc76ec98d27f557cd261ba1acea71d831a5faccef9a91dc92c03",
   "agent/src/AccountTemplates.php": "030c6d11a47744bed3b471f269ddfa7eff400f5e6dd2a615695d0406c5d7601b",
   "agent/src/Backup.php": "f5ac713b88e3356b012130eabba8b642dc8ecb6048109f6cb9580ceb4c9a9c7f",

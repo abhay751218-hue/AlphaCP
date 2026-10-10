@@ -22,7 +22,8 @@ ORDER = ['theme-fix','d1-email','d2-domains','d3-mysql','d4-whm','d5-tools',
          'd11-restart-services','d12-phpmyadmin-sso','d13-nodejs-apps',
          'd14-parity-gaps','d15-filemanager-plus','d16-branding-sweep',
          'd17-look-parity','d18-navbar-parity','d19-license-api',
-         'd22-license-nav','d23-license-expiry','d24-webmail-sso-table']
+         'd22-license-nav','d23-license-expiry','d24-webmail-sso-table',
+         'd25-maildir-owner']
 
 def sha(p):
     return hashlib.sha256(p.read_bytes()).hexdigest()
