@@ -65,6 +65,14 @@ tar -tzf "${PACK}" >/dev/null 2>&1 || die "pack corrupt — dobara download karo
 LIC_KEY="${ACP_LICENSE_KEY:-}"
 LIC_URL="${ACP_LICENSE_API_URL:-}"
 
+# ---- SAFETY GUARD: galat server par na chale -------------------------------
+if [[ -d /var/www/alphacp-get ]]; then
+  die "Ye tumhara LICENSE/GET server (AWS) lagta hai — fresh install yahan NAHI chalani! Ye command BADE (naye) server ke liye hai."
+fi
+if [[ -d "${PANEL_ROOT}" && "${ACP_FORCE_REINSTALL:-0}" != "1" ]]; then
+  die "AlphaCP yahan pehle se installed hai (${PANEL_ROOT}). Dobara install nahi hoga. Agar sach me reinstall chahiye to: ACP_FORCE_REINSTALL=1 ke saath chalao."
+fi
+
 # ---- Phase 1: PHP 8.4 pin (PHP 8.5 guard) -----------------------------------
 say ""
 say "-- Phase 1: PHP ${PHP_V} + extensions --"
