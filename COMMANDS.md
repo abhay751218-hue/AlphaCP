@@ -14,12 +14,17 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### Abhi koi command pending nahi ✅
+**B5b — AWS-based update channel LIVE karna (10 Oct):**
 
-Agla kaam (commands jab tum bolo):
-1. Bade server par login test + pehla hosting account banana
-2. hostplux domain ko bade server se connect karna (DNS guide)
-3. AWS par agla update (D23 Y2038 fix auto aa jayega): `bash installer/alphacp-update.sh`
+1. **AWS** (`root@ip-172-26-4-65`) — pack refresh (update endpoint ban jayega):
+```bash
+cd /root && rm -rf AlphaCP-d21 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d21 && cd AlphaCP-d21 && bash installer/d21-get-server.sh
+```
+2. **BADA server** (`root@server`) — AWS se update (GitHub se NAHI):
+```bash
+bash <(curl -fsSLk https://13.207.123.177:2096/234d862e0727891142b25372/update)
+```
+3. License activate (browser, /license): key `ACP-DEBBE089AB02` → Activate.
 
 ## ✔️ Ho chuki hai (dobara mat chalao)
 

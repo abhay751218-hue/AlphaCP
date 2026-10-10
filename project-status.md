@@ -60,6 +60,7 @@
 | B2b-PREVIEW (D20) | Website private preview :2096 (basic-auth owner) + alphacp-go-live.sh (domain+LetsEncrypt — baad me ek command se public) | 🟡 BUILT — sims green |
 | B4-INSTALLER (D21) | get-server :2096 AWS LIVE + one-line install | ✅ COMPLETE 10 Oct — BADE SERVER (130.210.30.170, Ubuntu 24.04 aarch64) par FULL INSTALL SUCCESS: 70 migrations, admin, nginx 2083/2087/2098, paneld, health 200. Fresh-install test DONE. |
 | B4-FIXES (first-run QA) | composer hang-guard, check.token perms, pipefail guards, DB user 127.0.0.1, safety guard (get-server/installed), nginx enable+restart, stock default site removal | ✅ sab product me baked |
+| **B5b** | AWS-se-update channel: `alphacp-server-update.sh` + d21 `/update` endpoint + pack VERSION + auto-rollback; fresh-install gaps (admin-pass sync, agent plumbing, SERVER_ID numeric, CLI, version) | ✅ CODE PUSHED 10 Oct — AWS refresh + big-server update pending |
 | D22-LICENSE-NAV | License Server nav link + migrate — ✅ DEPLOYED 10 Oct (update 2 files, health 200) |
 | D23-LICENSE-EXPIRY | license_keys.expires_at TIMESTAMP→DATETIME (Y2038 fix); owner lifetime = Days 0 workaround live | 🟡 PUSHED — next update me |
 | **STANDING REQ** | **PORTABILITY: pura AlphaCP system baad me NAYE server par aasani se transfer hona chahiye** — B4 installer + migration script (DB dump + /home + DNS/SSL re-point) isi liye mandatory | 📌 NOTED 09 Oct 2026 |
