@@ -129,6 +129,28 @@ class FilesController extends Controller
             ->with('success', "Permissions {$data['mode']} queued.");
     }
 
+    /** D34 — copy file/folder (cp -a via agent). */
+    public function copy(Request $request): RedirectResponse
+    {
+        $account = $this->guardAccount($request);
+        if ($account instanceof RedirectResponse) {
+            return $account;
+        }
+        $data = $request->validate([
+            'path' => ['required', 'string', 'max:240'],
+            'to'   => ['required', 'string', 'max:240'],
+        ]);
+        $from = Files::tryRel($data['path']);
+        $to = Files::tryRel($data['to']);
+        if ($from === null || $from === '' || $to === null || $to === '') {
+            return back()->withErrors(['path' => 'Invalid path (no ..).']);
+        }
+        $this->enqueue($account, 'copy', $from, ['to' => $to]);
+
+        return redirect()->route('files.index', ['path' => Files::parent($from)])
+            ->with('success', 'Copy is queued.');
+    }
+
     /** D15 — compress to <path>.tar.gz (cPanel Compress). */
     public function compress(Request $request): RedirectResponse
     {
@@ -154,12 +176,24 @@ class FilesController extends Controller
         if ($account instanceof RedirectResponse) {
             return $account;
         }
-        $data = $request->validate(['path' => ['required', 'string', 'max:240']]);
+        $data = $request->validate([
+            'path' => ['required', 'string', 'max:240'],
+            'to'   => ['nullable', 'string', 'max:240'],
+        ]);
         $path = Files::tryRel($data['path']);
-        if ($path === null || $path === '' || (! str_ends_with($path, '.tar.gz') && ! str_ends_with($path, '.tgz'))) {
-            return back()->withErrors(['path' => 'Sirf .tar.gz / .tgz extract hota hai.']);
+        if ($path === null || $path === '' || (! str_ends_with($path, '.tar.gz') && ! str_ends_with($path, '.tgz') && ! str_ends_with($path, '.zip'))) {
+            return back()->withErrors(['path' => 'Sirf .tar.gz / .tgz / .zip extract hota hai.']);
         }
-        $this->enqueue($account, 'extract', $path);
+        $extra = [];
+        $toRaw = trim((string) ($data['to'] ?? ''));
+        if ($toRaw !== '') {
+            $to = Files::tryRel($toRaw);
+            if ($to === null) {
+                return back()->withErrors(['path' => 'Invalid target path (no ..).']);
+            }
+            $extra = ['to' => $to];
+        }
+        $this->enqueue($account, 'extract', $path, $extra);
 
         return redirect()->route('files.index', ['path' => Files::parent($path)])
             ->with('success', 'Extract is queued.');

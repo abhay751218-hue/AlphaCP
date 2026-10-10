@@ -712,6 +712,8 @@ Route::middleware(['auth', '2fa', 'password.fresh'])->group(function (): void {
         ->middleware('perm:files.manage')->name('files.compress');
     Route::post('/files/extract', [FilesController::class, 'extract'])
         ->middleware('perm:files.manage')->name('files.extract');
+    Route::post('/files/copy', [FilesController::class, 'copy'])
+        ->middleware('perm:files.manage')->name('files.copy'); // D34
 });
 // ---- /D15 ----
 // ---- WHM API 1 compatible (billing integration, Bearer token) ----

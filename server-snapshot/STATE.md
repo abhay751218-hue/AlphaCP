@@ -340,6 +340,7 @@ POST               /file-restoration                             file-restoratio
 GET|HEAD           /files                                        files.index
 POST               /files/chmod                                  files.chmod
 POST               /files/compress                               files.compress
+POST               /files/copy                                   files.copy
 POST               /files/delete                                 files.destroy
 POST               /files/extract                                files.extract
 POST               /files/mkdir                                  files.mkdir
@@ -591,16 +592,27 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (11) — repo se panel dobara banane par ye pages tootenge:
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (22) — repo se panel dobara banane par ye pages tootenge:
 /usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010125702
+/usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010154153
+/usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010155848
+/usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010161705
 /usr/local/alphacp/panel/app/Support/AccountProvisioner.php.bak-update-20261010121811
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak-update-20261010093626
+/usr/local/alphacp/panel/public/assets/fm.js.bak-update-20261010155848
+/usr/local/alphacp/panel/public/assets/fm.js.bak-update-20261010161705
+/usr/local/alphacp/panel/public/assets/fm.js.bak-update-20261010162610
 /usr/local/alphacp/panel/public/assets/panel.js.bak-update-20261010151532
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010124113
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010125702
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010131303
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010154153
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010155848
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010161705
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010162610
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak-update-20261010123549
+/usr/local/alphacp/panel/routes/web.php.bak-update-20261010155848
 /usr/local/alphacp/panel/routes/web.php.bak.entry
 ```

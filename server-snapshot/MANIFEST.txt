@@ -195,6 +195,7 @@
 /usr/local/alphacp/agent/src/Dns.php
 /usr/local/alphacp/agent/src/ErrorPages.php
 /usr/local/alphacp/agent/src/Files.php
+/usr/local/alphacp/agent/src/Files.php.bak-update-20261010155848
 /usr/local/alphacp/agent/src/Ftp.php
 /usr/local/alphacp/agent/src/Git.php
 /usr/local/alphacp/agent/src/Handlers.php
@@ -258,6 +259,9 @@
 /usr/local/alphacp/agent/src/Tasks/ErrorPagesSet.php
 /usr/local/alphacp/agent/src/Tasks/FilesList.php
 /usr/local/alphacp/agent/src/Tasks/FilesSet.php
+/usr/local/alphacp/agent/src/Tasks/FilesSet.php.bak-update-20261010154153
+/usr/local/alphacp/agent/src/Tasks/FilesSet.php.bak-update-20261010155848
+/usr/local/alphacp/agent/src/Tasks/FilesSet.php.bak-update-20261010161705
 /usr/local/alphacp/agent/src/Tasks/FilesUsage.php
 /usr/local/alphacp/agent/src/Tasks/ForwardSet.php
 /usr/local/alphacp/agent/src/Tasks/FtpAdd.php
@@ -1137,6 +1141,9 @@
 /usr/local/alphacp/panel/app/Http/Controllers/FileRestorationController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FilesController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010125702
+/usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010154153
+/usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010155848
+/usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010161705
 /usr/local/alphacp/panel/app/Http/Controllers/ForwardersController.php
 /usr/local/alphacp/panel/app/Http/Controllers/FtpController.php
 /usr/local/alphacp/panel/app/Http/Controllers/GitController.php
@@ -1411,6 +1418,10 @@
 /usr/local/alphacp/panel/deploy/nginx-alphacp.conf.in
 /usr/local/alphacp/panel/deploy/php-fpm-alphacp.conf.in
 /usr/local/alphacp/panel/phpunit.xml
+/usr/local/alphacp/panel/public/assets/fm.js
+/usr/local/alphacp/panel/public/assets/fm.js.bak-update-20261010155848
+/usr/local/alphacp/panel/public/assets/fm.js.bak-update-20261010161705
+/usr/local/alphacp/panel/public/assets/fm.js.bak-update-20261010162610
 /usr/local/alphacp/panel/public/assets/panel.css
 /usr/local/alphacp/panel/public/assets/panel.js
 /usr/local/alphacp/panel/public/assets/panel.js.bak-update-20261010151532
@@ -1471,6 +1482,10 @@
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010124113
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010125702
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010131303
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010154153
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010155848
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010161705
+/usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010162610
 /usr/local/alphacp/panel/resources/views/forwarders/index.blade.php
 /usr/local/alphacp/panel/resources/views/ftp/index.blade.php
 /usr/local/alphacp/panel/resources/views/git/index.blade.php
@@ -1549,6 +1564,7 @@
 /usr/local/alphacp/panel/resources/views/zone-ttl/index.blade.php
 /usr/local/alphacp/panel/routes/console.php
 /usr/local/alphacp/panel/routes/web.php
+/usr/local/alphacp/panel/routes/web.php.bak-update-20261010155848
 /usr/local/alphacp/panel/routes/web.php.bak.entry
 /usr/local/alphacp/panel/tests/Feature/AccountsTest.php
 /usr/local/alphacp/panel/tests/Feature/AddressImporterTest.php
