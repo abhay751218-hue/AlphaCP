@@ -14,7 +14,21 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 
 ## ✅ Abhi chalani hai (NEXT STEP)
 
-### D19 (B1) — License API sell-ready (fingerprint binding + rate-limit)
+### B5 — Update-system check (SAFE, kuch apply nahi hota)
+
+Ye READ-ONLY command hai — batayegi live server release-bundle se kitna match karta hai:
+
+```bash
+cd /root && rm -rf AlphaCP-upd && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-upd && cd AlphaCP-upd && bash installer/alphacp-update.sh --check
+```
+
+- "sab up-to-date" aaye = live ↔ repo 100% sync ✅
+- Files list aaye = drift hai; `--check` hata ke chalaoge to backup+rollback-gate ke saath sync ho jayega
+- Aaj ke baad naye updates ka tarika yahi hoga: `bash installer/alphacp-update.sh` (cPanel jaisa)
+
+## ✔️ Ho chuki hai (dobara mat chalao)
+
+### ✔️ D19 (DEPLOYED 10 Oct 2026 — backups bak-d19lic-20261010034737) (B1) — License API sell-ready (fingerprint binding + rate-limit)
 
 SSH se `sudo -i` karke root prompt par:
 
@@ -29,7 +43,6 @@ Kya milega:
 - Key issue/revoke pehle jaisa: 2087 → License Server page
 - Rollback stamp: `bak-d19lic-…`
 
-## ✔️ Ho chuki hai (dobara mat chalao)
 
 ### ✔️ D18 (DEPLOYED 09 Oct 2026 — backups bak-d18nav-20261009175830) — cPanel-style navbar: bell + user dropdown + search placeholder
 
