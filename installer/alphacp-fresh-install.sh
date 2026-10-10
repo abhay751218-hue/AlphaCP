@@ -291,6 +291,16 @@ ensure_mail_stack() {
       && ok "mail stack installed (exim4 + dovecot)" \
       || warn "mail packages install fail — log dekho: ${LOG_FILE}"
   fi
+  # webmail SSO master creds (Roundcube acp_sso -> dovecot master passdb)
+  if [[ ! -f /usr/local/alphacp/etc/webmail-master.plain || ! -f /usr/local/alphacp/etc/webmail-master.pw ]]; then
+    MPW=$(openssl rand -hex 24)
+    printf '%s\n' "$MPW" > /usr/local/alphacp/etc/webmail-master.plain
+    MHASH=$(php8.4 -r 'echo password_hash($argv[1], PASSWORD_BCRYPT);' "$MPW")
+    printf 'acpmaster:{BLF-CRYPT}%s\n' "$MHASH" > /usr/local/alphacp/etc/webmail-master.pw
+    chown root:www-data /usr/local/alphacp/etc/webmail-master.plain /usr/local/alphacp/etc/webmail-master.pw 2>/dev/null || true
+    chmod 0640 /usr/local/alphacp/etc/webmail-master.plain /usr/local/alphacp/etc/webmail-master.pw
+    ok "webmail master creds generated (acpmaster)"
+  fi
   # doveadm --version is build me nahi chalta — env override (code ka designed escape hatch)
   mkdir -p /etc/systemd/system/paneld.service.d
   printf '[Service]\nEnvironment=ACP_MAIL_DOVEADM=/usr/bin/doveadm\n' > /etc/systemd/system/paneld.service.d/mail.conf
