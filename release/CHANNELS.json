@@ -1,0 +1,4 @@
+{
+  "stable": { "ref": "arena/009c72b2-alphacp", "note": "production channel — tested releases" },
+  "edge":   { "ref": "arena/009c72b2-alphacp", "note": "abhi stable ke barabar; future me pre-release testing" }
+}

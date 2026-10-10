@@ -1,0 +1,111 @@
+/* ==========================================================================
+   AlphaCP WHM theme — admin & reseller shell (cPanel-company grade).
+   Load AFTER panel.css (components reused: .card, .tiles, .pill, .bar, …).
+   Real-WHM layout: dark charcoal sidebar with categorized menus + sidebar
+   search, dark top bar, light content canvas, cPanel orange #FF6C2C accents.
+   Scoped under `.whm` (set on <body> in layouts/whm.blade.php) so the same
+   rules also render the WHM/reseller mockups inside demo/cpanel-theme-demo.html.
+   ========================================================================== */
+
+/* ---------- top bar (dark) ---------- */
+.whm .topbar {
+  background: #1b2330;
+  border-bottom-color: #2a3444;
+}
+.whm .brand { color: #f1f5f9; }
+.whm .brand small { color: #8b98ab; }
+.badge-whm {
+  background: linear-gradient(135deg, var(--cp-orange), var(--cp-orange-2));
+  color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: .1em;
+  padding: 3px 10px; border-radius: 6px; white-space: nowrap;
+  box-shadow: 0 4px 12px -4px rgba(255,108,44,.55);
+}
+.whm .chip { background: #232d3d; border-color: #33405a; color: #9fb0c6; }
+.whm .chip b { color: #e6edf7; }
+.whm .btn { background: #232d3d; border-color: #33405a; color: #e6edf7; }
+.whm .btn:hover { background: #2c3849; text-decoration: none; }
+.whm .userbox .uname { color: #e6edf7; }
+.whm .userbox .urole { color: #8b98ab; }
+.whm .tsearch { background: #232d3d; border-color: #33405a; color: #7f8ea3; }
+.whm .tsearch input { color: #e6edf7; }
+.whm .tsearch:focus-within { border-color: var(--cp-orange); }
+
+/* ---------- sidebar (dark, categorized) ---------- */
+.whm .shell { grid-template-columns: 268px minmax(0, 1fr); }
+.whm .sidebar { background: #1f2733; border-right-color: #2a3444; padding-top: 12px; }
+
+.whm-search {
+  display: flex; align-items: center; gap: 8px; margin: 2px 8px 10px;
+  background: #171e28; border: 1px solid #33405a; border-radius: 9px;
+  padding: 7px 11px; color: #7f8ea3;
+  transition: border-color .12s ease, box-shadow .12s ease;
+}
+.whm-search:focus-within { border-color: var(--cp-orange); box-shadow: 0 0 0 3px rgba(255,108,44,.18); color: var(--cp-orange); }
+.whm-search input {
+  border: 0; outline: 0; background: transparent; width: 100%;
+  font: inherit; font-size: 13px; color: #e6edf7;
+}
+.whm-search input::placeholder { color: #6d7c90; }
+
+.whm .sidebar h4 {
+  color: #6d7c90;
+  display: flex; align-items: center; gap: 7px;
+}
+.whm .sidebar h4 .ic { color: #55637a; }
+.whm .sidebar a { color: #c7d0dc; font-size: 13px; }
+.whm .sidebar a .ic { color: #7f8ea3; }
+.whm .sidebar a:hover { background: #2a3442; color: #fff; text-decoration: none; }
+.whm .sidebar a:hover .ic { color: #c7d0dc; }
+.whm .sidebar a.active {
+  background: rgba(255,108,44,.15);
+  border-left-color: var(--cp-orange);
+  color: #fff; font-weight: 700;
+}
+.whm .sidebar a.active .ic { color: var(--cp-orange); }
+
+/* parity / live markers on nav items */
+.sidebar .parity {
+  margin-left: auto; font-family: var(--mono); font-size: 10px;
+  color: #6d7c90; border: 1px solid #33405a; border-radius: 5px; padding: 0 5px;
+}
+.whm .sidebar a:hover .parity { color: #9fb0c6; }
+.sidebar a .live-dot { margin-left: auto; }
+.sidebar a .live-dot .dot { box-shadow: 0 0 0 3px rgba(22,163,74,.2); }
+
+/* ---------- WHM dashboard bits ---------- */
+.kv .v .pill { vertical-align: 1px; }
+
+table.acct { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.acct th {
+  text-align: left; color: var(--muted); font-weight: 700; font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: .08em; padding: 4px 8px;
+}
+table.acct td { padding: 7px 8px; border-top: 1px solid var(--line); }
+table.acct tr:hover td { background: #fafbff; }
+
+.stat-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.stat-chips .chip b { font-size: 13px; }
+
+.quick-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 9px; }
+.quick-links a {
+  display: flex; align-items: center; gap: 9px; text-decoration: none;
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 9px;
+  padding: 9px 11px; color: var(--ink); font-size: 12.5px; font-weight: 650;
+  transition: border-color .12s ease, transform .1s ease;
+}
+.quick-links a:hover { border-color: var(--cp-orange); transform: translateY(-1px); text-decoration: none; }
+.quick-links a .ic { color: var(--cp-orange-dark); }
+
+/* reseller flavour: teal badge instead of orange WHM badge */
+.whm.reseller .badge-whm {
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
+  box-shadow: 0 4px 12px -4px rgba(13,148,136,.55);
+}
+.whm.reseller .sidebar a.active { background: rgba(13,148,136,.16); border-left-color: #0d9488; }
+.whm.reseller .sidebar a.active .ic { color: #0d9488; }
+.whm.reseller .whm-search:focus-within { border-color: #0d9488; box-shadow: 0 0 0 3px rgba(13,148,136,.18); }
+
+@media (max-width: 900px) {
+  .whm .shell { grid-template-columns: 1fr; }
+  .whm .sidebar { border-right: 0; border-bottom: 1px solid #2a3444; }
+}

@@ -38,61 +38,61 @@
 
 | # | cPanel tool | Kya karta hai | Humara step | Status |
 |---|---|---|---|---|
-| 1 | File Manager | Upload/edit/delete/zip/permissions | S6 | ⏳ S6 |
-| 2 | Images | Resize/convert images | S6 | ⏳ S6 |
-| 3 | Directory Privacy | Password-protected folders | S6 | ⏳ S6 |
-| 4 | Disk Usage | Folder-wise space | S6 | ⏳ S6 |
-| 5 | Web Disk | WebDAV drive | S6 | ⏳ S6 |
-| 6 | FTP Accounts | FTP users | S6 | ⏳ S6 |
+| 1 | File Manager | Breadcrumbs/icons/filter/editor + upload/compress/extract/chmod | S6 | ✅ D5+D15 LIVE |
+| 2 | Images | Resize/convert images | S6 | ✅ D6b LIVE |
+| 3 | Directory Privacy | Password-protected folders | S6 | ✅ D6b LIVE |
+| 4 | Disk Usage | Folder-wise space | S6 | ✅ D6b LIVE |
+| 5 | Web Disk | WebDAV drive | S6 | ✅ D6b LIVE |
+| 6 | FTP Accounts | FTP users | S6 | ✅ D6b LIVE |
 | 7 | FTP Connections | FTP session logs | S6 | ⏳ S6 |
 | 8 | Backup | Manual backup download | S10 | ⏳ S10 |
-| 9 | Backup Wizard | Step-by-step backup/restore | S10 | ⏳ S10 |
-| 10 | File & Directory Restoration | Deleted file wapas | S10 | ⏳ S10 |
-| 11 | Git™ Version Control | Git deploy/repo | S6 | ⏳ S6 |
-| 12 | Trash | File Manager trash bin | S6 | ⏳ S6 |
+| 9 | Backup Wizard | Step-by-step backup/restore | S10 | ✅ D6b LIVE |
+| 10 | File & Directory Restoration | Deleted file wapas | S10 | ✅ D6b LIVE |
+| 11 | Git™ Version Control | Git deploy/repo | S6 | ✅ D6b LIVE |
+| 12 | Trash | File Manager trash bin | S6 | ✅ D6b LIVE |
 
 ### 📧 Email
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 13 | Email Accounts | Mailboxes + quota | S7 | ⏳ S7 |
-| 14 | Forwarders | Email forward | S7 | ⏳ S7 |
-| 15 | Email Routing | MX/local routing per domain | S7 | ⏳ S7 |
-| 16 | Autoresponders | Vacation/auto reply | S7 | ⏳ S7 |
-| 17 | Default Address | Catch-all | S7 | ⏳ S7 |
-| 18 | Mailing Lists | Mailman lists | S7 | ⏳ S7 |
-| 19 | Track Delivery | Delivery trace | S7 | ⏳ S7 |
-| 20 | Global Email Filters | Server-side filters | S7 | ⏳ S7 |
-| 21 | Email Filters | Per-mailbox filters | S7 | ⏳ S7 |
-| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ⏳ S7 |
-| 23 | Address Importer | Bulk CSV import | S7 | ⏳ S7 |
-| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ⏳ S7 |
-| 25 | Encryption | PGP/GnuPG email keys | S7 | ⏳ S7 |
-| 26 | BoxTrapper | Challenge-response anti-spam | S7 | ⏳ S7 |
-| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ⏳ S7 |
-| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ⏳ S7 |
-| 29 | Webmail | Roundcube/Horde link | S7 | ⏳ S7 |
+| 13 | Email Accounts | Mailboxes + quota + edit + suspend + usage + Connect Devices | S7 | ✅ D14 LIVE (suspend + edit fix, 09 Oct) |
+| 14 | Forwarders | Email forward (cPanel-style list/search/create) | S7 | ✅ D1 LIVE (09 Oct 2026) |
+| 15 | Email Routing | MX/local routing per domain | S7 | ✅ D6a LIVE |
+| 16 | Autoresponders | Vacation/auto reply | S7 | ✅ D6a LIVE |
+| 17 | Default Address | Catch-all | S7 | ✅ D6a LIVE |
+| 18 | Mailing Lists | Mailman lists | S7 | ✅ D6a LIVE |
+| 19 | Track Delivery | Delivery trace | S7 | ✅ D6a LIVE |
+| 20 | Global Email Filters | Server-side filters | S7 | ✅ D6a LIVE |
+| 21 | Email Filters | Per-mailbox filters | S7 | ✅ D6a LIVE |
+| 22 | Email Deliverability | SPF/DKIM/DMARC + fix buttons | S7 | ✅ D6a LIVE |
+| 23 | Address Importer | Bulk CSV import | S7 | ✅ D6a LIVE |
+| 24 | Spam Filters (SpamAssassin) | Spam scoring + blacklist | S7 | ✅ D6a LIVE |
+| 25 | Encryption | PGP/GnuPG email keys | S7 | ✅ D6a LIVE |
+| 26 | BoxTrapper | Challenge-response anti-spam | S7 | ✅ D6a LIVE |
+| 27 | Calendar & Contacts | CalDAV/CardDAV + web app | S7 | ✅ D6a LIVE |
+| 28 | Email Disk Usage | Per-folder mail space, purge | S7 | ✅ D6a LIVE |
+| 29 | Webmail | Roundcube/Horde link | S7 | ✅ LIVE (D9, per-mailbox SSO) |
 
 ### 🌐 Domains
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 30 | Domains | Overview + actions | S5 | ⏳ S5 |
+| 30 | Domains | Overview + stats vs limits + search + type-aware create | S5 | ✅ D2 LIVE (09 Oct 2026) |
 | 31 | Subdomains | sub.domain.com | S5 | ⏳ S5 |
 | 32 | Addon Domains | Extra domain, alag site | S5 | ⏳ S5 |
 | 33 | Aliases (Parked) | Domain aliases | S5 | ⏳ S5 |
 | 34 | Redirects | 301/302 redirect | S5 | ⏳ S5 |
-| 35 | Zone Editor | A/CNAME/MX/TXT/… records | S9 | ⏳ S9 |
-| 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 |
+| 35 | Zone Editor | A/AAAA/CNAME/MX/TXT + MX priority + record EDIT | S9 | ✅ D14 LIVE (AAAA + MX prio + edit fix) |
+| 36 | Dynamic DNS | Dynamic IP clients | S9 | ⏳ S9 | ✅ D6c LIVE |
 
 ### 🗄️ Databases
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 37 | MySQL® Databases | DB + users + privileges | S8 | ⏳ S8 |
-| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 |
-| 39 | phpMyAdmin | DB GUI (SSO login) | S8 | ⏳ S8 |
-| 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 |
+| 37 | MySQL® Databases | DB + users + privileges + revoke + custom password | S8 | ✅ D14 LIVE (revoke bhi) |
+| 38 | MySQL Database Wizard | Step-by-step DB setup | S8 | ⏳ S8 | ✅ D6c LIVE |
+| 39 | phpMyAdmin | Asli app (port 2098) + one-click SSO | S8 | ✅ D12 DEPLOYED 09 Oct (click-test naye server par) |
+| 40 | Remote MySQL | Remote access hosts | S8 | ⏳ S8 | ✅ D6c LIVE |
 | 41 | PostgreSQL Databases | 🔵 optional module | post-v1 | 🔵 |
 | 42 | PostgreSQL Wizard | 🔵 optional module | post-v1 | 🔵 |
 
@@ -101,10 +101,10 @@
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
 | 43 | Visitors | Latest Apache access log | S11 | ⏳ S11 |
-| 44 | Errors | Latest error log | S11 | ⏳ S11 |
+| 44 | Errors | Latest error log | S11 | ✅ LIVE (D7) |
 | 45 | Bandwidth | Monthly bandwidth | S11 | ⏳ S11 |
-| 46 | Raw Access | Download raw logs | S11 | ⏳ S11 |
-| 47 | Awstats | Full stats (geo, browsers) | S11 | ⏳ S11 |
+| 46 | Raw Access | Download raw logs | S11 | ✅ LIVE (D7) |
+| 47 | Awstats | Full stats (geo, browsers) | S11 | ✅ LIVE (D7, bars v1) |
 | 48 | Webalizer | Second stats engine | S11 | ⏳ S11 |
 | 49 | Webalizer FTP | FTP stats | S11 | ⏳ S11 |
 | 50 | Analog Stats | Third stats engine | S11 | ⏳ S11 |
@@ -116,14 +116,14 @@
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 54 | SSH Access | Keys + shell access control | S6 | ⏳ S6 |
-| 55 | IP Blocker | IP/range block | S13 | ⏳ S13 |
+| 54 | SSH Access | Keys + shell access control | S6 | ✅ D6b LIVE |
+| 55 | IP Blocker | IP/range block | S13 | ✅ D6b LIVE |
 | 56 | SSL/TLS | CSR, cert install, keys | S5 | ⏳ S5 |
-| 57 | SSL/TLS Status | Sab domains ka SSL ek table | S5 | ⏳ S5 |
+| 57 | SSL/TLS Status | Stats + expiry warnings + search + AutoSSL | S5 | ✅ D5 LIVE |
 | 58 | Two-Factor Authentication | TOTP 2FA |S2B-2|✅|
 | 59 | Password & Security | Password change + strength |S2B|✅|
 | 60 | Leech Protection | Password vs hotlink abusers | S13 | ⏳ S13 |
-| 61 | ModSecurity (WAF) | Per-account WAF on/off | S13 | ⏳ S13 |
+| 61 | ModSecurity (WAF) | Per-account WAF on/off | S13 | ⏳ S13 | ✅ D6c LIVE |
 | 62 | Security Policy | Account-level policy | S13 | ⏳ S13 |
 
 ### 🧩 Software
@@ -133,29 +133,29 @@
 | 63 | **Softaculous-style App Installer** | 50+ apps one-click (WordPress…) | S14 | ⏳ S14 |
 | 64 | WordPress Toolkit | Staging/clone/scan/update | S14 | ⏳ S14 |
 | 65 | WP Guardian-style security | Malware scan + vuln patch | S14 | ⏳ S14 |
-| 66 | Node.js® Selector | Node apps + npm | S14 | ⏳ S14 |
-| 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 |
-| 68 | MultiPHP Manager | Per-domain PHP version | S5 | ⏳ S5 |
+| 66 | Node.js® Selector | Node apps + npm | S14 | ✅ D13 LIVE 09 Oct (PM2-style app manager) |
+| 67 | Optimize Website | Gzip/deflate | S14 | ⏳ S14 | ✅ D6c LIVE |
+| 68 | MultiPHP Manager | Per-domain PHP version | S5 | ⏳ S5 | ✅ D6c LIVE |
 | 69 | MultiPHP INI Editor | Per-domain php.ini | S5 | ⏳ S5 |
-| 70 | PHP Composer | Composer in panel | S14 | ⏳ S14 |
+| 70 | PHP Composer | Composer in panel | S14 | ✅ LIVE (D10) |
 | 71 | PHP PEAR Packages | 🔵 legacy | post-v1 | 🔵 |
 | 72 | Ruby Gems | 🔵 legacy | post-v1 | 🔵 |
 | 73 | Perl Modules | 🔵 legacy | post-v1 | 🔵 |
 | 74 | Python Selector | 🔵 optional module | post-v1 | 🔵 |
-| 75 | Application Manager | Node/Python app manager | S14 | ⏳ S14 |
+| 75 | Application Manager | Node/Python app manager | S14 | ✅ D13 Node apps LIVE (PM2-style); Python 🔵 baad me |
 
 ### ⚙️ Advanced
 
 | # | cPanel tool | Kya karta hai | Step | Status |
 |---|---|---|---|---|
-| 76 | Cron Jobs | Scheduled tasks | S5 | ⏳ S5 |
+| 76 | Cron Jobs | Common Settings presets + stats + search | S5 | ✅ D5 LIVE |
 | 77 | Track DNS | DNS trace/debug | S9 | ⏳ S9 |
-| 78 | Indexes | Directory listing control | S5 | ⏳ S5 |
-| 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 |
-| 80 | MIME Types | Custom MIME | S5 | ⏳ S5 |
-| 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 |
-| 82 | Network Tools | Ping/traceroute/lookup | S11 | ⏳ S11 |
-| 83 | Terminal | Browser SSH (jailed) | S6 | ⏳ S6 |
+| 78 | Indexes | Directory listing control | S5 | ✅ D6b LIVE |
+| 79 | Error Pages | Custom 404/500 etc. | S5 | ⏳ S5 | ✅ D6c LIVE |
+| 80 | MIME Types | Custom MIME | S5 | ⏳ S5 | ✅ D6c LIVE |
+| 81 | Apache Handlers | Custom handlers | S5 | ⏳ S5 | ✅ D6c LIVE |
+| 82 | Network Tools | Ping/traceroute/lookup | S11 | ✅ LIVE (D7, DNS lookup v1) |
+| 83 | Terminal | Browser SSH (jailed) | S6 | ✅ LIVE (D9, read-only) |
 | 84 | Hotlink Protection | Image hotlink block | S13 | ⏳ S13 |
 | 85 | Site IP Address | Account IP info | S3 | ⏳ S3 |
 
@@ -166,10 +166,10 @@
 | 86 | Getting Started Wizard | Pehli setup guidance |S2B|🟡 2B-1|
 | 87 | Video Tutorials | Help videos | S2B | 🟡 2B |
 | 88 | Change Language | Multi-language | S2B | 🟡 2B |
-| 89 | Change Style | Theme/colors, dark mode | S2B | 🟡 2B |
+| 89 | Change Style | Theme/colors, dark mode | S2B | 🟡 2B · Paper Lantern theme shipped 09 Oct; style-switcher UI pending |
 | 90 | Change Password | Password update | S2B | ✅ |
 | 91 | Contact Information | Email + alerts |S2B|🟡 2B-2|
-| 92 | User Manager | Sub-users + roles |S2B|🟡 2B-2|
+| 92 | User Manager | Sub-users + roles |S2B|🟡 2B-2| ✅ D6c LIVE |
 | 93 | Shortcuts / Favorites | Quick links | S2B | 🟡 2B |
 
 ---
@@ -186,14 +186,14 @@
 | 99 | Server Profile | S15 | ⏳ S15 |
 | 100 | Server Time (NTP) | S11 | ⏳ S11 |
 | 101 | Statistics Software Configuration | S11 | ⏳ S11 |
-| 102 | Terminal (root, audited) | S6 | ⏳ S6 |
-| 103 | Update Preferences (panel updates) | S15 | ⏳ S15 |
+| 102 | Terminal (root, audited) | S6 | ✅ LIVE (D9, whitelist) |
+| 103 | Update Preferences (panel updates) | S15 | ✅ LIVE (D10) |
 
 ### Account Functions / Information
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 104 | Create a New Account | S3 | ⏳ S3 |
-| 105 | List Accounts | S3 | ⏳ S3 |
+| 104 | Create a New Account | S3 | ✅ D4 LIVE (09 Oct 2026) |
+| 105 | List Accounts | S3 | ✅ D4 LIVE (09 Oct 2026) |
 | 106 | Modify an Account | S3 | ⏳ S3 |
 | 107 | Suspend / Unsuspend (Manage Account Suspension) | S3 | ⏳ S3 |
 | 108 | Terminate Accounts | S3 | ⏳ S3 |
@@ -218,7 +218,7 @@
 | 123 | Add / Edit / Delete a Package | S4 | ⏳ S4 |
 | 124 | Feature Manager (feature lists) | S4 | ⏳ S4 |
 | 125 | Feature Showcase (client panel sections on/off) | S2B | 🟡 2B |
-| 126 | Reseller Center + ACLs + Reseller packages | S15 | ⏳ S15 |
+| 126 | Reseller Center + ACLs + Reseller packages | S15 | ⏳ S15 | ✅ D6c LIVE |
 | 127 | Themes / Theme Manager | S2B | 🟡 2B |
 
 ### DNS Functions
@@ -234,14 +234,14 @@
 | 135 | Park a Domain | S9 | ⏳ S9 |
 | 136 | Perform a DNS Cleanup | S9 | ⏳ S9 |
 | 137 | Set Zone TTL | S9 | ⏳ S9 |
-| 138 | Setup/Edit Domain Forwarding | S9 | ⏳ S9 |
+| 138 | Setup/Edit Domain Forwarding | S9 | ⏳ S9 | ✅ D6c LIVE |
 | 139 | Synchronize DNS Records | S9 | ⏳ S9 |
 | 140 | DNS Cluster | S15 | ⏳ S15 |
 
 ### Email (server-wide)
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 141 | Mail Queue Manager | S7 | ⏳ S7 |
+| 141 | Mail Queue Manager | S7 | ✅ LIVE (D8) |
 | 142 | Mail Delivery Reports | S7 | ⏳ S7 |
 | 143 | Exim Configuration Manager | S7 | ⏳ S7 |
 | 144 | Mailserver Configuration (Dovecot) | S7 | ⏳ S7 |
@@ -255,7 +255,7 @@
 |---|---|---|---|
 | 149 | Manage DB users / reset password | S8 | ⏳ S8 |
 | 150 | Repair / optimize DB, upgrade server | S8 | ⏳ S8 |
-| 151 | phpMyAdmin config + phpPgAdmin(🔵) | S8 | ⏳ S8 |
+| 151 | phpMyAdmin config + phpPgAdmin(🔵) | S8 | ✅ D12 pma signon config LIVE; phpPgAdmin 🔵 optional |
 | 152 | Remote MySQL (server config) | S8 | ⏳ S8 |
 
 ### Security Center
@@ -263,7 +263,7 @@
 |---|---|---|---|
 | 153 | **cPHulk Brute Force Protection** | S13 | ⏳ S13 |
 | 154 | Host Access Control | S13 | ⏳ S13 |
-| 155 | Configure Security Policies | S13 | ⏳ S13 |
+| 155 | Configure Security Policies | S13 | ✅ LIVE (D8, posture v1) |
 | 156 | Password Strength Configuration | S13 | ⏳ S13 |
 | 157 | Security Advisor | S13 | ⏳ S13 |
 | 158 | Security Questions | S13 | ⏳ S13 |
@@ -278,12 +278,13 @@
 | 167 | SSH Password Authorization Tweak | S13 | ⏳ S13 |
 | 168 | Traceroute Enable/Disable | S13 | ⏳ S13 |
 | 169 | Manage External Authentications | S13 | ⏳ S13 |
-| 170 | Manage API Tokens | S12 | ⏳ S12 |
+| 170 | Manage API Tokens | S12 | ✅ D6b LIVE |
 
 ### Service Configuration / Restart Services
 | # | WHM tool | Step | Status |
 |---|---|---|---|
-| 171 | Service Manager (start/stop/enable) | S2B |S2B|🟡 2B-2| 172 | Restart: DNS / HTTP / IMAP / Mail / SQL / SSH / PHP-FPM / Mailing List | S2B | 🟡 2B |
+| 171 | Service Manager (start/stop/enable) | S2B | ✅ D11 LIVE (restart one-click; start/stop baad me) |
+| 172 | Restart: DNS / HTTP / IMAP / Mail / SQL / SSH / PHP-FPM | S2B | ✅ D11 LIVE (allowlist 11 services, audit) |
 | 173 | Exim / FTP Server Selection / Mailserver / Nameserver Selection | S7·S9 | ⏳ |
 | 174 | Manage Service SSL Certificates | S5 | ⏳ S5 |
 | 175 | cPanel Web Disk & Web Services Configuration | S6 | ⏳ S6 |
@@ -333,7 +334,7 @@
 |---|---|---|---|
 | 203 | Meridian task-based layout | S2B me wahi 6-area layout (Websites/Email/Files/Databases/Security/Performance) + classic grid toggle |S2B|🟡 2B-1| 204 | Guided Setup wizard | Onboarding wizard (domain→site→email) | ⏳ S2B |
 | 205 | AI Assistant (panel ke andar) | 🔵 Optional — apna AI assistant (customer ke apne API key se) | 🔵 post-v1 |
-| 206 | Node.js AI Toolkit | Node.js selector + app manager | ⏳ S14 |
+| 206 | Node.js AI Toolkit | Node.js selector + app manager | ✅ D13 LIVE (selector + app manager) |
 | 207 | MCP support (AI agents se cPanel control) | 🔵 AlphaCP MCP server (panel ko AI se chalane ke liye) | 🔵 post-v1 |
 | 208 | Nova AI website builder | 🔵 Optional website builder module | 🔵 post-v1 |
 
@@ -370,3 +371,4 @@
 | cPanel ke andar ka closed-source code | Available nahi hai + legal nahi. Hum har feature **khud** bana rahe hain (behaviour same). |
 | LiteSpeed/Imunify jaise paid third-party add-ons | 🔵 Chahein to baad me integrate kar sakte hain (inme alag license lagta hai) — customer ki marzi. |
 | Purane mar chuke tools (Analog/Webalizer bina support) | 🔵 Rakh sakte hain compatibility ke liye, par by default Awstats + apna stats engine chalega. |
+ + apna stats engine chalega. |
