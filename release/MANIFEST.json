@@ -1103,7 +1103,7 @@
    "wave": "d19-license-api",
    "src": "d19-LicenseClient.php",
    "path": "panel/app/Support/License/LicenseClient.php",
-   "sha256": "f4c66f2a220aa59cecd05150657c2a4263282db92d5a9197be84ed8582cd4029"
+   "sha256": "d1ac280c4957f83658b125107f32ac7387aad817570be82390d953e7328c47a5"
   },
   {
    "wave": "d19-license-api",
@@ -1507,7 +1507,7 @@
   "panel/app/Support/Ftp.php": "bdcfaf39929a8bc1732ce1206adc3c3d3844deaa6c32eeca10946f506b232146",
   "panel/app/Support/Handlers.php": "9ffcf9ba33959811527cde4851b9c80c11dcceeb1e4337a45dabacbaadd406f8",
   "panel/app/Support/Indexes.php": "49e11f0ee4626f04118df0e9aeb83392ca1e15bb2d0ee470bbbe66dab2bbd498",
-  "panel/app/Support/License/LicenseClient.php": "f4c66f2a220aa59cecd05150657c2a4263282db92d5a9197be84ed8582cd4029",
+  "panel/app/Support/License/LicenseClient.php": "d1ac280c4957f83658b125107f32ac7387aad817570be82390d953e7328c47a5",
   "panel/app/Support/LicenseSigner.php": "8a5301ce09caea4b96ddec7f3d6172d9e649900fc4c8ab410a85e48209893a77",
   "panel/app/Support/Mail.php": "eb1a611524c32176fa8e1f77e2dd877f9b436d4a576ac6f3636bb7909edfc5f3",
   "panel/app/Support/MailProvisioner.php": "fbd55856a33e3c60351fb92ed048fa0b32c1dc514652510b49f0359f3c1bbd3c",
