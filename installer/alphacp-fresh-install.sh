@@ -291,9 +291,14 @@ ensure_mail_stack() {
       && ok "mail stack installed (exim4 + dovecot)" \
       || warn "mail packages install fail — log dekho: ${LOG_FILE}"
   fi
+  # doveadm --version is build me nahi chalta — env override (code ka designed escape hatch)
+  mkdir -p /etc/systemd/system/paneld.service.d
+  printf '[Service]\nEnvironment=ACP_MAIL_DOVEADM=/usr/bin/doveadm\n' > /etc/systemd/system/paneld.service.d/mail.conf
+  systemctl daemon-reload >>"${LOG_FILE}" 2>&1 || true
+  systemctl restart paneld >>"${LOG_FILE}" 2>&1 || true
   # agent se exim+dovecot ki AlphaCP config lagao (idempotent)
   if [[ -x /usr/local/alphacp/agent/bin/paneld || -f /usr/local/alphacp/agent/bin/paneld ]]; then
-    if php8.4 /usr/local/alphacp/agent/bin/paneld --run mail.server '{"action":"setup"}' >>"${LOG_FILE}" 2>&1; then
+    if ACP_MAIL_DOVEADM=/usr/bin/doveadm php8.4 /usr/local/alphacp/agent/bin/paneld --run mail.server '{"action":"setup"}' >>"${LOG_FILE}" 2>&1; then
       ok "mail.server setup applied (exim+dovecot AlphaCP config)"
     else
       warn "mail.server setup fail — log: ${LOG_FILE} (WHM se dobara chala sakte ho)"
