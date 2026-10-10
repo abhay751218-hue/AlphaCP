@@ -1,0 +1,1839 @@
+{
+ "product": "AlphaCP",
+ "version": "1.0.0-rc1",
+ "built": "2026-10-10",
+ "base": "server-snapshot live 0.75.x",
+ "waves": [
+  {
+   "wave": "theme-fix",
+   "files": 7
+  },
+  {
+   "wave": "d1-email",
+   "files": 6
+  },
+  {
+   "wave": "d2-domains",
+   "files": 5
+  },
+  {
+   "wave": "d3-mysql",
+   "files": 6
+  },
+  {
+   "wave": "d4-whm",
+   "files": 4
+  },
+  {
+   "wave": "d5-tools",
+   "files": 6
+  },
+  {
+   "wave": "d6a-email-ui",
+   "files": 14
+  },
+  {
+   "wave": "d6b-files-security",
+   "files": 14
+  },
+  {
+   "wave": "d6c-software-whm",
+   "files": 15
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "files": 10
+  },
+  {
+   "wave": "d8-mailqueue-secpol",
+   "files": 6
+  },
+  {
+   "wave": "d9-terminal-webmail",
+   "files": 4
+  },
+  {
+   "wave": "d10-final-tiles",
+   "files": 8
+  },
+  {
+   "wave": "d11-restart-services",
+   "files": 5
+  },
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "files": 6
+  },
+  {
+   "wave": "d13-nodejs-apps",
+   "files": 8
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "files": 12
+  },
+  {
+   "wave": "d15-filemanager-plus",
+   "files": 6
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "files": 15
+  },
+  {
+   "wave": "d17-look-parity",
+   "files": 4
+  },
+  {
+   "wave": "d18-navbar-parity",
+   "files": 2
+  },
+  {
+   "wave": "d19-license-api",
+   "files": 5
+  },
+  {
+   "wave": "d22-license-nav",
+   "files": 1
+  },
+  {
+   "wave": "d23-license-expiry",
+   "files": 1
+  }
+ ],
+ "overlay_count": 170,
+ "overlays": [
+  {
+   "wave": "theme-fix",
+   "src": "panel.css",
+   "path": "panel/public/assets/panel.css",
+   "sha256": "6c707cdf6060ec30338eef4b927ce18dc9145d9960b9a338952d05a4a00086c0"
+  },
+  {
+   "wave": "theme-fix",
+   "src": "panel.js",
+   "path": "panel/public/assets/panel.js",
+   "sha256": "468c617f0042e357eccc1620df6acd43d23eee9aa856d37415f47e126acb3264"
+  },
+  {
+   "wave": "theme-fix",
+   "src": "panel-layout.blade.php",
+   "path": "panel/resources/views/layouts/panel.blade.php",
+   "sha256": "b40e810f4f13cf1340c15519612aabcd2398558f665915d900c7cf200536b17d"
+  },
+  {
+   "wave": "theme-fix",
+   "src": "dashboard-cpanel.blade.php",
+   "path": "panel/resources/views/dashboard-cpanel.blade.php",
+   "sha256": "68855f908c737aee8f73cca6376ac70074647b9c1e0910a98c55a5e2f23e48b4"
+  },
+  {
+   "wave": "theme-fix",
+   "src": "whm-sidebar.blade.php",
+   "path": "panel/resources/views/partials/whm-sidebar.blade.php",
+   "sha256": "8b3d1e2b91dee8a1f949f875434fe9b4c48b2a6d06be72d4067279958f199d5e"
+  },
+  {
+   "wave": "theme-fix",
+   "src": "icons.blade.php",
+   "path": "panel/resources/views/partials/icons.blade.php",
+   "sha256": "7c48ec94b697812b5ef491bdf0e407a4ce166ce2bda83f86319c355abe3b8562"
+  },
+  {
+   "wave": "theme-fix",
+   "src": "tile.blade.php",
+   "path": "panel/resources/views/partials/tile.blade.php",
+   "sha256": "b9eb79724da45a11add5bebf497405a28cd6531bddd724755c57fd3e74222d8e"
+  },
+  {
+   "wave": "d1-email",
+   "src": "MailController.php",
+   "path": "panel/app/Http/Controllers/MailController.php",
+   "sha256": "9d50f0f1b71e1d72387d951f5c23b836e341ef89df2ab9ed3b3af9c366be10d1"
+  },
+  {
+   "wave": "d1-email",
+   "src": "routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "50fa2b39476e9b619faf5bf96b2423e94e1e70770e690a5c00e1a294a8b99037"
+  },
+  {
+   "wave": "d1-email",
+   "src": "email-index.blade.php",
+   "path": "panel/resources/views/email/index.blade.php",
+   "sha256": "fb637f15f4f9f4c4fde91854b1e1b7c0d8aa26ac853e491172c3ba9e0d04a480"
+  },
+  {
+   "wave": "d1-email",
+   "src": "forwarders-index.blade.php",
+   "path": "panel/resources/views/forwarders/index.blade.php",
+   "sha256": "36553e88546213aeb1586316c3e27ab6535681b7e5754b8183a01032e4bab61c"
+  },
+  {
+   "wave": "d1-email",
+   "src": "panel.js",
+   "path": "panel/public/assets/panel.js",
+   "sha256": "468c617f0042e357eccc1620df6acd43d23eee9aa856d37415f47e126acb3264"
+  },
+  {
+   "wave": "d1-email",
+   "src": "panel.css",
+   "path": "panel/public/assets/panel.css",
+   "sha256": "6c707cdf6060ec30338eef4b927ce18dc9145d9960b9a338952d05a4a00086c0"
+  },
+  {
+   "wave": "d2-domains",
+   "src": "ZoneEditorController.php",
+   "path": "panel/app/Http/Controllers/ZoneEditorController.php",
+   "sha256": "708f4e4413c89405044eb9d5344bb8e381ee0dbc565907ff6f5dae007da65328"
+  },
+  {
+   "wave": "d2-domains",
+   "src": "routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "50fa2b39476e9b619faf5bf96b2423e94e1e70770e690a5c00e1a294a8b99037"
+  },
+  {
+   "wave": "d2-domains",
+   "src": "domains-index.blade.php",
+   "path": "panel/resources/views/domains/index.blade.php",
+   "sha256": "19690e22ab74b709e9ffc81a3d2833fea3593824a83fa3816cdd77e9768d4f8e"
+  },
+  {
+   "wave": "d2-domains",
+   "src": "zone-editor-index.blade.php",
+   "path": "panel/resources/views/zone-editor/index.blade.php",
+   "sha256": "124961cb12ea6a99384535f8d2a05de0706f2c61980e91de5f3fe27a094179bf"
+  },
+  {
+   "wave": "d2-domains",
+   "src": "panel.js",
+   "path": "panel/public/assets/panel.js",
+   "sha256": "468c617f0042e357eccc1620df6acd43d23eee9aa856d37415f47e126acb3264"
+  },
+  {
+   "wave": "d3-mysql",
+   "src": "MysqlDatabasesController.php",
+   "path": "panel/app/Http/Controllers/MysqlDatabasesController.php",
+   "sha256": "5705e6f56f3a7c93f3585af21eb8479c982b2cdaffd6dd36edfc45316dc3d32d"
+  },
+  {
+   "wave": "d3-mysql",
+   "src": "MysqlUsersController.php",
+   "path": "panel/app/Http/Controllers/MysqlUsersController.php",
+   "sha256": "cb8a338a6b881d475d2bcd2a8e0da819d9bd2604c1e3b95a16175199ee3b996a"
+  },
+  {
+   "wave": "d3-mysql",
+   "src": "mysql-index.blade.php",
+   "path": "panel/resources/views/mysql/index.blade.php",
+   "sha256": "a1be4f3281ab650c5a61cfde6c2cc89c836a6168192831ad1dd94778c70443a0"
+  },
+  {
+   "wave": "d3-mysql",
+   "src": "mysql-users-index.blade.php",
+   "path": "panel/resources/views/mysql-users/index.blade.php",
+   "sha256": "028a537c25bcacf223bdb12d4b6c4933e68f5cf5464e9e1850786a063070e676"
+  },
+  {
+   "wave": "d3-mysql",
+   "src": "phpmyadmin-index.blade.php",
+   "path": "panel/resources/views/phpmyadmin/index.blade.php",
+   "sha256": "4ee848700bf2defa5267c739d5aadcc723b2d741df249115718d67ee311ea57c"
+  },
+  {
+   "wave": "d3-mysql",
+   "src": "panel.js",
+   "path": "panel/public/assets/panel.js",
+   "sha256": "468c617f0042e357eccc1620df6acd43d23eee9aa856d37415f47e126acb3264"
+  },
+  {
+   "wave": "d4-whm",
+   "src": "accounts-create.blade.php",
+   "path": "panel/resources/views/accounts/create.blade.php",
+   "sha256": "2317f96ea8ec861fa676f362670b47a18d20d434dd3a9a4993b80f492d577ffc"
+  },
+  {
+   "wave": "d4-whm",
+   "src": "accounts-index.blade.php",
+   "path": "panel/resources/views/accounts/index.blade.php",
+   "sha256": "18899d3592dfa5eac34172576fbb57375cd53d25ca2347dee9f13da039b4034d"
+  },
+  {
+   "wave": "d4-whm",
+   "src": "packages-index.blade.php",
+   "path": "panel/resources/views/packages/index.blade.php",
+   "sha256": "6377873c8daed2bdf754976557648f717a6c810208712eebd985fc855ac6d59c"
+  },
+  {
+   "wave": "d4-whm",
+   "src": "panel.js",
+   "path": "panel/public/assets/panel.js",
+   "sha256": "468c617f0042e357eccc1620df6acd43d23eee9aa856d37415f47e126acb3264"
+  },
+  {
+   "wave": "d5-tools",
+   "src": "cron-index.blade.php",
+   "path": "panel/resources/views/cron/index.blade.php",
+   "sha256": "0de6fdf9ae453f6b4693c1945d8070b5f139c1c5cb1b20012bc89a9db4d2bc58"
+  },
+  {
+   "wave": "d5-tools",
+   "src": "ssl-index.blade.php",
+   "path": "panel/resources/views/ssl/index.blade.php",
+   "sha256": "1a820181eefaff91e02822b202d80ee8ca52633a7885eafb54754dd7b911f51e"
+  },
+  {
+   "wave": "d5-tools",
+   "src": "files-index.blade.php",
+   "path": "panel/resources/views/files/index.blade.php",
+   "sha256": "5e11cd683fe9622489b66bac58fef8646db0fca0e450caab9d745a5bc3063777"
+  },
+  {
+   "wave": "d5-tools",
+   "src": "panel-layout.blade.php",
+   "path": "panel/resources/views/layouts/panel.blade.php",
+   "sha256": "b40e810f4f13cf1340c15519612aabcd2398558f665915d900c7cf200536b17d"
+  },
+  {
+   "wave": "d5-tools",
+   "src": "panel.js",
+   "path": "panel/public/assets/panel.js",
+   "sha256": "468c617f0042e357eccc1620df6acd43d23eee9aa856d37415f47e126acb3264"
+  },
+  {
+   "wave": "d5-tools",
+   "src": "panel.css",
+   "path": "panel/public/assets/panel.css",
+   "sha256": "6c707cdf6060ec30338eef4b927ce18dc9145d9960b9a338952d05a4a00086c0"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "default-address-index.blade.php",
+   "path": "panel/resources/views/default-address/index.blade.php",
+   "sha256": "e4c1cd2ae5f1666c7097a91dcb1d064abac1ec9309480e6bc6b35ee83b253906"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "autoresponders-index.blade.php",
+   "path": "panel/resources/views/autoresponders/index.blade.php",
+   "sha256": "2a86948ce10cb9832b4ce95b8bf1ba1582563fe5c4b0a16553c3e723d3855356"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "email-routing-index.blade.php",
+   "path": "panel/resources/views/email-routing/index.blade.php",
+   "sha256": "26f1ac617ac5e3ffe5bcea74647a1bf338d3b0039e0b3e26b39f8d8e171a795c"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "email-filters-index.blade.php",
+   "path": "panel/resources/views/email-filters/index.blade.php",
+   "sha256": "219bbd7bda5679fcebb5dfdb91c9bc804262268f6c4d3793299b3555681802da"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "global-filters-index.blade.php",
+   "path": "panel/resources/views/global-filters/index.blade.php",
+   "sha256": "47a76071a37f9f6fef0e1282bc892a32fd9c45ad3fc458a075ec0390f1ab5dd1"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "mailing-lists-index.blade.php",
+   "path": "panel/resources/views/mailing-lists/index.blade.php",
+   "sha256": "d1be978ddf9d43f1438f42a6ceaca57dc04eaccfb9e2cef119e8a7b9abe2dd14"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "spam-filters-index.blade.php",
+   "path": "panel/resources/views/spam-filters/index.blade.php",
+   "sha256": "33a16bcfee98498ccf59c05041f0e9a3f48dd3dec0a6a121c6cdc818fa41756b"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "boxtrapper-index.blade.php",
+   "path": "panel/resources/views/boxtrapper/index.blade.php",
+   "sha256": "90ba2f18728eed2a35263a137cd69970f562e0fc8dceec592e5c7f7f2ac6b02a"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "calendar-index.blade.php",
+   "path": "panel/resources/views/calendar/index.blade.php",
+   "sha256": "d155802f15ef2b03bea974686c1c9e88d711e657e03dcf8d476f17dc54912104"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "encryption-index.blade.php",
+   "path": "panel/resources/views/encryption/index.blade.php",
+   "sha256": "fa28f30628874387ff4b596248f23e8ecad1b58ee13b8cda4fb86a25954a9d11"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "email-disk-index.blade.php",
+   "path": "panel/resources/views/email-disk/index.blade.php",
+   "sha256": "523b540ca500c544bbc6e944ae4047b6b75e0b4ec5ca0c28c162febf6638b76b"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "track-delivery-index.blade.php",
+   "path": "panel/resources/views/track-delivery/index.blade.php",
+   "sha256": "8ab3200687cb5a72eab62aebdb8207070bd3bef7f3a61a7e61c82df083724d99"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "address-importer-index.blade.php",
+   "path": "panel/resources/views/address-importer/index.blade.php",
+   "sha256": "560b8a0a06fbf64d277f3dbbe57612621e287670beb198ec4030de7b60e7c73a"
+  },
+  {
+   "wave": "d6a-email-ui",
+   "src": "deliverability-index.blade.php",
+   "path": "panel/resources/views/deliverability/index.blade.php",
+   "sha256": "6df310e2de72a2d91e3e31410141a04f8f9030ee37a53a378baf0d90ad1ddda9"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "images-index.blade.php",
+   "path": "panel/resources/views/images/index.blade.php",
+   "sha256": "b4be1846e5a0041436cd5b7921c3851d3833ba857523c3b4806c052afa3ec206"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "privacy-index.blade.php",
+   "path": "panel/resources/views/privacy/index.blade.php",
+   "sha256": "6bc7d2ef83530d5d6b0ae87edaa33160ff9c2676c47bcd81ae58b55a91714c97"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "disk-index.blade.php",
+   "path": "panel/resources/views/disk/index.blade.php",
+   "sha256": "2166b86a4111eb5eeea18f4049728a72d26600489c37fe94275a22cee36549c5"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "ftp-index.blade.php",
+   "path": "panel/resources/views/ftp/index.blade.php",
+   "sha256": "c8870f5b8c3ca65f36e0da09411d345727dcbbc18ac05f02baab3718d136139f"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "webdisk-index.blade.php",
+   "path": "panel/resources/views/webdisk/index.blade.php",
+   "sha256": "2da043055ea14c7b5d1cf3c4f483782c8cfb547e6967e0bfafbc571856a829bd"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "backup-wizard-index.blade.php",
+   "path": "panel/resources/views/backup-wizard/index.blade.php",
+   "sha256": "0dec0f04bdb0c56d06c90ddc395bc28230160b685a4903e0e34ce3c41369a368"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "git-index.blade.php",
+   "path": "panel/resources/views/git/index.blade.php",
+   "sha256": "50c5ad1317bf3c873a0ba224931b9cef31d8d0db58ef7e32132dbe4066af9df8"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "file-restoration-index.blade.php",
+   "path": "panel/resources/views/file-restoration/index.blade.php",
+   "sha256": "2cbed6e8d5430c53f9b484b06f5ab4de1068d11ae9d9dd7f0d76a49187686b57"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "trash-index.blade.php",
+   "path": "panel/resources/views/trash/index.blade.php",
+   "sha256": "5be8d770784c112eb00b1f25004f136e99345092a19471ef367bc028cfd64d1e"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "indexes-index.blade.php",
+   "path": "panel/resources/views/indexes/index.blade.php",
+   "sha256": "4159011045a1d9435fc6685dfc7b2d4bc2537037621b3eb591f33f4cdb01ceda"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "ssh-index.blade.php",
+   "path": "panel/resources/views/ssh/index.blade.php",
+   "sha256": "c1d1ab9bb07dbea01f86d8d39362dcb0866f1a08e0e4b6e174707034b23f6333"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "ip-blocker-index.blade.php",
+   "path": "panel/resources/views/ip-blocker/index.blade.php",
+   "sha256": "4908742c82eb0aa6fbc64290ff80988b956a39cd8a4c19e74ce3ed9cef249bb9"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "api-tokens-index.blade.php",
+   "path": "panel/resources/views/api-tokens/index.blade.php",
+   "sha256": "92f724b915b37b9999963830d5a1c08dc0017410a33b2731a8878b0822c84982"
+  },
+  {
+   "wave": "d6b-files-security",
+   "src": "audit-index.blade.php",
+   "path": "panel/resources/views/audit/index.blade.php",
+   "sha256": "077592f603becf30be7bf2891f8dde9ddc92045edd627a0a38e21c5ecad57ad6"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "optimize-index.blade.php",
+   "path": "panel/resources/views/optimize/index.blade.php",
+   "sha256": "18c42c65af883d7d33ef8ad1c409f4e71a25a5a694c5ced2ad5e08686adc75dc"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "apps-index.blade.php",
+   "path": "panel/resources/views/apps/index.blade.php",
+   "sha256": "4084c9593c9d0afb9ce3ed29017055ee3014bd8932a296864d8c618e5c6a1bfc"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "errorpages-index.blade.php",
+   "path": "panel/resources/views/errorpages/index.blade.php",
+   "sha256": "ff8e18434d1957d70e720ce18cf3e26cb80bef70e5d6e8f57d3ee587ba12f2b9"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "php-index.blade.php",
+   "path": "panel/resources/views/php/index.blade.php",
+   "sha256": "26750a1f5ec5cc398b4be8ae880870f94510d46c4e54fe111fc0bc4c27c628ad"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "mysql-wizard-index.blade.php",
+   "path": "panel/resources/views/mysql-wizard/index.blade.php",
+   "sha256": "aea0d1dc97f45d5ce8edf85ea7c59aeedf8ccd2693f0f195cd98569be308c6b9"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "remote-mysql-index.blade.php",
+   "path": "panel/resources/views/remote-mysql/index.blade.php",
+   "sha256": "ae4892be5d4367b703e07be02e6e9db6181ea2aac9aa214f3a237f58a1994ff2"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "mime-index.blade.php",
+   "path": "panel/resources/views/mime/index.blade.php",
+   "sha256": "8d8e2b7fa9f25e4e8349f486ff2deb9a58c57ebdea0ada342e05c577b9a89eb5"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "handlers-index.blade.php",
+   "path": "panel/resources/views/handlers/index.blade.php",
+   "sha256": "ea19cc3ca501076da93d0f919a759c7c55af70404302c82e2b04535997b954ad"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "domain-forward-index.blade.php",
+   "path": "panel/resources/views/domain-forward/index.blade.php",
+   "sha256": "a09baa454e462f9a685b517dd1e413fc9a8ccf252460333b487da20bc5ce8dac"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "dynamic-dns-index.blade.php",
+   "path": "panel/resources/views/dynamic-dns/index.blade.php",
+   "sha256": "44d6da782357bbf7283a085988abc3876088f656526d1737fe82eebebad1cb07"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "users-index.blade.php",
+   "path": "panel/resources/views/users/index.blade.php",
+   "sha256": "ed72b7801226495767318dd091118e8fe8c831cffb2f5e95c329b2d957b23345"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "resellers-index.blade.php",
+   "path": "panel/resources/views/resellers/index.blade.php",
+   "sha256": "c91e4808e1028a56ba294478602ae9d1447b27ad168307cafdf04c1ba1339dde"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "security-tools-index.blade.php",
+   "path": "panel/resources/views/security-tools/index.blade.php",
+   "sha256": "71275f708f4f8193beb149309a4da60c52483ab246e7e9bf9e37d1e0414f2a19"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "ports-index.blade.php",
+   "path": "panel/resources/views/ports/index.blade.php",
+   "sha256": "17e03d2b988b1bbbebdfc85838e0270f0d4cfd8a1621e5d4a9f86a7ee0e53a35"
+  },
+  {
+   "wave": "d6c-software-whm",
+   "src": "license-index.blade.php",
+   "path": "panel/resources/views/license/index.blade.php",
+   "sha256": "c044214a9d46002dc73fa96e3e3b5c7ee12b8acf478287b3770ffbdcc32e3628"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-ErrorsLogController.php",
+   "path": "panel/app/Http/Controllers/ErrorsLogController.php",
+   "sha256": "41109bcefa0c18c598a0216c14b47202466a2474f2d63b6a089feb841044f27b"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-RawAccessController.php",
+   "path": "panel/app/Http/Controllers/RawAccessController.php",
+   "sha256": "8f7e9169d7c70c83666794ac605a6e4e276c44e33bafcff97f16a089cbbd1f78"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-AwstatsController.php",
+   "path": "panel/app/Http/Controllers/AwstatsController.php",
+   "sha256": "9ed742e614a61b02d3d95ff2471207202f4ceea3483a3b5d7d121d578ade588c"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-NetworkToolsController.php",
+   "path": "panel/app/Http/Controllers/NetworkToolsController.php",
+   "sha256": "7434ad27af1093fb01b906e38dbccf7066d2e459bab6884035eadcc4d929f344"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-errors-log-index.blade.php",
+   "path": "panel/resources/views/errors-log/index.blade.php",
+   "sha256": "49b2903dbccb1601f3fbc9008908e74c402bbf8784058f8e89ae5bd0adeccf8f"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-raw-access-index.blade.php",
+   "path": "panel/resources/views/raw-access/index.blade.php",
+   "sha256": "06323b00d39e27fb5adfe14e2bedf668f57f5955a54400a2fe747f70b5f1913d"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-awstats-index.blade.php",
+   "path": "panel/resources/views/awstats/index.blade.php",
+   "sha256": "f8d5f8a07c0c596689c0cf8d9b869b2be298eb6f0f62ba402a11994b91e7e45b"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-network-tools-index.blade.php",
+   "path": "panel/resources/views/network-tools/index.blade.php",
+   "sha256": "2b1be9643b885f1f8b48b85a3f5c6ee98d42a64b85dd8710aad18a90d4f784da"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "a27f3841dfcb2b624b12d6ebbffb2bff57ca2a9577abf965b44376cb20fc646e"
+  },
+  {
+   "wave": "d7-metrics-tools",
+   "src": "d7-module-catalog.php",
+   "path": "panel/app/Support/ModuleCatalog.php",
+   "sha256": "733d876f1cdaede84b4877ce4cb50d07e7f378c97dd40e66869b275151e28cb5"
+  },
+  {
+   "wave": "d8-mailqueue-secpol",
+   "src": "d8-MailQueueController.php",
+   "path": "panel/app/Http/Controllers/MailQueueController.php",
+   "sha256": "219aa0943003016c58d09e0b33db01db07ddf4bdf7d7b184cdd3ddd9bd490f40"
+  },
+  {
+   "wave": "d8-mailqueue-secpol",
+   "src": "d8-SecurityPoliciesController.php",
+   "path": "panel/app/Http/Controllers/SecurityPoliciesController.php",
+   "sha256": "5b8236ac220bc29fc8388155c09dbca11a76308e2caba261ab27a7ffe50b1c70"
+  },
+  {
+   "wave": "d8-mailqueue-secpol",
+   "src": "d8-mail-queue-index.blade.php",
+   "path": "panel/resources/views/mail-queue/index.blade.php",
+   "sha256": "92580c10e94da5c136a7bd84da7b9808cae857f220b729289f020a6ed375c802"
+  },
+  {
+   "wave": "d8-mailqueue-secpol",
+   "src": "d8-security-policies-index.blade.php",
+   "path": "panel/resources/views/security-policies/index.blade.php",
+   "sha256": "934f5c5c6ea828613eef81a32a5e1ba70d43e2dbf124e04fa729238c6f88d791"
+  },
+  {
+   "wave": "d8-mailqueue-secpol",
+   "src": "d8-routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "603660b1fd052b103b0d28b2ce68984fdfcc706637dd337368febb494a532250"
+  },
+  {
+   "wave": "d8-mailqueue-secpol",
+   "src": "d8-module-catalog.php",
+   "path": "panel/app/Support/ModuleCatalog.php",
+   "sha256": "d19550782b675293f90fd84d606afa37a2a359d82455d2633ecc79aea429c664"
+  },
+  {
+   "wave": "d9-terminal-webmail",
+   "src": "d9-TerminalController.php",
+   "path": "panel/app/Http/Controllers/TerminalController.php",
+   "sha256": "243033dd5ba02a3eab4c51a5c446567877c6b4ba30bbbb3cdf99738c5bf04be0"
+  },
+  {
+   "wave": "d9-terminal-webmail",
+   "src": "d9-WebmailController.php",
+   "path": "panel/app/Http/Controllers/WebmailController.php",
+   "sha256": "510c5a630f9c17d21d87941d45eef227570d29168792f6ed8dd57e0c0c9bba2f"
+  },
+  {
+   "wave": "d9-terminal-webmail",
+   "src": "d9-terminal-index.blade.php",
+   "path": "panel/resources/views/terminal/index.blade.php",
+   "sha256": "4db76d072893b5d050dac70ef7dd77716be0e92a230fef45dd4938156f33c7a2"
+  },
+  {
+   "wave": "d9-terminal-webmail",
+   "src": "d9-webmail-index.blade.php",
+   "path": "panel/resources/views/webmail/index.blade.php",
+   "sha256": "6d0578e1a4854e31c87a438ec79f8b3963fd0e693e6aa7968909e69a82886df9"
+  },
+  {
+   "wave": "d10-final-tiles",
+   "src": "d10-NodejsSelectorController.php",
+   "path": "panel/app/Http/Controllers/NodejsSelectorController.php",
+   "sha256": "b0a24cf6bc993c1499221051305b870fe8c42734d2af89f0e71b851211e291e0"
+  },
+  {
+   "wave": "d10-final-tiles",
+   "src": "d10-ComposerController.php",
+   "path": "panel/app/Http/Controllers/ComposerController.php",
+   "sha256": "15e57d3a69188ba5163936226e69af6bb25db544cddac9f6dc0e9ca269bfac06"
+  },
+  {
+   "wave": "d10-final-tiles",
+   "src": "d10-UpdatesController.php",
+   "path": "panel/app/Http/Controllers/UpdatesController.php",
+   "sha256": "f603756f24710bbee196d8237a2244990128387f2df731a0359ef77d52be77f2"
+  },
+  {
+   "wave": "d10-final-tiles",
+   "src": "d10-nodejs-index.blade.php",
+   "path": "panel/resources/views/nodejs/index.blade.php",
+   "sha256": "68b90f9d1d8f999b401942f50f6d29a4cc1c34e856168255776cbcc63a2eb036"
+  },
+  {
+   "wave": "d10-final-tiles",
+   "src": "d10-composer-index.blade.php",
+   "path": "panel/resources/views/composer/index.blade.php",
+   "sha256": "96071868711db98c45b98bc5f20352844a9b213788c74c9c6334f366fc18bec3"
+  },
+  {
+   "wave": "d10-final-tiles",
+   "src": "d10-updates-index.blade.php",
+   "path": "panel/resources/views/updates/index.blade.php",
+   "sha256": "9ab6a95af700266b3447eb6a0d6898be01cb1398028089f7cd43c65156f2e0be"
+  },
+  {
+   "wave": "d10-final-tiles",
+   "src": "d10-routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "4f23b653d7a2284de044e9a09e66bb848ebcc26ea28085dd4af5deaed70ee7cd"
+  },
+  {
+   "wave": "d10-final-tiles",
+   "src": "d10-module-catalog.php",
+   "path": "panel/app/Support/ModuleCatalog.php",
+   "sha256": "e792d767df822a08b8e4a1818080bd7804f651b6ba3da9b29519f66fc1e4a4b7"
+  },
+  {
+   "wave": "d11-restart-services",
+   "src": "d11-agent-tasks.php",
+   "path": "agent/config/tasks.php",
+   "sha256": "059e7b27223522733483ec2fb1064cd9940c560ebff0bb28e8188e87f7522d19"
+  },
+  {
+   "wave": "d11-restart-services",
+   "src": "d11-ServiceRestart.php",
+   "path": "agent/src/Tasks/ServiceRestart.php",
+   "sha256": "8dce3c093e3e5d3df8c689e24dd8b68b8b2c576cf3234258743ce225f24bc323"
+  },
+  {
+   "wave": "d11-restart-services",
+   "src": "d11-SystemController.php",
+   "path": "panel/app/Http/Controllers/SystemController.php",
+   "sha256": "0b77eb5873c024b36acda54b85a1bd1b8ea1540420dbc1ee2fc8f6240acdd562"
+  },
+  {
+   "wave": "d11-restart-services",
+   "src": "d11-system-services.blade.php",
+   "path": "panel/resources/views/system/services.blade.php",
+   "sha256": "cd6a0e686c20a5192b876a76023e14080d339d1cd85ceef1c44b02b2bb1e5a9d"
+  },
+  {
+   "wave": "d11-restart-services",
+   "src": "d11-routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "be1398670d4f8a4620850db8596966d423e173e50b5457526bd00b1d16fb0524"
+  },
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "src": "d12-agent-tasks.php",
+   "path": "agent/config/tasks.php",
+   "sha256": "d2471a7dddd43e15bc0ebeacfef9a7a6e1a3319ff449b98970f467c6f35db190"
+  },
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "src": "d12-PmaSignon.php",
+   "path": "agent/src/Tasks/PmaSignon.php",
+   "sha256": "f29ca7d06fad09c6cc53e7939a5fdb44e1ae913b5fb915813a79f389ff6f6392"
+  },
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "src": "d12-PhpmyadminController.php",
+   "path": "panel/app/Http/Controllers/PhpmyadminController.php",
+   "sha256": "8a3be54f9be812bbfccb7c0b629b89aa917546040aa5aa2d66115063df6d1831"
+  },
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "src": "d12-PmaSsoController.php",
+   "path": "panel/app/Http/Controllers/PmaSsoController.php",
+   "sha256": "3d81193e43a328908e5cd76fccd09c0c15aebd036746f2121cb8bc6b3a001a77"
+  },
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "src": "d12-phpmyadmin-index.blade.php",
+   "path": "panel/resources/views/phpmyadmin/index.blade.php",
+   "sha256": "9e9b6755faf12d43375f888cd37dee88dfcff156b4624bd94e2690e628c15f3f"
+  },
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "src": "d12-routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "2b709a36a1f4948e7ffa62853ccd137cfe56cb39dcdc040980ec47ec254df2c1"
+  },
+  {
+   "wave": "d13-nodejs-apps",
+   "src": "d13-agent-tasks.php",
+   "path": "agent/config/tasks.php",
+   "sha256": "4f9b3a12574678d268b61a268f09853e9d1ec0e2a1568317349df7bedd68301d"
+  },
+  {
+   "wave": "d13-nodejs-apps",
+   "src": "d13-NodeTask.php",
+   "path": "agent/src/Tasks/NodeTask.php",
+   "sha256": "8e3d330e7e3b5cebcd45b8c1069d52cae905aaa4b7918a93d8ab0f7fad8b4b5b"
+  },
+  {
+   "wave": "d13-nodejs-apps",
+   "src": "d13-NodeAppList.php",
+   "path": "agent/src/Tasks/NodeAppList.php",
+   "sha256": "03049e0cb18ea33d32737edd47b442776c125a6dd473fad82c8c339762408ae0"
+  },
+  {
+   "wave": "d13-nodejs-apps",
+   "src": "d13-NodeAppSetup.php",
+   "path": "agent/src/Tasks/NodeAppSetup.php",
+   "sha256": "aa218b3d4eb5830232b62fd3154fe0f572046c18c90fa4cfea95c29a86a6c3e2"
+  },
+  {
+   "wave": "d13-nodejs-apps",
+   "src": "d13-NodeAppControl.php",
+   "path": "agent/src/Tasks/NodeAppControl.php",
+   "sha256": "711f32b6f6a07089143dd91e770d924512d1d3cf3b840d89e8d65b1681744a0d"
+  },
+  {
+   "wave": "d13-nodejs-apps",
+   "src": "d13-NodejsSelectorController.php",
+   "path": "panel/app/Http/Controllers/NodejsSelectorController.php",
+   "sha256": "804582a0aeb5623ff37654fd850fe0e8ad1842468e87b60b64b7e21bd66ecccd"
+  },
+  {
+   "wave": "d13-nodejs-apps",
+   "src": "d13-nodejs-index.blade.php",
+   "path": "panel/resources/views/nodejs/index.blade.php",
+   "sha256": "31b6e480bd90626838f4234f9621ac666d51b618b3f92e388951d121f20cd719"
+  },
+  {
+   "wave": "d13-nodejs-apps",
+   "src": "d13-routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "8a6152d115340ca58ff47abace9b47b4c7c63d009c0c4828a64dc6d9c2831e5f"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-agent-tasks.php",
+   "path": "agent/config/tasks.php",
+   "sha256": "1b6bd3ec02c8c5a941185612c8debcc06888e7f8d6252b9f17213ee44e97510a"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-agent-Dns.php",
+   "path": "agent/src/Dns.php",
+   "sha256": "ffdaf175120e596fdb98c10876999d2ffbbacf871df0d4d9211737a1e48e31ab"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-agent-BindServer.php",
+   "path": "agent/src/BindServer.php",
+   "sha256": "5cffc1a60ff2879bc2966358d02cd022953433b19b8794b893460bed1dc99c33"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-agent-Mail.php",
+   "path": "agent/src/Mail.php",
+   "sha256": "7d067f13e8699ee87bf7005c503b8c2fd7084af88d36c36f7767916cd68f2bb3"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-DbUserRevoke.php",
+   "path": "agent/src/Tasks/DbUserRevoke.php",
+   "sha256": "4622d87050f54f5882795a3a9d7f287b2468b99bcf890642fa4b99ab85a40a88"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-panel-Dns.php",
+   "path": "panel/app/Support/Dns.php",
+   "sha256": "c693a399bc05d18abc6acc97dc09e68d9b8f9c650583b05e4d2ea52e70414816"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-MailController.php",
+   "path": "panel/app/Http/Controllers/MailController.php",
+   "sha256": "565049cfd810d63a0608bc30145bbd31a12921a58f918c3854d1ea6273fa5385"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-MysqlUsersController.php",
+   "path": "panel/app/Http/Controllers/MysqlUsersController.php",
+   "sha256": "ad23714c3b552c9aa414ecd0edfee89771980fe32fdf4ed46fa777cd26b83e13"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-email-index.blade.php",
+   "path": "panel/resources/views/email/index.blade.php",
+   "sha256": "d037e8e17b60fbda6994b616d8f4b15658b2be9bc3066bb93f00031af1a75cc8"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-mysql-users-index.blade.php",
+   "path": "panel/resources/views/mysql-users/index.blade.php",
+   "sha256": "9ef1f4ad08cab08e834ce978480d30270dae7faaef95797dab82b5eaf2077a36"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-zone-editor-index.blade.php",
+   "path": "panel/resources/views/zone-editor/index.blade.php",
+   "sha256": "54417fc6b9f969939b620b57bb8730a2a243e47a1dc5ded110e356b838e52764"
+  },
+  {
+   "wave": "d14-parity-gaps",
+   "src": "d14-routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "5b468e471f7c93ca4fca5c427613824d3f7b5439e951d18e27a8463d1b35cedf"
+  },
+  {
+   "wave": "d15-filemanager-plus",
+   "src": "d15-agent-tasks.php",
+   "path": "agent/config/tasks.php",
+   "sha256": "1594eef21715a14f780f22dd1fa6d538afbbf8330009d256f8330f30531381cd"
+  },
+  {
+   "wave": "d15-filemanager-plus",
+   "src": "d15-agent-Files.php",
+   "path": "agent/src/Files.php",
+   "sha256": "fac5b20a85591b4c69ca8a14904476acdedadb841014fd04a9d4a9f57fcd2f15"
+  },
+  {
+   "wave": "d15-filemanager-plus",
+   "src": "d15-FilesSet.php",
+   "path": "agent/src/Tasks/FilesSet.php",
+   "sha256": "81a9acb529e8423c3e1cec4ffdc747b66ec2628485bc7e82b6e644153e29d567"
+  },
+  {
+   "wave": "d15-filemanager-plus",
+   "src": "d15-FilesController.php",
+   "path": "panel/app/Http/Controllers/FilesController.php",
+   "sha256": "d39645fb176559611981283ee869f8ffb41f10d066c6c1059c83db111218b061"
+  },
+  {
+   "wave": "d15-filemanager-plus",
+   "src": "d15-files-index.blade.php",
+   "path": "panel/resources/views/files/index.blade.php",
+   "sha256": "af1b32e096c250d08e0eddcd5fc3fde6c074b3385e0818381347a1e5175e18a1"
+  },
+  {
+   "wave": "d15-filemanager-plus",
+   "src": "d15-routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "2a4101b00986ca00408b75c4df8db27fc58d54c50b1e40939b919b7ef957c855"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-dash-sections.blade.php",
+   "path": "panel/resources/views/partials/dash-sections.blade.php",
+   "sha256": "a8dcb365d01f33897cb21bdd2f5416ee1e198ad1d012aa9b19281e7987a436d1"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-panel-layout.blade.php",
+   "path": "panel/resources/views/layouts/panel.blade.php",
+   "sha256": "626ecf3036eeb98609d3f433589497dd92911b4b7e903a5c9c18eb175d5292db"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-login.blade.php",
+   "path": "panel/resources/views/auth/login.blade.php",
+   "sha256": "2cf8ca843fe5997b36aab48be80bfcac9c46f49c60aaba26523590b64d7bb289"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-dashboard-cpanel.blade.php",
+   "path": "panel/resources/views/dashboard-cpanel.blade.php",
+   "sha256": "e0a8d7bf06d940e816a88e39619eb42e91f43ab03151bf8d3de276ae70c44b0e"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-dashboard-whm.blade.php",
+   "path": "panel/resources/views/dashboard-whm.blade.php",
+   "sha256": "45921eb67450a7a710750b96b7cc5ae01f25ab5fd87c76421f7c36d72aef0ba6"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-whm-sidebar.blade.php",
+   "path": "panel/resources/views/partials/whm-sidebar.blade.php",
+   "sha256": "b3a3a69729be18821115f028b46f88e9f176c3d3c7a235249f2729ad7ebb63fe"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-ports-index.blade.php",
+   "path": "panel/resources/views/ports/index.blade.php",
+   "sha256": "31f640a41b9ea7214c0da3e328f7650b1347f4f578bfc49b58262f179828756b"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-terminal-index.blade.php",
+   "path": "panel/resources/views/terminal/index.blade.php",
+   "sha256": "cc90d84648eb2e2e4ec41b3170a582b46f5971dd5ad3f2c43073a24aa589745b"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-phpmyadmin-index.blade.php",
+   "path": "panel/resources/views/phpmyadmin/index.blade.php",
+   "sha256": "2ecc43ca5b7a7e4d5f68c7bdd374a62d133fd37dd9c1722c4af6655fecff783d"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-system-services.blade.php",
+   "path": "panel/resources/views/system/services.blade.php",
+   "sha256": "02befaf4c78830f207148650621ad0c53610a681eb501f43b5f224880847acda"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-email-index.blade.php",
+   "path": "panel/resources/views/email/index.blade.php",
+   "sha256": "8e6e80b91d5ead7952b4e3942b82a0cea967a449d90fd165420a7250cc657986"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-mysql-users-index.blade.php",
+   "path": "panel/resources/views/mysql-users/index.blade.php",
+   "sha256": "028f89d105736ff676d9a19b31701d9d2dbc1fec146dcea1ab6e24f4fb17dc1a"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-accounts-create.blade.php",
+   "path": "panel/resources/views/accounts/create.blade.php",
+   "sha256": "4033ca46e9361c94ce5f618c0890b7185ff80ad94d98b1e057159f07ed062f5c"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-packages-index.blade.php",
+   "path": "panel/resources/views/packages/index.blade.php",
+   "sha256": "2396205e0751c928ad7ae4fbb692b399f30474b0a562508e0c332dabb3c83d52"
+  },
+  {
+   "wave": "d16-branding-sweep",
+   "src": "d16-git-index.blade.php",
+   "path": "panel/resources/views/git/index.blade.php",
+   "sha256": "2359feeee1a5aa01c4fac78423cbe6f9460e5660c1e7858bdbc9d2d7b4c90da5"
+  },
+  {
+   "wave": "d17-look-parity",
+   "src": "d17-panel.css",
+   "path": "panel/public/assets/panel.css",
+   "sha256": "b47562966cc3a5f0d978500389cd88b8c8069877f68bf47b25af33bfc40eae00"
+  },
+  {
+   "wave": "d17-look-parity",
+   "src": "d17-dashboard-whm.blade.php",
+   "path": "panel/resources/views/dashboard-whm.blade.php",
+   "sha256": "d49e32bfcc0b4f1ac50af2a7440af8bcf4918cb9e128e1912fd3b8bcb65f3725"
+  },
+  {
+   "wave": "d17-look-parity",
+   "src": "d17-files-index.blade.php",
+   "path": "panel/resources/views/files/index.blade.php",
+   "sha256": "f28e367b7e96dbcee06224e454b2d34bcab05bb9f76f0aeff88bc37ecd2d66d4"
+  },
+  {
+   "wave": "d17-look-parity",
+   "src": "d17-apps-index.blade.php",
+   "path": "panel/resources/views/apps/index.blade.php",
+   "sha256": "b591550ea48db2565a4d1cafceb79d3242cec07e6a42a726ed699ce3dcf9d5b8"
+  },
+  {
+   "wave": "d18-navbar-parity",
+   "src": "d18-panel.css",
+   "path": "panel/public/assets/panel.css",
+   "sha256": "52ee9f600c6fbb0b445258ef4f732d73f04f070ff0f9777d45069886a8be14d7"
+  },
+  {
+   "wave": "d18-navbar-parity",
+   "src": "d18-panel-layout.blade.php",
+   "path": "panel/resources/views/layouts/panel.blade.php",
+   "sha256": "ad803c6fd4c6bb8fdff01072c08503d6519ca5be11232abe1eef8dd34a6a4c03"
+  },
+  {
+   "wave": "d19-license-api",
+   "src": "d19-bootstrap-app.php",
+   "path": "panel/bootstrap/app.php",
+   "sha256": "2cdfbbfddc2e80c086b039e2f1a0f8e54bef5653375cfe3304927c7f6b543546"
+  },
+  {
+   "wave": "d19-license-api",
+   "src": "d19-acp-config.php",
+   "path": "panel/config/acp.php",
+   "sha256": "33e5eb577249b98d22288e48fe451a0ec53207d69c37d4942012e296ab74be18"
+  },
+  {
+   "wave": "d19-license-api",
+   "src": "d19-LicenseServerController.php",
+   "path": "panel/app/Http/Controllers/LicenseServerController.php",
+   "sha256": "495f0516dfff0e2b0d9d72a3e7a994d2ffb1352b943addc13d89b573b67947f3"
+  },
+  {
+   "wave": "d19-license-api",
+   "src": "d19-LicenseClient.php",
+   "path": "panel/app/Support/License/LicenseClient.php",
+   "sha256": "f4c66f2a220aa59cecd05150657c2a4263282db92d5a9197be84ed8582cd4029"
+  },
+  {
+   "wave": "d19-license-api",
+   "src": "d19-routes-web.php",
+   "path": "panel/routes/web.php",
+   "sha256": "36ed2ae05be730a43467f0d951d2ef08641742f40f48d3588109de6e810d5510"
+  },
+  {
+   "wave": "d22-license-nav",
+   "src": "d22-ModuleCatalog.php",
+   "path": "panel/app/Support/ModuleCatalog.php",
+   "sha256": "ed9d34aa9f8b286b6871f2200e600c08ea4b539677c2d3e299502b9d022f624c"
+  },
+  {
+   "wave": "d23-license-expiry",
+   "src": "d23-migration-expires-datetime.php",
+   "path": "panel/database/migrations/2026_10_10_000001_license_keys_expires_datetime.php",
+   "sha256": "15bc312eb492ed0127162785cec1eaee506057cb01344a87551cddfda22f9578"
+  }
+ ],
+ "system_components_from_wave_installers": [
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "src": "d12-acp-signon.php",
+   "target": "PMA:acp-signon.php"
+  },
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "src": "d12-pma-config.php",
+   "target": "PMAETC:conf.d/acp-signon.php"
+  },
+  {
+   "wave": "d12-phpmyadmin-sso",
+   "src": "d12-pma-vhost.conf",
+   "target": "NGX:alphacp-pma.conf"
+  }
+ ],
+ "total_files": 692,
+ "tree_sha256": {
+  "agent/README.md": "943bca52f0c0bbe38be6fbe3824a7a6112379207b88769470f18de2dcaf89fcf",
+  "agent/bin/paneld": "e89fac605b33decdcebe243b6ddf3c42ddc7313db620cfc4bec1b5f4a5cece1f",
+  "agent/config/tasks.php": "1594eef21715a14f780f22dd1fa6d538afbbf8330009d256f8330f30531381cd",
+  "agent/src/AccountIdentity.php": "2175d17ed940c393d23044c2fefe3ea3b7c4b3ec6790c0f2848dde3339767560",
+  "agent/src/AccountOs.php": "9367c5d62d76c096cf8751fb7dc1132dad0fa570ff854eb148584aa5c05d63b1",
+  "agent/src/AccountPaths.php": "dafe328e1881cc76ec98d27f557cd261ba1acea71d831a5faccef9a91dc92c03",
+  "agent/src/AccountTemplates.php": "030c6d11a47744bed3b471f269ddfa7eff400f5e6dd2a615695d0406c5d7601b",
+  "agent/src/Backup.php": "f5ac713b88e3356b012130eabba8b642dc8ecb6048109f6cb9580ceb4c9a9c7f",
+  "agent/src/BackupArchiveStore.php": "d2bf0693a40609751d85baca21f426b0dfeae878e9344694798c0a7ed7e177b7",
+  "agent/src/BindServer.php": "5cffc1a60ff2879bc2966358d02cd022953433b19b8794b893460bed1dc99c33",
+  "agent/src/Bootstrap.php": "a78235d1820453209770f11c2fc52ea33a1ac34a88ded9d21d2fdc31749cc6b9",
+  "agent/src/Cli.php": "c4349a3c6c1f16679d77724ac01dd3ebea9f97ca005a56799ef241c773a71f4e",
+  "agent/src/CommandExecutor.php": "ecd3839726bced87231e444cd2d8e05d48e5e9a01a5ca5acbdadf469139c3aa8",
+  "agent/src/CommandResult.php": "09221fc19621ff97fa2fe29cb35f1e75c745aebe1465b2aad7b2ecd4b1116033",
+  "agent/src/CommandRunner.php": "2680a717e9e30223a9ec71889ce242f928d597af53ee5affa81b8aa023ef0552",
+  "agent/src/CpanelArchive.php": "296ad50f442a918691d962ef121e6b3604dc37591266aa7459866434001e0c28",
+  "agent/src/CpanelMysql.php": "abea15e16e6da19688bbe2f99f7ec042ddb6dc42d35fe877f240783edb92f15d",
+  "agent/src/Daemon.php": "739b149cef8965fb61558831f7b5e9a59f9c6c168e76a0e0cc7f5423c6dda4a0",
+  "agent/src/Db.php": "2b1b797e7ecf869f019baf4f820187eaf2d17a33a5a7a6a1a569e9fe657fbb84",
+  "agent/src/Dns.php": "ffdaf175120e596fdb98c10876999d2ffbbacf871df0d4d9211737a1e48e31ab",
+  "agent/src/ErrorPages.php": "7c9a3bf7f914d4ac31beb630c0d368bdd12b5cdec0187b914e899a22d4209ba1",
+  "agent/src/Files.php": "fac5b20a85591b4c69ca8a14904476acdedadb841014fd04a9d4a9f57fcd2f15",
+  "agent/src/Ftp.php": "0d74ba32dd34aa31845b3f19fed808741461ac2dfc45c5822a850630d882f7a0",
+  "agent/src/Git.php": "20d0037ad4fa2c357b9738573d681b31bbbc2c385cc3bc1ab3e87fa4f6b34842",
+  "agent/src/Handlers.php": "1f6971594938160ce4f7ee0ebfda6243018c24f40c8da37a0b5eaa4f4248cde4",
+  "agent/src/Indexes.php": "7bd415173edebec321c12ff52846f57d839bfbdd6d9a4eacd99676bc8acf2df3",
+  "agent/src/JsonSchema.php": "38786cf2ee351f180a1abb1e1ae4bafead9c089d86ba117d1f93a369b3e83802",
+  "agent/src/Mail.php": "7d067f13e8699ee87bf7005c503b8c2fd7084af88d36c36f7767916cd68f2bb3",
+  "agent/src/MailServer.php": "ed5550ed82d4b7d0fb12d4df490bdd87483671a255b0e6902cf38903f6a7af9a",
+  "agent/src/Metrics.php": "fa4c12d56d8a65747c407b0ebb17cd5e151ab5e6569cc69e033f542893d3b0d0",
+  "agent/src/MimeTypes.php": "61201efc2e2ca9551ff8815b84c4d2c59756ffb5200b350ce8ded58884c4d5f9",
+  "agent/src/Mysql.php": "0f2ee48f9945eba3cfbb531ee264a40405d8e25dfe6b92e9f39a98ea78a99540",
+  "agent/src/MysqlServer.php": "6ff4e615ad4450b5c0b6e00b1938288f0618091b3c0b9c55c4ffd419f2e33b8f",
+  "agent/src/PathGuard.php": "17b2e8f67710beaae060781ef41e5fd276c4ce7b7d4e9c6e37b73a3c29b942ec",
+  "agent/src/PhpIni.php": "569142bd0084487186ce0b9804d93697353077e6768a63b3b743e1e684db8b77",
+  "agent/src/PortsNginx.php": "9484e157589d2b53288a902ad01eca812d18e0a09913ea9b12f6eefdfaf10c1f",
+  "agent/src/Privacy.php": "632179012cca31e5a492b76a450758398eeb51765f462a10c98a2b8fad99b96a",
+  "agent/src/RemoteDestination.php": "696cefd181b42aec4d13cce34326d9bc0fb9c40fa6e9665a49cdb48c26fde37e",
+  "agent/src/RemotePull.php": "15b30692957e33d1b971302bd1b29508436ddd16840e8ae41edca8bd0e05737c",
+  "agent/src/SafeFs.php": "34d966c4ff6d5686811bcc834862a526972df43f7ee98ff00eb9a0cb58d951f9",
+  "agent/src/Ssh.php": "122e104a60c60b653101a7054bf21affaa8f0f818ed0f95b5620a2a102ba8e6d",
+  "agent/src/TaskLogger.php": "4b6e0dbfab43b6fddd7fa741781b3b76666caf8b883c95eb4a608bbf0604519f",
+  "agent/src/TaskRejectedException.php": "53e5bab70ca972449eb534a7a2c2717f9d93ae243faf91d8448e2e1fcffaa09e",
+  "agent/src/TaskRunner.php": "359674adf495262594c0bea6f1977f04c145fbfdd39006375c87e4214c2d4723",
+  "agent/src/Tasks/AccountCreate.php": "60cfd6add2cc61175890afee06009b3f60d9666f47e6f6088cee042fbb760335",
+  "agent/src/Tasks/AccountSetQuota.php": "4012b4156d98a7af9cce6ebcd213e4c4cc6d5d4065d21002aedef34e62d92b84",
+  "agent/src/Tasks/AccountSuspend.php": "0c5d7737c331b2521a709921e694bf093092f6894a1f37c7f2421b7111b4823e",
+  "agent/src/Tasks/AccountTerminate.php": "94f5327c2f81b929070f74ae66404dd32262008d29f06ae772b99ab29f9f1b66",
+  "agent/src/Tasks/AccountUnsuspend.php": "d208e7ffbe5c2208616ed932beedd85d9ca46ef2bed17d1b67b93d1320d04396",
+  "agent/src/Tasks/AgentPing.php": "94bd43749d9933b48b674a585c945969bd017518a7cd063b5cd4e78164c49511",
+  "agent/src/Tasks/AppsInstall.php": "c4c5f6a5853174d6acc6aa095789ab1d7092daff7f59d0621e4e3a5f4f8057d8",
+  "agent/src/Tasks/BackupArchiveCreate.php": "a2b89b0ed534c5384aedc2c86945246c95cd6c49eabfa67459803742f06aaf34",
+  "agent/src/Tasks/BackupConfig.php": "ee3864b078d9e0869ea793c13a7b449c5a9a31ce6fb84e7f22e958cffa50cf74",
+  "agent/src/Tasks/BackupCpanel.php": "132491566ea83b0df640a5df051d5fcb47987245243b687bb7e131127d3259cc",
+  "agent/src/Tasks/BackupCreate.php": "75604a7e68e636b4b35df9c2b1801b6f285a97a0f72efca8995d1206192b55f9",
+  "agent/src/Tasks/BackupDestination.php": "8222d3ebca430838138e05b326195928628f5137a85132a4280b447bd821da45",
+  "agent/src/Tasks/BackupExtract.php": "04db577bf1e1d23a332dff210a1749dd3996957945102222284d49e74c0f3c77",
+  "agent/src/Tasks/BackupFiledir.php": "ecc3cd18cac84024b92e7a88b4e7efa18ad2833ebc24b40da3a6cdf22599549e",
+  "agent/src/Tasks/BackupPull.php": "afe85e81e10cdb7f6ff2655f87df8f853e67b6d2740d64ebd2a5a2b77dd123a9",
+  "agent/src/Tasks/BackupRestoration.php": "5525acc92e509cbfdf885fa88a4751797d9ce8b7db46162fa8489e16cad1789a",
+  "agent/src/Tasks/BackupRestore.php": "946830b60067822e92c2d731ca4919b21df2f13c9317d01e3ffc11d79b1c988d",
+  "agent/src/Tasks/BackupReview.php": "2e1f93b793872624f6dd5642836c743152aeafc8080d8222d408d1eb872bb750",
+  "agent/src/Tasks/BackupTransfer.php": "d3ad84718f088a65c375abc7ee6b455db2f078b5e4fc2ba4c41a75d81854073a",
+  "agent/src/Tasks/BackupUsers.php": "631ac461f69d2ce8028a1df94ff04d7f627841562cff636d20a28b0506577160",
+  "agent/src/Tasks/BackupWizard.php": "7e2093ae6f263f83d7cbc5ef689afbece191ff68b540d56bf71d7e61f6bb81d8",
+  "agent/src/Tasks/BindSetup.php": "10f7c13efb0175ffac57a919e6a18c4caeb00caaff034efd16a13e4d2a18f3eb",
+  "agent/src/Tasks/CleanupSet.php": "f8a618edeed2ce0d83f08fee3e0755d929baf725e11078a1a057272abd4d67f7",
+  "agent/src/Tasks/CronSet.php": "1f79df3ed18e9e27f11dbface5448b0ab3d3448a00e807b53819f6b658b5a007",
+  "agent/src/Tasks/DbCreate.php": "a670c79da8e7b2e46e83abc23f970ab27f7cffead3b29a33d6cf4744666a06b1",
+  "agent/src/Tasks/DbDrop.php": "16eb0838f2e13754b373bd50411b09a58b43dd31927d586aa39e759cc1cee702",
+  "agent/src/Tasks/DbList.php": "8c86f10e5de5e8ed274cc11dccf5434b10c0e39bfe3e38cfc99f3fb1f40651e8",
+  "agent/src/Tasks/DbRestore.php": "129917c486916e49b781fe7ded491692d8f10ed058a486876501aea04adad30b",
+  "agent/src/Tasks/DbTask.php": "ca4da93c8af1f13a7825a478f6e6eebd5026bd8c2f01190f4403eae9d5700942",
+  "agent/src/Tasks/DbUserCreate.php": "e1d7e588b6c237fffed911408db7a49ae782261ef12d0f17c0542badfa7eeabf",
+  "agent/src/Tasks/DbUserDrop.php": "8bc8d080434c2788a8ea206c400392b6a3e4b7aa7f485622a8fbdf51a6d954ac",
+  "agent/src/Tasks/DbUserGrant.php": "569f618f2a0d5fb6746acf9207620b39919e4f5bed365f40936ff061665cde33",
+  "agent/src/Tasks/DbUserPassword.php": "055934d04e57cadf71dab2e87e38e84e2d1f70bfefa34da7b36cf67eafb907ee",
+  "agent/src/Tasks/DbUserRevoke.php": "4622d87050f54f5882795a3a9d7f287b2468b99bcf890642fa4b99ab85a40a88",
+  "agent/src/Tasks/DnsTrack.php": "a153797fa34feacb233e818601204b4df79a49eb0bd775783f6f4a2d78ced19b",
+  "agent/src/Tasks/DomainAdd.php": "4c37c1ab8bd076494ee6e3c95559a19200e955ead4435c486cd9e7d506c683cc",
+  "agent/src/Tasks/DomainRemove.php": "148f379f26e0a528ad5a31461c6b48ab416e29bafd0443897de84a21842d646b",
+  "agent/src/Tasks/DynamicSet.php": "8f95e6727a1c78904761e04abe1af43bcb1c4be632cca7e027a604ebc461a2dc",
+  "agent/src/Tasks/ErrorPagesSet.php": "c69d3af37292f321c60a3870d76116ef1e622f007eb6917ec124a4e3ee277a6b",
+  "agent/src/Tasks/FilesList.php": "d7e275b5b6c4e306412f6c6a042c13f3098a17b06439635539ffb0cbaf83e948",
+  "agent/src/Tasks/FilesSet.php": "81a9acb529e8423c3e1cec4ffdc747b66ec2628485bc7e82b6e644153e29d567",
+  "agent/src/Tasks/FilesUsage.php": "d126fbcc3845c8f9b803828035d68e5074bc1aae01fe77a89cde8ec82119e0c3",
+  "agent/src/Tasks/ForwardSet.php": "b1667778b95ea4ea6d78e9abc45144176cbf0d6ba2c0d60e24f610c45f488081",
+  "agent/src/Tasks/FtpAdd.php": "c45a6b69cedd524da62cfdd93ef77adfae09d9ef341beb5d642a320ece340746",
+  "agent/src/Tasks/FtpDel.php": "612625c00b497a53abf0a3ca8af89af467125977d88c4ee631b70d2e34251d8e",
+  "agent/src/Tasks/FtpPasswd.php": "2cdb1b06f0a6f2299c4fd50286161942c9c4ecae545646f51c35cbafe40f5466",
+  "agent/src/Tasks/FtpTask.php": "b4da5beb089d06ac70164f0f5a6062f3205d4df9eef683cbcb8940019c3ca391",
+  "agent/src/Tasks/GitClone.php": "68c4ce804a67f9e13c1f0fd2bb67fdf9eba6c844e38c20b28836e3c75f6d5400",
+  "agent/src/Tasks/GitList.php": "146d7bd3c079447ffc5adb108183646c3b6fb817acbd683e61496c983927d34c",
+  "agent/src/Tasks/GitPull.php": "c3f6963a95a2fda85f7d311ffc2dd81cb9acc9eb596b3fb7780670b415e1b2ca",
+  "agent/src/Tasks/GitStatus.php": "8806a4ee7dfd306caff687a363f520c4dab8f89ade654a447b50c05ff435a6c2",
+  "agent/src/Tasks/GitTask.php": "0fd1901533c7d725ba648b14d5b624c3a7ddcc1baade8de8c5a44b048e666b16",
+  "agent/src/Tasks/GlobalRoutingSet.php": "79f2a424d6eb047745985d0426e96799b46a36c18b8213471fa0c44c4d0e54c3",
+  "agent/src/Tasks/HandlersSet.php": "995a032bafc3d8bb5e8a98587b543644b72ac83937ee39522fb73bc364eafbfb",
+  "agent/src/Tasks/HostnameASet.php": "59aaa4aee48ce4d085f6a5c090a96ceb04cbf29056c112a374e9294ffd57bc4b",
+  "agent/src/Tasks/IndexesSet.php": "02b0134db6471c7a66e8d6232e2d39d893026aea59c2dff808f268d1bdb4b8fb",
+  "agent/src/Tasks/IpBlock.php": "bcc98d62e1929f04472c237530a1bfc59d483b5e132d3319ed144fc17e5a4a86",
+  "agent/src/Tasks/IpUnblock.php": "4637b30326a09baa1f2942c0897e896199e19b9d63141a1c609e3502e822d8b8",
+  "agent/src/Tasks/MailAutorespond.php": "d825aa22822061d126ce5df0be81e6fe10dbfdca1a23230dbc146ecf6de89a2c",
+  "agent/src/Tasks/MailBoxtrapper.php": "bdc246419ca3452e844934c108aea1d58f6ef4444a01c0b950224822b8c582d5",
+  "agent/src/Tasks/MailCalendar.php": "d4496e5eab4d3194ea62646d18c9f9494881a6788cc3a68522e1e7f949d92697",
+  "agent/src/Tasks/MailCatchall.php": "4281c58df005756f8c3496ff228ae9931a4a68f8afbfe43987dc067c52e15a96",
+  "agent/src/Tasks/MailDeliverability.php": "437104b6af0128b9d5724b69f96adaf71b4e43200c73838404ec8a716dc6a07e",
+  "agent/src/Tasks/MailEncrypt.php": "cf42c7d14966e4fcab0b58c89e1e6082b0dc39e96afc8ee7bf29cbcface89f2f",
+  "agent/src/Tasks/MailFilter.php": "18eafe9d7a8f665aadb5d69036d59767cd34ff1319d51c1a06cea5d39915f472",
+  "agent/src/Tasks/MailForward.php": "12066bc9143f96996aabfaa6d98694b43ed25c5bcbe11200a138ee11c9d73f71",
+  "agent/src/Tasks/MailGfilter.php": "c4101e67f410cb5dee2c056681491d777547c08c7396b0f5c86be377f3401bb3",
+  "agent/src/Tasks/MailList.php": "4b316e415cda0627438f0f8a2deefd8a5f0d3c898a4cd0f98d43deb32a43e7c5",
+  "agent/src/Tasks/MailRouting.php": "a5aeff5343d45b079509b845a7eeae0639c82fc0a193fb835a3a69dbfb39ed31",
+  "agent/src/Tasks/MailServerSetup.php": "6766e7304c12a43c993acd457025b19d390fa0b19cc1f63c06d12b111fa4e7e0",
+  "agent/src/Tasks/MailSet.php": "8cc93b37fb185bb897c2a5e4e679fd34556e787dd64952e84d5f257d7ae3f49f",
+  "agent/src/Tasks/MailSpam.php": "e6b7023c55c342fc619f9d41fbf9c7089a71eb260b6ae309fa49448f727a0cc7",
+  "agent/src/Tasks/MailTrack.php": "bab47515539bce81a17f092ab71f6f7107e1111355443fe2eb463c1ac0fd20df",
+  "agent/src/Tasks/MailUsage.php": "1e343a42738d485cbf623008c20d26005093a19a34c75c228db1610b8c23181d",
+  "agent/src/Tasks/MailWebmail.php": "2b038a411802e4aaa840f0ed67ce8b02f39404b7e9d66221f8d2f289f2fe30ce",
+  "agent/src/Tasks/MetricsAccess.php": "bb3bf0766440dbd04e73d7ef185be5c5107452166e8efcf823d73ddf535a25e3",
+  "agent/src/Tasks/MimeTypesSet.php": "3bc409642909f21c4ad626af82cd68da2a5aecd4ebdfd1246957dcfd60e00e17",
+  "agent/src/Tasks/MysqlSet.php": "d55e460f219efd78dad29fa8c9383b3acbdd523fbe8e6340ed97fbe0fa323de0",
+  "agent/src/Tasks/NameserverSet.php": "98a3d99d829663c9cef55d07d8c40cbb18e743539500377414fe803797dc87e9",
+  "agent/src/Tasks/NodeAppControl.php": "711f32b6f6a07089143dd91e770d924512d1d3cf3b840d89e8d65b1681744a0d",
+  "agent/src/Tasks/NodeAppList.php": "03049e0cb18ea33d32737edd47b442776c125a6dd473fad82c8c339762408ae0",
+  "agent/src/Tasks/NodeAppSetup.php": "aa218b3d4eb5830232b62fd3154fe0f572046c18c90fa4cfea95c29a86a6c3e2",
+  "agent/src/Tasks/NodeTask.php": "8e3d330e7e3b5cebcd45b8c1069d52cae905aaa4b7918a93d8ab0f7fad8b4b5b",
+  "agent/src/Tasks/NsReportSet.php": "a43ded04eab081a79f886df97da96ad96620f3f8aebf2766e58aa9527e71d1ee",
+  "agent/src/Tasks/ParkSet.php": "c0b6fe8d495821fd824da8c60c6e3fe5c52a05a1f2985703566757265cbd2974",
+  "agent/src/Tasks/PhpSetIni.php": "560422cf7606977e73732ab66f4fa23b2a03f4d5295aecb5603564375b305585",
+  "agent/src/Tasks/PhpSetVersion.php": "b7680141754258b62483f514d8461ad9715e53f3d40c7a714fcdfdef38c18e7f",
+  "agent/src/Tasks/PhpmyadminSet.php": "127509934cfa1599dad51c31e7eaaa9247062ea9a69db6f8eba505a5e98ccd16",
+  "agent/src/Tasks/PmaSignon.php": "f29ca7d06fad09c6cc53e7939a5fdb44e1ae913b5fb915813a79f389ff6f6392",
+  "agent/src/Tasks/PortsApply.php": "f5914bed14b7daaa7117e286ed2cfff946770997b436f2bc584100531bfa905d",
+  "agent/src/Tasks/PrivacySet.php": "baea0d988cc822837041ce53dedb1103ca0077b31a0b05dc97314ca480dc4624",
+  "agent/src/Tasks/RemoteMysqlSet.php": "b88b7703395b90ee3d48f6ee7436005fe129de29cb89d6d28454cb2e80552288",
+  "agent/src/Tasks/SecurityTask.php": "f4eea3315fefadf9d1ecda0e550f736c1ac44879f713b8b652302dc9ab77047b",
+  "agent/src/Tasks/ServiceRestart.php": "8dce3c093e3e5d3df8c689e24dd8b68b8b2c576cf3234258743ce225f24bc323",
+  "agent/src/Tasks/ServiceStatus.php": "8d01a9dd2de4b60ba7a6fc695c7063e928df852ef34d6fd7ddcd9ce98bbd3550",
+  "agent/src/Tasks/SshSet.php": "92f55d288e56ea04344057264eab1c3fc9dfa8b2bcb068c5744fe32d4eb6e7b2",
+  "agent/src/Tasks/SslIssue.php": "8bbc429fd874b3f1e3b7d27a4328b58eb86b19636b98c79c7cc3f1b7c1de90ec",
+  "agent/src/Tasks/SslRemove.php": "1547711438a01e773c7c02ff6fadd4d84dadb3c692164942345541ef9dde166a",
+  "agent/src/Tasks/SyncSet.php": "4737c53e6aa3760e9651c534bc12bbf212ddf21376fe66090dc0a3da6b1c6dc8",
+  "agent/src/Tasks/SystemInfo.php": "c19a2b9c30052e620c269389882d6248ca7ac52eee750db1f0413e987136706f",
+  "agent/src/Tasks/TaskContext.php": "cc609bf0f5f6f1ec908c6729dd7e8c899d8593cbcc9295c0b4b004a5991cb926",
+  "agent/src/Tasks/TaskInterface.php": "c0bb16adbafb7bda29bfb1ef473f91413e9a9bddd17e7e234469895803c21b80",
+  "agent/src/Tasks/TemplatesSet.php": "ec83084fd9322cbf7a0e9ae2020a44c4553920e923fca293bea6ea92d997235e",
+  "agent/src/Tasks/TerminalRun.php": "eed4d57090e3b0271f96d845bffd7cd8589dbb9b6dcbefc8d2a379107a348aae",
+  "agent/src/Tasks/TtlSet.php": "3b17bee76496856579c60559ed3a4da48b720ee0cbf7f6ec2962dc4919d7f325",
+  "agent/src/Tasks/VirusScan.php": "838c80934fbc86119c45687d135dd6f5a6fe0dfc8543b3f524592a879e46fef0",
+  "agent/src/Tasks/WafDisable.php": "5d0fe89654959fd033168fbe0351c7f658bd3895b5a01841dd747cd5b3a9ec8a",
+  "agent/src/Tasks/WafEnable.php": "fefd80e799912a758df09d1317440b0639e62c1f55c1e402ab25c301839ca46b",
+  "agent/src/Tasks/WafStatus.php": "3c2b2b811451a78558bae62daa956f41c381abfc8b4d4e5953ce4d85631d3b6c",
+  "agent/src/Tasks/WebDiskCreate.php": "340a1dd04c7d8246783c12c607c6853f83276b7574ea9494bf4767344ecbd666",
+  "agent/src/Tasks/WebDiskDelete.php": "6c0903127fad480cf7928216d093ce176b0af0f1a2ba19d4e4683152a07f42b5",
+  "agent/src/Tasks/WebDiskList.php": "8f82f972967003ddd0040e4c83e394d07f815f6c0f8813ed3c760d1258c15a58",
+  "agent/src/Tasks/ZoneSet.php": "3917d6767ba43425485290136da2762f37988718ea280780919559d42f781c94",
+  "agent/src/WebDisk.php": "e053f84163604942a8ebbdc044860d9af5400b906eddb1c7612dc94ce41f8403",
+  "agent/systemd/paneld.service": "21df292b4204449c8bcae2d2eea4eeccccbaadc7b6cb620d3aafe2e449e400f7",
+  "agent/tests/FakeCommandExecutor.php": "28680b8c793a2c468a8deff78c358d1c082a12772525d933b7ad6f113ae6df63",
+  "agent/tests/run-tests.php": "5f802565f48a15a973e65d1c7ea59d141ff83040b224f41c9b5de8e8101ce71a",
+  "panel/.env.example": "0fe79e75d1a70bc06926e305518fa697be9e8c2a5f100c2fc2db23424c95e368",
+  "panel/MANIFEST.json": "30f2b994a6695ef081c3d5bbb4bcaece3646289a717b7cd8c0da432aedf023d1",
+  "panel/README.md": "4c6c97166b9f3c4e43d3ca861c1316115fba800aea487b170cfe1b5c86c51db6",
+  "panel/app/Console/Commands/AdminPasswordCommand.php": "a388e77ea7afc91635408b86d12994820c69d90a5c8dad5b3a8142455fe64a1f",
+  "panel/app/Console/Commands/ApiTokenCommand.php": "df433e2dc2486d97b9496b8e58e05a2aa73d5e999472d665803337eee8d89fc8",
+  "panel/app/Console/Commands/BackupDestinationPushCommand.php": "8d0603a6190af4d2259ba35a19ffac130ecdd59da350c8ff988cacc8abc44222",
+  "panel/app/Console/Commands/DemoAccountsCommand.php": "5d2c31398c502392e78f5c0a6e04a245df25c7c3e80944080efcf5245b987547",
+  "panel/app/Console/Commands/LicenseRenewCommand.php": "5ba2e58672f84deec6496521b8504bcfcce8f8b16fcb84982cf9cd6fe8be4f76",
+  "panel/app/Console/Commands/OwnerLicenseCommand.php": "b005f86ea651eb94b02c279d3461ed0a106f60c6834424bb57fee7367129a467",
+  "panel/app/Console/Commands/ScheduledBackupsCommand.php": "d9e6d10aad0f2dadb334fbe3654ce1dcfe9c91faf20e945501362f5809b50a4a",
+  "panel/app/Http/Controllers/AccountsController.php": "b6e1e95af212b661555fb7da8447fff80056fe052e1492cbdc9a2e40ce9c3380",
+  "panel/app/Http/Controllers/AddressImporterController.php": "fa23aa32dc07d859fe5434c83989ae9d53778acd173f640c653c18c253cba096",
+  "panel/app/Http/Controllers/ApiTokensController.php": "197c6a0ef4ef0d7d4d146e5cd36e635d17f05cb0379ffefee398a036d9872ae1",
+  "panel/app/Http/Controllers/AppsController.php": "a154182af187be698f2a1bc81f8835fb97d9087441fffce36cf266be8acafe97",
+  "panel/app/Http/Controllers/AuditController.php": "2e8f44ed9f13a72458760ee1bf17d965a4a4a2972f91b75af85a27996ffce8e2",
+  "panel/app/Http/Controllers/Auth/EntryLoginController.php": "18d915004d513b8bcdc8f00538fe6149b4fb9a25bef659e4e51f535de9275131",
+  "panel/app/Http/Controllers/Auth/LoginController.php": "a47d270949ee19acec748acfbcd6972ca2efd49facba165e82eac6cf6f981a63",
+  "panel/app/Http/Controllers/Auth/TwoFactorController.php": "43ff350c6467b63799067305e46d65a2d0c4c40c6be3b6011fd611da4e1eadf4",
+  "panel/app/Http/Controllers/AutorespondersController.php": "f021eaa388c4fdcdd85b31d668238c88caed12d4425c6b0bbc74fcd2adc7e83f",
+  "panel/app/Http/Controllers/AwstatsController.php": "9ed742e614a61b02d3d95ff2471207202f4ceea3483a3b5d7d121d578ade588c",
+  "panel/app/Http/Controllers/BackupConfigController.php": "721fba82b6f2d6e07ca03540d019a19ca3c650c659836bd6efccde560730b7b8",
+  "panel/app/Http/Controllers/BackupController.php": "3277e847be19f1cbfdee9e6b9cb0b60cb24b663856f779d1121d7f4373ba5b2b",
+  "panel/app/Http/Controllers/BackupDestinationController.php": "519348791704f5ace908d5d71bb1e35f6bd61a40e70e520c9790eded67e28578",
+  "panel/app/Http/Controllers/BackupRestorationController.php": "c0f4246d7de9f36d6f14b0aec9d564458d7f00f2e7679a371d66dcadf8dbf224",
+  "panel/app/Http/Controllers/BackupUserSelectionController.php": "9af3f430a385006af837a1d83c4a2a441b7d33672b13609b576aae5c47288946",
+  "panel/app/Http/Controllers/BackupWizardController.php": "49eeeb8b3cb5f4ea18fe0d1a3ed50a61b99551476a79730ed81e7612602d084c",
+  "panel/app/Http/Controllers/BoxTrapperController.php": "f2a2981a534f5c6546f97b738a5ca9ab39106f4385a7791843f9822a4b4e574b",
+  "panel/app/Http/Controllers/CalendarController.php": "c915614bd9f3bb778f526c7189a64523f0cd93c8548dd68cd03fbf818b9f7d4e",
+  "panel/app/Http/Controllers/ComposerController.php": "15e57d3a69188ba5163936226e69af6bb25db544cddac9f6dc0e9ca269bfac06",
+  "panel/app/Http/Controllers/Controller.php": "25d1c1ef8e6cc8a376553faacfba2b07d9dfaee9bdbb84f14f77517580e9deb1",
+  "panel/app/Http/Controllers/CronController.php": "b7de54707877e7aacae87090bd274a4ae9a9fd1a9f6721abb2b469bd5e2a776a",
+  "panel/app/Http/Controllers/DashboardController.php": "fcf72fa3755727d3271030cb7b63c6f208f1bef667b032ec8e8774b45c322501",
+  "panel/app/Http/Controllers/DefaultAddressController.php": "e4901031c175617709fa2787414bd5ff87e3886bd57d3db8b4ab68f44cc62783",
+  "panel/app/Http/Controllers/DeliverabilityController.php": "64c3113de20822631105dc1dd69e0b1f3ba2e0ae0245cee946ab451ef0ba826b",
+  "panel/app/Http/Controllers/DiskUsageController.php": "7fd42f6a39e3b8c5be306293f1f729a7043e6d8dbdd67c598b1b00a93853bc6e",
+  "panel/app/Http/Controllers/DnsCleanupController.php": "4e25f9c189644aeb3b015e9ba57ba97c8926bab6526d26efffc5abf38172f004",
+  "panel/app/Http/Controllers/DnsClusterController.php": "890befd68ed6d7422166f20f189d9dfb2b2972ed7a7def1c4e67a6322aed8010",
+  "panel/app/Http/Controllers/DnsSyncController.php": "3d3d71d384ddf719721ec9acdbeea5f227f119a9917ca75d454172535cf2434d",
+  "panel/app/Http/Controllers/DnsZonesController.php": "4415273d12f4c2ccc1c0ac5bac323f90c942271ab9a92c37ca1efa86dbe04dea",
+  "panel/app/Http/Controllers/DomainForwardController.php": "28d4e16ec8808cd4cc69a34b218540b27f9bf3c7ebf152d59879d906225c6697",
+  "panel/app/Http/Controllers/DomainsController.php": "0323ad6cbd1c64b62c377cc26f6a173afa97efb8c8fd3bd8d1aee9f813d4b71c",
+  "panel/app/Http/Controllers/DynamicDnsController.php": "9934bc91623af1a85e979d1f704c15b2cf1cabc890c5f5ac1b1bc36e4cedde60",
+  "panel/app/Http/Controllers/EmailDiskUsageController.php": "566b810395907d0e2ccd8f08f0123028b611d9d641d10edc555b908ddf67d764",
+  "panel/app/Http/Controllers/EmailFiltersController.php": "b7108d4501999c45965165372d2b0e85fa34eb858c7bc844bf5d4a146561f7f8",
+  "panel/app/Http/Controllers/EmailRoutingController.php": "a674b69e8d5cccb342b4efc854248cf2c0888d744382dadb05f76a058a627e8e",
+  "panel/app/Http/Controllers/EncryptionController.php": "7aaa5f100ca11dc91aee7f33a39827aec327c8cde2e980c8cdde5399e8265433",
+  "panel/app/Http/Controllers/ErrorPagesController.php": "9c020981501cf5541ac283daa6cf381ffd552c6db61765784aa90e6be1454e52",
+  "panel/app/Http/Controllers/ErrorsLogController.php": "41109bcefa0c18c598a0216c14b47202466a2474f2d63b6a089feb841044f27b",
+  "panel/app/Http/Controllers/FileDirectoryRestorationController.php": "d2c3045638fbeccd6d9e0c38b5dca922c6d84284f57609a436f52741f6bb8997",
+  "panel/app/Http/Controllers/FileRestorationController.php": "895299d4741c7bc9e69ecf08f532b5e321f99592d7ca5540525caf05631d817a",
+  "panel/app/Http/Controllers/FilesController.php": "d39645fb176559611981283ee869f8ffb41f10d066c6c1059c83db111218b061",
+  "panel/app/Http/Controllers/ForwardersController.php": "db4d1566310ce141449ed314453466d1aab4b575a086020f906017384b8bc874",
+  "panel/app/Http/Controllers/FtpController.php": "1b0982079d896dc3418f7900fb789d4f6a862415eb882cf90a388d012764c9e1",
+  "panel/app/Http/Controllers/GitController.php": "134542b0055698e4c0bfc4cdd5a7afefb30c518ea3ced34df62de280acf0f045",
+  "panel/app/Http/Controllers/GlobalEmailRoutingController.php": "6a9bd6127c25b6ad19928b832820ec0f731be853eb2623cad0effcb71b82f247",
+  "panel/app/Http/Controllers/GlobalFiltersController.php": "983327124214083d16d37cbed6e10f9280f81c99e1bb7ad6d8d37b364bf645af",
+  "panel/app/Http/Controllers/HandlersController.php": "2d449ccec6fa40b097cbfb98085c9e826919dc993cd7a38f01ddd0f92f31c1f0",
+  "panel/app/Http/Controllers/HostnameAController.php": "514e22fc20d3916799bb28ce23aa2c3a836b80dd4b44a357938339997ee9cc77",
+  "panel/app/Http/Controllers/ImagesController.php": "32cd4de1c5c78902b5c47a408e9dfd195b9f34c900a3e454275ff6ca883aa69c",
+  "panel/app/Http/Controllers/IndexesController.php": "29b2dfeb68de5ba6988630d9a363a20944774b88fde34ae75e3672d861650f88",
+  "panel/app/Http/Controllers/IpBlockerController.php": "b020761c3820e621a252166139c1395b6ec3428bdd27423eac76c673cb4cceb7",
+  "panel/app/Http/Controllers/LicenseController.php": "d015d482362e66880a1f3ab5799abcc72261b7e04749dfb0275ed2fe5160199e",
+  "panel/app/Http/Controllers/LicenseServerController.php": "495f0516dfff0e2b0d9d72a3e7a994d2ffb1352b943addc13d89b573b67947f3",
+  "panel/app/Http/Controllers/MailController.php": "565049cfd810d63a0608bc30145bbd31a12921a58f918c3854d1ea6273fa5385",
+  "panel/app/Http/Controllers/MailQueueController.php": "219aa0943003016c58d09e0b33db01db07ddf4bdf7d7b184cdd3ddd9bd490f40",
+  "panel/app/Http/Controllers/MailingListsController.php": "308b5e21ac194b76a2ed6aff3a50fcb2a1a2e9f061db6141e58c0694813fe598",
+  "panel/app/Http/Controllers/MetricsController.php": "04cd9c0207d93c2831a76da217b61f40bbdb12cc76077ea2a5d9e696eebdbcaf",
+  "panel/app/Http/Controllers/MimeTypesController.php": "a75faf41d5afe8817438ae5cf2c5d911b044ae0810fb6a282d674f89452e6663",
+  "panel/app/Http/Controllers/MonitoringController.php": "7a7b702113d763cf5c2c28ec39226322f3a3bfc5cba15c7744fcec0db82eb4c6",
+  "panel/app/Http/Controllers/MysqlDatabasesController.php": "5705e6f56f3a7c93f3585af21eb8479c982b2cdaffd6dd36edfc45316dc3d32d",
+  "panel/app/Http/Controllers/MysqlUsersController.php": "ad23714c3b552c9aa414ecd0edfee89771980fe32fdf4ed46fa777cd26b83e13",
+  "panel/app/Http/Controllers/MysqlWizardController.php": "d58ef934dd8af2d25d2607016c89eee8faeaf87d6c5849f30a9f30823edc89b6",
+  "panel/app/Http/Controllers/NameserverSelectionController.php": "77b1adbbcc97591cfaa4f5298d606b631c50493447bf0b25ce03d80827d28f3b",
+  "panel/app/Http/Controllers/NetworkToolsController.php": "7434ad27af1093fb01b906e38dbccf7066d2e459bab6884035eadcc4d929f344",
+  "panel/app/Http/Controllers/NodejsSelectorController.php": "804582a0aeb5623ff37654fd850fe0e8ad1842468e87b60b64b7e21bd66ecccd",
+  "panel/app/Http/Controllers/NsReportController.php": "db061fee3bed0147f67944f44873169e0f9525909b5d31729e9289bc68bcfd54",
+  "panel/app/Http/Controllers/OptimizeController.php": "b07720ee7d345a9ae8716216d2fb8686158c59e531c8596412aad84255e121e0",
+  "panel/app/Http/Controllers/PackagesController.php": "9f1790f21cdd1a6fb9df6b96aab748fc32d06ee3e2a869b4b57a6faa4d0d1b47",
+  "panel/app/Http/Controllers/ParkDomainController.php": "2d77e33e28274a8890857544f2194e0a24152e899c5040a6f085a134160ebaee",
+  "panel/app/Http/Controllers/PhpController.php": "b8070f2fd05107ca6cfd4c2b3d9ccb92c6c047a4d5f992c8a4bcf0073fc074ac",
+  "panel/app/Http/Controllers/PhpIniController.php": "d15736b6ad809e23823b99d9fbdc956da67512176ac273dc6b47772202dea5fa",
+  "panel/app/Http/Controllers/PhpmyadminController.php": "8a3be54f9be812bbfccb7c0b629b89aa917546040aa5aa2d66115063df6d1831",
+  "panel/app/Http/Controllers/PmaSsoController.php": "3d81193e43a328908e5cd76fccd09c0c15aebd036746f2121cb8bc6b3a001a77",
+  "panel/app/Http/Controllers/PortsController.php": "a71ef34508638945d1fcbe42e1235cb6b29cb17612cb1258a4f96f659e708918",
+  "panel/app/Http/Controllers/PrivacyController.php": "f903361b6d1967fe15116af5a194105f83d55928c8a9b3a9c9611e95ee58faea",
+  "panel/app/Http/Controllers/RawAccessController.php": "8f7e9169d7c70c83666794ac605a6e4e276c44e33bafcff97f16a089cbbd1f78",
+  "panel/app/Http/Controllers/RemoteMysqlController.php": "0f7287f31718ba6d3abb3d4d1a2604c3c181aa2724cc886ca92611a45930eed3",
+  "panel/app/Http/Controllers/ResellersController.php": "c814fd82c4d672cefc9adf41ac26ffed116887f73270acdd3732fc65ec34526f",
+  "panel/app/Http/Controllers/SecurityController.php": "b1bf05f0e41ec2b9324b49a457761846aed0aa5cd2e4c3cf1e497de51790633d",
+  "panel/app/Http/Controllers/SecurityExtrasController.php": "49fcefe575ddc2ae4e1da629c328650c5cd8c26fd0d1fd10631dbca79d7e7e88",
+  "panel/app/Http/Controllers/SecurityPoliciesController.php": "5b8236ac220bc29fc8388155c09dbca11a76308e2caba261ab27a7ffe50b1c70",
+  "panel/app/Http/Controllers/SecurityToolsController.php": "0ac7b402e58bd13929b3f419c368f2e4f89fdc1fc8eecde06c6d8214a38c4672",
+  "panel/app/Http/Controllers/SpamFiltersController.php": "488c55215c1d2b7fb61c414e4ee8b76a6d57c03c430bb482ea5753080c1a48d7",
+  "panel/app/Http/Controllers/SshController.php": "35d3c4a21552a75ad016afe4dd5cc055e0c48f3918c8dde59e41f4a0d5e75f04",
+  "panel/app/Http/Controllers/SslController.php": "a702e0491e5843ac28ee45df7cb8f703140217e189dba416780e370fcf641a44",
+  "panel/app/Http/Controllers/SystemController.php": "0b77eb5873c024b36acda54b85a1bd1b8ea1540420dbc1ee2fc8f6240acdd562",
+  "panel/app/Http/Controllers/TerminalController.php": "243033dd5ba02a3eab4c51a5c446567877c6b4ba30bbbb3cdf99738c5bf04be0",
+  "panel/app/Http/Controllers/TrackDeliveryController.php": "cd0fe525fd811c85a50c5644fda92aa0564009fcaaaacffb22f5149b2d5902d6",
+  "panel/app/Http/Controllers/TrackDnsController.php": "f9b68076a3885bcac094f4465613d5373001a76e3e21d4d478e41ce37540d2df",
+  "panel/app/Http/Controllers/TransferRestoreController.php": "70de9ff7e2f38ebc8fed70c35f651d810bae0ae94c9162955965ffa7ff3276a7",
+  "panel/app/Http/Controllers/TransferReviewController.php": "20f81fcaef4c10af409cf613af960758bed3c30d7f5b432ea92d17c51b4d1694",
+  "panel/app/Http/Controllers/TransferToolController.php": "beb07ab85902ae7b844ccbddac93e1265f4f4bb7f2c56f78f956d49a4e2f673a",
+  "panel/app/Http/Controllers/TrashController.php": "79e86c745a274222f139493a022993c98f92e62da38e93852b700d13d779299e",
+  "panel/app/Http/Controllers/UpdatesController.php": "f603756f24710bbee196d8237a2244990128387f2df731a0359ef77d52be77f2",
+  "panel/app/Http/Controllers/UsersController.php": "541bf61fb418a49d5c05a5261dfc29f451ead912a3cbfb6b1e87f7a0198f048a",
+  "panel/app/Http/Controllers/WebDiskController.php": "1d591c93f0f45971063bb1c4df4d8a698910738d27d96e60136314b5bb58b3bf",
+  "panel/app/Http/Controllers/WebmailController.php": "510c5a630f9c17d21d87941d45eef227570d29168792f6ed8dd57e0c0c9bba2f",
+  "panel/app/Http/Controllers/WebmailSsoController.php": "d13bd6ebee79e91bf2c93a459d649c8ebd5d893833308cf94a27cb4e822f71d4",
+  "panel/app/Http/Controllers/WhmApiController.php": "ce5b9064d5c58d3cbde53b1bd1b0600b2f8222b63bbbfb570e4cbb025ed2cc43",
+  "panel/app/Http/Controllers/ZoneEditorController.php": "708f4e4413c89405044eb9d5344bb8e381ee0dbc565907ff6f5dae007da65328",
+  "panel/app/Http/Controllers/ZoneTemplatesController.php": "c5fe8ff47293521b5773641bfaacc74e30229b70c59aaf9088911f30174416ce",
+  "panel/app/Http/Controllers/ZoneTtlController.php": "1de97db725a8dd9a6416a887510466135ea9cd947364a11084a0302166a2174d",
+  "panel/app/Http/Middleware/AcpPortGuard.php": "ed64d39c132e94ed1e8febc8dd2a40e4d42a4d675282758a1d24bc768d460815",
+  "panel/app/Http/Middleware/EnsureApiToken.php": "9096f47792190b3afa64e222bc2d9219814e939999a87164828a03bca93ee19d",
+  "panel/app/Http/Middleware/EnsurePasswordIsFresh.php": "38737b56831580a44b78c488f4ea6fbff1a82704964f9eb0aea6904116077aa3",
+  "panel/app/Http/Middleware/EnsurePermission.php": "dbea4a62d87b1d6f3e551b64b7c164399836032cf96f34be7ad1944f15745a6e",
+  "panel/app/Http/Middleware/EnsureTwoFactorIsVerified.php": "b7f3e92e787c4ee037b7319b9a12d0a957b23b09cec69dfa9d885124ccb1e8ef",
+  "panel/app/Http/Middleware/PanelSecurityHeaders.php": "47b4371bcb9263f79832f7aa05ff833d59f4778e3f6dc29a2a00ad62774db15f",
+  "panel/app/Models/Account.php": "49be28067bf5ce7d236687886aeba87cebf777461c429184e4c42dcb71bc5186",
+  "panel/app/Models/AccountEvent.php": "98b7f3e554a0c5a6e8661bb30d540208013ac1e98510c92c1a984edea7b16292",
+  "panel/app/Models/ApiToken.php": "9824e7387e4a5873135dd77f728b61a43e11061eea39f0766b783c377d43c5a1",
+  "panel/app/Models/Autoresponder.php": "5df8dd957e91a7c90253b3f4129b32690daa312dded3968ce13ce239c9b5540d",
+  "panel/app/Models/BackupConfig.php": "84fc34f569dcf0913ed0b06e8c4001e7e828c89921060ba42b3e42c14773bdeb",
+  "panel/app/Models/BackupDestination.php": "7749352828b0911cb650e99a84c01834cd422dde481e6d1e15ed5f17a8b5e310",
+  "panel/app/Models/BackupDestinationPush.php": "c2472088a699c6a4eb7c23fbce7680eae95ad5832edaaa41248a3acdb48bb701",
+  "panel/app/Models/BackupJob.php": "d268a7ec8e2db4a780f36a9a34fba56f4b9226e32a469f17f02fb1a901c6da68",
+  "panel/app/Models/BackupRestoration.php": "7d819b24fd89c98b7adab2b8137956a8231f61974146f819a7c6e47b7e9e0b2a",
+  "panel/app/Models/BackupRestore.php": "eb33bdfc94c0951b77bca0dae54c298aeb4d6c85bf9bf62fded31770c638cfa5",
+  "panel/app/Models/BackupUserSelection.php": "f3ce5efb4fb7a6740394a0e5a6bec99bab1f3e58f038552515524b9ddb7d5c84",
+  "panel/app/Models/BackupWizard.php": "b41c02c83185a57cb8796cb2332d8d36ad899866d0ea8f03f1e89950a8675839",
+  "panel/app/Models/BlockedIp.php": "0429191010368c4781a426cfccbd4d65fbcf430ada67b4fd59958a60347c7186",
+  "panel/app/Models/BoxTrapperSetting.php": "7a16221f979fea91fa3a1ae70b7739661e6dcb87838e21900481dbdfa409e4ea",
+  "panel/app/Models/CalendarItem.php": "4440b05ae37b0803c8cd90f324f49c44cdab02928fe80ae8893a2188e8a53fca",
+  "panel/app/Models/Catchall.php": "b7c73157601a0494bf8232f03c773463ead69bbd1300cf513feedf65979eab1d",
+  "panel/app/Models/CronJob.php": "1a1bec65008195261b226d90773d62f016d0611546f43d80238b344aec66280b",
+  "panel/app/Models/DnsCleanup.php": "696b18df6d4f1a8873d4771cab680ec3561a24dfa71de9e5c9e467d347b568e1",
+  "panel/app/Models/DnsClusterNode.php": "2bae9c8d8f9d044ea23429a26d50e8c55b08da818dcad9e53afd1d569897a998",
+  "panel/app/Models/DnsDynamicHost.php": "3c132c4b575cf865c8c271017ca505f2c77f5ea7edf4d5a08e8a73ffb052f9fd",
+  "panel/app/Models/DnsRecord.php": "a7c93c1981243b8313a62042a634e59085ba728a6c8fa355461c34aa7b33a7e9",
+  "panel/app/Models/DnsSync.php": "bdded19293ddfac5fc49a70e4a165b9b57f931ccd2b58cf56840713051a4490a",
+  "panel/app/Models/DnsTemplate.php": "7a0522320c87d1e92b636b6298917b4b766275d0625ef6a4af55e270453dadd6",
+  "panel/app/Models/Domain.php": "b51ad27e8521526f1eb518fc219e8e7fa6f38c61bf374bb0a610c1747e8da0c5",
+  "panel/app/Models/DomainForward.php": "24e04f3eda7470c1bf5f4f702c46e6041097b524d4e173574a9dea47018fb0af",
+  "panel/app/Models/EmailRoute.php": "530f3b8faeeb3576e92bc6add67ec427cbb42cbab1796fc3ae9f0adef84dc97f",
+  "panel/app/Models/EncryptionKey.php": "219f79f9a1cdc5b9943cd168108b81c54e4e8b0b11e5fa2897306759370242c9",
+  "panel/app/Models/FeatureList.php": "288becf7eb66857bed264d0fa0d669c0c5448880de0abf639f040685ae2e0496",
+  "panel/app/Models/FileDirectoryRestoration.php": "d7e4b9803ba0ec189c6f54849f031d2c80c49636d308172d84d3dce164bbac6a",
+  "panel/app/Models/Forwarder.php": "5a7a681fb3020fd0b48c8cbcd96589b984e8b9814a82f64ee809e2de936008d2",
+  "panel/app/Models/FtpAccount.php": "1b5050935b753cabcd7bbdf3976eca67add83a6b816ef90fea8ad2bdb276abad",
+  "panel/app/Models/GlobalEmailRoute.php": "26e26545140834c8b9116cde5766ac32f2011c789b4e6dce8ed746a3a0790f09",
+  "panel/app/Models/GlobalFilter.php": "04219aba4d8b7637464a89e028b6bcc620b63225f1d4a95c27f761ffd138f445",
+  "panel/app/Models/HostnameA.php": "c72adb74447945792c72024817e88ef2e3acbe9c41b2570c8639c4fda9ae3df5",
+  "panel/app/Models/LicenseKey.php": "eb6a902b80f37417d301b6026e205e54b8c4fc8e03f8dec05156b6fff72808b2",
+  "panel/app/Models/LoginAttempt.php": "11a53087a8f6672a5f48e901dae12daafde659f7dd8ac2fcbfb4f769428d7fcb",
+  "panel/app/Models/MailFilter.php": "3e762ddec60ffecb2f4d58c2a453c9205fbb0a50c15664ec12f07d7ee8889070",
+  "panel/app/Models/Mailbox.php": "a0634752051fed16f07d7d53f368bf03a4fe76d5fc1a777af703e9f738d2a7d8",
+  "panel/app/Models/MailingList.php": "f61792b79a59d1fe48726ed111be17df04f46b938700b42abc77750d47208502",
+  "panel/app/Models/MysqlDatabase.php": "59d9b8db68ae57f7439d3def2f52aa5aca6ce591cc386a5711e13bec9a667f50",
+  "panel/app/Models/MysqlRemoteHost.php": "a5050d9720f576cb156f55744d943e9efa9e6f7576f591cb3499af19110f9fbf",
+  "panel/app/Models/MysqlUser.php": "6acba5588f3e5dea8b0ee782433e7b724d6e959fb820190ba1ea4a7e23669e27",
+  "panel/app/Models/NameserverSelection.php": "0af11325369e85237f4391aa4653efa348fe2fd3a1abbc60be60c54a9fcba551",
+  "panel/app/Models/NsRecord.php": "b60e0f5e30ba9a0d9e9ed6a602344a28cd63269dba004fe15129eee118b8da64",
+  "panel/app/Models/OptimizeSetting.php": "19ff18cc81178f38f53af28202744d06f88b30f7984bcbfb8588e325c04b1652",
+  "panel/app/Models/Package.php": "12d3c30e815861b203980692141e2455d9290d8a7b606439a3dd205097696b7c",
+  "panel/app/Models/ParkedDomain.php": "e274920458e3fc5da3b4667cb00fa36158a76775345323b1f031ced15ecc141a",
+  "panel/app/Models/Permission.php": "72f6056b4cd3007e173d9f8fdeba3730bf9da57746cdafe986ac21b89d21d4c5",
+  "panel/app/Models/PhpmyadminSetting.php": "ae0a9b10482426509cce3084be9a1fcbad3a4b04f6c99db49bed8e6fc14883bc",
+  "panel/app/Models/PortConfig.php": "a762b5fe8ce59dc8a009e6b6989019c96f7b407811f5aecb365b6704bb66d700",
+  "panel/app/Models/Role.php": "af858b0bf91980481735a972f7575a21584669a9b722c555f8b7e7d0c29bd76e",
+  "panel/app/Models/RolePermission.php": "3a1794ab81d3513b405e19c2b020b23e80f4b60df4a611596314880c92502ad5",
+  "panel/app/Models/SecurityExtra.php": "9b0895066bcd32c6b2f580dd98ed00c28a60e53d445b673f7f11eb6ade1ba19e",
+  "panel/app/Models/SpamSetting.php": "50e8ca2808a2085d2b6979e6ec3f10ec098b1a4cc8501fd0bd51a96fd1f3adef",
+  "panel/app/Models/TransferRestore.php": "00004170acfa577422b6dee290c9786ca62378e987d37e73008f62c8d9a2aeee",
+  "panel/app/Models/TransferReview.php": "a6bd479c16d2ba0e65de09c2b66cc8cc09266e676e2d7c9fcbfb29adb9c596df",
+  "panel/app/Models/TransferTool.php": "0c00b2fc547b9ccdfd0203e1c9ede7c3b5dc06051db1a2f1aab8279c59d0d3eb",
+  "panel/app/Models/User.php": "d6d076c68083881e135a603ad9634490a55abf60e10dcc7c4ed1bc4330b04710",
+  "panel/app/Models/WebDiskAccount.php": "dbd1e5f5e456b7bf95c80e672cedbbd438e992e3e68693d4317ed999732addba",
+  "panel/app/Models/WebmailSetting.php": "81b584cec18373431ee50a05e2651e4041f9f1e8e5c74d87da4eb416087f3e33",
+  "panel/app/Models/ZoneTtl.php": "a6fc06b2f3919bee88d5e2e99733b5b38966b3fae190a71437f37575e235de7e",
+  "panel/app/Providers/AppServiceProvider.php": "81b46005db2e93c4ec11c82e7e550a6cb3cfe91fd9947b6c1a6b76b3ecb7a645",
+  "panel/app/Providers/ResellerScopeProvider.php": "5d967d9cf522d06363755956ba8234d73858807abc13f5f016a7a239291b5576",
+  "panel/app/Support/AccountIdentity.php": "44d90a5464815fc68b83b24a3da295b9cd6df046fc0ff757c5b774f2196888a5",
+  "panel/app/Support/AccountProvisioner.php": "535f3568cec57526b2db4eb5a654b55b791f613ef996c616313fbcfde85e5173",
+  "panel/app/Support/AppInstaller.php": "19c9983249c484844b122f3f96777d1baebc2f3aae04b427d71dbeb03c7a47d0",
+  "panel/app/Support/Audit.php": "47a437ebe4033f9ff0560085fc91f62727e6c2202d5a7e146bd8a3be07e918d6",
+  "panel/app/Support/Backup.php": "075c82cf6190a033f58a24cdb62fa52189ee34897d59cf3f0f5984820a4fa80c",
+  "panel/app/Support/BackupDestinations.php": "ec760cbde84e89e0bcd3a9b03dcd4cb3c2ca8152277b10778c90558b02ef9cfd",
+  "panel/app/Support/BackupProvisioner.php": "84648d9b97bb0148b81999c2fa5e85355a8b49b1897fd7ac654c6a3fb97dcbaf",
+  "panel/app/Support/BackupSchedule.php": "73bb715454bf9df128d0c12e5a7c085425d27bf4c1c83dbd9abdb186f26910c0",
+  "panel/app/Support/CpanelArchives.php": "2ca2ec670ea4996da1e351e508167c5ea4dbaceeabfa455c1ad3c031ffc35ef3",
+  "panel/app/Support/CronProvisioner.php": "b028bb2a83e33d38d68b41bcb7cfb0bc5c4b56b0ab4bc68465190c770226b64a",
+  "panel/app/Support/DatabaseProvisioner.php": "da7c787ffcc65105807cf2d0c53ceee0623814e3bc747ee93f2399011d1cdf34",
+  "panel/app/Support/Dns.php": "c693a399bc05d18abc6acc97dc09e68d9b8f9c650583b05e4d2ea52e70414816",
+  "panel/app/Support/DnsProvisioner.php": "4692f562fd971f9ff3f78904be20c4d004a9fb74ace9a9c7e9d6d9e56fff616a",
+  "panel/app/Support/DomainProvisioner.php": "42f53401217814b1fc2cb44a134bebb7ba3de6746d2de84cc97e15a6ef37b6c7",
+  "panel/app/Support/DynamicDns.php": "f89a87102a544d3c39bda4a384a757627edd885368701cd11e077f450c83917a",
+  "panel/app/Support/DynamicDnsProvisioner.php": "5c019b9f5aa699365163749d3d2fdf963efc7a4a3c7e4c6645a3cba80f0bb0b5",
+  "panel/app/Support/ErrorPages.php": "830a6ce5a08451ca45923d2839b331831e20136bb20d64d837be43403f9e9717",
+  "panel/app/Support/Files.php": "c131bb652b906d8247371afef9efde105d9ada1b84e2dbaecac878e6d2c6473e",
+  "panel/app/Support/Firewall.php": "9e1580d1401d768b739831fe9b998936e5d2bc67370618b15ff06a5014bc5b4e",
+  "panel/app/Support/Ftp.php": "bdcfaf39929a8bc1732ce1206adc3c3d3844deaa6c32eeca10946f506b232146",
+  "panel/app/Support/Handlers.php": "9ffcf9ba33959811527cde4851b9c80c11dcceeb1e4337a45dabacbaadd406f8",
+  "panel/app/Support/Indexes.php": "49e11f0ee4626f04118df0e9aeb83392ca1e15bb2d0ee470bbbe66dab2bbd498",
+  "panel/app/Support/License/LicenseClient.php": "f4c66f2a220aa59cecd05150657c2a4263282db92d5a9197be84ed8582cd4029",
+  "panel/app/Support/LicenseSigner.php": "8a5301ce09caea4b96ddec7f3d6172d9e649900fc4c8ab410a85e48209893a77",
+  "panel/app/Support/Mail.php": "eb1a611524c32176fa8e1f77e2dd877f9b436d4a576ac6f3636bb7909edfc5f3",
+  "panel/app/Support/MailProvisioner.php": "fbd55856a33e3c60351fb92ed048fa0b32c1dc514652510b49f0359f3c1bbd3c",
+  "panel/app/Support/Metrics.php": "8d3935cf3656141e6148a4e016cd9a0b9709f68c057c969a98030fd55176804a",
+  "panel/app/Support/MimeTypes.php": "47db1795ddf1a8009901a0a5e97a58d4585c684c638530802fb7ce1831e7a03e",
+  "panel/app/Support/ModuleCatalog.php": "ed9d34aa9f8b286b6871f2200e600c08ea4b539677c2d3e299502b9d022f624c",
+  "panel/app/Support/Mysql.php": "c41f1ce6e512af793d2bd1da336cc521264e4a07b72c80e1f1bf66708c97ef38",
+  "panel/app/Support/PackageLimits.php": "f1245e3cede2738e69b5e79d64d29bdc687bff7fa4adff6ce5792cab3a8d82a5",
+  "panel/app/Support/Panel.php": "c10a9fa723cc68bbd62e57c2e8e76072d3d370f9af48496ce314e1920f5ceac4",
+  "panel/app/Support/PanelEnv.php": "4102ffc252708bcfc214c12a97419de0d08e660f6899932a3de7bbe4bdcce594",
+  "panel/app/Support/Paneld.php": "38901b75145ef6713338b2a750403101121d74a39e7a4d97f39cda3530e50550",
+  "panel/app/Support/PasswordGenerator.php": "c2291fb72661538a995bf3b9119aec330b6b512b8f57b6bb0cd88427d0fbf161",
+  "panel/app/Support/PermissionCatalog.php": "d193da915abb4864e5fb005be5217d430a76c03b1e9c1d8a6071e0a6d1e598ff",
+  "panel/app/Support/PhpIni.php": "aae9711d4f7f0d7672da510c830df6203b352699065e75a0f7d8f3edf44671f9",
+  "panel/app/Support/PhpVersions.php": "46f1924d160288b1bd7592e8be8a371d309f04bbade2a656e0a92829bab6b718",
+  "panel/app/Support/PortMap.php": "b28c2bd9540a0989635a296b0c80e06791c90543650fd1b39a8b4a13e22bf638",
+  "panel/app/Support/Privacy.php": "754553221c12e1fde89618f63d41b36b0d26d123cdae03fdaa1ac493e1a292d4",
+  "panel/app/Support/ShadowHash.php": "6f8907359381db5b8e40fbd674931be1a9e0bccca7d612f66b8cbeb36aeba43b",
+  "panel/app/Support/Ssh.php": "037e1fbc7d23af52e5a2db0e3c6a078cbad7b9b1fbfbceaad098692031740c47",
+  "panel/app/Support/SystemStats.php": "8cc3fc2d377c5f0937d90606b03cca67ff873a1c4e5fd01f7b453b02ec3e0dd5",
+  "panel/app/Support/Totp.php": "992e5696ed3e003a47b3f3981c99355b7762cd7123d556f4fafd8f19f0b9a9d4",
+  "panel/app/Support/Waf.php": "d8899c409a913d3cc381f9a4dd731d3b9e8b084366df467cf7b4eeb2f7e6eec1",
+  "panel/artisan": "f91a517c0c5d3a904c3f390933964a5e08ec1fc68146882730daac4aca4ffcec",
+  "panel/bootstrap/app.php": "2cdfbbfddc2e80c086b039e2f1a0f8e54bef5653375cfe3304927c7f6b543546",
+  "panel/bootstrap/providers.php": "ac8650980919162c051e8d0631c37c76fd7f24fa93a0ab083779d82ce3964343",
+  "panel/composer.json": "dc30862e917de4ddf6866056c83eeabcac72c078e5ed604ddcecc73147a1ceaa",
+  "panel/composer.lock": "53004b87e6d62971fd4c8f0c3baf3c4a462af1f30cb90a84482d922e9d1f1068",
+  "panel/config/acp.php": "33e5eb577249b98d22288e48fe451a0ec53207d69c37d4942012e296ab74be18",
+  "panel/config/app.php": "b4b25e15efa76846a7f2e19fd1044fec4945e4e928c4098126a2b0042b034383",
+  "panel/config/auth.php": "c7e204e9785c9f596d66fb884b493f658f2327f157646bdb4088efd6b3a7773f",
+  "panel/config/cache.php": "ee4ad2bba1edfcff52e9599f37371f2370d0b167cc226ce72d46cdf6edf2dc55",
+  "panel/config/database.php": "b82f172fd6ad2b28e22c8459312836e5386e77b0d8186279342b08a2cb9ef8de",
+  "panel/config/filesystems.php": "ba7060d7a23e490c3ce830656f6d24ad3ccf5b868e3293f2a12e411959dc5635",
+  "panel/config/license_public.pem.example": "51c53a46e4b0b175bbfb365404bad06c9518fe7b5af647d45386abf66530446c",
+  "panel/config/logging.php": "beb1ffd0db910f6f0b4f75214c3d5aa385d692733ece8a450f4c169d2c99ce38",
+  "panel/config/mail.php": "c43ff49a31c5f32ce21eb7159f2a4b3cd2f4074eaed5838d265646dbfedd3474",
+  "panel/config/queue.php": "6101774da7c8b79af46d0028f2b8b31a484c3f7eda10b76e5b27b6093ad364a4",
+  "panel/config/services.php": "b7ee786ea1adbc92db9f229f479431c94503527c47051da3862eb0e4d7db70aa",
+  "panel/config/session.php": "64272cfbef6f47c65bf857f1c5b1e853700c0d0278de46b86663fd83ef4aeed8",
+  "panel/database/migrations/0001_01_01_000001_create_cache_table.php": "fbb4665e5a977e71df4e74ec75b3c06ca4f17ad0de7138fe9786639189978e77",
+  "panel/database/migrations/0001_01_01_000002_create_jobs_table.php": "df4910687180313a14a3f96a8bddd808ae145ed1b107cd772caf865c0dc2b746",
+  "panel/database/migrations/2026_09_28_000001_create_panel_core_tables.php": "fc4cf65914a4c3d33a8f5884b91d381803101fe62bb4ec31141eca72620a38f8",
+  "panel/database/migrations/2026_09_28_000002_agent_side_tables_if_missing.php": "cadde6afcbb8a3c2385b212e069281e00d27627e41ae2bc84aff5228cf39051e",
+  "panel/database/migrations/2026_09_29_000003_create_accounts_tables.php": "f19f2df5d9beea0b47b1eed5005715b61b3cad39fda4834e5daf1f4941a3e10f",
+  "panel/database/migrations/2026_09_29_000004_packages_feature_lists_and_limits.php": "9efa0f1ae6c56deca5e413d265cbdfc6e3af13088edcb04cb48ed25acbcf8f28",
+  "panel/database/migrations/2026_09_29_000005_create_domains_table.php": "afb8c3235ad62829b78d498563e51fccf8cdddd315ac01314c19de36b3f779a2",
+  "panel/database/migrations/2026_09_29_000006_create_cron_jobs_and_software_perms.php": "36c7ace09bf8f882bf37d39eb08733726a12c96a526636fa7cd4fadb06b1a09d",
+  "panel/database/migrations/2026_09_29_000007_add_ssl_to_domains.php": "9e18710d5558a063c4468bdbbe11e75a1df37e0f1cb739911024473dd9f83ee9",
+  "panel/database/migrations/2026_09_29_000008_add_autossl_to_domains.php": "4927fb58ad90623cbfe786792f084646e29efad38c49661f07cd905758e7bd38",
+  "panel/database/migrations/2026_09_29_000009_add_errorpages_permissions.php": "807eb60ba3e5046fd4b88e50cf46c886f1377f929714bb4ed3acd7d5f281bd49",
+  "panel/database/migrations/2026_09_29_000010_add_indexes_permissions.php": "f6012b2aceba1b93623e520dde12eff2f261ad01fce2892c7fdb6cbdaea894b0",
+  "panel/database/migrations/2026_09_29_000011_add_mime_permissions.php": "e12e6d17dbe2f450fcf1cce2fab42b639a7acfa4acb349a87ce5902fe2d50e96",
+  "panel/database/migrations/2026_09_29_000012_add_handlers_permissions.php": "eddeb0a907cef80ac34c50ec970f98e624c285020e6255e2f23bc286855d3add",
+  "panel/database/migrations/2026_09_29_000013_add_files_permissions.php": "fabd2d1f52580c62aca2d555a5202e83a2ed3703e9d129054598bcdc7076c6f2",
+  "panel/database/migrations/2026_09_29_000014_add_privacy_permissions.php": "e87042b774a3f1272ac82afe92e3a7a0de7c26724e9fc1b58801ebab1b3c862c",
+  "panel/database/migrations/2026_09_29_000015_add_ssh_permissions.php": "0916b7e541dd38ca5378512905cacbcc766bfe9f4e32f560b65a2eb84d811e5d",
+  "panel/database/migrations/2026_09_29_000016_create_mailboxes_table.php": "dd09f0a58af5f0ab1b8dfa0a1d651c2ac88237b73a01a5e7f6f013b19109a438",
+  "panel/database/migrations/2026_09_29_000017_create_forwarders_table.php": "fc0b01279df528ad294b5cd5ad60a209d1265f2638291c2819570036dc3df298",
+  "panel/database/migrations/2026_09_29_000018_create_autoresponders_table.php": "8d07fa4d13b54ceb4505adf14939df3d599b7bb15151837a67701f60bf48d303",
+  "panel/database/migrations/2026_09_29_000019_create_catchalls_table.php": "e331c2929a4825b9ef66400db9aef4fd99b163cfd83374dce6dece6cabf621e6",
+  "panel/database/migrations/2026_09_29_000020_create_mail_filters_table.php": "6177d6bff093e39277887c3383418c46a81add416050720d9ed9844acf005c43",
+  "panel/database/migrations/2026_09_29_000021_create_spam_settings_table.php": "1839d1ccd0a983d1dfd8db6a17fead6408fc24d95c1461d803cc9dc891708443",
+  "panel/database/migrations/2026_09_29_000022_create_mailing_lists_table.php": "4900eae6b37935b0723ef090328c748b7993ac6af371c33ad0523b3b8718bd14",
+  "panel/database/migrations/2026_09_29_000023_create_email_routes_table.php": "e34f080f1357c7d887a84252a304c1a3bd379fd7c4022c8cdcd0f19be6048f91",
+  "panel/database/migrations/2026_09_29_000024_create_global_filters_table.php": "f420177300b6f0123335e40f2ba7dbf9be4cfd9464763bbb50cab1d20d0f7df2",
+  "panel/database/migrations/2026_09_29_000025_create_encryption_keys_table.php": "644d7bfdcc954d3e7b5f5c561d6c17b9e9a799a91b84da7f3598f0359fc440a7",
+  "panel/database/migrations/2026_09_29_000026_create_boxtrapper_settings_table.php": "339037a82fec7c4b4a5aa4fc58a9a52c7247a3bb2598184d32af9a0a70c67e5b",
+  "panel/database/migrations/2026_09_29_000027_create_calendar_items_table.php": "96cbfa0a97a0f145f4043988eaf594ef65c0e1ff0193c3aa59e07474f41b963b",
+  "panel/database/migrations/2026_09_29_000028_create_webmail_settings_table.php": "913afa272e6c699bae283cf9e185e9e9f937842751961af93ff6c2b82beeb286",
+  "panel/database/migrations/2026_09_29_000029_create_mysql_databases_table.php": "ce94ad5c36f300aabe822d7a8ede86575b79ab019c79e897fe3d1931f2c2c2a3",
+  "panel/database/migrations/2026_09_29_000030_create_phpmyadmin_settings_table.php": "e8e561d0d26835323bd2eb8f017c359501c81a681399a310b0ddb252a9e4c55f",
+  "panel/database/migrations/2026_09_29_000031_create_mysql_remote_hosts_table.php": "ab09d3bad0a26e25151b7123c34a912b9357ac44002728910c53863dad5bc5ac",
+  "panel/database/migrations/2026_09_29_000032_create_dns_records_table.php": "082a91f28a8db1656b1cff1bbc8d6ba76cbfe33620934418fad65743622ec168",
+  "panel/database/migrations/2026_09_29_000033_create_dns_dynamic_hosts_table.php": "7d8c5c26a487b073fb29d45da8c8445e004dfa1014d8c3ba3cff5cfc2fb37cb0",
+  "panel/database/migrations/2026_09_29_000034_create_hostname_a_entries_table.php": "1730569ff2433ba612e502c9847c734a48d3fa87f4490032e4b4d6bf0c7faa04",
+  "panel/database/migrations/2026_09_29_000035_create_dns_templates_table.php": "7693be5537ffb2386b6a2b1aed7eb81ddc91b252dada0b81125b5da454c4d62b",
+  "panel/database/migrations/2026_09_29_000036_create_global_email_routes_table.php": "ebdb44d44c17d15c2764e196b2472b8daf6f85fe8b86bd7c9699d5c3ea98962f",
+  "panel/database/migrations/2026_09_29_000037_create_ns_records_table.php": "0ec24887578965bc2cd9fa610433213aab4d7fb8ce1f06f42ad2d43259156f5a",
+  "panel/database/migrations/2026_09_29_000038_create_parked_domains_table.php": "8fa1fb311c93eb3dc27d23395da375696cc50c240e2ad15c82ef0c3a2afd5580",
+  "panel/database/migrations/2026_09_29_000039_create_dns_cleanups_table.php": "396cd00a04c09c1e60d8aa78709f1240b6b65a5eb1b89e496be83f5f682eebb0",
+  "panel/database/migrations/2026_09_29_000040_create_zone_ttls_table.php": "ef00a9923aa9763ef7de454ad18d4087b065e8ad25417b1b148461a7604802a8",
+  "panel/database/migrations/2026_09_29_000041_create_domain_forwards_table.php": "df2ee26e918bf270cf34d6cbb7880a8c9fa2f77a05a1672bc37ad13979562c11",
+  "panel/database/migrations/2026_09_29_000042_create_dns_syncs_table.php": "95d3fdab09ae34a7f04f45360cac52fc35da2301be54bd3328628475979a3acf",
+  "panel/database/migrations/2026_09_29_000043_create_nameserver_selections_table.php": "f13427938b7cb84b3a25605c826159144be48a49855f02ce7ce996a40b1a65f2",
+  "panel/database/migrations/2026_09_29_000044_create_backup_jobs_table.php": "df24879459acc9c3cbc537b2f8aec88b856926c6811d4784c79c581991676545",
+  "panel/database/migrations/2026_09_29_000045_create_backup_wizards_table.php": "1a0dfe5a3f5ceb1e3d708f342cb6a92c26cd97de16fcc3b1c474e0dec7005aac",
+  "panel/database/migrations/2026_09_29_000046_create_backup_restores_table.php": "0832230faffb0c1717ed3a0e9b580bae0b3ac7fdb9bae2cfe317e38a4dce7581",
+  "panel/database/migrations/2026_09_29_000047_create_backup_configs_table.php": "1b1a244478f62abbde8db58085e2d602eb394a6d341f0497cd2b479c0d782d44",
+  "panel/database/migrations/2026_09_29_000048_create_backup_restorations_table.php": "98f95caa039d15402acda4c507fd74f66973ce37d39623a8d77824a64bee89f4",
+  "panel/database/migrations/2026_09_29_000049_create_backup_user_selections_table.php": "ccdc0fca48e8a1124ce553af7bc1e12eb2fbebaa45825f135ec567569fd8d93a",
+  "panel/database/migrations/2026_09_29_000050_create_file_directory_restorations_table.php": "20e71ec082367145c583b96ef654e96a7ea579e7d71d2b626a7948be80082346",
+  "panel/database/migrations/2026_09_29_000051_create_transfer_tools_table.php": "ad82b611d8684322448bb38faf67b1ba72f6894d17fbed59c44f81c33305d372",
+  "panel/database/migrations/2026_09_29_000052_create_transfer_restores_table.php": "0dc65dce2c226c5a3e09312e209c81a01c1c0d25fde46f9c5cb7b95bcf8fcd00",
+  "panel/database/migrations/2026_09_29_000053_create_transfer_reviews_table.php": "7a7fbf12a5e56b0285ea5432c9a76b34e7cfb02e0bc3684ee28c668db55ab34d",
+  "panel/database/migrations/2026_10_04_000054_create_mysql_user_tables.php": "18e51a500aafa02b59d1ccd494ac9d3399d0cb09b11dc964d216c998be0c4ce1",
+  "panel/database/migrations/2026_10_04_000055_add_mysql_restore_to_transfer_restores.php": "3bc10ed48837c424d61abff9e8aa87616c798428dfed0c992c978fbcc06f5784",
+  "panel/database/migrations/2026_10_05_000060_create_backup_destinations_table.php": "0b5df965a63ad8a761ab38b33a3cf7ce3eb06b740ed136f6ef09badf89185958",
+  "panel/database/migrations/2026_10_05_000061_create_backup_destination_pushes_table.php": "5e48998979a1b31e9788bfa4140e093aa700f3e5dba2f7088c45b45f4304ea3f",
+  "panel/database/migrations/2026_10_05_000062_add_members_to_mailing_lists_table.php": "5ceebef11abf5c8681b1704fcda369ac676330da1705e79ed2abc60424142257",
+  "panel/database/migrations/2026_10_07_000001_create_ftp_accounts_table.php": "8692eec4a8c25c26418e26899140b8b85d10e467ee36c69dad5c8e2273907b42",
+  "panel/database/migrations/2026_10_07_000002_create_blocked_ips_table.php": "5b241907b6683bed06c33508d3d69fc49ae6bb47c9a6ad4f74e47524f4c4c098",
+  "panel/database/migrations/2026_10_07_000003_create_api_tokens_table.php": "221f434ffdd6acb2d57fd6a7dd4db3408bcc8ef2466a244fc1be257ab46b48db",
+  "panel/database/migrations/2026_10_07_000004_create_license_keys_table.php": "d3a8708c0da61dca5a17a6a74acb525dd5b92cf6f73d9ee9f8e340b4d4872654",
+  "panel/database/migrations/2026_10_07_000005_create_security_extras_table.php": "e4dd0c5ae579e7a98c50abb9332b75a1b6f00f2763042c4a14ec0bf06f284c18",
+  "panel/database/migrations/2026_10_07_000006_create_webdisk_accounts_table.php": "20467ade66f4021dcdecd112de2695cdf9db4755510e1896ead56a6af5b16ed2",
+  "panel/database/migrations/2026_10_07_000008_create_optimize_settings_table.php": "fe2b05ee538c690e895706bb84d19d67ad7e33788eca7c4167311accfaf44ef7",
+  "panel/database/migrations/2026_10_07_000009_create_dns_cluster_nodes_table.php": "837195228fe47f205f0a939c5876cd516e03454812f0ad1fa98ece6cc9549381",
+  "panel/database/migrations/2026_10_07_000010_create_port_configs_table.php": "d0cdc8302a335b22f75275171bbbdc8037a377f474a810b288282905f948c34a",
+  "panel/database/migrations/2026_10_07_000011_add_payload_to_license_keys.php": "2f21b6e08adc742949e7b3f4aec2c31eef7dd54cd5fe16a8abbabebf5caf7b75",
+  "panel/database/migrations/2026_10_10_000001_license_keys_expires_datetime.php": "15bc312eb492ed0127162785cec1eaee506057cb01344a87551cddfda22f9578",
+  "panel/database/seeders/AdminUserSeeder.php": "a24580809beec3f430677a524a9eb0b154340526ebd2a84ba77ad0886932b86d",
+  "panel/database/seeders/DatabaseSeeder.php": "a564653893c9f9ebf30205b06fde373b4803f7b6ce5020fd01d0278a0ba1e3f9",
+  "panel/database/seeders/RolesAndPermissionsSeeder.php": "cb4b22ad72bd4f2da2aa90da144e3c6a9bb41c040f3042a5f8b9bc14705c2440",
+  "panel/deploy/nginx-alphacp-http.conf.in": "69d4447f9f6d60bb2714c14e58e8950355353d85e4a04cc6d9b02c8987c75321",
+  "panel/deploy/nginx-alphacp.conf.in": "e8fd485cd071cbc97b3a80cb938f50af34e30bfd9463e84ffc72f56e9fffb4f2",
+  "panel/deploy/php-fpm-alphacp.conf.in": "0562e43def8cdfe106dcf42198d0476e2d2ab671944e4aea7e5783cb0c7d599c",
+  "panel/phpunit.xml": "cc28be2f2845b0386c816e06384b27d798afed7adcea1cc32711f55d5de35d14",
+  "panel/public/assets/panel.css": "52ee9f600c6fbb0b445258ef4f732d73f04f070ff0f9777d45069886a8be14d7",
+  "panel/public/assets/panel.js": "468c617f0042e357eccc1620df6acd43d23eee9aa856d37415f47e126acb3264",
+  "panel/public/favicon.ico": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "panel/public/index.php": "2e6e91ea1efa086f0545521c822f67e37b2800f8f3623ce4a2fbbc4915d63a68",
+  "panel/public/robots.txt": "e5c4b84484ee4216e9373be99380320c25dd94805f99f0a805846f087636553f",
+  "panel/resources/views/accounts/create.blade.php": "4033ca46e9361c94ce5f618c0890b7185ff80ad94d98b1e057159f07ed062f5c",
+  "panel/resources/views/accounts/index.blade.php": "18899d3592dfa5eac34172576fbb57375cd53d25ca2347dee9f13da039b4034d",
+  "panel/resources/views/accounts/show.blade.php": "97c0991d47bd7c0c037163908590bf7bde0bafccdd3ef418481034fd54bc4056",
+  "panel/resources/views/address-importer/index.blade.php": "560b8a0a06fbf64d277f3dbbe57612621e287670beb198ec4030de7b60e7c73a",
+  "panel/resources/views/api-tokens/index.blade.php": "92f724b915b37b9999963830d5a1c08dc0017410a33b2731a8878b0822c84982",
+  "panel/resources/views/apps/index.blade.php": "b591550ea48db2565a4d1cafceb79d3242cec07e6a42a726ed699ce3dcf9d5b8",
+  "panel/resources/views/audit/index.blade.php": "077592f603becf30be7bf2891f8dde9ddc92045edd627a0a38e21c5ecad57ad6",
+  "panel/resources/views/auth/login.blade.php": "2cf8ca843fe5997b36aab48be80bfcac9c46f49c60aaba26523590b64d7bb289",
+  "panel/resources/views/auth/twofactor.blade.php": "b7d1a7069322957c623e768930aa242abb2b51a31b1922d4647d64d568f3a1f5",
+  "panel/resources/views/autoresponders/index.blade.php": "2a86948ce10cb9832b4ce95b8bf1ba1582563fe5c4b0a16553c3e723d3855356",
+  "panel/resources/views/awstats/index.blade.php": "f8d5f8a07c0c596689c0cf8d9b869b2be298eb6f0f62ba402a11994b91e7e45b",
+  "panel/resources/views/backup/index.blade.php": "b2fc02dfe4bb1a5fce0b4b37d434fcaa59ab7bcc3d991f3908e400aa88d8a1c4",
+  "panel/resources/views/backup-config/index.blade.php": "0b7d27b55203b3f2dcd08842b27c40c1068ddbe576735837c8fec35bc03895a8",
+  "panel/resources/views/backup-destinations/index.blade.php": "00f34a797cc4d54d167627ef9410bf41bfaa275d2e9321f0b6dd294249d5dfe6",
+  "panel/resources/views/backup-restoration/index.blade.php": "680def5da4a8abbd51b01109ca656e3a91bbe7df4d669e4a00f402860e114251",
+  "panel/resources/views/backup-user-selection/index.blade.php": "825dd58d52a9e56114c5a553e67aac50999ae530f0499d469caa2a2f00457c46",
+  "panel/resources/views/backup-wizard/index.blade.php": "0dec0f04bdb0c56d06c90ddc395bc28230160b685a4903e0e34ce3c41369a368",
+  "panel/resources/views/boxtrapper/index.blade.php": "90ba2f18728eed2a35263a137cd69970f562e0fc8dceec592e5c7f7f2ac6b02a",
+  "panel/resources/views/calendar/index.blade.php": "d155802f15ef2b03bea974686c1c9e88d711e657e03dcf8d476f17dc54912104",
+  "panel/resources/views/composer/index.blade.php": "96071868711db98c45b98bc5f20352844a9b213788c74c9c6334f366fc18bec3",
+  "panel/resources/views/cron/index.blade.php": "0de6fdf9ae453f6b4693c1945d8070b5f139c1c5cb1b20012bc89a9db4d2bc58",
+  "panel/resources/views/dashboard-cpanel.blade.php": "e0a8d7bf06d940e816a88e39619eb42e91f43ab03151bf8d3de276ae70c44b0e",
+  "panel/resources/views/dashboard-whm.blade.php": "d49e32bfcc0b4f1ac50af2a7440af8bcf4918cb9e128e1912fd3b8bcb65f3725",
+  "panel/resources/views/dashboard.blade.php": "3312ebc0df78bd0d3a334cff717bbe76ab07d871f2402341d7e055780fe05618",
+  "panel/resources/views/default-address/index.blade.php": "e4c1cd2ae5f1666c7097a91dcb1d064abac1ec9309480e6bc6b35ee83b253906",
+  "panel/resources/views/deliverability/index.blade.php": "6df310e2de72a2d91e3e31410141a04f8f9030ee37a53a378baf0d90ad1ddda9",
+  "panel/resources/views/disk/index.blade.php": "2166b86a4111eb5eeea18f4049728a72d26600489c37fe94275a22cee36549c5",
+  "panel/resources/views/dns-cleanup/index.blade.php": "42a28fbad2e926d7036072e42465529dd2d96aad849128d0eb249e6a981577b4",
+  "panel/resources/views/dns-cluster/index.blade.php": "1ea11f678e90805c5dbc7c22454e1d27b0a3e0e16082f9ae6138cc50b9577ccd",
+  "panel/resources/views/dns-sync/index.blade.php": "e6b105090c9dca049334aca95c4cf19b1b1adf065ad832f572c8777e46e8fb33",
+  "panel/resources/views/dns-zones/index.blade.php": "b2679d1e8065b7a4ad6c8df08d15bb10185d351da97a6777800fbb4a753d4232",
+  "panel/resources/views/domain-forward/index.blade.php": "a09baa454e462f9a685b517dd1e413fc9a8ccf252460333b487da20bc5ce8dac",
+  "panel/resources/views/domains/index.blade.php": "19690e22ab74b709e9ffc81a3d2833fea3593824a83fa3816cdd77e9768d4f8e",
+  "panel/resources/views/dynamic-dns/index.blade.php": "44d6da782357bbf7283a085988abc3876088f656526d1737fe82eebebad1cb07",
+  "panel/resources/views/email/index.blade.php": "8e6e80b91d5ead7952b4e3942b82a0cea967a449d90fd165420a7250cc657986",
+  "panel/resources/views/email-disk/index.blade.php": "523b540ca500c544bbc6e944ae4047b6b75e0b4ec5ca0c28c162febf6638b76b",
+  "panel/resources/views/email-filters/index.blade.php": "219bbd7bda5679fcebb5dfdb91c9bc804262268f6c4d3793299b3555681802da",
+  "panel/resources/views/email-routing/index.blade.php": "26f1ac617ac5e3ffe5bcea74647a1bf338d3b0039e0b3e26b39f8d8e171a795c",
+  "panel/resources/views/encryption/index.blade.php": "fa28f30628874387ff4b596248f23e8ecad1b58ee13b8cda4fb86a25954a9d11",
+  "panel/resources/views/errorpages/index.blade.php": "ff8e18434d1957d70e720ce18cf3e26cb80bef70e5d6e8f57d3ee587ba12f2b9",
+  "panel/resources/views/errors/403.blade.php": "b9c26dfd80498bb08e330ad9e34aa9410c036b4f7821de98137163c4ed6db221",
+  "panel/resources/views/errors/404.blade.php": "afdf808c4a33513548ef48f00c451b26a6fa3a8e3812526b52c7e316d77dc884",
+  "panel/resources/views/errors/405.blade.php": "c65da8e591d121e5392f0c28e52259a9e74777577feebef7ac278dd429bfced2",
+  "panel/resources/views/errors/419.blade.php": "be55cf6409077b91de434190b9141ce035abbd0fe986a46e223c33a4df5eb0a4",
+  "panel/resources/views/errors/429.blade.php": "d8112cec79299804b8ecfaa6ed667f1259b0ed89cf7027f2a1135480bc0cd338",
+  "panel/resources/views/errors/500.blade.php": "1aca6fcdc26645b51e462caa06e7e919daa9de1dec7a2a6592004120ca90378a",
+  "panel/resources/views/errors/503.blade.php": "51fa2e305a10b7e6f450202e7dc5069c8bcd7634e5633a0c33d33a369fe5080f",
+  "panel/resources/views/errors-log/index.blade.php": "49b2903dbccb1601f3fbc9008908e74c402bbf8784058f8e89ae5bd0adeccf8f",
+  "panel/resources/views/file-directory-restoration/index.blade.php": "a111d47210af60bce4a0cd5e227510cf8fa1169099990510c4369b3e752dc89e",
+  "panel/resources/views/file-restoration/index.blade.php": "2cbed6e8d5430c53f9b484b06f5ab4de1068d11ae9d9dd7f0d76a49187686b57",
+  "panel/resources/views/files/index.blade.php": "f28e367b7e96dbcee06224e454b2d34bcab05bb9f76f0aeff88bc37ecd2d66d4",
+  "panel/resources/views/forwarders/index.blade.php": "36553e88546213aeb1586316c3e27ab6535681b7e5754b8183a01032e4bab61c",
+  "panel/resources/views/ftp/index.blade.php": "c8870f5b8c3ca65f36e0da09411d345727dcbbc18ac05f02baab3718d136139f",
+  "panel/resources/views/git/index.blade.php": "2359feeee1a5aa01c4fac78423cbe6f9460e5660c1e7858bdbc9d2d7b4c90da5",
+  "panel/resources/views/git/status.blade.php": "8bcb377eb6fc76b384b36bfb170612db6eccb3577c5aae13576ab909c069d2c1",
+  "panel/resources/views/global-email-routing/index.blade.php": "bb4bf955cd39eaf70285d4358adf7cb244b1d16a3a88efcdd9b5fde4b52d4f39",
+  "panel/resources/views/global-filters/index.blade.php": "47a76071a37f9f6fef0e1282bc892a32fd9c45ad3fc458a075ec0390f1ab5dd1",
+  "panel/resources/views/handlers/index.blade.php": "ea19cc3ca501076da93d0f919a759c7c55af70404302c82e2b04535997b954ad",
+  "panel/resources/views/hostname-a/index.blade.php": "af532e7d00508b84c9c781cb1c38ae507cf995ce6395d853589ff545fb486f9a",
+  "panel/resources/views/images/index.blade.php": "b4be1846e5a0041436cd5b7921c3851d3833ba857523c3b4806c052afa3ec206",
+  "panel/resources/views/indexes/index.blade.php": "4159011045a1d9435fc6685dfc7b2d4bc2537037621b3eb591f33f4cdb01ceda",
+  "panel/resources/views/ip-blocker/index.blade.php": "4908742c82eb0aa6fbc64290ff80988b956a39cd8a4c19e74ce3ed9cef249bb9",
+  "panel/resources/views/layouts/guest.blade.php": "a3b79a3d1a1f2f15b03be364d6fb7422f1b501fc27f1be3f2147ac04573e9bfd",
+  "panel/resources/views/layouts/panel.blade.php": "ad803c6fd4c6bb8fdff01072c08503d6519ca5be11232abe1eef8dd34a6a4c03",
+  "panel/resources/views/license/index.blade.php": "c044214a9d46002dc73fa96e3e3b5c7ee12b8acf478287b3770ffbdcc32e3628",
+  "panel/resources/views/license-server/index.blade.php": "4c9995bdf61870db3656c1626398c02d48cd292da1a8c3c69e93115a08672c21",
+  "panel/resources/views/mail-queue/index.blade.php": "92580c10e94da5c136a7bd84da7b9808cae857f220b729289f020a6ed375c802",
+  "panel/resources/views/mailing-lists/index.blade.php": "d1be978ddf9d43f1438f42a6ceaca57dc04eaccfb9e2cef119e8a7b9abe2dd14",
+  "panel/resources/views/metrics/index.blade.php": "4ee3486c1c35be39fcd144af40b590c4e942ac8013a0907507147d17fd76ea25",
+  "panel/resources/views/mime/index.blade.php": "8d8e2b7fa9f25e4e8349f486ff2deb9a58c57ebdea0ada342e05c577b9a89eb5",
+  "panel/resources/views/monitoring/index.blade.php": "d393068b96fa3152cdd272b7f8475a1fd6e3b267ebb7558883a470087e8619b6",
+  "panel/resources/views/mysql/index.blade.php": "a1be4f3281ab650c5a61cfde6c2cc89c836a6168192831ad1dd94778c70443a0",
+  "panel/resources/views/mysql-users/index.blade.php": "028f89d105736ff676d9a19b31701d9d2dbc1fec146dcea1ab6e24f4fb17dc1a",
+  "panel/resources/views/mysql-wizard/index.blade.php": "aea0d1dc97f45d5ce8edf85ea7c59aeedf8ccd2693f0f195cd98569be308c6b9",
+  "panel/resources/views/nameserver-selection/index.blade.php": "c5bc70d951e4aa4f212d0e8b04cffa436c5e2bc79ade9dacb7082d474f6294d5",
+  "panel/resources/views/network-tools/index.blade.php": "2b1be9643b885f1f8b48b85a3f5c6ee98d42a64b85dd8710aad18a90d4f784da",
+  "panel/resources/views/nodejs/index.blade.php": "31b6e480bd90626838f4234f9621ac666d51b618b3f92e388951d121f20cd719",
+  "panel/resources/views/ns-report/index.blade.php": "329734e19609a155d8d608c26736255d396fb287a41bba025d14422bff1edd81",
+  "panel/resources/views/optimize/index.blade.php": "18c42c65af883d7d33ef8ad1c409f4e71a25a5a694c5ced2ad5e08686adc75dc",
+  "panel/resources/views/packages/edit.blade.php": "939d70facf6d8865c90b5beb53608e76b01f0087b7fe412dfedb4100554812d7",
+  "panel/resources/views/packages/index.blade.php": "2396205e0751c928ad7ae4fbb692b399f30474b0a562508e0c332dabb3c83d52",
+  "panel/resources/views/park-domain/index.blade.php": "e15b2fcc88b16ae5452c7ea483e2160b563c4d704756e468354cb27d2310899f",
+  "panel/resources/views/partials/cpanel-sidebar.blade.php": "fb62e91c53ab71a6538fbe17adc92f75345281d2db0c87f9ebbecbb1094dcafc",
+  "panel/resources/views/partials/dash-sections.blade.php": "a8dcb365d01f33897cb21bdd2f5416ee1e198ad1d012aa9b19281e7987a436d1",
+  "panel/resources/views/partials/flash.blade.php": "48705377178499bcb0a9bf131050759fb548d53540689d2bd82d45448d48d132",
+  "panel/resources/views/partials/icons.blade.php": "7c48ec94b697812b5ef491bdf0e407a4ce166ce2bda83f86319c355abe3b8562",
+  "panel/resources/views/partials/tile.blade.php": "b9eb79724da45a11add5bebf497405a28cd6531bddd724755c57fd3e74222d8e",
+  "panel/resources/views/partials/whm-sidebar.blade.php": "b3a3a69729be18821115f028b46f88e9f176c3d3c7a235249f2729ad7ebb63fe",
+  "panel/resources/views/php/index.blade.php": "26750a1f5ec5cc398b4be8ae880870f94510d46c4e54fe111fc0bc4c27c628ad",
+  "panel/resources/views/php/ini.blade.php": "7c9904184d9a2923663afde29035d967e004e2fd4ef846650df6c990211a351d",
+  "panel/resources/views/phpmyadmin/index.blade.php": "2ecc43ca5b7a7e4d5f68c7bdd374a62d133fd37dd9c1722c4af6655fecff783d",
+  "panel/resources/views/ports/index.blade.php": "31f640a41b9ea7214c0da3e328f7650b1347f4f578bfc49b58262f179828756b",
+  "panel/resources/views/privacy/index.blade.php": "6bc7d2ef83530d5d6b0ae87edaa33160ff9c2676c47bcd81ae58b55a91714c97",
+  "panel/resources/views/raw-access/index.blade.php": "06323b00d39e27fb5adfe14e2bedf668f57f5955a54400a2fe747f70b5f1913d",
+  "panel/resources/views/remote-mysql/index.blade.php": "ae4892be5d4367b703e07be02e6e9db6181ea2aac9aa214f3a237f58a1994ff2",
+  "panel/resources/views/resellers/index.blade.php": "c91e4808e1028a56ba294478602ae9d1447b27ad168307cafdf04c1ba1339dde",
+  "panel/resources/views/secextra/hotlink.blade.php": "0410dca3c7bc6436a848a167d848adbcd8c74bdef380f7153c1f48659e46917b",
+  "panel/resources/views/secextra/leech.blade.php": "b771342183746cebaca2e259e903b93143e25fe579332059796b0b6d7320b18f",
+  "panel/resources/views/security/index.blade.php": "a9277c63ad5d6a2daffc2984b5cbd58ffdfbaf69755c0e5338e593178a86bb36",
+  "panel/resources/views/security/password.blade.php": "566180a283a8f63347be36abba5a809a86f5a7d6fd2ed1946752e3f705132433",
+  "panel/resources/views/security/sessions.blade.php": "f6fc63626c58b3fe2c4b248ca915d5ad3fb4e1911a5344a456f9013c20dba08c",
+  "panel/resources/views/security-policies/index.blade.php": "934f5c5c6ea828613eef81a32a5e1ba70d43e2dbf124e04fa729238c6f88d791",
+  "panel/resources/views/security-tools/index.blade.php": "71275f708f4f8193beb149309a4da60c52483ab246e7e9bf9e37d1e0414f2a19",
+  "panel/resources/views/spam-filters/index.blade.php": "33a16bcfee98498ccf59c05041f0e9a3f48dd3dec0a6a121c6cdc818fa41756b",
+  "panel/resources/views/ssh/index.blade.php": "c1d1ab9bb07dbea01f86d8d39362dcb0866f1a08e0e4b6e174707034b23f6333",
+  "panel/resources/views/ssl/index.blade.php": "1a820181eefaff91e02822b202d80ee8ca52633a7885eafb54754dd7b911f51e",
+  "panel/resources/views/system/index.blade.php": "f1e3f1c9106c66eb422ae0cd95830f15a9b2391c86fe48af7f37aec375867035",
+  "panel/resources/views/system/services.blade.php": "02befaf4c78830f207148650621ad0c53610a681eb501f43b5f224880847acda",
+  "panel/resources/views/system/tasks.blade.php": "51ea99f8e49e6af4cdfe72fa119406acdf3c92ab693bbc937f338c61ad1137f7",
+  "panel/resources/views/terminal/index.blade.php": "cc90d84648eb2e2e4ec41b3170a582b46f5971dd5ad3f2c43073a24aa589745b",
+  "panel/resources/views/track-delivery/index.blade.php": "8ab3200687cb5a72eab62aebdb8207070bd3bef7f3a61a7e61c82df083724d99",
+  "panel/resources/views/track-dns/index.blade.php": "e32b31d28b412802f57c20b3f979abc59dbef232b7eab1812a168cbec6d994b5",
+  "panel/resources/views/transfer-restore/index.blade.php": "43ca00fa7b85e51c568035939e8a6bdae8dd67254778cc4ddf0a3358425cbd4b",
+  "panel/resources/views/transfer-review/index.blade.php": "9aa7bc6d387f51f1ba3130532137544105591157208858738bfaa478d04dfa89",
+  "panel/resources/views/transfer-tool/index.blade.php": "569165d16aa25ab1e1c12d8bc6fbc81dfd3a698dfc449b0a9ca9608b9f8900a8",
+  "panel/resources/views/trash/index.blade.php": "5be8d770784c112eb00b1f25004f136e99345092a19471ef367bc028cfd64d1e",
+  "panel/resources/views/updates/index.blade.php": "9ab6a95af700266b3447eb6a0d6898be01cb1398028089f7cd43c65156f2e0be",
+  "panel/resources/views/users/create.blade.php": "8887e0594d172ef086f28afffc5a8b13e846dc84d3c4d7a1f7102737d0f857de",
+  "panel/resources/views/users/edit.blade.php": "a0e02a79a4ae1475f2dc92c98259ab069647fd733da203687a2de8bd77a886a0",
+  "panel/resources/views/users/index.blade.php": "ed72b7801226495767318dd091118e8fe8c831cffb2f5e95c329b2d957b23345",
+  "panel/resources/views/webdisk/index.blade.php": "2da043055ea14c7b5d1cf3c4f483782c8cfb547e6967e0bfafbc571856a829bd",
+  "panel/resources/views/webmail/index.blade.php": "6d0578e1a4854e31c87a438ec79f8b3963fd0e693e6aa7968909e69a82886df9",
+  "panel/resources/views/zone-editor/index.blade.php": "54417fc6b9f969939b620b57bb8730a2a243e47a1dc5ded110e356b838e52764",
+  "panel/resources/views/zone-templates/index.blade.php": "3577f60547a7413163a7756224bc8cbf132b22d46119da65d053c9d5fb663587",
+  "panel/resources/views/zone-ttl/index.blade.php": "b210afa2aafecbc42ee6263cfb551b2b4bc39e9166270ac2e5bef8f4e976c744",
+  "panel/routes/console.php": "3a8cc7d3cb62d1722d1191470d033546706d486a1ce28ec5596068149e7c30de",
+  "panel/routes/web.php": "36ed2ae05be730a43467f0d951d2ef08641742f40f48d3588109de6e810d5510",
+  "panel/tests/Feature/AccountsTest.php": "a360a4a288bf2358be8ac4d530dbc36394949584439c3273c747db6895d3fafa",
+  "panel/tests/Feature/AddressImporterTest.php": "e39c977f984438035adad3aac3e5c1d6d2c8460148ea40159bb2f68ec1e6cb4e",
+  "panel/tests/Feature/AdminPasswordCommandTest.php": "1fd9fc244d0a503751d4be74d0934bcdaec0181dad0c3d80fa3afff7a7cfe280",
+  "panel/tests/Feature/AuthTest.php": "2fef85a0e1bcae6a659babb720c92cd7386bc213e36bbd0f12417eb02ab39de9",
+  "panel/tests/Feature/AuthorizationTest.php": "a7c2b65db0d8336fbc1f3ad7bd6f196bd2d4e173acbfab4d042dd4bd9cd32a33",
+  "panel/tests/Feature/AutorespondersTest.php": "b5c63df26ea8ceb1d0831590b08d67f110258cc049a4b615c7a9a253218fee5a",
+  "panel/tests/Feature/BackupConfigTest.php": "13b5ecb7f5d520fa28a488757bf2981ed1549ccc46458a451d3cc89f2c23cea9",
+  "panel/tests/Feature/BackupDestinationsTest.php": "0953f63b59eb39fc5d937bb7eb3f1ac6d2911d83508f8713b4729b28c3d8d7a2",
+  "panel/tests/Feature/BackupRestorationTest.php": "9d10b3eb3291e345481159a33d419dd32c1575682087e90d678a923d7bd8901a",
+  "panel/tests/Feature/BackupTest.php": "6bc82ed2966bbd0087576312b26e3cbbb180dd97b9e268f05514145ccce14cbf",
+  "panel/tests/Feature/BackupUserSelectionTest.php": "4bdb6422353b2bfe68943ae12c78560380fa5f9ad548b546016c675f62819c15",
+  "panel/tests/Feature/BackupWizardTest.php": "5febbf1220922b20865c526b514e565ac8775e3d8e4c1059263bab52ba4b66e9",
+  "panel/tests/Feature/BoxTrapperTest.php": "3f33e5c599abf554d7c560801ccb3340a2fefd59f8510116bcfe6e90c3432d43",
+  "panel/tests/Feature/CalendarTest.php": "971057df9134687de4fc75e70b709d35470c21452321df7f5a90a1b5150567da",
+  "panel/tests/Feature/ConfigBootTest.php": "c07ceedd4c44e40964f6a7e311980a068296b9a7b7a937e05422681ab648003d",
+  "panel/tests/Feature/DashboardShellTest.php": "007780c9fc4233838f8aa10de811b36fa2cea3699904f31558c73b1722f06284",
+  "panel/tests/Feature/DefaultAddressTest.php": "068f2f2f86b8728c0282533f54ee7061ccc3c0898ddfe735a61fe772de510a4a",
+  "panel/tests/Feature/DeliverabilityTest.php": "ad25160d13806cc1b3f7aadbe9f8e449ee7778f5de602a1e027d5b10d2a6a88d",
+  "panel/tests/Feature/DiskUsageTest.php": "2a748c29f0da7805f349de35be176a287ae4f743cdca0c9a3199a9927c4179ff",
+  "panel/tests/Feature/DnsCleanupTest.php": "0d055eb405bcbcb82140568caa6110c9c3e5a7af7781cf4990796766bf55e99b",
+  "panel/tests/Feature/DnsSyncTest.php": "f2302d9d09c2a6b1964a6d39037c9e1be15a398332886910fcd0a6eede804c03",
+  "panel/tests/Feature/DnsZonesTest.php": "43dca8a0bd134e074e195bf2e52e4407ef8ad15bcb3d5222ec0e86a3587aed74",
+  "panel/tests/Feature/DomainForwardTest.php": "8818a83f8b1ac725c1eefc3489a3b3f3e2eb5647696465ded9152864afdac97f",
+  "panel/tests/Feature/DomainsTest.php": "d1c0f5cf20649568d89e57234bad3fb4e53d38b5e0201f36230485d9257cd0ff",
+  "panel/tests/Feature/DynamicDnsTest.php": "ca1099af09e7960c7ac0ee269b2814ea9aaefb1970150a59876c36907e7a2d2d",
+  "panel/tests/Feature/EmailDiskUsageTest.php": "26bfe7a223fed1a9db730ebcbe40bdcfbf9a182b4e9c24854c0f4f7e3e536dc9",
+  "panel/tests/Feature/EmailFiltersTest.php": "262caafa8169426fd70e65172e7b5063c056d6685603722b8d797009ce13c992",
+  "panel/tests/Feature/EmailRoutingTest.php": "2e1009ec54273ce3a8ac5b6da52789376c8b895918818a9e3babc2c2c31d0ec5",
+  "panel/tests/Feature/EncryptionTest.php": "66d40510a48907367b42afa0f51bd81f6b8dc0918c5825ed3cb4fab29243f562",
+  "panel/tests/Feature/EntryLoginTest.php": "5218095cd97473395913f56f4a023f1b84c2275e3126baced2526c4e2dce90df",
+  "panel/tests/Feature/ErrorPagesTest.php": "056d2d1ed4e1600cb779c2214c6f6fce7b62008b6cb417507ae6e2f12ffe874d",
+  "panel/tests/Feature/FileDirectoryRestorationTest.php": "3e12883ba5effbc2850788258036662b5ac9345e14329146018a6698c7d3d044",
+  "panel/tests/Feature/FileRestorationTest.php": "cb5f3e74409d65e7eac3d9ecbbf3c9a54fc9702f91a40fbaef2bb87ebc854714",
+  "panel/tests/Feature/FilesTest.php": "502ec63429085872413ff20e6fe7b70da36c952d3b0dc4d22d1f059361f4919a",
+  "panel/tests/Feature/ForwardersTest.php": "9aa9346a1089585f2fd560b83ef4ed995c89306a27440a1edab5ae8d113853dc",
+  "panel/tests/Feature/GlobalEmailRoutingTest.php": "8222206840ef38c54fc97a25538f7176aa0c2eda610f57e75b0720c8b2083528",
+  "panel/tests/Feature/GlobalFiltersTest.php": "79afdba8de21340f034479aed0325cc263cb82c2d66d50b5d84afefef47286ec",
+  "panel/tests/Feature/HandlersTest.php": "c9673e441d43466123b0e884dd7711b18caf039e5364fb55d09df1e1ae5f64d5",
+  "panel/tests/Feature/HostnameATest.php": "679010fe0d0a7dd3533b4fbbabcae1d4b807f11c4048dc2daf6644cb52ab40e5",
+  "panel/tests/Feature/IndexesTest.php": "7874b697f7de4ce396dff22b313ec42ef1f24eb1493cfdd37ec0032e10e3144d",
+  "panel/tests/Feature/MailTest.php": "ca4e0304f3514642abf3a410f4decd8ccf6f58dc81f884fc06c91b130724ac38",
+  "panel/tests/Feature/MailingListsTest.php": "6046cd943c54d3d8222fe529586c41fc33f8ebeba2165ec446c2037be6e3ef71",
+  "panel/tests/Feature/MimeTypesTest.php": "938fb02ddd9062229947ad9f70ce4e8392c99bff1c15f362d33bbb39e063c524",
+  "panel/tests/Feature/ModuleCatalogTest.php": "6d4e67cf741657d12e2b9e858a1434f7d8f1a56d9eb307cf9092bfe2de0253f2",
+  "panel/tests/Feature/MysqlDatabasesTest.php": "9c8cd1771b18d023d03e316dadb40879e8dcb42a0204b41ea26553bb5f9740ac",
+  "panel/tests/Feature/MysqlUsersTest.php": "3d5a2c64f3166fd18a0725a3ac0acdeb0c0f6d132938620700e5a5dc89c0b886",
+  "panel/tests/Feature/MysqlWizardTest.php": "300ef57a8118d5863edbcb1ad9a829ab29d9b157c09c808dbcb8cc9839d945a9",
+  "panel/tests/Feature/NameserverSelectionTest.php": "e22a20eb5b0feae85eedc5a363411409e4551ad3b5eb4f93833c2f00a3617d47",
+  "panel/tests/Feature/NsReportTest.php": "73f36ecfdba964d367c619b6b773ed7fd17ba55ffc924dd137e5776a34326c89",
+  "panel/tests/Feature/PackagesTest.php": "c61439382c21fe5e80058ffeeaccb8b78ae1cda1d890576472835d210d37d453",
+  "panel/tests/Feature/ParkDomainTest.php": "ec2cd6c2f4efa5a189b054d55d7ec9fe5a4c2b65da44652fb40be2ce6b67927a",
+  "panel/tests/Feature/PhpIniTest.php": "0aa81d589c0cf83e6e132ca79d376e812b5dd11b6f45ee1052ca8a6ee50f8587",
+  "panel/tests/Feature/PhpmyadminTest.php": "d45f25ec2429d688925f8147bb97f4b1531a84f09fc2cf3d576d11005ccfda87",
+  "panel/tests/Feature/PrivacyTest.php": "5b6c41bd4cd0caf550e2bb7d565b147f1c24019f0d282a9b9ed0191279c5e99f",
+  "panel/tests/Feature/RemoteMysqlTest.php": "6d36dda897d93f6e174c988b661cd731713fa1dc3d168274bc701b1d136edb8e",
+  "panel/tests/Feature/ScheduledBackupsTest.php": "3dd72148217703af2366c3df41e604046322e557bd6bd6f89b91efeb417f23e6",
+  "panel/tests/Feature/SecurityHeadersTest.php": "a06b4a9d3c5d383b36b63bcf00a68ab4fa347a41a5bfa23e34061a7224faf61c",
+  "panel/tests/Feature/SessionAuthTest.php": "f8363d7616d5c331bc2ffd0d37205fe308e0a93cbf458f85bb8f0c3baa6f0055",
+  "panel/tests/Feature/SoftwareCronTest.php": "32737b5996e1788b6b59f4e93b70bb202a263b9d7d85e22352f8fa7290075fe7",
+  "panel/tests/Feature/SpamFiltersTest.php": "2b5c820c361eeee8e483cd09aaf3fab5f0b6ff8ac91fd9b6da783abdd5a9fc4b",
+  "panel/tests/Feature/SshTest.php": "177a96d6cf39385e563dae493792e4df54851853c3e2c41430aecccc5e328bd3",
+  "panel/tests/Feature/SslTest.php": "066e5407d5701feb3ab7ba57af435bd19afef1f0ab2ef73ae41734c12a972e89",
+  "panel/tests/Feature/TrackDeliveryTest.php": "47bef49659af7db476413b57065c5083e317fb5ca01c983cf38a8ce69738a391",
+  "panel/tests/Feature/TrackDnsTest.php": "76baa938ab643c6db623715fbff17f61f5582a284e8f8e2868b5e99ce1dc09b2",
+  "panel/tests/Feature/TransferRestoreTest.php": "37d97c278bda3543a59f84567b39a4a5f1cf6badfbf86e8650833b0da4ee4040",
+  "panel/tests/Feature/TransferReviewTest.php": "4485f84408b0286433d89ed1c48afef0676db93a391d10b95af4c936e6eadadf",
+  "panel/tests/Feature/TransferToolTest.php": "28503c163c9c314256632e498d3cd5f7f378a232a0a2051d99b11b5caf532a45",
+  "panel/tests/Feature/WebmailTest.php": "bcabbc1afca2ef6cbf63aaac29521e1fb31fb0ad79a5e72964b5d07184076121",
+  "panel/tests/Feature/ZoneEditorTest.php": "136db61e3d0619272538b9a1b82a63896b0a45e058cfadb7c25531334f2218b4",
+  "panel/tests/Feature/ZoneTemplatesTest.php": "50c43ba1ea28f817d00c0566500deb058d05f09b83814e69c8bdbbc60212e517",
+  "panel/tests/Feature/ZoneTtlTest.php": "fa4937d2ed182706005fa0accc9ae495691369c600beaaed5d1603f8aec34806",
+  "panel/tests/TestCase.php": "de47d00d5b77761156c6bffa1b4564520de9bc1acfdf7170582d014d38da482e",
+  "panel/tests/Unit/AccountIdentityTest.php": "f51a41ba94e56cc7265722ccc4652c68ddd6e8ad40ab1108b44f064cb8416970",
+  "panel/tests/Unit/CpanelArchivesTest.php": "dd4812b1275061d45a7b7bfcc6684d79612c2e4d5a6b5944ae48f9d1fc73d990",
+  "panel/tests/Unit/LicenseClientTest.php": "9ec3d2f8e1c2eb13ad7db83a274859ce3a05c7920d889b02446d561f0217151a",
+  "panel/tests/Unit/PasswordGeneratorTest.php": "e13193a09545ccdf1a6edc3a621d1e695f70f33a164ec52c7c4578f97b1580a0",
+  "panel/tests/Unit/PermissionCatalogTest.php": "04b09a226d7422c43a91bc7204d7c3b99bec3d3e4940cc060bc395cd8c1c7ad9",
+  "panel/tests/Unit/TotpTest.php": "57c6c60afd2e2129b6ecb75934cd8f5fffff4065c9eb3d86537b9087aafc0d9f"
+ }
+}

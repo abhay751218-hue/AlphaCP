@@ -361,7 +361,7 @@ phase_packages() {
 
   info "Composer..."
   if command -v composer >/dev/null 2>&1; then
-    ok "composer already installed: $(composer --version 2>/dev/null | head -1)"
+    ok "composer already installed: $(COMPOSER_ALLOW_SUPERUSER=1 timeout 10 composer --version --no-interaction --no-ansi 2>/dev/null | head -1)"
   elif (( DRY_RUN )); then
     say "    ${C_DIM}(dry-run)${C_RESET} install composer"
   else
@@ -407,8 +407,8 @@ phase_packages() {
   svc_ver=$(mariadb --version 2>/dev/null || true);                 say "  MariaDB  : ${svc_ver:-?}"
   svc_ver=$(redis-server -v 2>/dev/null || true);                   say "  Redis    : ${svc_ver:-?}"
   svc_ver=$(named -v 2>/dev/null || true);                          say "  BIND     : ${svc_ver:-?}"
-  svc_ver=$(composer --version 2>/dev/null | head -1 || true);      say "  Composer : ${svc_ver:-not installed}"
-  svc_ver=$(node --version 2>/dev/null || true);                    say "  Node     : ${svc_ver:-not installed}"
+  svc_ver=$(COMPOSER_ALLOW_SUPERUSER=1 timeout 10 composer --version --no-interaction --no-ansi 2>/dev/null | head -1 || true); say "  Composer : ${svc_ver:-not installed}"
+  svc_ver=$(timeout 10 node --version 2>/dev/null || true);         say "  Node     : ${svc_ver:-not installed}"
 
   mark_phase packages
 }
@@ -511,7 +511,8 @@ EOF
   # token-protected php check (used by verify phase; not public info)
   if (( ! DRY_RUN )); then
     CHECK_TOKEN="$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-    printf '%s' "$CHECK_TOKEN" | write_conf "${ACP_ETC}/check.token" 0600
+    printf '%s' "$CHECK_TOKEN" | write_conf "${ACP_ETC}/check.token" 0640
+    chgrp www-data "${ACP_ETC}/check.token" 2>/dev/null || true   # php-fpm (www-data) ko read chahiye — self-test fix
   fi
   write_conf "${www_root}/check.php" 0644 <<'EOF'
 <?php
@@ -1129,13 +1130,13 @@ phase_verify() {
   vcheck "MariaDB query works"    "$(mariadb -N -e 'SELECT 1' >/dev/null 2>&1 && echo 1 || echo 0)" "" 1
   local anon_count="1"
   if (( ! DRY_RUN )); then
-    anon_count="$(mariadb -N -e "SELECT COUNT(*) FROM mysql.user WHERE User=''" 2>/dev/null | tr -dc '0-9')"
+    anon_count="$(mariadb -N -e "SELECT COUNT(*) FROM mysql.user WHERE User=''" 2>/dev/null | tr -dc '0-9' || true)"
     if [[ -z "$anon_count" ]]; then anon_count="1"; fi
   fi
   vcheck "no anonymous SQL users" "$([[ "$anon_count" == "0" ]] && echo 1 || echo 0)" "count=${anon_count}" 0
   local mysql_nonlocal=""
   if (( ! DRY_RUN )); then
-    mysql_nonlocal=$(ss -ltnH 2>/dev/null | awk '{print $4}' | grep ':3306$' | grep -vE '^(127\.|\[::1\]|localhost)' | head -1)
+    mysql_nonlocal=$(ss -ltnH 2>/dev/null | awk '{print $4}' | grep ':3306$' | grep -vE '^(127\.|\[::1\]|localhost)' | head -1 || true)
   fi
   vcheck "MySQL not public (3306)" "$([[ -z "$mysql_nonlocal" ]] && echo 1 || echo 0)" "loopback-only binding" 1
   vcheck "Redis responds (PONG)"  "$(redis-cli ping 2>/dev/null | grep -q PONG && echo 1 || echo 0)" "" 1

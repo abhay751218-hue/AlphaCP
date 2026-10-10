@@ -27,6 +27,42 @@
 | Step 2A | **paneld agent + task queue + CLI v0.2** — dev-srv1 par install ✅, queue test `agent.ping` success in 2ms | ✅ **DONE (28 Sep)** |
 | Step 2B-1 | **Panel LIVE on dev-srv1** — https://13.207.123.177:8090 (Laravel 13 v0.3.0: login, dashboard w/ live paneld data, User Manager, RBAC, 2FA, audit) | ✅ **INSTALLED & VERIFIED on dev-srv1** (29 Sep 00:02) |
 | Step 2B-2 | First-login password change + 2FA login verification + RBAC/User Manager pages | ✅ **VERIFIED** |
+| 2B-UI | **Paper Lantern theme (cPanel-grade UI)** — `#FF6C2C` accent, 82-tool icon grid (9 sections), right-rail panels, live tool search, 51 SVG icons; demo: `demo/cpanel-theme-demo.html`; gate: `tools/sim/theme-check.py` 21/21 | ✅ **DONE (09 Oct)** |
+| 2B-WHM | **WHM admin + Reseller panels (sabhi panel cPanel company-grade)** — dark-sidebar WHM shell, 49-item admin menu + 13-item reseller menu (parity rows ke saath), `/admin` + `/reseller` routes, Server information + Accounts + Services on WHM home; client↔WHM↔reseller cross-links; demo me WHM+reseller mockups; gate: `theme-check.py` 42/42 | ✅ **DONE (09 Oct)** |
+| THEME-LIVE | **theme-fix v1.0→v1.2 live deploy** — CSP inline-JS block root-cause fix (external panel.js), cPanel LIGHT vs WHM DARK, product-wise 36 icons, hamburger/search/favorites ab chalte hain; 7 files, backup+auto-rollback, live verify 3×200 | ✅ **DONE (09 Oct)** |
+| DEPTH-AUDIT | **Feature-depth audit** — andar ke options ka cPanel-parity audit (`docs/10-feature-depth-audit.md`): breadth ~100 tools ✅, depth ~30-40% 🟡; Waves D1–D5 process defined | ✅ **DONE (09 Oct)** |
+| D1-EMAIL | Email Accounts + Forwarders depth parity (quota/password edit, disk usage, Connect Devices, pw generator/meter, search) | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
+| D2-DOMAINS | Domains + Zone Editor depth parity (record edit, stats vs limits, type-aware create, search) | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
+| D3-MYSQL | MySQL Databases + Users + phpMyAdmin depth parity (custom password, Users column, grant card, show-once+copy) | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
+| D4-WHM | WHM Create Account + List Accounts + Packages depth parity (autofill, generator, stats, search, quick suspend) | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
+| D5-TOOLS | Cron presets + SSL expiry/stats + File Manager breadcrumbs + DARK MODE toggle | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
+| GAP-AUDIT-2 | Full code re-scan: 16 deep ✅, ~55 plain-UI 🟡, 7 stub 🔴, ~20 missing ❌ — docs/11-full-gap-audit.md, waves D6a–D10 planned | ✅ 09 Oct 2026 |
+| D6A-EMAIL-UI | Email group 14 pages → cPanel-style UI (stats+icons+badges+search), views-only | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
+| D6B-FILES-SEC | Files+Security 14 pages (Images, Privacy, Disk, FTP, WebDisk, BackupWiz, Git, FileRest, Trash, Indexes, SSH, IP Blocker, API Tokens, Audit) → cPanel-style UI, views-only | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
+| D6C-SOFT-WHM | Software/Advanced+WHM 15 pages (Optimize, Apps, ErrorPages, MultiPHP, DB Wizard, RemoteMySQL, MIME, Handlers, DomainFwd, DynDNS, Users, Resellers, SecurityTools, Ports, License) → cPanel-style UI, views-only | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed |
+| D7-METRICS | Errors + Raw Access + Awstats + Network Tools LIVE (4 controllers + 4 views + 5 routes + catalog 94→98) | ✅ DEPLOYED 09 Oct — user-confirmed |
+| D8-MAILQ-SECPOL | Mail Queue Manager (exim deliver/freeze/thaw/remove/flush) + Security Policies posture page (catalog 98→100) | ✅ DEPLOYED 09 Oct — user-confirmed |
+| D9-TERM-WEBMAIL | Terminal v2 (quick cmds + session history) + Webmail v2 (per-mailbox one-click Roundcube SSO) | ✅ DEPLOYED 09 Oct — user-confirmed |
+| D10-FINAL-TILES | Node.js Selector + PHP Composer + Updates — AAKHRI 3 greyed tiles (counter 100→103 = 103/103, 100%) | ✅ DEPLOYED 09 Oct — user-confirmed, ROADMAP COMPLETE 🏆 |
+| D11-RESTART-SVCS | Phase-2: WHM Restart Services — agent task service.restart (11 allowlisted, paneld excluded) + panel Restart buttons + audit | ✅ DEPLOYED 09 Oct (user-confirmed, backups bak-d11restart-20261009160034) |
+| D12-PHPMYADMIN-SSO | Phase-2: asli phpMyAdmin (apt, port 2098) + cPanel-style one-click SSO — agent db.pmaSignon + one-time token + signon shim + nginx vhost | ✅ DEPLOYED 09 Oct (v1.1, backups bak-d12pma-20261009162458; SSO click-test naye server par hoga — demo account me Linux user nahi tha, fix COMMANDS.md me) |
+| D13-NODEJS-APPS | Phase-2: Node.js App Manager (PM2-style) — agent node.list/setup/control (systemd units alphacp-node-<user>-<app>, Restart=always, log tail) + Setup Node.js App page (create/start/stop/restart/remove) | ✅ DEPLOYED 09 Oct (user-confirmed, backups bak-d13node-20261009164655; node v20.20.2) |
+| D14-PARITY-GAPS | Phase-2: mailbox Suspend/Unsuspend + DNS AAAA/MX-priority + db.user.revoke + FIX: email.update & zone-editor.update routes wapas | ✅ DEPLOYED 09 Oct (user-confirmed, backups bak-d14parity-20261009165725) |
+| D15-FILEMGR | File Manager: Upload (64 MB staging) + Compress/Extract (.tar.gz) + chmod + php upload limits | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed (bak-d15fm-20261009171411) |
+| D16-BRANDING | AlphaCP-only branding sweep + progress-card removal | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed (bak-d16brand-20261009174013) |
+| D17-LOOK | WHM-style tiles + FM toolbar + apps grid | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed (bak-d17look-20261009174756) |
+| D18-NAVBAR | navbar: bell + user dropdown + find-functions search + sidebar branding fix | ✅ DEPLOYED LIVE 09 Oct 2026 — user confirmed (bak-d18nav-20261009175830) |
+| **PHASE-3 BUSINESS** | B1 license-server · B2 website · B3 billing · B4 one-line install · B5 update channels · B6 release/hardening | 🚀 STARTED 09 Oct 2026 |
+| B6a-RELEASE | release/tree (691 files, snapshot+21 waves, MANIFEST sha256) — repo ab single source of truth; 548 php 0 errors, 125 blades balanced, 177/177 @csrf | ✅ BUILT 09 Oct 2026 |
+| B2-WEBSITE-v1 | Company landing page (hero/features/pricing/install/docs) — website/ + single-file demo | ✅ BUILT 09 Oct 2026 |
+| B1-LICENSE-API (D19) | /api/v1 activate+verify + fingerprint binding + throttle | ✅ DEPLOYED LIVE 10 Oct 2026 — user confirmed (bak-d19lic-20261010034737) |
+| B5-UPDATER | alphacp-update.sh — cPanel-style channel updater (stable/edge), manifest-sha256 diff, backup+rollback+health gate; CHANNELS.json | ✅ BUILT 10 Oct — SIM1/SIM2 green |
+| B2b-PREVIEW (D20) | Website private preview :2096 (basic-auth owner) + alphacp-go-live.sh (domain+LetsEncrypt — baad me ek command se public) | 🟡 BUILT — sims green |
+| B4-INSTALLER (D21) | get-server :2096 AWS LIVE + one-line install | ✅ COMPLETE 10 Oct — BADE SERVER (130.210.30.170, Ubuntu 24.04 aarch64) par FULL INSTALL SUCCESS: 70 migrations, admin, nginx 2083/2087/2098, paneld, health 200. Fresh-install test DONE. |
+| B4-FIXES (first-run QA) | composer hang-guard, check.token perms, pipefail guards, DB user 127.0.0.1, safety guard (get-server/installed), nginx enable+restart, stock default site removal | ✅ sab product me baked |
+| D22-LICENSE-NAV | License Server nav link + migrate — ✅ DEPLOYED 10 Oct (update 2 files, health 200) |
+| D23-LICENSE-EXPIRY | license_keys.expires_at TIMESTAMP→DATETIME (Y2038 fix); owner lifetime = Days 0 workaround live | 🟡 PUSHED — next update me |
+| **STANDING REQ** | **PORTABILITY: pura AlphaCP system baad me NAYE server par aasani se transfer hona chahiye** — B4 installer + migration script (DB dump + /home + DNS/SSL re-point) isi liye mandatory | 📌 NOTED 09 Oct 2026 |
 | Step 2B-3 | Real TLS (Let's Encrypt) + service control buttons | ⏳ |
 | Step 2C | Offline-first license client + 15-day trial + optional license-server activation | 🟡 **CLIENT DEPLOYED** — local trial verified; license-server API pending |
 | Step 3 | Provisioning engine (account create/suspend/terminate) | ⏳ |

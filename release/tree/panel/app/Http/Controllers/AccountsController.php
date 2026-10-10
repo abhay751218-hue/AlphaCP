@@ -1,0 +1,313 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers;
+
+use App\Models\Account;
+use App\Models\Package;
+use App\Models\Role;
+use App\Models\User;
+use App\Support\AccountIdentity;
+use App\Support\AccountProvisioner;
+use App\Support\Audit;
+use App\Support\License\LicenseClient;
+use App\Support\Panel;
+use App\Support\PasswordGenerator;
+use App\Support\PhpVersions;
+use App\Support\ShadowHash;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\View\View;
+
+/**
+ * WHM-style account list / create / suspend / unsuspend / terminate.
+ * Privileged OS work is always an agent task (ADR-0002).
+ */
+class AccountsController extends Controller
+{
+    public function index(): View
+    {
+        $accounts = Account::query()->with('package')->orderBy('username')->get();
+        foreach ($accounts as $account) {
+            AccountProvisioner::refresh($account);
+        }
+
+        return view('accounts.index', [
+            'accounts' => $accounts->fresh('package'),
+            'liveCount' => AccountProvisioner::liveCount(),
+        ]);
+    }
+
+    public function create(LicenseClient $license): View
+    {
+        return view('accounts.create', [
+            'packages' => Package::query()->where('status', 'active')->orderBy('name')->get(),
+            'gate' => AccountProvisioner::licenseGate($license),
+        ]);
+    }
+
+    public function store(Request $request, LicenseClient $license): RedirectResponse
+    {
+        $gate = AccountProvisioner::licenseGate($license);
+        if (! $gate['ok']) {
+            $message = $gate['reason'] === 'cap'
+                ? 'License account limit reached (max_accounts).'
+                : 'License/trial has new accounts paused — customer sites stay up.';
+            return back()->withErrors(['username' => $message])->withInput();
+        }
+
+        $data = $request->validate([
+            'username'      => ['required', 'string', 'max:16', 'regex:' . AccountIdentity::USERNAME_PATTERN],
+            'main_domain'   => ['required', 'string', 'max:190', 'regex:' . AccountIdentity::DOMAIN_PATTERN],
+            'contact_email' => ['required', 'email', 'max:190'],
+            'package_id'    => ['required', 'integer', Rule::exists('packages', 'id')],
+            'php_version'   => ['required', 'string', 'regex:' . \App\Support\PhpVersions::pattern()],
+            'password'      => ['nullable', Password::defaults()],
+        ]);
+
+        $username = strtolower($data['username']);
+        $domain = strtolower($data['main_domain']);
+
+        if (AccountIdentity::isReserved($username)) {
+            return back()->withErrors(['username' => 'This username is reserved.'])->withInput();
+        }
+        if (User::query()->where('username', $username)->exists()) {
+            return back()->withErrors(['username' => 'A panel user with this name already exists.'])->withInput();
+        }
+        if (Account::query()->where('username', $username)->exists()) {
+            return back()->withErrors(['username' => 'A hosting account with this name already exists.'])->withInput();
+        }
+        if (Account::query()->where('main_domain', $domain)->exists()) {
+            return back()->withErrors(['main_domain' => 'This domain is already on an account.'])->withInput();
+        }
+
+        $package = Package::query()->findOrFail($data['package_id']);
+        $plain = $data['password'] ?: PasswordGenerator::generate(20);
+        $generated = empty($data['password']);
+        $role = Role::query()->where('name', 'user')->firstOrFail();
+        $home = rtrim((string) config('acp.paths.accounts', '/home'), '/') . '/' . $username;
+
+        $account = DB::transaction(function () use ($request, $username, $domain, $data, $package, $plain, $role, $home): Account {
+            $owner = User::query()->create([
+                'username'              => $username,
+                'email'                 => $data['contact_email'],
+                'password_hash'         => Hash::make($plain),
+                'role_id'               => $role->id,
+                'status'                => 'active',
+                'force_password_change' => true,
+                'created_by'            => $request->user()->id,
+            ]);
+
+            $account = Account::query()->create([
+                'server_id'     => Panel::serverId(),
+                'package_id'    => $package->id,
+                'reseller_id'   => $request->user()->isRoot() ? null : $request->user()->id,
+                'owner_user_id' => $owner->id,
+                'username'      => $username,
+                'main_domain'   => $domain,
+                'contact_email' => $data['contact_email'],
+                'home_path'     => $home,
+                'php_version'   => $data['php_version'],
+                'quota_mb'      => $package->quotaMb(),
+                'status'        => 'pending',
+                'created_by'    => $request->user()->id,
+            ]);
+
+            DB::table('account_users')->insert([
+                'account_id' => $account->id,
+                'user_id'    => $owner->id,
+                'role'       => 'owner',
+                'created_at' => now(),
+            ]);
+
+            $account->recordEvent('account.create.queued', 'Provisioning queued');
+            \App\Support\DomainProvisioner::seedMain($account);
+            return $account;
+        });
+
+        AccountProvisioner::enqueue($account, 'account.create', [
+            'username'    => $username,
+            'domain'      => $domain,
+            'shadow_hash' => ShadowHash::make($plain),
+            'quota_mb'    => $package->quotaMb(),
+            'php_version' => $data['php_version'],
+        ]);
+
+        Audit::log('account.create', 'warning', 'account', $account->id, [
+            'username' => $username, 'domain' => $domain,
+        ]);
+
+        $msg = "Account '{$username}' is queued.";
+        if ($generated) {
+            $msg .= " Panel password (ek baar): {$plain}";
+        }
+
+        return redirect()->route('accounts.show', $account)->with('success', $msg);
+    }
+
+    public function show(Account $account): View
+    {
+        AccountProvisioner::refresh($account);
+        $account->refresh();
+
+        return view('accounts.show', [
+            'account' => $account->load(['package', 'owner', 'events']),
+            'packages' => Package::query()->where('status', 'active')->orderBy('name')->get(),
+            'task' => DB::table('tasks')->where('account_id', $account->id)->orderByDesc('id')->first(),
+        ]);
+    }
+
+    public function suspend(Request $request, Account $account): RedirectResponse
+    {
+        $data = $request->validate([
+            'reason' => ['nullable', 'string', 'max:255'],
+        ]);
+        if ($account->isTerminated()) {
+            return back()->withErrors(['reason' => 'A terminated account cannot be suspended.']);
+        }
+
+        $account->forceFill([
+            'suspend_reason' => $data['reason'] ?? 'Suspended from panel',
+            'suspended_at'   => now(),
+            'status'         => 'pending',
+        ])->save();
+        $account->recordEvent('account.suspend.queued', $account->suspend_reason);
+
+        AccountProvisioner::enqueue($account, 'account.suspend', [
+            'username' => $this->liveUsername($account),
+            'domain'   => $this->liveDomain($account),
+            'reason'   => (string) $account->suspend_reason,
+        ]);
+        Audit::log('account.suspend', 'warning', 'account', $account->id, [
+            'reason' => $account->suspend_reason,
+        ]);
+
+        return redirect()->route('accounts.show', $account)->with('success', 'Suspend task is queued.');
+    }
+
+    public function unsuspend(Account $account): RedirectResponse
+    {
+        if ($account->isTerminated()) {
+            return back()->withErrors(['reason' => 'A terminated account cannot be unsuspended.']);
+        }
+
+        $account->forceFill(['status' => 'pending'])->save();
+        $account->recordEvent('account.unsuspend.queued', 'Unsuspend queued');
+        AccountProvisioner::enqueue($account, 'account.unsuspend', [
+            'username' => $this->liveUsername($account),
+            'domain'   => $this->liveDomain($account),
+        ]);
+        Audit::log('account.unsuspend', 'warning', 'account', $account->id, []);
+
+        return redirect()->route('accounts.show', $account)->with('success', 'Unsuspend task is queued.');
+    }
+
+    public function terminate(Request $request, Account $account): RedirectResponse
+    {
+        $data = $request->validate([
+            'confirm_username' => ['required', 'string', 'max:32'],
+        ]);
+        $live = $this->liveUsername($account);
+        if (! hash_equals($live, strtolower($data['confirm_username']))) {
+            return back()->withErrors(['confirm_username' => 'Type the username exactly to confirm.']);
+        }
+
+        $account->recordEvent('account.terminate.queued', 'Terminate queued');
+        AccountProvisioner::enqueue($account, 'account.terminate', [
+            'username' => $live,
+            '_confirm' => 'account.terminate',
+        ]);
+        Audit::log('account.terminate', 'critical', 'account', $account->id, ['username' => $live]);
+
+        return redirect()->route('accounts.index')->with('warning', "Account '{$live}' terminate is queued.");
+    }
+
+    public function upgrade(Request $request, Account $account): RedirectResponse
+    {
+        if ($account->isTerminated()) {
+            return back()->withErrors(['package_id' => 'A terminated account cannot be upgraded.']);
+        }
+        $data = $request->validate([
+            'package_id' => ['required', 'integer', Rule::exists('packages', 'id')],
+        ]);
+        $package = Package::query()->findOrFail($data['package_id']);
+        if ($package->status !== 'active') {
+            return back()->withErrors(['package_id' => 'An archived package cannot be assigned.']);
+        }
+
+        $before = $account->package?->name;
+        $account->forceFill([
+            'package_id' => $package->id,
+            'quota_mb' => $package->quotaMb(),
+        ])->save();
+        $account->recordEvent('account.upgrade', 'Package '.$before.' → '.$package->name);
+
+        AccountProvisioner::enqueue($account, 'account.setQuota', [
+            'username' => $this->liveUsername($account),
+            'quota_mb' => $package->quotaMb(),
+        ]);
+        Audit::log('account.upgrade', 'warning', 'account', $account->id, [
+            'from' => $before, 'to' => $package->name, 'quota_mb' => $package->quotaMb(),
+        ]);
+
+        return redirect()->route('accounts.show', $account)
+            ->with('success', "Package '{$package->name}' is queued (quota {$package->quotaMb()} MB).");
+    }
+
+    public function quota(Request $request, Account $account): RedirectResponse
+    {
+        if ($account->isTerminated()) {
+            return back()->withErrors(['quota_mb' => 'A terminated account quota cannot change.']);
+        }
+        $data = $request->validate([
+            'quota_mb' => ['required', 'integer', 'min:-1', 'max:10485760'],
+        ]);
+        $account->forceFill(['quota_mb' => $data['quota_mb']])->save();
+        $account->recordEvent('account.quota', 'Quota → '.$data['quota_mb']);
+        AccountProvisioner::enqueue($account, 'account.setQuota', [
+            'username' => $this->liveUsername($account),
+            'quota_mb' => $data['quota_mb'],
+        ]);
+        Audit::log('account.quota', 'warning', 'account', $account->id, ['quota_mb' => $data['quota_mb']]);
+
+        return redirect()->route('accounts.show', $account)->with('success', 'Quota change is queued.');
+    }
+
+    public function php(Request $request, Account $account): RedirectResponse
+    {
+        if ($account->isTerminated() || $account->isSuspended()) {
+            return back()->withErrors(['php_version' => 'Cannot change PHP on a suspended/terminated account.']);
+        }
+        $data = $request->validate([
+            'php_version' => ['required', 'string', 'regex:' . PhpVersions::pattern()],
+        ]);
+        $php = $data['php_version'];
+        if (! in_array($php, PhpVersions::all(), true)) {
+            return back()->withErrors(['php_version' => 'This PHP version is not on this server.']);
+        }
+        $account->forceFill(['php_version' => $php])->save();
+        AccountProvisioner::enqueue($account, 'php.setVersion', [
+            'username' => $this->liveUsername($account),
+            'php_version' => $php,
+        ]);
+        $account->recordEvent('php.setVersion.queued', $php);
+        Audit::log('php.setVersion', 'info', 'account', $account->id, ['php_version' => $php]);
+
+        return redirect()->route('accounts.show', $account)->with('success', "PHP {$php} is queued.");
+    }
+
+    private function liveUsername(Account $account): string
+    {
+        return explode('.deleted.', $account->username)[0];
+    }
+
+    private function liveDomain(Account $account): string
+    {
+        return explode('.deleted.', $account->main_domain)[0];
+    }
+}
