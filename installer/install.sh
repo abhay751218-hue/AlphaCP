@@ -511,7 +511,8 @@ EOF
   # token-protected php check (used by verify phase; not public info)
   if (( ! DRY_RUN )); then
     CHECK_TOKEN="$(head -c 24 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-    printf '%s' "$CHECK_TOKEN" | write_conf "${ACP_ETC}/check.token" 0600
+    printf '%s' "$CHECK_TOKEN" | write_conf "${ACP_ETC}/check.token" 0640
+    chgrp www-data "${ACP_ETC}/check.token" 2>/dev/null || true   # php-fpm (www-data) ko read chahiye — self-test fix
   fi
   write_conf "${www_root}/check.php" 0644 <<'EOF'
 <?php
