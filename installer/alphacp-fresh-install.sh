@@ -235,6 +235,9 @@ for f in "${EB}"/nginx/alphacp-*.conf; do
   ADDED+=("${b}")
 done
 [[ "${#ADDED[@]}" -gt 0 ]] || die "pack me nginx vhosts nahi"
+# Ubuntu ki stock "default" site :80 maangti hai — :80 Apache ka hai (customer
+# sites). Hatao warna nginx start hi nahi hoga.
+rm -f "${ETC_NGX_ENABLED}/default"
 if nginx -t >>"${LOG_FILE}" 2>&1; then
   systemctl enable nginx >>"${LOG_FILE}" 2>&1 || true
   systemctl restart nginx >>"${LOG_FILE}" 2>&1 || die "nginx start fail — systemctl status nginx dekho"
