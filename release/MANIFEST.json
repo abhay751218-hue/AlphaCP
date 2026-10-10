@@ -127,9 +127,13 @@
   {
    "wave": "d30-fm-cpanel-exact",
    "files": 1
+  },
+  {
+   "wave": "d31-ssl-symlink",
+   "files": 1
   }
  ],
- "overlay_count": 179,
+ "overlay_count": 180,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1204,6 +1208,12 @@
    "src": "d30-files-index.blade.php",
    "path": "panel/resources/views/files/index.blade.php",
    "sha256": "cb6513c773de698659f7c3c913a852d1c7ca206931ee7a57ae1114c4d73843fe"
+  },
+  {
+   "wave": "d31-ssl-symlink",
+   "src": "d31-AccountOs.php",
+   "path": "agent/src/AccountOs.php",
+   "sha256": "36444ee8a191fa0571f55b5ca6e3ff01c5e51481dda493e912e3a7615ab62d93"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1229,7 +1239,7 @@
   "agent/bin/paneld": "e89fac605b33decdcebe243b6ddf3c42ddc7313db620cfc4bec1b5f4a5cece1f",
   "agent/config/tasks.php": "1594eef21715a14f780f22dd1fa6d538afbbf8330009d256f8330f30531381cd",
   "agent/src/AccountIdentity.php": "2175d17ed940c393d23044c2fefe3ea3b7c4b3ec6790c0f2848dde3339767560",
-  "agent/src/AccountOs.php": "223e38f7340e9c766f3c4ca658b8e9536fc01b2d398cd1967539a282ddc439d4",
+  "agent/src/AccountOs.php": "36444ee8a191fa0571f55b5ca6e3ff01c5e51481dda493e912e3a7615ab62d93",
   "agent/src/AccountPaths.php": "dafe328e1881cc76ec98d27f557cd261ba1acea71d831a5faccef9a91dc92c03",
   "agent/src/AccountTemplates.php": "030c6d11a47744bed3b471f269ddfa7eff400f5e6dd2a615695d0406c5d7601b",
   "agent/src/Backup.php": "f5ac713b88e3356b012130eabba8b642dc8ecb6048109f6cb9580ceb4c9a9c7f",
