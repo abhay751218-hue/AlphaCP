@@ -25,7 +25,7 @@ ETC_SYSD="${ETC_SYSD:-/etc/systemd/system}"
 ETC_CRON="${ETC_CRON:-/etc/cron.d}"
 DEF_WWW="${DEF_WWW:-/var/www/alphacp-default}"
 CERT_DIR="${CERT_DIR:-/etc/ssl/alphacp}"
-PORT=2096
+PORT=2099  # 2096 = Webmail (cPanel-standard) — get-server ka apna port
 STAMP="$(date +%Y%m%d%H%M%S)"
 LOG_FILE="/var/log/alphacp-d21-get.log"; touch "${LOG_FILE}" 2>/dev/null || LOG_FILE="/tmp/alphacp-d21-get.log"
 
@@ -83,6 +83,7 @@ ok "panel+agent+bin+share staged (secrets excluded: .env, license signer, logs, 
 # /etc configs from LIVE
 cp "${ETC_NGX}"/alphacp-cpanel.conf "${ETC_NGX}"/alphacp-whm.conf "${ETC_NGX}"/alphacp-webmail.conf "${ETC_NGX}"/alphacp-link.conf "${STAGE}/etc-bundle/nginx/" 2>>"${LOG_FILE}" || die "nginx vhosts copy fail"
 [[ -f "${ETC_NGX}/alphacp-panel.conf" ]] && cp "${ETC_NGX}/alphacp-panel.conf" "${STAGE}/etc-bundle/nginx/"
+[[ -f "${ETC_NGX}/alphacp-pma.conf" ]] && cp "${ETC_NGX}/alphacp-pma.conf" "${STAGE}/etc-bundle/nginx/" || warn "alphacp-pma.conf live par nahi mila (phpMyAdmin vhost pack me nahi jayega)"
 cp "${ETC_POOL}/alphacp.conf" "${STAGE}/etc-bundle/pool.d/" 2>>"${LOG_FILE}" || die "fpm pool copy fail"
 cp "${ETC_SYSD}/paneld.service" "${STAGE}/etc-bundle/systemd/" 2>>"${LOG_FILE}" || die "paneld.service copy fail"
 [[ -d "${ETC_SYSD}/php8.4-fpm.service.d" ]] && cp -r "${ETC_SYSD}/php8.4-fpm.service.d" "${STAGE}/etc-bundle/systemd/"

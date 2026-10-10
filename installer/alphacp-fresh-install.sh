@@ -225,6 +225,16 @@ ok "tables (70 migrations) + roles + admin user ready"
 # ---- Phase 5: fpm pool + certs + nginx + cron + paneld -------------------------
 say ""
 say "-- Phase 5: services (fpm, nginx, paneld, cron) --"
+
+# Webmail (Roundcube) + phpMyAdmin — cPanel-style companion apps
+say "   webmail (roundcube) + phpmyadmin install..."
+export DEBIAN_FRONTEND=noninteractive
+echo "roundcube-core roundcube/dbconfig-install boolean true" | debconf-set-selections 2>/dev/null || true
+echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections 2>/dev/null || true
+echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect" | debconf-set-selections 2>/dev/null || true
+apt-get install -y roundcube roundcube-mysql phpmyadmin >>"${LOG_FILE}" 2>&1 \
+  && ok "roundcube + phpmyadmin installed" \
+  || warn "roundcube/phpmyadmin install warning (log: ${LOG_FILE}) — webmail/pma baad me install ho sakte hain"
 EB="${STAGE}/etc-bundle"
 install -m 644 "${EB}/pool.d/alphacp.conf" "${ETC_POOL}/alphacp.conf" || die "fpm pool install fail"
 [[ -d "${EB}/systemd/php8.4-fpm.service.d" ]] && cp -r "${EB}/systemd/php8.4-fpm.service.d" "${ETC_SYSD}/"
