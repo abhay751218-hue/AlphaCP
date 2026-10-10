@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # AlphaCP bootstrap — naya server install (AlphaCP get-server se, GitHub se NAHI)
 set -u -o pipefail
-BASE="https://13.207.123.177:2096/234d862e0727891142b25372"
+BASE="https://13.207.123.177:2099/234d862e0727891142b25372"
 [[ "$(id -u)" -eq 0 ]] || { echo "root chahiye: sudo -i karke chalao"; exit 1; }
 W="/root/alphacp-install"; mkdir -p "$W"; cd "$W"
 echo "== AlphaCP installer download (${BASE}) =="

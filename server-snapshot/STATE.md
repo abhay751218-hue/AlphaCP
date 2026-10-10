@@ -207,6 +207,7 @@ redis-server               active
 2087	nginx
 2096	nginx
 2098	nginx
+2099	nginx
 3306	mariadbd
 6379	redis-server
 8090	nginx
@@ -551,6 +552,7 @@ GET|HEAD           /{fallbackPlaceholder}
 /usr/local/alphacp/panel/config/license_public.pem.example
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000004_create_license_keys_table.php
 /usr/local/alphacp/panel/database/migrations/2026_10_07_000011_add_payload_to_license_keys.php
+/usr/local/alphacp/panel/database/migrations/2026_10_10_000001_license_keys_expires_datetime.php
 /usr/local/alphacp/panel/resources/views/license-server/index.blade.php
 /usr/local/alphacp/panel/resources/views/license/index.blade.php
 /usr/local/alphacp/panel/tests/Unit/LicenseClientTest.php
@@ -589,8 +591,9 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (3) — repo se panel dobara banane par ye pages tootenge:
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (4) — repo se panel dobara banane par ye pages tootenge:
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
+/usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak-update-20261010093626
 /usr/local/alphacp/panel/resources/views/layouts/panel.blade.php.bak
 /usr/local/alphacp/panel/routes/web.php.bak.entry
 ```

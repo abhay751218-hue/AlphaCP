@@ -666,7 +666,7 @@ CREATE TABLE `license_keys` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `server_id` varchar(255) NOT NULL,
   `plan` varchar(255) NOT NULL,
-  `expires_at` timestamp NULL DEFAULT NULL,
+  `expires_at` datetime DEFAULT NULL,
   `key_hash` varchar(64) NOT NULL,
   `revoked` tinyint(1) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,

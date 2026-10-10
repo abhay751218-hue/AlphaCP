@@ -152,6 +152,8 @@ final class LicenseClient
         }
 
         $api = rtrim((string) config('acp.license.api_url', ''), '/');
+        // URL chahe base ho (https://host:2083) ya /api/v1 ke saath — dono chalenge.
+        $api = preg_replace('#/api/v1$#', '', $api) ?? $api;
         if ($api === '') {
             return $this->operationFailure('License server is not configured yet. Local trial stays active.');
         }

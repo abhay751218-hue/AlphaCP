@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # AlphaCP server update — get-server se (GitHub se NAHI). Code-only, auto-rollback.
 set -u -o pipefail
-BASE="https://13.207.123.177:2096/234d862e0727891142b25372"
+BASE="https://13.207.123.177:2099/234d862e0727891142b25372"
 [[ "$(id -u)" -eq 0 ]] || { echo "root chahiye: sudo -i karke chalao"; exit 1; }
 W="/root/alphacp-update"; mkdir -p "$W"; cd "$W"
 echo "== AlphaCP update download (${BASE}) =="
