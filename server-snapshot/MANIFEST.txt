@@ -1413,6 +1413,7 @@
 /usr/local/alphacp/panel/phpunit.xml
 /usr/local/alphacp/panel/public/assets/panel.css
 /usr/local/alphacp/panel/public/assets/panel.js
+/usr/local/alphacp/panel/public/assets/panel.js.bak-update-20261010151532
 /usr/local/alphacp/panel/public/favicon.ico
 /usr/local/alphacp/panel/public/index.php
 /usr/local/alphacp/panel/public/robots.txt

@@ -591,11 +591,12 @@ GET|HEAD           /{fallbackPlaceholder}
 
 ## Snapshot completeness (v1.3)
 ```
-PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (10) — repo se panel dobara banane par ye pages tootenge:
+PANEL SOURCE FILES JO SNAPSHOT ME NAHI AAYI (11) — repo se panel dobara banane par ye pages tootenge:
 /usr/local/alphacp/panel/app/Http/Controllers/FilesController.php.bak-update-20261010125702
 /usr/local/alphacp/panel/app/Support/AccountProvisioner.php.bak-update-20261010121811
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak
 /usr/local/alphacp/panel/app/Support/License/LicenseClient.php.bak-update-20261010093626
+/usr/local/alphacp/panel/public/assets/panel.js.bak-update-20261010151532
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010124113
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010125702
 /usr/local/alphacp/panel/resources/views/files/index.blade.php.bak-update-20261010131303

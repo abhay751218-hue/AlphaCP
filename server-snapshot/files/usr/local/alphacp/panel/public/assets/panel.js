@@ -41,6 +41,16 @@
   /* ------------------------------------------------- top search (cPanel) */
   var q = document.getElementById('acp-search');
   if (q) {
+    /* d32: search har page par — tiles nahi to Enter par dashboard kholo */
+    var hasTiles = document.querySelectorAll('.grid.tiles .tile').length > 0;
+    if (!hasTiles) {
+      q.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && q.value.trim() !== '') {
+          e.preventDefault();
+          window.location.href = '/dashboard?q=' + encodeURIComponent(q.value.trim());
+        }
+      });
+    }
     q.addEventListener('input', function () {
       var v = q.value.trim().toLowerCase();
       document.querySelectorAll('.grid.tiles').forEach(function (grid) {
@@ -66,6 +76,9 @@
         q.focus();
       }
     });
+    /* d32: dashboard?q=... aaye to turant filter */
+    var qsv = new URLSearchParams(window.location.search).get('q');
+    if (qsv && hasTiles) { q.value = qsv; q.dispatchEvent(new Event('input')); }
   }
 
   /* ------------------------------------------------- WHM sidebar */
