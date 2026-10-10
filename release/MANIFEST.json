@@ -111,9 +111,13 @@
   {
    "wave": "d26-mailbox-status",
    "files": 1
+  },
+  {
+   "wave": "d27-home-nav",
+   "files": 1
   }
  ],
- "overlay_count": 173,
+ "overlay_count": 174,
  "overlays": [
   {
    "wave": "theme-fix",
@@ -1152,6 +1156,12 @@
    "src": "d26-AccountProvisioner.php",
    "path": "panel/app/Support/AccountProvisioner.php",
    "sha256": "294b22f3d58ac6b938c33fc33d5370b16c1ccf2ffde9abd494618cb3a8e7a56f"
+  },
+  {
+   "wave": "d27-home-nav",
+   "src": "d27-panel-layout.blade.php",
+   "path": "panel/resources/views/layouts/panel.blade.php",
+   "sha256": "ad2ac422890238c3983392889116acb2150b39dceb4c28a6ebaba37229facd37"
   }
  ],
  "system_components_from_wave_installers": [
@@ -1724,7 +1734,7 @@
   "panel/resources/views/indexes/index.blade.php": "4159011045a1d9435fc6685dfc7b2d4bc2537037621b3eb591f33f4cdb01ceda",
   "panel/resources/views/ip-blocker/index.blade.php": "4908742c82eb0aa6fbc64290ff80988b956a39cd8a4c19e74ce3ed9cef249bb9",
   "panel/resources/views/layouts/guest.blade.php": "a3b79a3d1a1f2f15b03be364d6fb7422f1b501fc27f1be3f2147ac04573e9bfd",
-  "panel/resources/views/layouts/panel.blade.php": "ad803c6fd4c6bb8fdff01072c08503d6519ca5be11232abe1eef8dd34a6a4c03",
+  "panel/resources/views/layouts/panel.blade.php": "ad2ac422890238c3983392889116acb2150b39dceb4c28a6ebaba37229facd37",
   "panel/resources/views/license/index.blade.php": "c044214a9d46002dc73fa96e3e3b5c7ee12b8acf478287b3770ffbdcc32e3628",
   "panel/resources/views/license-server/index.blade.php": "4c9995bdf61870db3656c1626398c02d48cd292da1a8c3c69e93115a08672c21",
   "panel/resources/views/mail-queue/index.blade.php": "92580c10e94da5c136a7bd84da7b9808cae857f220b729289f020a6ed375c802",
