@@ -19,7 +19,7 @@ sudo alphacp-sync get <COMMIT-40-char> installer/<script>.sh /tmp/<script>-<ver>
 SSH se `sudo -i` karke:
 
 ```bash
-cd /root && rm -rf AlphaCP-d20 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d20 && cd AlphaCP-d20 && echo "__SHA__  installer/d20-website-preview.sh" | sha256sum -c - && bash installer/d20-website-preview.sh
+cd /root && rm -rf AlphaCP-d20 && git clone --depth 1 --branch arena/009c72b2-alphacp https://github.com/abhay751218-hue/AlphaCP.git AlphaCP-d20 && cd AlphaCP-d20 && echo "51a35312967d4fdde76f10367227963ba8e23e7462e3a28b5f63afb41eb1875a  installer/d20-website-preview.sh" | sha256sum -c - && bash installer/d20-website-preview.sh
 ```
 
 - End me URL + **owner password** milega (note kar lena — ek hi baar dikhta hai)
