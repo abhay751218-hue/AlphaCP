@@ -208,7 +208,7 @@ run_artisan db:seed --class=AdminUserSeeder --force || die "admin seed fail"
 # Seeder purane admin ko update nahi karta — printed password HAMESHA sahi ho,
 # isliye password yahan explicitly set karo (bcrypt).
 ADMIN_HASH="$(sudo -u "${PANEL_USER}" "${PHP_BIN}" -r "echo password_hash('${ADMIN_PASS}', PASSWORD_BCRYPT);")"
-mysql "${DB_NAME}" -e "UPDATE users SET password='${ADMIN_HASH}' WHERE username='admin';" >>"${LOG_FILE}" 2>&1 || warn "admin password sync warning"
+mysql "${DB_NAME}" -e "UPDATE users SET password_hash='${ADMIN_HASH}', force_password_change=1 WHERE username='admin';" >>"${LOG_FILE}" 2>&1 || warn "admin password sync warning"
 run_artisan view:clear || true
 run_artisan route:clear || true
 run_artisan config:clear || true
