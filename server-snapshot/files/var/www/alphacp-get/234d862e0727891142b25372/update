@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# AlphaCP server update — get-server se (GitHub se NAHI). Code-only, auto-rollback.
+set -u -o pipefail
+BASE="https://13.207.123.177:2096/234d862e0727891142b25372"
+[[ "$(id -u)" -eq 0 ]] || { echo "root chahiye: sudo -i karke chalao"; exit 1; }
+W="/root/alphacp-update"; mkdir -p "$W"; cd "$W"
+echo "== AlphaCP update download (${BASE}) =="
+for f in SHA256SUMS alphacp-server-update.sh alphacp-server.tar.gz; do
+  echo "  -> $f"
+  curl -fsSLk "${BASE}/$f" -o "$f" || { echo "[FAIL] $f download fail"; exit 1; }
+done
+grep -E ' (alphacp-server-update\.sh|alphacp-server\.tar\.gz)$' SHA256SUMS | sha256sum -c - || { echo "[FAIL] checksum mismatch — dobara try karo"; exit 1; }
+echo "[OK] sab files verified"
+bash alphacp-server-update.sh --pack "$W/alphacp-server.tar.gz"
